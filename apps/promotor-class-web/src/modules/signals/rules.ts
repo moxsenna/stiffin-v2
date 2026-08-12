@@ -1,44 +1,62 @@
-import { MinatStatus } from '@promotor/contracts';
+import { LearningEvent, LearningSignal, SignalStatus } from '@promotor/contracts';
 
-export interface SignalEvaluationResult {
-  minatStatus: MinatStatus;
+export interface ScoreEvaluationResult {
+  intentScore: number;
+  signalLevel: 'Minat tinggi' | 'Minat sedang' | 'Minat rendah';
   primaryReason: string;
-  intentScoreNumeric: number;
 }
 
-export function evaluateSignalRules(
-  progressPercent: number,
-  hasCompletedProgram: boolean,
-  hasClickedCta: boolean,
-  lastReflectionText?: string
-): SignalEvaluationResult {
-  if (hasCompletedProgram || hasClickedCta) {
-    return {
-      minatStatus: 'Minat tinggi',
-      primaryReason: hasClickedCta ? 'CTA sesi diklik' : 'Program selesai',
-      intentScoreNumeric: 95,
-    };
+/**
+ * Calculates deterministic intent score (0 - 100) based strictly on canonical LearningEvent history.
+ *
+ * Scoring Rules:
+ * - learner.enrolled          : +10
+ * - 1st lesson.completed      : +10
+ * - program.progress_50       : +20
+ * - program.progress_80       : +20
+ * - program.completed         : +20
+ * - cta.clicked               : +20
+ */
+export function evaluateIntentFromEvents(
+  events: LearningEvent[],
+  latestReflectionQuote?: string
+): ScoreEvaluationResult {
+  let score = 0;
+  const eventTypes = new Set(events.map(e => e.eventType));
+
+  if (eventTypes.has('learner.enrolled')) score += 10;
+  if (eventTypes.has('lesson.completed')) score += 10;
+  if (eventTypes.has('program.progress_50')) score += 20;
+  if (eventTypes.has('program.progress_80')) score += 20;
+  if (eventTypes.has('program.completed')) score += 20;
+  if (eventTypes.has('cta.clicked')) score += 20;
+
+  // Cap score between 0 and 100
+  score = Math.min(100, Math.max(0, score));
+
+  // Determine signal level
+  let signalLevel: 'Minat tinggi' | 'Minat sedang' | 'Minat rendah' = 'Minat rendah';
+  if (score >= 60) {
+    signalLevel = 'Minat tinggi';
+  } else if (score >= 30) {
+    signalLevel = 'Minat sedang';
   }
 
-  if (lastReflectionText && lastReflectionText.toLowerCase().includes('hp')) {
-    return {
-      minatStatus: 'Minat sedang',
-      primaryReason: 'Refleksi menyebut konflik penggunaan HP',
-      intentScoreNumeric: 75,
-    };
+  // Determine primary reason
+  let primaryReason = 'Baru mendaftar program';
+  if (eventTypes.has('program.completed')) {
+    primaryReason = 'Program selesai';
+  } else if (eventTypes.has('cta.clicked')) {
+    primaryReason = 'Mengklik tombol Call-to-Action';
+  } else if (eventTypes.has('program.progress_80')) {
+    primaryReason = 'Mencapai progres 80%';
+  } else if (eventTypes.has('program.progress_50')) {
+    primaryReason = 'Mencapai progres 50%';
+  } else if (latestReflectionQuote && /HP|gadget|gawai/i.test(latestReflectionQuote)) {
+    primaryReason = 'Refleksi menyebut kendala penggunaan HP';
+  } else if (eventTypes.has('lesson.completed')) {
+    primaryReason = 'Aktif menyelesaikan sesi pelajaran';
   }
 
-  if (progressPercent >= 50) {
-    return {
-      minatStatus: 'Minat sedang',
-      primaryReason: `Menyelesaikan ${progressPercent}% materi`,
-      intentScoreNumeric: 65,
-    };
-  }
-
-  return {
-    minatStatus: 'Minat rendah',
-    primaryReason: 'Belum tes & baru memulai',
-    intentScoreNumeric: 35,
-  };
+  return { intentScore: score, signalLevel, primaryReason };
 }

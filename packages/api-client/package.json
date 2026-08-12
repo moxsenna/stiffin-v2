@@ -7,8 +7,8 @@
   "types": "./src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "echo 'api-client test ok'",
-    "lint": "echo 'api-client lint ok'"
+    "test": "tsc --noEmit",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@promotor/contracts": "workspace:*"

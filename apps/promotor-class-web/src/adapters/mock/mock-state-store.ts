@@ -3,34 +3,38 @@ import {
   Enrollment,
   Contact,
   Reflection,
+  LearningEvent,
   LearningSignal,
-  IntegrationEventEnvelope,
+  IntegrationOutboxItem,
   FlowNextActionRef,
   ProductEntitlements,
   IntegrationHealth,
 } from '@promotor/contracts';
 import {
   SEED_ORGANIZATION,
-  SEED_PROMOTOR_USER,
   SEED_CONTACTS,
   SEED_PROGRAMS,
   SEED_ENROLLMENTS,
   SEED_REFLECTIONS,
+  SEED_LEARNING_EVENTS,
   SEED_SIGNALS,
 } from '@promotor/promotor-class-fixtures';
 
-const LOCAL_STORAGE_KEY = 'promotor_class_mock_state_v1';
+const LOCAL_STORAGE_KEY = 'promotor_class_mock_state_v2';
 
 export interface ClassMockState {
   organization: typeof SEED_ORGANIZATION;
-  user: typeof SEED_PROMOTOR_USER;
   contacts: Contact[];
   programs: Program[];
   enrollments: Enrollment[];
   reflections: Reflection[];
+  learningEvents: LearningEvent[];       // Canonical Class domain history
   learningSignals: LearningSignal[];
-  integrationOutbox: IntegrationEventEnvelope[];
+  integrationOutbox: IntegrationOutboxItem[]; // Cross-product transport queue
   flowNextActionRefs: FlowNextActionRef[];
+  currentLearnerAccess: {
+    contactId: string | null;
+  };
   entitlements: ProductEntitlements;
   integrationHealth: IntegrationHealth;
   // NOTE: nextActions[] IS INTENTIONALLY FORBIDDEN IN CLASS MOCK STORE.
@@ -39,23 +43,23 @@ export interface ClassMockState {
 
 const DEFAULT_STATE: ClassMockState = {
   organization: SEED_ORGANIZATION,
-  user: SEED_PROMOTOR_USER,
   contacts: SEED_CONTACTS,
   programs: SEED_PROGRAMS,
   enrollments: SEED_ENROLLMENTS,
   reflections: SEED_REFLECTIONS,
+  learningEvents: SEED_LEARNING_EVENTS,
   learningSignals: SEED_SIGNALS,
   integrationOutbox: [],
   flowNextActionRefs: [],
+  currentLearnerAccess: {
+    contactId: 'contact_ayu', // Default demo active learner session
+  },
   entitlements: {
-    hasPromotorClass: true,
-    hasPromotorFlow: true,
-    integrationMode: 'BUNDLE_AVAILABLE',
+    promotorClass: true,
+    promotorFlow: true,
   },
   integrationHealth: {
-    status: 'healthy',
-    lastSyncedAt: new Date().toISOString(),
-    pendingOutboxCount: 0,
+    promotorFlow: 'AVAILABLE',
   },
 };
 

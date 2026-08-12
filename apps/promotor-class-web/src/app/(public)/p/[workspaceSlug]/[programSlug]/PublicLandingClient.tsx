@@ -2,39 +2,43 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { programRepository } from '@/adapters/mock/program-repository';
-import { contactRepository } from '@/adapters/mock/contact-repository';
-import { learnerRepository } from '@/adapters/mock/learner-repository';
+import { useParams, notFound } from 'next/navigation';
+import { getProgramBySlugsQuery } from '@/modules/programs/queries';
+import { matchOrCreateContactCommand } from '@/modules/contacts/commands';
+import { createEnrollmentCommand } from '@/modules/enrollments/commands';
+import { setActiveLearnerSession } from '@/lib/session';
 import { Program, Enrollment } from '@promotor/contracts';
 
 export function PublicLandingClient() {
   const params = useParams();
-  const router = useRouter();
   const workspaceSlug = params.workspaceSlug as string;
   const programSlug = params.programSlug as string;
 
   const [program, setProgram] = useState<Program | null>(null);
+  const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registrationSuccessEnrollment, setRegistrationSuccessEnrollment] = useState<Enrollment | null>(null);
 
   useEffect(() => {
-    programRepository.getProgramBySlugs(workspaceSlug, programSlug).then((prog: Program | undefined) => {
+    getProgramBySlugsQuery(workspaceSlug, programSlug).then((prog: Program | undefined) => {
       if (prog) {
         setProgram(prog);
       } else {
-        // Fallback to first program if slugs not exact
-        programRepository.getPrograms().then((progs: Program[]) => {
-          if (progs.length > 0) setProgram(progs[0]);
-        });
+        // Return 404 if slug is invalid (Fix Bug #17)
+        notFound();
       }
+      setLoading(false);
     });
   }, [workspaceSlug, programSlug]);
 
-  if (!program) {
+  if (loading) {
     return <div style={{ padding: '40px', textAlign: 'center' }}>Memuat halaman program...</div>;
+  }
+
+  if (!program) {
+    return null;
   }
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -43,13 +47,16 @@ export function PublicLandingClient() {
 
     setIsSubmitting(true);
     try {
-      // 1. Normalize phone via platform-core normalizePhone and match/create Contact
-      const contact = await contactRepository.matchOrCreateContact(name.trim(), phone.trim());
+      // 1. Match/Create Contact with E.164 normalization
+      const contact = await matchOrCreateContactCommand(name.trim(), phone.trim());
 
-      // 2. Create Enrollment
-      const newEnrollment = await learnerRepository.createEnrollment(contact.id, program.id);
+      // 2. Set active learner session in localStorage
+      setActiveLearnerSession(contact.id);
 
-      // 3. Set Registration Success Access State
+      // 3. Create Enrollment & Emit learner.registered / learner.enrolled events
+      const newEnrollment = await createEnrollmentCommand(contact.id, program.id);
+
+      // 4. Set Registration Success Access State
       setRegistrationSuccessEnrollment(newEnrollment);
     } catch (err) {
       alert('Gagal mendaftar: ' + (err as Error).message);
@@ -73,7 +80,6 @@ export function PublicLandingClient() {
             textAlign: 'center',
           }}
         >
-          <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎉</div>
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '8px' }}>
             Pendaftaran Berhasil!
           </h2>
@@ -176,7 +182,7 @@ export function PublicLandingClient() {
                 required
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="Contoh: Ayu Lestari"
+                placeholder="Contoh: Budi Santoso"
                 style={{
                   width: '100%',
                   padding: '10px',
@@ -189,7 +195,7 @@ export function PublicLandingClient() {
 
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>
-                Nomor WhatsApp (E.164) *
+                Nomor WhatsApp (contoh: 081234567890) *
               </label>
               <input
                 type="tel"

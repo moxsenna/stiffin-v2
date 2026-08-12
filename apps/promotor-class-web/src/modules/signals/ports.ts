@@ -1,7 +1,8 @@
 import { LearningSignal } from '@promotor/contracts';
 
-export interface SignalPort {
+export interface SignalRepositoryPort {
   getSignals(): Promise<LearningSignal[]>;
-  getSignalForContact(contactId: string): Promise<LearningSignal | undefined>;
-  createOrUpdateSignal(signal: Omit<LearningSignal, 'id' | 'createdAt'>): Promise<LearningSignal>;
+  getSignalById(id: string): Promise<LearningSignal | undefined>;
+  getSignalByContactId(contactId: string): Promise<LearningSignal | undefined>;
+  reevaluateSignal(contactId: string, enrollmentId: string): Promise<LearningSignal>;
 }

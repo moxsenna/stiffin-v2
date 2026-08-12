@@ -1,7 +1,9 @@
 import { Program, Module, Lesson } from '@promotor/contracts';
 import { MockStateStore } from './mock-state-store';
+import { ProgramRepositoryPort } from '@/modules/programs/ports';
+import { extractYoutubeId } from '@/lib/video/parse-youtube-url';
 
-export class MockProgramRepository {
+export class MockProgramRepository implements ProgramRepositoryPort {
   async getPrograms(): Promise<Program[]> {
     return MockStateStore.getState().programs;
   }
@@ -16,85 +18,114 @@ export class MockProgramRepository {
     );
   }
 
-  async createProgram(programData: Omit<Program, 'id' | 'createdAt' | 'updatedAt'>): Promise<Program> {
-    const newId = `prog_${Date.now()}`;
-    const now = new Date().toISOString();
-    const newProgram: Program = {
-      ...programData,
-      id: newId,
-      createdAt: now,
-      updatedAt: now,
+  async createProgram(
+    title: string,
+    subtitle: string,
+    description: string,
+    priceType: 'free' | 'paid'
+  ): Promise<Program> {
+    const state = MockStateStore.getState();
+    const newProgramId = `prog_${Date.now()}`;
+    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+    const newModule: Module = {
+      id: `mod_${Date.now()}`,
+      programId: newProgramId, // Fixed Bug #12: Match parent programId
+      title: 'Modul 1: Pengenalan Materi',
+      order: 1,
+      lessons: [
+        {
+          id: `les_${Date.now()}_1`,
+          moduleId: `mod_${Date.now()}`,
+          title: 'Sesi 1: Pengantar Program',
+          order: 1,
+          textContent: 'Selamat datang di program ini. Silakan ikuti materi dengan tekun.',
+          hasReflection: true,
+          reflectionType: 'long_text',
+          reflectionPrompt: 'Tuliskan harapan utama Anda dalam mengikuti program ini:',
+          hasCta: false,
+        },
+      ],
     };
 
-    MockStateStore.updateState(state => ({
-      ...state,
-      programs: [newProgram, ...state.programs],
+    const newProgram: Program = {
+      id: newProgramId,
+      organizationId: state.organization.id,
+      workspaceSlug: state.organization.slug,
+      programSlug: slug,
+      title: title.trim(),
+      subtitle: subtitle.trim(),
+      description: description.trim(),
+      programType: priceType === 'free' ? 'lead_magnet' : 'paid',
+      accessType: 'public',
+      status: 'published',
+      pricing: priceType === 'free' ? 'free' : 'one_time',
+      priceAmount: priceType === 'paid' ? 150000 : 0,
+      modules: [newModule],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    MockStateStore.updateState(curr => ({
+      ...curr,
+      programs: [newProgram, ...curr.programs],
     }));
 
     return newProgram;
   }
 
   async reorderModules(programId: string, moduleIdsOrder: string[]): Promise<Program> {
-    const program = await this.getProgramById(programId);
-    if (!program) throw new Error('Program not found');
-
-    const moduleMap = new Map(program.modules.map(m => [m.id, m]));
-    const reordered: Module[] = moduleIdsOrder
-      .map((id, idx) => {
-        const mod = moduleMap.get(id);
-        if (!mod) return null;
-        return { ...mod, order: idx + 1 };
-      })
-      .filter((m): m is Module => m !== null);
-
-    const updatedProgram = { ...program, modules: reordered, updatedAt: new Date().toISOString() };
-
-    MockStateStore.updateState(state => ({
-      ...state,
-      programs: state.programs.map(p => (p.id === programId ? updatedProgram : p)),
-    }));
-
-    return updatedProgram;
-  }
-
-  async saveLesson(programId: string, moduleId: string, lessonData: Lesson): Promise<Program> {
-    const program = await this.getProgramById(programId);
-    if (!program) throw new Error('Program not found');
-
-    const updatedModules = program.modules.map(mod => {
-      if (mod.id !== moduleId) return mod;
-      const existingIdx = mod.lessons.findIndex(l => l.id === lessonData.id);
-      let updatedLessons: Lesson[];
-      if (existingIdx >= 0) {
-        updatedLessons = mod.lessons.map(l => (l.id === lessonData.id ? lessonData : l));
-      } else {
-        updatedLessons = [...mod.lessons, lessonData];
-      }
-      return { ...mod, lessons: updatedLessons };
+    MockStateStore.updateState(curr => {
+      const programs = curr.programs.map(p => {
+        if (p.id !== programId) return p;
+        const moduleMap = new Map(p.modules.map(m => [m.id, m]));
+        const reorderedModules: Module[] = [];
+        moduleIdsOrder.forEach((id, idx) => {
+          const mod = moduleMap.get(id);
+          if (mod) {
+            reorderedModules.push({ ...mod, order: idx + 1 });
+          }
+        });
+        return { ...p, modules: reorderedModules, updatedAt: new Date().toISOString() };
+      });
+      return { ...curr, programs };
     });
 
-    const updatedProgram = { ...program, modules: updatedModules, updatedAt: new Date().toISOString() };
-
-    MockStateStore.updateState(state => ({
-      ...state,
-      programs: state.programs.map(p => (p.id === programId ? updatedProgram : p)),
-    }));
-
-    return updatedProgram;
+    const updated = await this.getProgramById(programId);
+    if (!updated) throw new Error('Program not found after reorder');
+    return updated;
   }
 
-  async setPublishStatus(programId: string, isPublished: boolean): Promise<Program> {
-    const program = await this.getProgramById(programId);
-    if (!program) throw new Error('Program not found');
+  async saveLesson(programId: string, moduleId: string, updatedLesson: Lesson): Promise<Program> {
+    MockStateStore.updateState(curr => {
+      const programs = curr.programs.map(p => {
+        if (p.id !== programId) return p;
+        const modules = p.modules.map(m => {
+          if (m.id !== moduleId) return m;
+          const lessons = m.lessons.map(les => {
+            if (les.id !== updatedLesson.id) return les;
 
-    const updatedProgram = { ...program, isPublished, updatedAt: new Date().toISOString() };
+            // Fixed Bug #13: Preserve original order & attachments metadata
+            const videoExternalId = extractYoutubeId(updatedLesson.videoYoutubeUrl) || les.videoExternalId;
 
-    MockStateStore.updateState(state => ({
-      ...state,
-      programs: state.programs.map(p => (p.id === programId ? updatedProgram : p)),
-    }));
+            return {
+              ...les,
+              ...updatedLesson,
+              order: les.order, // Preserve original lesson order!
+              attachments: les.attachments, // Preserve attachments metadata!
+              videoExternalId,
+            };
+          });
+          return { ...m, lessons };
+        });
+        return { ...p, modules, updatedAt: new Date().toISOString() };
+      });
+      return { ...curr, programs };
+    });
 
-    return updatedProgram;
+    const updated = await this.getProgramById(programId);
+    if (!updated) throw new Error('Program not found after lesson update');
+    return updated;
   }
 }
 

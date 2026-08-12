@@ -1,79 +1,57 @@
-import { Contact, ContactId, OrganizationId } from '@promotor/contracts';
+import { PhoneE164Schema, PhoneE164 } from '@promotor/contracts';
 
 /**
- * Normalizes any Indonesian raw phone input string to canonical E.164 format (+628...).
- * Examples:
- * - "08123456789" -> "+628123456789"
- * - "628123456789" -> "+628123456789"
- * - "+62 812-3456-789" -> "+628123456789"
+ * Strictly normalizes raw phone input to E.164 standard (+628...).
+ * Throws an Error if the phone number cannot be parsed into a valid E.164 format.
  */
-export function normalizePhone(rawInput: string): string {
-  if (!rawInput) return '';
-  const digitsOnly = rawInput.replace(/\D/g, '');
-  
-  if (digitsOnly.startsWith('0')) {
-    return '+62' + digitsOnly.substring(1);
+export function normalizePhone(rawPhone: string): PhoneE164 {
+  if (!rawPhone || typeof rawPhone !== 'string') {
+    throw new Error('Nomor HP tidak boleh kosong');
   }
-  if (digitsOnly.startsWith('62')) {
-    return '+' + digitsOnly;
+
+  // Remove spaces, hyphens, parentheses, dots
+  let cleaned = rawPhone.replace(/[\s\-\(\)\.]/g, '');
+
+  // Convert domestic 08... prefix to +628...
+  if (cleaned.startsWith('08')) {
+    cleaned = '+62' + cleaned.substring(1);
+  } else if (cleaned.startsWith('628')) {
+    cleaned = '+' + cleaned;
+  } else if (!cleaned.startsWith('+') && cleaned.startsWith('8')) {
+    cleaned = '+62' + cleaned;
   }
-  if (digitsOnly.length > 5) {
-    return '+' + digitsOnly;
+
+  // Validate using canonical Zod PhoneE164Schema
+  const parseResult = PhoneE164Schema.safeParse(cleaned);
+  if (!parseResult.success) {
+    throw new Error(`Nomor HP "${rawPhone}" tidak valid. Format harus E.164 (contoh: +6281234567890)`);
   }
-  return rawInput.trim();
+
+  return parseResult.data;
 }
 
 /**
- * Formats an E.164 phone number for clean human-readable UI display.
+ * Formats E.164 phone string for human readable UI display (+62 812-3456-7890)
  */
-export function formatPhoneDisplay(e164Phone: string): string {
-  if (!e164Phone) return '';
-  const clean = e164Phone.replace(/\D/g, '');
-  if (clean.startsWith('628')) {
-    const localNumber = '08' + clean.substring(3);
-    if (localNumber.length >= 10) {
-      return `${localNumber.substring(0, 4)}-${localNumber.substring(4, 8)}-${localNumber.substring(8)}`;
-    }
-    return localNumber;
+export function formatPhoneDisplay(e164: string): string {
+  if (!e164 || !e164.startsWith('+62')) return e164 || '';
+  const digits = e164.substring(3);
+  if (digits.length >= 8) {
+    return `+62 ${digits.substring(0, 3)}-${digits.substring(3, 7)}-${digits.substring(7)}`;
   }
-  return e164Phone;
+  return e164;
 }
 
 /**
- * Platform-neutral date/time formatters.
+ * Formats relative time ago (e.g., "5 menit lalu", "2 jam lalu")
  */
-export function formatTimeAgo(timestampISO: string): string {
-  if (!timestampISO) return '';
-  const date = new Date(timestampISO);
+export function formatTimeAgo(dateInput: string | Date): string {
+  const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
+  const secondsAgo = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  if (diffMins < 1) return 'Baru saja';
-  if (diffMins < 60) return `${diffMins} menit lalu`;
-  if (diffHours < 24) return `${diffHours} jam lalu`;
-  return `${diffDays} hari lalu`;
-}
-
-/**
- * Shared identity helper function to create a new Contact record structure.
- */
-export function createContactIdentity(
-  organizationId: OrganizationId,
-  name: string,
-  rawPhone: string,
-  email?: string
-): Contact {
-  const normalized = normalizePhone(rawPhone);
-  const generatedId = `contact_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-  return {
-    id: generatedId,
-    organizationId,
-    name: name.trim(),
-    phone: normalized,
-    email: email?.trim(),
-    createdAt: new Date().toISOString(),
-  };
+  if (secondsAgo < 60) return 'baru saja';
+  if (secondsAgo < 3600) return `${Math.floor(secondsAgo / 60)}m lalu`;
+  if (secondsAgo < 86400) return `${Math.floor(secondsAgo / 3600)}j lalu`;
+  return `${Math.floor(secondsAgo / 86400)}h lalu`;
 }

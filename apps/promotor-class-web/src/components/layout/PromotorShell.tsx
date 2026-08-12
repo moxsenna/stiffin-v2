@@ -28,7 +28,7 @@ export function PromotorShell({ children }: PromotorShellProps) {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       {/* Desktop Sidebar Layout */}
       <div style={{ display: 'flex', flex: 1 }}>
         <aside
@@ -81,7 +81,7 @@ export function PromotorShell({ children }: PromotorShellProps) {
         <main
           style={{
             flex: 1,
-            paddingBottom: '80px', // Clearance for mobile tab bar
+            paddingBottom: 'calc(90px + env(safe-area-inset-bottom, 0px))', // Clearance for mobile tab bar & safe area
             maxWidth: '1200px',
             width: '100%',
             margin: '0 auto',

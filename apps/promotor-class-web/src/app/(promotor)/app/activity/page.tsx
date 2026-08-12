@@ -2,62 +2,62 @@
 
 import React, { useState, useEffect } from 'react';
 import { PromotorShell } from '@/components/layout/PromotorShell';
-import { MockStateStore } from '@/adapters/mock/mock-state-store';
-import { LearningActivityProjection, Reflection } from '@promotor/contracts';
+import { getReflectionsQuery } from '@/modules/reflections/queries';
+import { getContactsQuery } from '@/modules/contacts/queries';
+import { Reflection, Contact } from '@promotor/contracts';
+import { formatTimeAgo } from '@promotor/platform-core';
 
 export default function ActivityPage() {
-  const [activities, setActivities] = useState<LearningActivityProjection[]>([]);
+  const [reflections, setReflections] = useState<Reflection[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
 
   useEffect(() => {
-    setActivities(MockStateStore.getState().reflections.map((r: Reflection, idx: number) => ({
-      id: `act_${idx}`,
-      contactId: 'contact_ayu',
-      learnerName: idx % 2 === 0 ? 'Ayu Lestari' : 'Nina Rahmawati',
-      activitySummary: r.answerText,
-      timeAgoFormatted: '03:01',
-      timestamp: r.createdAt,
-    })));
+    Promise.all([
+      getReflectionsQuery(),
+      getContactsQuery(),
+    ]).then(([reflData, conData]) => {
+      setReflections(reflData);
+      setContacts(conData);
+    });
   }, []);
+
+  const contactMap = new Map(contacts.map(c => [c.id, c]));
 
   return (
     <PromotorShell>
       <div style={{ padding: '16px' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '4px' }}>Log Aktivitas Belajar</h1>
+        <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '4px' }}>Aktivitas Pembelajaran</h1>
         <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
-          Timeline real-time penyelesaian modul & jawaban refleksi peserta
+          Jejak refleksi & penuntusan materi peserta secara terperinci
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {activities.length === 0 ? (
-            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--color-text-muted)', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--border-radius-md)' }}>
-              Belum ada aktivitas belajar terbaru.
-            </div>
-          ) : (
-            activities.map(act => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {reflections.map(refl => {
+            const contact = contactMap.get(refl.contactId);
+            const name = contact ? contact.name : 'Peserta';
+
+            return (
               <div
-                key={act.id}
+                key={refl.id}
                 style={{
-                  padding: '12px 16px',
                   backgroundColor: 'var(--color-surface)',
-                  borderRadius: 'var(--border-radius-sm)',
+                  padding: '14px',
+                  borderRadius: 'var(--border-radius-md)',
                   border: '1px solid var(--color-divider)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
                 }}
               >
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '14px' }}>{act.learnerName}</div>
-                  <div style={{ fontSize: '13px', color: 'var(--color-text-main)' }}>
-                    Refleksi: &ldquo;{act.activitySummary}&rdquo;
-                  </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '13px' }}>{name}</span>
+                  <span style={{ fontSize: '11px', color: 'var(--color-text-subtle)' }} className="tabular-nums">
+                    {formatTimeAgo(refl.submittedAt)}
+                  </span>
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--color-text-subtle)' }} className="tabular-nums">
-                  {act.timeAgoFormatted}
-                </div>
+                <p style={{ fontSize: '13px', color: 'var(--color-text-main)', fontStyle: 'italic' }}>
+                  &ldquo;{refl.answerText}&rdquo;
+                </p>
               </div>
-            ))
-          )}
+            );
+          })}
         </div>
       </div>
     </PromotorShell>

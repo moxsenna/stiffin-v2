@@ -5,36 +5,35 @@ import { Contact } from '@promotor/contracts';
 
 interface WhatsAppDraftSheetProps {
   contact: Contact | null;
-  initialMessage: string;
-  isOpen: boolean;
+  initialMessage?: string;
   onClose: () => void;
 }
 
 export function WhatsAppDraftSheet({
   contact,
-  initialMessage,
-  isOpen,
+  initialMessage = '',
   onClose,
 }: WhatsAppDraftSheetProps) {
-  const [message, setMessage] = useState(initialMessage);
+  const [message, setMessage] = useState(
+    initialMessage || (contact ? `Halo ${contact.name}, salam dari STIFIn Parenting.` : '')
+  );
 
-  if (!isOpen || !contact) return null;
+  if (!contact) return null;
 
-  const encodedMessage = encodeURIComponent(message);
-  const cleanPhone = contact.phone.replace(/\D/g, '');
-  const waUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
+  const cleanPhone = contact.phoneE164.replace(/\D/g, '');
+  const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 
   return (
     <>
-      <div className={`sheet-overlay ${isOpen ? 'active' : ''}`} onClick={onClose} />
-      <div className={`bottom-sheet ${isOpen ? 'active' : ''}`}>
+      <div className="sheet-overlay active" onClick={onClose} />
+      <div className="bottom-sheet active">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h3 style={{ fontSize: '16px', fontWeight: 700 }}>Draf Pesan WhatsApp</h3>
           <button onClick={onClose} style={{ padding: '4px 8px', fontSize: '14px' }}>✕</button>
         </div>
 
         <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '8px' }}>
-          Penerima: <strong>{contact.name}</strong> ({contact.phone})
+          Penerima: <strong>{contact.name}</strong> ({contact.phoneE164})
         </div>
 
         <textarea
@@ -72,7 +71,7 @@ export function WhatsAppDraftSheet({
             className="touch-target-primary"
             style={{
               flex: 2,
-              backgroundColor: '#25D366', // WhatsApp green
+              backgroundColor: '#25D366',
               color: '#FFF',
               borderRadius: 'var(--border-radius-md)',
               fontWeight: 700,

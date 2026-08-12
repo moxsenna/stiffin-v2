@@ -10,7 +10,7 @@ interface LearnerShellProps {
 
 export function LearnerShell({ children }: LearnerShellProps) {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-canvas)' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-canvas)' }}>
       {/* Learner Top Header */}
       <header
         style={{
@@ -38,7 +38,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
       <main
         style={{
           flex: 1,
-          paddingBottom: '70px', // Clearance for learner bottom tab bar
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', // Clearance for learner bottom tab bar
           maxWidth: '800px',
           width: '100%',
           margin: '0 auto',

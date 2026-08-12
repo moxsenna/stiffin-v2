@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Contact, Enrollment, Program, LearningSignal } from '@promotor/contracts';
 import { formatPhoneDisplay } from '@promotor/platform-core';
 
@@ -21,9 +21,9 @@ export function LearnerDetail({
   onOpenWhatsAppDraft,
   onClose,
 }: LearnerDetailProps) {
-  const minatStatus = signal?.minatStatus || 'Minat sedang';
+  const signalLevel = signal?.signalLevel || 'Minat sedang';
   const primaryReason = signal?.primaryReason || 'Memulai pembelajaran';
-  const rawQuote = signal?.rawQuoteSnippet;
+  const rawQuote = signal?.rawReflectionQuote;
 
   const getMinatStyle = (status: string) => {
     switch (status) {
@@ -36,12 +36,11 @@ export function LearnerDetail({
     }
   };
 
-  const minatStyle = getMinatStyle(minatStatus);
-
+  const minatStyle = getMinatStyle(signalLevel);
   const defaultDraftMessage = `Halo ${contact.name}, saya Rina dari STIFIn Parenting. Saya memperhatikan Anda telah ${primaryReason.toLowerCase()} di program "${program?.title || 'Parenting'}". Bagaimana perkembangan pendampingan anak di rumah saat ini?`;
 
   return (
-    <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="side-panel active" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Header Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
@@ -49,7 +48,7 @@ export function LearnerDetail({
             {contact.name}
           </h2>
           <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-            {formatPhoneDisplay(contact.phone)} {contact.email ? `· ${contact.email}` : ''}
+            {formatPhoneDisplay(contact.phoneE164)}
           </div>
         </div>
         {onClose && (
@@ -83,15 +82,15 @@ export function LearnerDetail({
               backgroundColor: '#FFF',
             }}
           >
-            {minatStatus}
+            {signalLevel}
           </span>
           <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-main)' }}>
             Alasan: {primaryReason}
           </span>
         </div>
-        {signal?.intentScoreNumeric && (
+        {signal?.intentScore !== undefined && (
           <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }} className="tabular-nums">
-            Score indikator lanjutan: {signal.intentScoreNumeric}/100
+            Skor indikator lanjutan: {signal.intentScore}/100
           </div>
         )}
       </div>
@@ -147,13 +146,6 @@ export function LearnerDetail({
         </div>
       )}
 
-      {/* Notes / Context */}
-      {contact.notes && (
-        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-          <strong>Catatan Promotor:</strong> {contact.notes}
-        </div>
-      )}
-
       {/* Action Button */}
       <button
         onClick={() => onOpenWhatsAppDraft(contact, defaultDraftMessage)}
@@ -161,7 +153,7 @@ export function LearnerDetail({
         style={{
           width: '100%',
           backgroundColor: 'var(--color-primary)',
-          color: 'var(--color-text-inverse)',
+          color: '#FFF',
           fontWeight: 600,
           borderRadius: 'var(--border-radius-md)',
           marginTop: '10px',

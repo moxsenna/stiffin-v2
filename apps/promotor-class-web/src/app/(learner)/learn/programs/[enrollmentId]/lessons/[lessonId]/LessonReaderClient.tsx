@@ -4,8 +4,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { LearnerShell } from '@/components/layout/LearnerShell';
-import { MockStateStore } from '@/adapters/mock/mock-state-store';
-import { learnerRepository } from '@/adapters/mock/learner-repository';
+import { getActiveLearnerContactId } from '@/lib/session';
+import { getEnrollmentByIdQuery } from '@/modules/enrollments/queries';
+import { getProgramByIdQuery } from '@/modules/programs/queries';
+import { completeLessonCommand } from '@/modules/learning/commands';
+import { recordCtaClickCommand } from '@/modules/ctas/commands';
+import { getYoutubeEmbedUrl } from '@/lib/video/parse-youtube-url';
 import { Enrollment, Program, Lesson } from '@promotor/contracts';
 
 export function LessonReaderClient() {
@@ -20,30 +24,57 @@ export function LessonReaderClient() {
   const [reflectionAnswer, setReflectionAnswer] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
-    const state = MockStateStore.getState();
-    const enr = state.enrollments.find(e => e.id === enrollmentId);
-    if (!enr) return;
-    setEnrollment(enr);
+    getEnrollmentByIdQuery(enrollmentId).then(enr => {
+      if (!enr) return;
 
-    const prog = state.programs.find(p => p.id === enr.programId);
-    if (!prog) return;
-    setProgram(prog);
+      // Ownership Verification Check
+      const activeContactId = getActiveLearnerContactId();
+      if (enr.contactId !== activeContactId) {
+        setAccessDenied(true);
+        return;
+      }
 
-    for (const mod of prog.modules) {
-      for (const les of mod.lessons) {
-        if (les.id === lessonId) {
-          setLesson(les);
-          // Pre-fill previous reflection if already completed
-          const prevProgress = enr.lessonProgress[lessonId];
-          if (prevProgress?.reflectionAnswer) {
-            setReflectionAnswer(prevProgress.reflectionAnswer);
+      setEnrollment(enr);
+
+      getProgramByIdQuery(enr.programId).then(prog => {
+        if (!prog) return;
+        setProgram(prog);
+
+        for (const mod of prog.modules) {
+          for (const les of mod.lessons) {
+            if (les.id === lessonId) {
+              setLesson(les);
+              const prevProgress = enr.lessonProgress[lessonId];
+              if (prevProgress?.reflectionAnswer) {
+                setReflectionAnswer(prevProgress.reflectionAnswer);
+              }
+            }
           }
         }
-      }
-    }
+      });
+    });
   }, [enrollmentId, lessonId]);
+
+  if (accessDenied) {
+    return (
+      <LearnerShell>
+        <div style={{ padding: '40px', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-status-danger)', marginBottom: '8px' }}>
+            Akses Ditolak
+          </h2>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+            Anda tidak memiliki hak akses ke pelajaran ini.
+          </p>
+          <Link href="/learn" style={{ fontWeight: 600, color: 'var(--color-primary)' }}>
+            ← Kembali ke Program Saya
+          </Link>
+        </div>
+      </LearnerShell>
+    );
+  }
 
   if (!enrollment || !program || !lesson) {
     return (
@@ -61,7 +92,7 @@ export function LessonReaderClient() {
     setIsSubmitting(true);
 
     try {
-      const updatedEnr = await learnerRepository.completeLesson(enrollmentId, lessonId, reflectionAnswer);
+      const updatedEnr = await completeLessonCommand(enrollmentId, lessonId, reflectionAnswer);
       if (updatedEnr.status === 'selesai') {
         router.push(`/learn/programs/${enrollmentId}/completed`);
       } else {
@@ -74,14 +105,11 @@ export function LessonReaderClient() {
     }
   };
 
-  // Convert YouTube URL to embed format if available
-  let embedVideoUrl = '';
-  if (lesson.videoYoutubeUrl) {
-    const match = lesson.videoYoutubeUrl.match(/(?:v=|\/embed\/|\/watch\?v=|\/shorts\/)([a-zA-Z0-9_-]{11})/);
-    if (match) {
-      embedVideoUrl = `https://www.youtube.com/embed/${match[1]}`;
-    }
-  }
+  const handleCtaClick = async (ctaUrl: string) => {
+    await recordCtaClickCommand(enrollmentId, lessonId, ctaUrl);
+  };
+
+  const embedVideoUrl = getYoutubeEmbedUrl(lesson.videoYoutubeUrl);
 
   return (
     <LearnerShell>
@@ -130,13 +158,15 @@ export function LessonReaderClient() {
           </div>
         )}
 
-        {/* PDF Attachments */}
+        {/* Attachments */}
         {lesson.attachments && lesson.attachments.length > 0 && (
           <div style={{ marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Lampiran File PDF / Dokumen</h3>
+            <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Lampiran Berkas / Panduan</h3>
             {lesson.attachments.map(att => (
-              <div
+              <a
                 key={att.id}
+                href={att.url}
+                download
                 style={{
                   padding: '10px 14px',
                   backgroundColor: 'var(--color-surface)',
@@ -145,13 +175,16 @@ export function LessonReaderClient() {
                   display: 'flex',
                   justifyContent: 'space-between',
                   fontSize: '13px',
+                  color: 'inherit',
+                  textDecoration: 'none',
+                  marginBottom: '6px',
                 }}
               >
-                <span>📄 {att.name}</span>
+                <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{att.name}</span>
                 <span style={{ color: 'var(--color-text-subtle)' }} className="tabular-nums">
-                  {att.sizeFormatted || '1.2 MB'}
+                  {att.sizeFormatted || 'Download'}
                 </span>
-              </div>
+              </a>
             ))}
           </div>
         )}
@@ -195,13 +228,14 @@ export function LessonReaderClient() {
           </div>
         )}
 
-        {/* Optional Call to Action Button */}
+        {/* Call to Action Button with Explicit Event Tracking */}
         {lesson.hasCta && lesson.ctaUrl && (
           <div style={{ marginBottom: '20px' }}>
             <a
               href={lesson.ctaUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => handleCtaClick(lesson.ctaUrl!)}
               className="touch-target-primary"
               style={{
                 width: '100%',
@@ -225,7 +259,7 @@ export function LessonReaderClient() {
           </div>
         )}
 
-        {/* Completion Button (Locked when reflection empty!) */}
+        {/* Completion Button */}
         <button
           onClick={handleComplete}
           disabled={isButtonDisabled || isSubmitting}

@@ -21,14 +21,17 @@ export function LearnerTabBar() {
         bottom: 0,
         left: 0,
         right: 0,
-        height: '64px',
+        height: 'calc(64px + env(safe-area-inset-bottom, 0px))',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         backgroundColor: 'var(--color-surface)',
         borderTop: '1px solid var(--color-divider)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
-        zIndex: 80,
-        boxShadow: 'var(--shadow-sheet)',
+        zIndex: 1000,
+        boxShadow: '0 -2px 12px rgba(0,0,0,0.08)',
+        WebkitBackfaceVisibility: 'hidden',
+        transform: 'translateZ(0)',
       }}
     >
       <Link

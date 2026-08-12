@@ -1,8 +1,8 @@
-import { Contact } from '@promotor/contracts';
+import { Contact, PhoneE164 } from '@promotor/contracts';
 
-export interface ContactPort {
+export interface ContactRepositoryPort {
   getContacts(): Promise<Contact[]>;
   getContactById(id: string): Promise<Contact | undefined>;
-  findContactByPhone(phone: string): Promise<Contact | undefined>;
-  matchOrCreateContact(name: string, rawPhone: string, email?: string): Promise<Contact>;
+  getContactByPhone(phoneE164: PhoneE164): Promise<Contact | undefined>;
+  matchOrCreateContact(name: string, phoneRaw: string): Promise<Contact>;
 }

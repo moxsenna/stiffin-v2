@@ -1,36 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PromotorShell } from '@/components/layout/PromotorShell';
+import { getTemplatesQuery } from '@/modules/templates/queries';
+import { ProgramTemplate } from '@/modules/templates/ports';
 
 export default function TemplatesPage() {
-  const templates = [
-    {
-      id: 'tmpl_parenting_7hari',
-      title: '7 Hari Mengenal Cara Belajar Anak',
-      description: 'Template dasar lead magnet untuk promotor parenting & STIFIn.',
-      moduleCount: 2,
-      lessonCount: 3,
-      tag: 'Parenting',
-    },
-    {
-      id: 'tmpl_aftersales_sensing',
-      title: 'Pendampingan Aftersales STIFIn Sensing',
-      description: 'Program privat 14 hari pendampingan setelah hasil tes keluar.',
-      moduleCount: 3,
-      lessonCount: 6,
-      tag: 'Aftersales',
-    },
-    {
-      id: 'tmpl_masterclass_upsell',
-      title: 'Masterclass Karir & Potensi Genetik',
-      description: 'Program berbayar 4 sesi webinar & diskusi grup privat.',
-      moduleCount: 4,
-      lessonCount: 8,
-      tag: 'Masterclass',
-    },
-  ];
+  const [templates, setTemplates] = useState<ProgramTemplate[]>([]);
+
+  useEffect(() => {
+    getTemplatesQuery().then(setTemplates);
+  }, []);
 
   return (
     <PromotorShell>
@@ -67,19 +48,16 @@ export default function TemplatesPage() {
                     marginBottom: '8px',
                   }}
                 >
-                  {tmpl.tag}
+                  {tmpl.priceType === 'free' ? 'Lead Magnet' : 'Paid Program'}
                 </span>
                 <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '4px' }}>{tmpl.title}</h3>
                 <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
                   {tmpl.description}
                 </p>
-                <div style={{ fontSize: '12px', color: 'var(--color-text-subtle)' }}>
-                  {tmpl.moduleCount} Modul · {tmpl.lessonCount} Pelajaran
-                </div>
               </div>
 
               <Link
-                href="/app/programs/new"
+                href={`/app/programs/new?templateId=${tmpl.id}`}
                 className="touch-target-primary"
                 style={{
                   marginTop: '16px',

@@ -4,7 +4,9 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { LearnerShell } from '@/components/layout/LearnerShell';
-import { MockStateStore } from '@/adapters/mock/mock-state-store';
+import { getActiveLearnerContactId } from '@/lib/session';
+import { getEnrollmentByIdQuery } from '@/modules/enrollments/queries';
+import { getProgramByIdQuery } from '@/modules/programs/queries';
 import { Enrollment, Program } from '@promotor/contracts';
 
 export function LearnerProgramClient() {
@@ -13,15 +15,43 @@ export function LearnerProgramClient() {
 
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [program, setProgram] = useState<Program | null>(null);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
-    const state = MockStateStore.getState();
-    const enr = state.enrollments.find((e: Enrollment) => e.id === enrollmentId);
-    if (!enr) return;
-    setEnrollment(enr);
-    const prog = state.programs.find((p: Program) => p.id === enr.programId);
-    if (prog) setProgram(prog);
+    getEnrollmentByIdQuery(enrollmentId).then(enr => {
+      if (!enr) return;
+
+      // Ownership Verification Check
+      const activeContactId = getActiveLearnerContactId();
+      if (enr.contactId !== activeContactId) {
+        setAccessDenied(true);
+        return;
+      }
+
+      setEnrollment(enr);
+      getProgramByIdQuery(enr.programId).then(prog => {
+        if (prog) setProgram(prog);
+      });
+    });
   }, [enrollmentId]);
+
+  if (accessDenied) {
+    return (
+      <LearnerShell>
+        <div style={{ padding: '40px', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-status-danger)', marginBottom: '8px' }}>
+            Akses Ditolak
+          </h2>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+            Anda tidak memiliki hak akses ke program pembelajaran ini.
+          </p>
+          <Link href="/learn" style={{ fontWeight: 600, color: 'var(--color-primary)' }}>
+            ← Kembali ke Program Saya
+          </Link>
+        </div>
+      </LearnerShell>
+    );
+  }
 
   if (!enrollment || !program) {
     return (
@@ -80,7 +110,7 @@ export function LearnerProgramClient() {
                       <div>
                         <div style={{ fontWeight: 600, fontSize: '13px' }}>{les.title}</div>
                         <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                          {les.videoYoutubeUrl ? '🎥 Video' : '📄 Teks'} {les.hasReflection ? '· 📝 Refleksi' : ''}
+                          {les.videoYoutubeUrl ? 'Video' : 'Teks'} {les.hasReflection ? '· Refleksi' : ''}
                         </div>
                       </div>
 

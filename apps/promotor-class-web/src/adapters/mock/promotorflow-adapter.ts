@@ -1,58 +1,48 @@
-import { FlowNextActionRef, IntegrationMode } from '@promotor/contracts';
+import { IntegrationEventEnvelope, FlowNextActionRef, IntegrationHealth } from '@promotor/contracts';
 import { MockStateStore } from './mock-state-store';
+import { PromotorFlowAdapterPort } from '@/modules/promotorflow/ports';
 
-export class MockPromotorFlowAdapter {
-  getIntegrationMode(): IntegrationMode {
-    return MockStateStore.getState().entitlements.integrationMode;
+export class MockPromotorFlowAdapter implements PromotorFlowAdapterPort {
+  async getIntegrationHealth(): Promise<IntegrationHealth> {
+    return MockStateStore.getState().integrationHealth;
   }
 
-  setIntegrationMode(mode: IntegrationMode): void {
+  async setIntegrationHealth(status: 'AVAILABLE' | 'UNAVAILABLE'): Promise<void> {
     MockStateStore.updateState(state => ({
       ...state,
-      entitlements: {
-        ...state.entitlements,
-        integrationMode: mode,
-      },
       integrationHealth: {
         ...state.integrationHealth,
-        status: mode === 'BUNDLE_FLOW_UNAVAILABLE' ? 'degraded' : 'healthy',
+        promotorFlow: status,
       },
     }));
   }
 
-  async createNextActionReference(contactId: string, suggestedTitle: string): Promise<FlowNextActionRef | null> {
-    const mode = this.getIntegrationMode();
+  async dispatchOutboxEnvelope(envelope: IntegrationEventEnvelope): Promise<FlowNextActionRef | null> {
+    const health = await this.getIntegrationHealth();
 
-    if (mode === 'CLASS_ONLY') {
-      // Local recommended step only
+    if (health.promotorFlow === 'UNAVAILABLE') {
+      // Flow offline, envelope remains queued in integrationOutbox
       return null;
     }
 
-    if (mode === 'BUNDLE_FLOW_UNAVAILABLE') {
-      // Flow unavailable, queue in outbox, return degraded reference
-      MockStateStore.updateState(state => ({
-        ...state,
-        integrationHealth: {
-          ...state.integrationHealth,
-          status: 'degraded',
-          pendingOutboxCount: state.integrationOutbox.length + 1,
-        },
-      }));
-      return null;
-    }
-
-    // BUNDLE_AVAILABLE: Successfully creates Flow next action reference
+    // PromotorFlow AVAILABLE: Generate FlowNextActionRef
     const newRef: FlowNextActionRef = {
       id: `ref_${Date.now()}`,
-      flowNextActionId: `flow_act_${Date.now()}`,
-      contactId,
-      status: 'pending',
+      contactId: envelope.contactId,
+      nextActionId: `flow_act_${Date.now()}`,
+      title: (envelope.subject as string) || 'Rekomendasi Aksi PromotorFlow',
       createdAt: new Date().toISOString(),
     };
 
     MockStateStore.updateState(state => ({
       ...state,
       flowNextActionRefs: [newRef, ...state.flowNextActionRefs],
+      integrationOutbox: state.integrationOutbox.map(item => {
+        if (item.envelope.eventId === envelope.eventId) {
+          return { ...item, status: 'SENT', sentAt: new Date().toISOString() };
+        }
+        return item;
+      }),
     }));
 
     return newRef;

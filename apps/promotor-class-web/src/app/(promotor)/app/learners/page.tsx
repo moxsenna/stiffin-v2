@@ -2,10 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { PromotorShell } from '@/components/layout/PromotorShell';
-import { MockStateStore } from '@/adapters/mock/mock-state-store';
 import { LearnerDetail } from '@/components/promotor/LearnerDetail';
 import { WhatsAppDraftSheet } from '@/components/promotor/WhatsAppDraftSheet';
-import { Contact, Enrollment, Program, LearningSignal, MinatStatus } from '@promotor/contracts';
+import { getContactsQuery } from '@/modules/contacts/queries';
+import { getEnrollmentsQuery } from '@/modules/enrollments/queries';
+import { getLearningSignalsQuery } from '@/modules/signals/queries';
+import { getProgramsQuery } from '@/modules/programs/queries';
+import { Contact, Enrollment, Program, LearningSignal } from '@promotor/contracts';
 import { formatPhoneDisplay } from '@promotor/platform-core';
 
 export default function LearnersPage() {
@@ -13,7 +16,7 @@ export default function LearnersPage() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [signals, setSignals] = useState<LearningSignal[]>([]);
   const [programsMap, setProgramsMap] = useState<Map<string, Program>>(new Map());
-  const [selectedFilter, setSelectedFilter] = useState<'semua' | MinatStatus>('semua');
+  const [selectedFilter, setSelectedFilter] = useState<'semua' | 'Minat tinggi' | 'Minat sedang' | 'Minat rendah'>('semua');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [draftState, setDraftState] = useState<{ isOpen: boolean; contact: Contact | null; message: string }>({
     isOpen: false,
@@ -22,14 +25,20 @@ export default function LearnersPage() {
   });
 
   useEffect(() => {
-    const state = MockStateStore.getState();
-    setContacts(state.contacts);
-    setEnrollments(state.enrollments);
-    setSignals(state.learningSignals);
+    Promise.all([
+      getContactsQuery(),
+      getEnrollmentsQuery(),
+      getLearningSignalsQuery(),
+      getProgramsQuery(),
+    ]).then(([conData, enrData, sigData, progData]) => {
+      setContacts(conData);
+      setEnrollments(enrData);
+      setSignals(sigData);
 
-    const pMap = new Map<string, Program>();
-    state.programs.forEach((p: Program) => pMap.set(p.id, p));
-    setProgramsMap(pMap);
+      const pMap = new Map<string, Program>();
+      progData.forEach((p: Program) => pMap.set(p.id, p));
+      setProgramsMap(pMap);
+    });
   }, []);
 
   const handleOpenDraft = (contact: Contact, message: string) => {
@@ -47,7 +56,7 @@ export default function LearnersPage() {
   const filteredContacts = contacts.filter(c => {
     if (selectedFilter === 'semua') return true;
     const sig = getSignalForContact(c.id);
-    return sig?.minatStatus === selectedFilter;
+    return sig?.signalLevel === selectedFilter;
   });
 
   return (
@@ -87,7 +96,6 @@ export default function LearnersPage() {
           {filteredContacts.map(contact => {
             const sig = getSignalForContact(contact.id);
             const enr = getEnrollmentForContact(contact.id);
-            const prog = enr ? programsMap.get(enr.programId) : undefined;
             const isSelected = selectedContact?.id === contact.id;
 
             return (
@@ -109,7 +117,7 @@ export default function LearnersPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700 }}>{contact.name}</span>
                     <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                      {formatPhoneDisplay(contact.phone)}
+                      {formatPhoneDisplay(contact.phoneE164)}
                     </span>
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--color-text-subtle)' }}>
@@ -125,16 +133,16 @@ export default function LearnersPage() {
                       padding: '2px 8px',
                       borderRadius: 'var(--border-radius-sm)',
                       backgroundColor:
-                        sig?.minatStatus === 'Minat tinggi'
+                        sig?.signalLevel === 'Minat tinggi'
                           ? 'var(--color-status-success-bg)'
                           : 'var(--color-status-warning-bg)',
                       color:
-                        sig?.minatStatus === 'Minat tinggi'
+                        sig?.signalLevel === 'Minat tinggi'
                           ? 'var(--color-status-success)'
                           : 'var(--color-status-warning)',
                     }}
                   >
-                    {sig?.minatStatus || 'Minat sedang'}
+                    {sig?.signalLevel || 'Minat sedang'}
                   </span>
                   {enr && (
                     <div style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 600, marginTop: '2px' }}>
@@ -149,7 +157,7 @@ export default function LearnersPage() {
 
         {/* Side Panel Drawer for Desktop / Full view */}
         {selectedContact && (
-          <div className={`side-panel ${selectedContact ? 'active' : ''}`}>
+          <div className="side-panel active">
             <LearnerDetail
               contact={selectedContact}
               enrollment={getEnrollmentForContact(selectedContact.id)}
@@ -162,12 +170,13 @@ export default function LearnersPage() {
         )}
 
         {/* WhatsApp Draft Sheet */}
-        <WhatsAppDraftSheet
-          contact={draftState.contact}
-          initialMessage={draftState.message}
-          isOpen={draftState.isOpen}
-          onClose={() => setDraftState({ ...draftState, isOpen: false })}
-        />
+        {draftState.isOpen && (
+          <WhatsAppDraftSheet
+            contact={draftState.contact}
+            initialMessage={draftState.message}
+            onClose={() => setDraftState({ ...draftState, isOpen: false })}
+          />
+        )}
       </div>
     </PromotorShell>
   );

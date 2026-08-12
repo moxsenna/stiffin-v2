@@ -3,14 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PromotorShell } from '@/components/layout/PromotorShell';
-import { MockStateStore } from '@/adapters/mock/mock-state-store';
+import { getProgramsQuery } from '@/modules/programs/queries';
 import { Program } from '@promotor/contracts';
 
 export default function ProgramsPage() {
   const [programs, setPrograms] = useState<Program[]>([]);
 
   useEffect(() => {
-    setPrograms(MockStateStore.getState().programs);
+    getProgramsQuery().then(setPrograms);
   }, []);
 
   return (
@@ -64,12 +64,12 @@ export default function ProgramsPage() {
                       fontSize: '11px',
                       padding: '2px 6px',
                       borderRadius: '4px',
-                      backgroundColor: prog.isPublished ? 'var(--color-status-success-bg)' : '#F0F0ED',
-                      color: prog.isPublished ? 'var(--color-status-success)' : 'var(--color-text-muted)',
+                      backgroundColor: prog.status === 'published' ? 'var(--color-status-success-bg)' : '#F0F0ED',
+                      color: prog.status === 'published' ? 'var(--color-status-success)' : 'var(--color-text-muted)',
                       fontWeight: 600,
                     }}
                   >
-                    {prog.isPublished ? 'Terbit' : 'Draf'}
+                    {prog.status === 'published' ? 'Terbit' : 'Draf'}
                   </span>
                 </div>
                 <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
