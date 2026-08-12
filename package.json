@@ -5,6 +5,7 @@
   "scripts": {
     "dev:class": "pnpm --filter @promotor/promotor-class-web dev",
     "build:class": "pnpm --filter @promotor/promotor-class-web build",
+    "build:flow": "pnpm --filter @promotor/promotor-flow-web build",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test"

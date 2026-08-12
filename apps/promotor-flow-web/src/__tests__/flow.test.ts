@@ -410,16 +410,35 @@ test('Integration: FLOW_ONLY, BUNDLE_AVAILABLE, BUNDLE_CLASS_UNAVAILABLE resilie
 
   assert.equal(act1.id, act2.id, 'Repeated request must reuse canonical Flow action');
 
-  // 4. Canonical enrollContact test
-  const enrollRef = await adapter.enrollContact({
+  // 4. Canonical enrollContact idempotency test
+  const enrollInput = {
     organizationId: 'org_rina_stifin',
     contactId: 'contact_ayu',
     programId: 'prog_30_hari_setelah_tes',
-    source: 'PROMOTORFLOW_AFTERSALES',
+    source: 'PROMOTORFLOW_AFTERSALES' as const,
     idempotencyKey: 'promotorflow:aftersales:contact_ayu:prog_30_hari',
-  });
-  assert.equal(enrollRef.contactId, 'contact_ayu');
-  assert.equal(enrollRef.status, 'aktif');
+  };
+
+  const enrollRef1 = await adapter.enrollContact(enrollInput);
+  assert.equal(enrollRef1.contactId, 'contact_ayu');
+  assert.equal(enrollRef1.status, 'aktif');
+
+  // Repeated call with same idempotencyKey returns exact same EnrollmentRef
+  const enrollRef2 = await adapter.enrollContact(enrollInput);
+  assert.equal(enrollRef1.enrollmentId, enrollRef2.enrollmentId, 'EnrollmentId must be identical on idempotent retry');
+  assert.equal(enrollRef1.enrolledAt, enrollRef2.enrolledAt, 'EnrolledAt timestamp must be preserved on idempotent retry');
+
+  // 5. Canonical getEnrollmentStatus test
+  const status = await adapter.getEnrollmentStatus('contact_ayu', 'prog_30_hari_setelah_tes');
+  assert.ok(status);
+  assert.equal(status?.enrollmentId, enrollRef1.enrollmentId);
+
+  // 6. Non-null LearningContext for contact without learning activity
+  const emptyCtx = await adapter.getLearningContext('contact_budi');
+  assert.ok(emptyCtx, 'LearningContext must be non-null');
+  assert.equal(emptyCtx.contactId, 'contact_budi');
+  assert.equal(emptyCtx.activeEnrollments.length, 0);
+  assert.equal(emptyCtx.recentSignals.length, 0);
 });
 
 // ----------------------------------------------------
