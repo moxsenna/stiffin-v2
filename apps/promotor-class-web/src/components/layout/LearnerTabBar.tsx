@@ -46,7 +46,7 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
   return (
     <nav
       aria-label="Navigasi bawah learner"
-      className="mobile-only mobile-bottom-nav"
+      className="mobile-bottom-nav"
     >
       <div className="mobile-bottom-nav__container">
         {/* Tab 1: Beranda */}
