@@ -394,7 +394,7 @@ function NewProgramForm() {
               </div>
 
               {/* Live Preview of Uploaded Image */}
-              {coverImageUrl ? (
+              {coverImageUrl && (
                 <div style={{ marginTop: '14px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                     <span style={{ fontSize: '12px', fontWeight: 750, color: 'var(--color-status-success)' }}>
@@ -405,39 +405,10 @@ function NewProgramForm() {
                       onClick={() => setCoverImageUrl('')}
                       style={{ fontSize: '12px', color: 'var(--color-status-danger)', fontWeight: 700, border: 0, background: 'none', cursor: 'pointer' }}
                     >
-                      Hapus Gambar & Gunakan Preset
+                      Hapus Gambar
                     </button>
                   </div>
                   <ProgramCover title={title || 'Judul Program'} publicLabel={heroEyebrow} imageUrl={coverImageUrl} />
-                </div>
-              ) : (
-                <div style={{ marginTop: '16px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '10px', fontWeight: 600 }}>
-                    Atau pilih gambar preset bawaan:
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-                    {(['cover-a', 'cover-b', 'cover-c'] as const).map(variant => (
-                      <div
-                        key={variant}
-                        onClick={() => {
-                          setCoverVariant(variant);
-                          setCoverImageUrl('');
-                        }}
-                        style={{
-                          border: coverVariant === variant ? '2px solid var(--color-primary)' : '1px solid var(--color-divider)',
-                          borderRadius: '12px',
-                          padding: '8px',
-                          cursor: 'pointer',
-                          backgroundColor: coverVariant === variant ? 'var(--color-primary-light)' : 'transparent',
-                        }}
-                      >
-                        <ProgramCover title={title || 'Judul Contoh'} publicLabel={heroEyebrow} variant={variant} />
-                        <div style={{ fontSize: '11px', textAlign: 'center', fontWeight: 700, marginTop: '6px', textTransform: 'uppercase' }}>
-                          {variant === 'cover-a' ? 'Preset A' : variant === 'cover-b' ? 'Preset B' : 'Preset C'}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               )}
             </div>
