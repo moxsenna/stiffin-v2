@@ -10,6 +10,8 @@ export interface PublicWorkspaceProfile {
   roleLabel: string;
   heroProgramId: string;
   whatsappPhoneE164?: string;
+  avatarUrl?: string;
+  logoUrl?: string;
   stats: {
     familiesHelped?: string;
     programCount: string;

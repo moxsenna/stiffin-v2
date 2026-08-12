@@ -38,7 +38,7 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
           }}
         >
           <img
-            src="/images/promoter_profile_rina.webp"
+            src={profile.avatarUrl || "/images/promoter_profile_rina.webp"}
             alt={profile.displayName}
             style={{
               width: '100%',

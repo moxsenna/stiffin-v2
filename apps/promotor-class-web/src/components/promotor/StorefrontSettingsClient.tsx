@@ -1,7 +1,7 @@
 'use client';
 /* eslint-disable @next/next/no-img-element */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { MockStateStore, INITIAL_RINA_PROFILE } from '@/adapters/mock/mock-state-store';
 import { PublicWorkspaceProfile } from '@/modules/public-storefront/types';
@@ -12,6 +12,7 @@ interface StorefrontSettingsClientProps {
 }
 
 export function StorefrontSettingsClient({ programs: initialPrograms = [] }: StorefrontSettingsClientProps) {
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [programs, setPrograms] = useState<Program[]>(initialPrograms);
   const [profile, setProfile] = useState<PublicWorkspaceProfile>(() => {
     const storeProfiles = MockStateStore.getState().workspaceProfiles;
@@ -19,7 +20,6 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
   });
 
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<'form' | 'preview'>('form');
 
   useEffect(() => {
     const storeState = MockStateStore.getState();
@@ -30,6 +30,18 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
       setProfile(storeState.workspaceProfiles.rina);
     }
   }, []);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = event => {
+      if (event.target?.result) {
+        setProfile(prev => ({ ...prev, avatarUrl: event.target!.result as string }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSaveStorefront = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +89,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
             boxShadow: 'var(--shadow-md)',
           }}
         >
-          ✓ Pengaturan Storefront berhasil disimpan & langsung aktif!
+          ✓ Pengaturan & Foto Profil Storefront berhasil disimpan!
         </div>
       )}
 
@@ -176,14 +188,15 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
 
         <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
           <img
-            src="/images/promoter_profile_rina.webp"
+            src={profile.avatarUrl || '/images/promoter_profile_rina.webp'}
             alt={profile.displayName}
             style={{
-              width: '64px',
-              height: '64px',
+              width: '68px',
+              height: '68px',
               borderRadius: '50%',
               objectFit: 'cover',
               border: '3px solid #FFF',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
             }}
           />
 
@@ -203,7 +216,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
 
       {/* Main Settings Form */}
       <form onSubmit={handleSaveStorefront} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
-        {/* KARTU 1: Identitas & Branding */}
+        {/* KARTU 1: Foto Profil & Identitas Promotor */}
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
@@ -212,9 +225,75 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
             padding: '22px',
           }}
         >
-          <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '14px' }}>1. Identitas & Profil Promotor</h3>
+          <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '16px' }}>1. Foto Profil / Logo & Identitas Promotor</h3>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            {/* Foto Profil / Logo Picker */}
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '8px' }}>
+                Foto Profil / Logo Promotor *
+              </label>
+
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                style={{ display: 'none' }}
+              />
+
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <img
+                  src={profile.avatarUrl || '/images/promoter_profile_rina.webp'}
+                  alt={profile.displayName}
+                  style={{
+                    width: '76px',
+                    height: '76px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '3px solid var(--color-primary-border)',
+                    boxShadow: 'var(--shadow-sm)',
+                  }}
+                />
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: 'var(--color-primary)',
+                      color: '#FFF',
+                      borderRadius: '10px',
+                      fontWeight: 750,
+                      fontSize: '13px',
+                      border: 0,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    📸 Upload Foto Profil Baru
+                  </button>
+
+                  {profile.avatarUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setProfile({ ...profile, avatarUrl: undefined })}
+                      style={{ fontSize: '12px', color: 'var(--color-status-danger)', fontWeight: 600, border: 0, background: 'none', cursor: 'pointer', textAlign: 'left' }}
+                    >
+                      Hapus & Gunakan Foto Bawaan
+                    </button>
+                  )}
+
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-subtle)' }}>
+                    Format PNG, JPG, WEBP (Max 5MB). Foto ini langsung tampil di profil & header storefront.
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
