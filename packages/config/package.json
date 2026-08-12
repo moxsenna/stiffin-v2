@@ -1,10 +1,5 @@
 {
   "name": "@promotor/config",
   "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "typecheck": "node -e \"console.log('config typecheck ok')\"",
-    "test": "node -e \"console.log('config test ok')\"",
-    "lint": "node -e \"console.log('config lint ok')\""
-  }
+  "private": true
 }

@@ -125,7 +125,7 @@ export const ReflectionSchema = z.object({
 export type Reflection = z.infer<typeof ReflectionSchema>;
 
 // ==========================================
-// 4. Canonical Learning Events
+// 4. Canonical Learning Events & Activity Projection
 // ==========================================
 export const LearningEventTypeSchema = z.enum([
   'program.created',
@@ -158,6 +158,31 @@ export const LearningEventSchema = z.object({
 });
 
 export type LearningEvent = z.infer<typeof LearningEventSchema>;
+
+export const LearningActivityProjectionSchema = z.object({
+  organizationId: z.string(),
+  contactId: z.string(),
+  activityType: z.enum([
+    'PROGRAM_COMPLETED',
+    'CTA_CLICKED',
+    'LEARNER_INACTIVE',
+    'HIGH_INTENT_MILESTONE',
+    'REFLECTION_INSIGHT',
+  ]),
+  title: z.string(),
+  summary: z.string(),
+  occurredAt: z.string(),
+  context: z
+    .object({
+      programId: z.string().optional(),
+      enrollmentId: z.string().optional(),
+      lessonId: z.string().optional(),
+      signalType: z.string().optional(),
+    })
+    .optional(),
+});
+
+export type LearningActivityProjection = z.infer<typeof LearningActivityProjectionSchema>;
 
 export type SignalStatus = 'ACTIVE' | 'RESOLVED' | 'DISMISSED';
 
@@ -279,21 +304,70 @@ export interface LearningContext {
   }>;
 }
 
-export interface EnrollContactInput {
-  organizationId: string;
-  contactId: string;
-  programId: string;
-  enrolledByUserId?: string;
-}
+export const EnrollContactInputSchema = z.object({
+  organizationId: z.string(),
+  contactId: z.string(),
+  programId: z.string(),
+  source: z.enum(['PROMOTORFLOW_AFTERSALES', 'PROMOTORFLOW_MANUAL']),
+  idempotencyKey: z.string(),
+});
+
+export type EnrollContactInput = z.infer<typeof EnrollContactInputSchema>;
+
+export const EligibleProgramsInputSchema = z.object({
+  organizationId: z.string(),
+  contactId: z.string(),
+  category: z.string().optional(),
+});
+
+export type EligibleProgramsInput = z.infer<typeof EligibleProgramsInputSchema>;
+
+export const ProgramSummarySchema = z.object({
+  programId: z.string(),
+  title: z.string(),
+  subtitle: z.string().optional(),
+  programType: z.enum(['lead_magnet', 'aftersales', 'paid', 'private', 'challenge']),
+  pricing: z.enum(['free', 'one_time']),
+  priceAmount: z.number().optional(),
+});
+
+export type ProgramSummary = z.infer<typeof ProgramSummarySchema>;
+
+export const EnrollmentRefSchema = z.object({
+  enrollmentId: z.string(),
+  contactId: z.string(),
+  programId: z.string(),
+  status: z.string(),
+  enrolledAt: z.string(),
+});
+
+export type EnrollmentRef = z.infer<typeof EnrollmentRefSchema>;
+
+export const EnrollmentStatusSchema = z.object({
+  enrollmentId: z.string(),
+  status: z.enum(['aktif', 'selesai', 'dibatalkan']),
+  progressPercent: z.number().min(0).max(100),
+  enrolledAt: z.string(),
+  completedAt: z.string().optional(),
+});
+
+export type EnrollmentStatus = z.infer<typeof EnrollmentStatusSchema>;
 
 // ==========================================
-// 7. Canonical PromotorFlowAdapter Interface
+// 7. Canonical Adapter Interfaces
 // ==========================================
 export interface PromotorFlowAdapter {
   getContactContext(contactId: string): Promise<FlowContactContext>;
   getAssessmentStatus(contactId: string): Promise<AssessmentStatus>;
   createNextAction(input: LearningNextActionRequest): Promise<FlowNextActionRef>;
-  appendLearningActivity(input: Record<string, unknown>): Promise<void>;
+  appendLearningActivity(input: LearningActivityProjection): Promise<void>;
+}
+
+export interface PromotorClassAdapter {
+  getLearningContext(contactId: string): Promise<LearningContext>;
+  listEligiblePrograms(input: EligibleProgramsInput): Promise<ProgramSummary[]>;
+  enrollContact(input: EnrollContactInput): Promise<EnrollmentRef>;
+  getEnrollmentStatus(contactId: string, programId: string): Promise<EnrollmentStatus | null>;
 }
 
 // Internal Outbox Queue Item

@@ -9,7 +9,11 @@ import { getActiveLearnerContactId, clearActiveLearnerSession, setActiveLearnerS
 import { normalizePhone, formatPhoneDisplay } from '@promotor/platform-core';
 import { evaluateIntentFromEvents } from '../modules/signals/rules';
 import { extractYoutubeId } from '../lib/video/parse-youtube-url';
-import { IntegrationEventEnvelopeSchema } from '@promotor/contracts';
+import {
+  IntegrationEventEnvelopeSchema,
+  EnrollContactInputSchema,
+  LearningActivityProjectionSchema,
+} from '@promotor/contracts';
 
 describe('PromotorClass F0.1.1 Contract, Idempotency & Domain Alignment Test Suite', () => {
   beforeEach(() => {
@@ -146,7 +150,7 @@ describe('PromotorClass F0.1.1 Contract, Idempotency & Domain Alignment Test Sui
     assert.strictEqual(IntegrationEventEnvelopeSchema.safeParse(invalidSourceApp).success, false, 'Lowercase sourceApp MUST fail validation');
   });
 
-  it('11. Canonical PromotorFlowAdapter methods', async () => {
+  it('11. Canonical PromotorFlowAdapter & LearningActivityProjection Validation', async () => {
     const context = await promotorFlowAdapter.getContactContext('contact_ayu');
     assert.strictEqual(context.contactId, 'contact_ayu');
     assert.strictEqual(context.classification, 'PROSPECT');
@@ -167,15 +171,43 @@ describe('PromotorClass F0.1.1 Contract, Idempotency & Domain Alignment Test Sui
     });
 
     assert.strictEqual(nextActionRef.id, 'key_test_123');
+
+    const validActivity = {
+      organizationId: 'org_stifin_parenting',
+      contactId: 'contact_nina',
+      activityType: 'PROGRAM_COMPLETED' as const,
+      title: 'Program Selesai',
+      summary: 'Nina telah menyelesaikan 100% materi program.',
+      occurredAt: '2026-08-12T10:00:00.000Z',
+      context: { programId: 'prog_7_hari_belajar' },
+    };
+
+    assert.strictEqual(LearningActivityProjectionSchema.safeParse(validActivity).success, true);
   });
 
-  it('12. YouTube URL Parser Utility', () => {
+  it('12. Canonical EnrollContactInput Schema Validation', () => {
+    const validEnrollInput = {
+      organizationId: 'org_stifin_parenting',
+      contactId: 'contact_ayu',
+      programId: 'prog_7_hari_belajar',
+      source: 'PROMOTORFLOW_AFTERSALES' as const,
+      idempotencyKey: 'key_enroll_123',
+    };
+
+    const parsed = EnrollContactInputSchema.safeParse(validEnrollInput);
+    assert.strictEqual(parsed.success, true, 'Valid EnrollContactInput MUST pass Zod validation');
+
+    const invalidSource = { ...validEnrollInput, source: 'MANUAL' };
+    assert.strictEqual(EnrollContactInputSchema.safeParse(invalidSource).success, false, 'Invalid source MUST fail Zod validation');
+  });
+
+  it('13. YouTube URL Parser Utility', () => {
     assert.strictEqual(extractYoutubeId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), 'dQw4w9WgXcQ');
     assert.strictEqual(extractYoutubeId('https://youtu.be/dQw4w9WgXcQ'), 'dQw4w9WgXcQ');
     assert.strictEqual(extractYoutubeId('https://www.youtube.com/shorts/dQw4w9WgXcQ'), 'dQw4w9WgXcQ');
   });
 
-  it('13. resetDemo() restores original seed state deterministically', () => {
+  it('14. resetDemo() restores original seed state deterministically', () => {
     MockStateStore.updateState(state => ({ ...state, contacts: [] }));
     assert.strictEqual(MockStateStore.getState().contacts.length, 0);
 

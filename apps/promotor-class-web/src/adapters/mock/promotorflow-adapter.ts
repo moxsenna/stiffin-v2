@@ -4,6 +4,7 @@ import {
   AssessmentStatus,
   LearningNextActionRequest,
   FlowNextActionRef,
+  LearningActivityProjection,
   IntegrationEventEnvelope,
   IntegrationHealth,
 } from '@promotor/contracts';
@@ -54,7 +55,7 @@ export class MockPromotorFlowAdapter implements PromotorFlowAdapter {
     return newRef;
   }
 
-  async appendLearningActivity(input: Record<string, unknown>): Promise<void> {
+  async appendLearningActivity(input: LearningActivityProjection): Promise<void> {
     console.log('[MockPromotorFlowAdapter] Appended learning activity:', input);
   }
 
