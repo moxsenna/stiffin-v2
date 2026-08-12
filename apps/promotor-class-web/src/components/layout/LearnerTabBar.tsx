@@ -58,21 +58,23 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
             fontWeight: activeTab === 'beranda' ? 700 : 500,
           }}
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={activeTab === 'beranda' ? '2.4' : '1.8'}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            <polyline points="9 22 9 12 15 12 15 22" />
-          </svg>
-          <span className="mobile-bottom-nav__label">Beranda</span>
           {activeTab === 'beranda' && <div className="mobile-bottom-nav__indicator" />}
+          <div className="mobile-bottom-nav__icon-wrapper">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill={activeTab === 'beranda' ? 'var(--color-primary-light, rgba(40,99,68,0.12))' : 'none'}
+              stroke="currentColor"
+              strokeWidth={activeTab === 'beranda' ? '2.2' : '1.8'}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+          </div>
+          <span className="mobile-bottom-nav__label">Beranda</span>
         </Link>
 
         {/* Tab 2: Katalog */}
@@ -84,23 +86,25 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
             fontWeight: activeTab === 'katalog' ? 700 : 500,
           }}
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={activeTab === 'katalog' ? '2.4' : '1.8'}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="3" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="14" width="7" height="7" rx="1" />
-            <rect x="3" y="14" width="7" height="7" rx="1" />
-          </svg>
-          <span className="mobile-bottom-nav__label">Katalog</span>
           {activeTab === 'katalog' && <div className="mobile-bottom-nav__indicator" />}
+          <div className="mobile-bottom-nav__icon-wrapper">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill={activeTab === 'katalog' ? 'var(--color-primary-light, rgba(40,99,68,0.12))' : 'none'}
+              stroke="currentColor"
+              strokeWidth={activeTab === 'katalog' ? '2.2' : '1.8'}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+            </svg>
+          </div>
+          <span className="mobile-bottom-nav__label">Katalog</span>
         </Link>
 
         {/* Tab 3: Belajar / Program Saya */}
@@ -112,20 +116,22 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
             fontWeight: activeTab === 'belajar' ? 700 : 500,
           }}
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={activeTab === 'belajar' ? '2.4' : '1.8'}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polygon points="5 3 19 12 5 21 5 3" />
-          </svg>
-          <span className="mobile-bottom-nav__label">Belajar</span>
           {activeTab === 'belajar' && <div className="mobile-bottom-nav__indicator" />}
+          <div className="mobile-bottom-nav__icon-wrapper">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill={activeTab === 'belajar' ? 'var(--color-primary-light, rgba(40,99,68,0.12))' : 'none'}
+              stroke="currentColor"
+              strokeWidth={activeTab === 'belajar' ? '2.2' : '1.8'}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+          </div>
+          <span className="mobile-bottom-nav__label">Belajar</span>
         </Link>
 
         {/* Tab 4: Profil */}
@@ -137,21 +143,23 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
             fontWeight: activeTab === 'profil' ? 700 : 500,
           }}
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={activeTab === 'profil' ? '2.4' : '1.8'}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="8" r="4" />
-            <path d="M20 21a8 8 0 0 0-16 0" />
-          </svg>
-          <span className="mobile-bottom-nav__label">Profil</span>
           {activeTab === 'profil' && <div className="mobile-bottom-nav__indicator" />}
+          <div className="mobile-bottom-nav__icon-wrapper">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill={activeTab === 'profil' ? 'var(--color-primary-light, rgba(40,99,68,0.12))' : 'none'}
+              stroke="currentColor"
+              strokeWidth={activeTab === 'profil' ? '2.2' : '1.8'}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="8" r="4" />
+              <path d="M20 21a8 8 0 0 0-16 0" />
+            </svg>
+          </div>
+          <span className="mobile-bottom-nav__label">Profil</span>
         </Link>
       </div>
     </nav>

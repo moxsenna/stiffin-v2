@@ -104,7 +104,7 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
         className="mobile-only"
         style={{
           position: 'fixed',
-          bottom: 'calc(56px + env(safe-area-inset-bottom, 0px))',
+          bottom: 'calc(60px + env(safe-area-inset-bottom, 0px))',
           left: 0,
           right: 0,
           zIndex: 950,
