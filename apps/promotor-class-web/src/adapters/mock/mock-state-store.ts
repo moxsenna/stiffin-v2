@@ -20,7 +20,7 @@ import {
   SEED_SIGNALS,
 } from '@promotor/promotor-class-fixtures';
 
-import { PublicWorkspaceProfile } from '@/modules/public-storefront/types';
+import { PublicWorkspaceProfile, ProgramPublicPresentation } from '@/modules/public-storefront/types';
 
 const LOCAL_STORAGE_KEY = 'promotor_class_mock_state_v2';
 
@@ -33,7 +33,6 @@ export const INITIAL_RINA_PROFILE: PublicWorkspaceProfile = {
   city: 'Surabaya',
   roleLabel: 'Promotor STIFIn',
   heroProgramId: 'prog_7_hari_belajar',
-  whatsappPhoneE164: '+6281234567890',
   stats: {
     programCount: '3 Program Aktif',
     location: 'Surabaya',
@@ -57,6 +56,7 @@ export interface ClassMockState {
   entitlements: ProductEntitlements;
   integrationHealth: IntegrationHealth;
   workspaceProfiles: Record<string, PublicWorkspaceProfile>;
+  programPresentations: Record<string, ProgramPublicPresentation>;
   // NOTE: nextActions[] IS INTENTIONALLY FORBIDDEN IN CLASS MOCK STORE.
   // PromotorFlow is the sole canonical owner of nextActions.
 }
@@ -85,58 +85,89 @@ const DEFAULT_STATE: ClassMockState = {
   workspaceProfiles: {
     rina: INITIAL_RINA_PROFILE,
   },
+  programPresentations: {},
 };
 
-class MockStateStoreManager {
-  private state: ClassMockState;
+export class MockStateStore {
+  private static state: ClassMockState = MockStateStore.loadInitialState();
+  private static listeners: Array<() => void> = [];
 
-  constructor() {
-    this.state = this.loadStateFromStorage();
-  }
-
-  private loadStateFromStorage(): ClassMockState {
-    if (typeof window === 'undefined') return DEFAULT_STATE;
-    try {
-      const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (!raw) return DEFAULT_STATE;
-      const parsed = JSON.parse(raw);
-      // Verify schema guardrail: ensure no canonical nextActions collection is present
-      if ('nextActions' in parsed) {
-        delete parsed.nextActions;
-      }
-      return { ...DEFAULT_STATE, ...parsed };
-    } catch {
+  private static loadInitialState(): ClassMockState {
+    if (typeof window === 'undefined') {
       return DEFAULT_STATE;
     }
-  }
-
-  private saveStateToStorage(): void {
-    if (typeof window === 'undefined') return;
     try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(this.state));
-    } catch (err) {
-      console.error('Failed to save mock state to LocalStorage:', err);
+      const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        // Clean any accidental nextActions if corrupt state was stored
+        if (parsed && 'nextActions' in parsed) {
+          delete parsed.nextActions;
+        }
+        return {
+          ...DEFAULT_STATE,
+          ...parsed,
+          workspaceProfiles: {
+            ...DEFAULT_STATE.workspaceProfiles,
+            ...(parsed.workspaceProfiles || {}),
+          },
+          programPresentations: {
+            ...DEFAULT_STATE.programPresentations,
+            ...(parsed.programPresentations || {}),
+          },
+        };
+      }
+    } catch (e) {
+      console.warn('Failed to parse localStorage mock state, resetting to default:', e);
     }
+    return DEFAULT_STATE;
   }
 
-  public getState(): ClassMockState {
+  public static getState(): ClassMockState {
     return this.state;
   }
 
-  public updateState(updater: (currentState: ClassMockState) => ClassMockState): ClassMockState {
-    this.state = updater(this.state);
-    // Hard guardrail check
-    if ('nextActions' in (this.state as unknown as Record<string, unknown>)) {
-      throw new Error('FORBIDDEN: PromotorClass MockStateStore cannot contain canonical nextActions collection!');
+  public static updateState(updater: (current: ClassMockState) => ClassMockState): void {
+    const nextState = updater(this.state);
+    // Enforce strict architecture invariant: nextActions MUST NOT exist in Class Mock Store
+    if ('nextActions' in nextState) {
+      delete (nextState as Record<string, unknown>).nextActions;
     }
-    this.saveStateToStorage();
-    return this.state;
+    this.state = nextState;
+    this.saveState();
+    this.notify();
   }
 
-  public resetDemo(): void {
+  private static saveState(): void {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(this.state));
+      } catch (e) {
+        console.warn('Failed to save mock state to localStorage:', e);
+      }
+    }
+  }
+
+  public static subscribe(listener: () => void): () => void {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+
+  private static notify(): void {
+    this.listeners.forEach(l => l());
+  }
+
+  public static resetDemo(): void {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      localStorage.removeItem('promotor_class_learner_session_v1');
+      localStorage.removeItem('promotor_class_learner_session_v2');
+      localStorage.removeItem('promotor_class_last_public_workspace');
+    }
     this.state = JSON.parse(JSON.stringify(DEFAULT_STATE));
-    this.saveStateToStorage();
+    this.saveState();
+    this.notify();
   }
 }
-
-export const MockStateStore = new MockStateStoreManager();

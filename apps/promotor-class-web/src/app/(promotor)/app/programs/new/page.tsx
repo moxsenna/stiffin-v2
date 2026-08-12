@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PromotorShell } from '@/components/layout/PromotorShell';
-import { programRepository } from '@/adapters/mock/program-repository';
+import { createProgramDetailedCommand } from '@/modules/programs/commands';
 import { getTemplateByIdQuery } from '@/modules/templates/queries';
 import { ProgramCover } from '@/components/public/ProgramCover';
 
@@ -28,7 +28,7 @@ function NewProgramForm() {
   // Dynamic Learning Outcomes
   const [outcomes, setOutcomes] = useState<Array<{ title: string; description: string }>>([
     { title: 'Mengenali Pola Utama', description: 'Memahami sinyal sederhana dalam pembelajaran harian.' },
-    { title: 'Aplikasi Praktis di Rumah', description: 'Mencoba penyesuaian kecil tanpa merusak rutinitas.' }
+    { title: 'Aplikasi Praktis di Rumah', description: 'Mencoba penyesuaian kecil tanpa merusak rutinitas.' },
   ]);
 
   useEffect(() => {
@@ -92,7 +92,7 @@ function NewProgramForm() {
     setLoading(true);
 
     try {
-      const newProg = await programRepository.createProgramDetailed({
+      const newProg = await createProgramDetailedCommand({
         title: title.trim(),
         subtitle: subtitle.trim(),
         description: description.trim() || subtitle.trim() || 'Program edukasi untuk peserta STIFIn',

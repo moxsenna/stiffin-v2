@@ -1,6 +1,6 @@
 import { Program, Module, Lesson } from '@promotor/contracts';
 import { MockStateStore } from './mock-state-store';
-import { ProgramRepositoryPort } from '@/modules/programs/ports';
+import { ProgramRepositoryPort, CreateProgramDetailedInput } from '@/modules/programs/ports';
 import { extractYoutubeId } from '@/lib/video/parse-youtube-url';
 
 export class MockProgramRepository implements ProgramRepositoryPort {
@@ -30,7 +30,7 @@ export class MockProgramRepository implements ProgramRepositoryPort {
 
     const newModule: Module = {
       id: `mod_${Date.now()}`,
-      programId: newProgramId, // Fixed Bug #12: Match parent programId
+      programId: newProgramId,
       title: 'Modul 1: Pengenalan Materi',
       order: 1,
       lessons: [
@@ -58,7 +58,7 @@ export class MockProgramRepository implements ProgramRepositoryPort {
       description: description.trim(),
       programType: priceType === 'free' ? 'lead_magnet' : 'paid',
       accessType: 'public',
-      status: 'published',
+      status: 'draft', // F0.4 Requirement: Programs default to draft
       pricing: priceType === 'free' ? 'free' : 'one_time',
       priceAmount: priceType === 'paid' ? 150000 : 0,
       modules: [newModule],
@@ -74,18 +74,7 @@ export class MockProgramRepository implements ProgramRepositoryPort {
     return newProgram;
   }
 
-  async createProgramDetailed(input: {
-    title: string;
-    subtitle: string;
-    description: string;
-    programType: 'lead_magnet' | 'aftersales' | 'paid';
-    heroEyebrow?: string;
-    durationLabel?: string;
-    coverVariant?: 'cover-a' | 'cover-b' | 'cover-c';
-    imageUrl?: string;
-    priceAmount?: number;
-    outcomes?: Array<{ title: string; description: string }>;
-  }): Promise<Program> {
+  async createProgramDetailed(input: CreateProgramDetailedInput): Promise<Program> {
     const state = MockStateStore.getState();
     const newProgramId = `prog_${Date.now()}`;
     const slug = input.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -116,11 +105,11 @@ export class MockProgramRepository implements ProgramRepositoryPort {
       workspaceSlug: state.organization.slug,
       programSlug: slug,
       title: input.title.trim(),
-      subtitle: input.subtitle.trim(),
+      subtitle: (input.subtitle || '').trim(),
       description: input.description.trim(),
       programType: input.programType,
       accessType: 'public',
-      status: 'published',
+      status: 'draft', // F0.4 Requirement: Programs default to draft
       pricing: input.programType === 'lead_magnet' ? 'free' : 'one_time',
       priceAmount: input.programType === 'lead_magnet' ? 0 : (input.priceAmount || 150000),
       modules: [initialModule],
@@ -128,15 +117,8 @@ export class MockProgramRepository implements ProgramRepositoryPort {
       updatedAt: new Date().toISOString(),
     };
 
-    // Update state
-    MockStateStore.updateState(curr => ({
-      ...curr,
-      programs: [newProgram, ...curr.programs],
-    }));
-
-    // Register presentation mapping if custom outcomes / cover were provided
     const presentation = {
-      coverVariant: input.coverVariant || 'cover-a',
+      coverVariant: (input.coverVariant || 'cover-a') as 'cover-a' | 'cover-b' | 'cover-c',
       imageUrl: input.imageUrl,
       featured: false,
       heroEyebrow: input.heroEyebrow || (input.programType === 'lead_magnet' ? 'Program Gratis' : input.programType === 'aftersales' ? 'Khusus Peserta Tes' : 'Program Berbayar'),
@@ -144,13 +126,19 @@ export class MockProgramRepository implements ProgramRepositoryPort {
       durationLabel: input.durationLabel || 'Mandiri',
       learningOutcomes: input.outcomes && input.outcomes.length > 0 ? input.outcomes : [
         { title: 'Memahami Konsep Dasar', description: 'Mendapat gambaran utuh materi yang dipelajari.' },
-        { title: 'Aplikasi Praktis', description: 'Mencoba penyesuaian kecil di rumah atau kegiatan harian.' }
+        { title: 'Aplikasi Praktis', description: 'Mencoba penyesuaian kecil di rumah atau kegiatan harian.' },
       ],
     };
 
-    // Store in MOCK_PRESENTATION_MAP if needed
-    const { MOCK_PRESENTATION_MAP } = require('./public-storefront-repository');
-    MOCK_PRESENTATION_MAP[newProgramId] = presentation;
+    // Update state including persisted presentation
+    MockStateStore.updateState(curr => ({
+      ...curr,
+      programs: [newProgram, ...curr.programs],
+      programPresentations: {
+        ...curr.programPresentations,
+        [newProgramId]: presentation,
+      },
+    }));
 
     return newProgram;
   }
@@ -180,16 +168,8 @@ export class MockProgramRepository implements ProgramRepositoryPort {
   async addLesson(
     programId: string,
     moduleId: string,
-    lessonInput: {
-      title: string;
-      textContent?: string;
-      videoYoutubeUrl?: string;
-      hasReflection?: boolean;
-      reflectionPrompt?: string;
-      hasCta?: boolean;
-      ctaLabel?: string;
-      ctaUrl?: string;
-    }
+    lessonTitle: string,
+    videoUrl?: string
   ): Promise<Program> {
     MockStateStore.updateState(curr => {
       const programs = curr.programs.map(p => {
@@ -197,21 +177,17 @@ export class MockProgramRepository implements ProgramRepositoryPort {
         const modules = p.modules.map(m => {
           if (m.id !== moduleId) return m;
           const newLesId = `les_${Date.now()}`;
-          const videoExternalId = extractYoutubeId(lessonInput.videoYoutubeUrl);
+          const videoExternalId = extractYoutubeId(videoUrl) || undefined;
           const newLes: Lesson = {
             id: newLesId,
             moduleId,
-            title: lessonInput.title.trim(),
+            title: lessonTitle.trim(),
             order: m.lessons.length + 1,
-            textContent: lessonInput.textContent || '',
-            videoYoutubeUrl: lessonInput.videoYoutubeUrl,
-            videoExternalId: extractYoutubeId(lessonInput.videoYoutubeUrl) || undefined,
-            hasReflection: !!lessonInput.hasReflection,
-            reflectionType: lessonInput.hasReflection ? 'long_text' : undefined,
-            reflectionPrompt: lessonInput.reflectionPrompt || (lessonInput.hasReflection ? 'Tuliskan catatan refleksi Anda:' : undefined),
-            hasCta: !!lessonInput.hasCta,
-            ctaLabel: lessonInput.ctaLabel,
-            ctaUrl: lessonInput.ctaUrl,
+            textContent: 'Silakan pelajari materi berikut.',
+            videoYoutubeUrl: videoUrl,
+            videoExternalId,
+            hasReflection: false,
+            hasCta: false,
           };
           return { ...m, lessons: [...m.lessons, newLes] };
         });
@@ -305,14 +281,13 @@ export class MockProgramRepository implements ProgramRepositoryPort {
           const lessons = m.lessons.map(les => {
             if (les.id !== updatedLesson.id) return les;
 
-            // Fixed Bug #13: Preserve original order & attachments metadata
             const videoExternalId = extractYoutubeId(updatedLesson.videoYoutubeUrl) || les.videoExternalId;
 
             return {
               ...les,
               ...updatedLesson,
-              order: les.order, // Preserve original lesson order!
-              attachments: les.attachments, // Preserve attachments metadata!
+              order: les.order,
+              attachments: les.attachments,
               videoExternalId,
             };
           });

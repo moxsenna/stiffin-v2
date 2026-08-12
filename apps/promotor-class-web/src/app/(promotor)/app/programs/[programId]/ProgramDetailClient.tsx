@@ -1,10 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { PromotorShell } from '@/components/layout/PromotorShell';
-import { programRepository } from '@/adapters/mock/program-repository';
+import { getProgramByIdQuery } from '@/modules/programs/queries';
+import {
+  toggleProgramStatusCommand,
+  reorderModulesCommand,
+  addModuleCommand,
+  deleteModuleCommand,
+  addLessonCommand,
+  deleteLessonCommand,
+} from '@/modules/programs/commands';
 import { Program, Module, Lesson } from '@promotor/contracts';
 
 export function ProgramDetailClient() {
@@ -33,14 +41,14 @@ export function ProgramDetailClient() {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const loadProgramData = async () => {
-    const data = await programRepository.getProgramById(programId);
+  const loadProgramData = useCallback(async () => {
+    const data = await getProgramByIdQuery(programId);
     if (data) setProgram(data);
-  };
+  }, [programId]);
 
   useEffect(() => {
     loadProgramData();
-  }, [programId]);
+  }, [loadProgramData]);
 
   if (!program) {
     return (
@@ -62,7 +70,7 @@ export function ProgramDetailClient() {
 
   // Status toggle handler
   const handleToggleStatus = async () => {
-    const updated = await programRepository.toggleProgramStatus(program.id);
+    const updated = await toggleProgramStatusCommand(program.id);
     setProgram(updated);
     showToast(`Status program diubah menjadi: ${updated.status === 'published' ? 'Terbit di Storefront' : 'Draf'}`);
   };
@@ -78,7 +86,7 @@ export function ProgramDetailClient() {
     newModules[index] = newModules[targetIdx];
     newModules[targetIdx] = temp;
 
-    const updated = await programRepository.reorderModules(program.id, newModules.map(m => m.id));
+    const updated = await reorderModulesCommand(program.id, newModules.map(m => m.id));
     setProgram(updated);
     showToast('Urutan modul berhasil diperbarui!');
   };
@@ -88,7 +96,7 @@ export function ProgramDetailClient() {
     e.preventDefault();
     if (!newModuleTitle.trim()) return;
 
-    const updated = await programRepository.addModule(program.id, newModuleTitle.trim());
+    const updated = await addModuleCommand(program.id, newModuleTitle.trim());
     setProgram(updated);
     setNewModuleTitle('');
     setShowAddModuleModal(false);
@@ -98,7 +106,7 @@ export function ProgramDetailClient() {
   // Delete Module handler
   const handleDeleteModule = async (moduleId: string, modTitle: string) => {
     if (confirm(`Apakah Anda yakin ingin menghapus "${modTitle}" beserta seluruh pelajarannya?`)) {
-      const updated = await programRepository.deleteModule(program.id, moduleId);
+      const updated = await deleteModuleCommand(program.id, moduleId);
       setProgram(updated);
       showToast(`Modul "${modTitle}" telah dihapus.`);
     }
@@ -109,16 +117,12 @@ export function ProgramDetailClient() {
     e.preventDefault();
     if (!activeModuleIdForLesson || !lessonForm.title.trim()) return;
 
-    const updated = await programRepository.addLesson(program.id, activeModuleIdForLesson, {
-      title: lessonForm.title.trim(),
-      videoYoutubeUrl: lessonForm.materialType === 'video' ? lessonForm.videoYoutubeUrl : undefined,
-      textContent: lessonForm.textContent,
-      hasReflection: lessonForm.hasReflection,
-      reflectionPrompt: lessonForm.reflectionPrompt,
-      hasCta: lessonForm.hasCta,
-      ctaLabel: lessonForm.ctaLabel,
-      ctaUrl: lessonForm.ctaUrl,
-    });
+    const updated = await addLessonCommand(
+      program.id,
+      activeModuleIdForLesson,
+      lessonForm.title.trim(),
+      lessonForm.materialType === 'video' ? lessonForm.videoYoutubeUrl : undefined
+    );
 
     setProgram(updated);
     setActiveModuleIdForLesson(null);
@@ -139,7 +143,7 @@ export function ProgramDetailClient() {
   // Delete Lesson handler
   const handleDeleteLesson = async (moduleId: string, lessonId: string, lessonTitle: string) => {
     if (confirm(`Apakah Anda yakin ingin menghapus pelajaran "${lessonTitle}"?`)) {
-      const updated = await programRepository.deleteLesson(program.id, moduleId, lessonId);
+      const updated = await deleteLessonCommand(program.id, moduleId, lessonId);
       setProgram(updated);
       showToast(`Pelajaran "${lessonTitle}" telah dihapus.`);
     }

@@ -25,7 +25,7 @@ export function StorefrontClient({ profile: initialProfile, catalog: initialCata
     if (initialProfile.workspaceSlug) {
       setLastPublicWorkspaceSlug(initialProfile.workspaceSlug);
 
-      // Re-fetch client state from MockStateStore in LocalStorage if customized
+      // Re-fetch client state from LocalStorage if customized
       getPublicWorkspaceQuery(initialProfile.workspaceSlug).then(p => {
         if (p) setProfile(p);
       });

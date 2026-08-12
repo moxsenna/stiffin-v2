@@ -11,11 +11,15 @@ export async function getPublicWorkspaceQuery(
   return publicStorefrontRepository.getPublicWorkspaceProfile(workspaceSlug);
 }
 
+export const getPublicWorkspaceProfileQuery = getPublicWorkspaceQuery;
+
 export async function listPublicProgramsQuery(
   workspaceSlug: string
 ): Promise<PublicProgramCatalogItem[]> {
   return publicStorefrontRepository.getPublicProgramCatalog(workspaceSlug);
 }
+
+export const getPublicProgramCatalogQuery = listPublicProgramsQuery;
 
 export async function getPublicProgramDetailQuery(
   workspaceSlug: string,
