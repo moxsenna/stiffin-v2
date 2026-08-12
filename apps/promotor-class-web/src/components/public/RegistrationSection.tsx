@@ -159,7 +159,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                   marginBottom: '18px',
                 }}
               >
-                Program ini gratis untuk umum & calon klien STIFIn. Materi langsung dapat diakses setelah mendaftar.
+                Program ini gratis untuk umum & calon peserta STIFIn. Materi langsung dapat diakses setelah mendaftar.
               </p>
 
               {error && (
@@ -273,7 +273,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
               }}
             >
               <h3 style={{ fontSize: '18px', marginBottom: '8px', fontWeight: 750 }}>
-                {program.programType === 'aftersales' ? 'Khusus Klien STIFIn' : 'Program Berbayar'}
+                {program.programType === 'aftersales' ? 'Khusus Peserta Tes STIFIn' : 'Program Berbayar'}
               </h3>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
                 {registrationStatusNotice ||

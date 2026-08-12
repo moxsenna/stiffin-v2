@@ -15,8 +15,8 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
   let priceMain = 'Gratis';
   let priceSub = 'akses seluruh materi';
   if (program.programType === 'aftersales') {
-    priceMain = 'Khusus Klien';
-    priceSub = 'akses bagi klien terdaftar';
+    priceMain = 'Khusus Peserta Tes';
+    priceSub = 'akses bagi alumni tes STIFIn';
   } else if (program.pricing === 'one_time' && program.priceAmount) {
     priceMain = `Rp${program.priceAmount.toLocaleString('id-ID')}`;
     priceSub = 'pembayaran sekali';
@@ -160,7 +160,7 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
                   alignItems: 'center',
                 }}
               >
-                {program.programType === 'aftersales' ? 'Akses Khusus Klien' : 'Informasi Pendaftaran'}
+                {program.programType === 'aftersales' ? 'Akses Peserta Tes STIFIn' : 'Informasi Pendaftaran'}
               </a>
             )}
 

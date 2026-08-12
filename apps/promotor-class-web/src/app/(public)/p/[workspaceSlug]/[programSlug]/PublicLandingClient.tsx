@@ -151,7 +151,7 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
                 cursor: 'pointer',
               }}
             >
-              Khusus Klien STIFIn — Lihat Akses
+              Khusus Peserta Tes STIFIn — Lihat Akses
             </button>
           ) : (program.priceAmount && program.priceAmount > 0) ? (
             <button

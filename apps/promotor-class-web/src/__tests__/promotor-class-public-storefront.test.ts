@@ -57,7 +57,7 @@ describe('PromotorClass F0.2 Public Storefront & Access Policy Test Suite', () =
     assert.strictEqual(detail?.isRegistrationAllowed, false, 'aftersales program MUST block public registration');
     assert.strictEqual(
       detail?.registrationStatusNotice,
-      'Program ini khusus untuk klien yang telah menyelesaikan tes STIFIn.'
+      'Program ini khusus untuk peserta yang telah menyelesaikan tes STIFIn.'
     );
   });
 

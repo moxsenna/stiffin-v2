@@ -51,7 +51,7 @@ export const MOCK_PRESENTATION_MAP: Record<string, ProgramPublicPresentation> = 
   prog_30_hari_setelah_tes: {
     coverVariant: 'cover-b',
     featured: false,
-    heroEyebrow: 'Khusus Klien',
+    heroEyebrow: 'Khusus Peserta Tes',
     shortOutcome: 'Panduan pendampingan setelah tes agar hasil tidak berhenti sebagai laporan.',
     durationLabel: '30 hari',
     learningOutcomes: [
@@ -118,7 +118,7 @@ export class MockPublicStorefrontRepository implements PublicStorefrontRepositor
 
       let registrationStatusNotice: string | undefined;
       if (program.programType === 'aftersales') {
-        registrationStatusNotice = 'Program ini khusus untuk klien yang telah menyelesaikan tes STIFIn.';
+        registrationStatusNotice = 'Program ini khusus untuk peserta yang telah menyelesaikan tes STIFIn.';
       } else if (program.programType === 'paid' || program.pricing === 'one_time') {
         registrationStatusNotice = 'Program Berbayar — Hubungi Promotor / Tersedia via Konsultasi.';
       }
@@ -162,7 +162,7 @@ export class MockPublicStorefrontRepository implements PublicStorefrontRepositor
 
     let registrationStatusNotice: string | undefined;
     if (program.programType === 'aftersales') {
-      registrationStatusNotice = 'Program ini khusus untuk klien yang telah menyelesaikan tes STIFIn.';
+      registrationStatusNotice = 'Program ini khusus untuk peserta yang telah menyelesaikan tes STIFIn.';
     } else if (program.programType === 'paid' || program.pricing === 'one_time') {
       registrationStatusNotice = 'Program Berbayar — Hubungi Promotor / Tersedia via Konsultasi.';
     }

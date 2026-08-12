@@ -121,7 +121,7 @@ export const SEED_PROGRAMS: Program[] = [
     programSlug: '30-hari-setelah-tes',
     title: '30 Hari Setelah Tes',
     subtitle: 'Panduan Pendampingan Setelah Tes Agar Hasil Tidak Berhenti Sebagai Laporan',
-    description: 'Program pendampingan khusus bagi klien yang telah menyelesaikan tes STIFIn untuk menerjemahkan hasil tes menjadi kebiasaan harian di rumah.',
+    description: 'Program pendampingan khusus bagi peserta yang telah menyelesaikan tes STIFIn untuk menerjemahkan hasil tes menjadi kebiasaan harian di rumah.',
     programType: 'aftersales',
     accessType: 'manual',
     status: 'published',

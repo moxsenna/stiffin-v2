@@ -152,7 +152,7 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
                 cursor: 'pointer',
               }}
             >
-              Umum & Calon Klien
+              Umum & Calon Peserta
             </button>
             <button
               onClick={() => setFilter('client')}
