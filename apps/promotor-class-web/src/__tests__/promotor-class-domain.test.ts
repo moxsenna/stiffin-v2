@@ -22,7 +22,7 @@ describe('PromotorClass F0.1.1 Contract, Idempotency & Domain Alignment Test Sui
 
   it('1. Seed Loading: MockStateStore initializes with canonical collections & learningEvents', () => {
     const state = MockStateStore.getState();
-    assert.strictEqual(state.programs.length, 1);
+    assert.strictEqual(state.programs.length, 5);
     assert.strictEqual(state.contacts.length, 3);
     assert.strictEqual(state.enrollments.length, 2);
     assert.strictEqual(state.reflections.length, 2);

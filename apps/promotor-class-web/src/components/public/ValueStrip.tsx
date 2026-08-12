@@ -1,0 +1,69 @@
+'use client';
+
+import React from 'react';
+
+export function ValueStrip() {
+  const items = [
+    {
+      num: '01',
+      title: 'Mulai dari yang paling relevan',
+      desc: 'Pilih materi sesuai kondisi keluarga, bukan urutan kursus yang kaku.',
+    },
+    {
+      num: '02',
+      title: 'Materi kecil, bukan kuliah panjang',
+      desc: 'Video, bacaan, dan refleksi yang dirancang untuk orang tua yang sibuk.',
+    },
+    {
+      num: '03',
+      title: 'Ada langkah berikutnya',
+      desc: 'Setiap program membantu Anda tahu apa yang sebaiknya dilakukan setelah belajar.',
+    },
+  ];
+
+  return (
+    <section className="container" style={{ paddingTop: '42px', paddingBottom: '42px' }}>
+      <div
+        style={{
+          borderTop: '1px solid var(--color-divider)',
+          borderBottom: '1px solid var(--color-divider)',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        }}
+      >
+        {items.map((item, idx) => (
+          <div
+            key={item.num}
+            style={{
+              padding: '26px 30px 26px 0',
+              borderLeft: idx > 0 ? '1px solid var(--color-divider)' : 'none',
+              paddingLeft: idx > 0 ? '30px' : '0',
+            }}
+          >
+            <div
+              style={{
+                color: 'var(--color-primary)',
+                fontSize: '12px',
+                fontWeight: 850,
+                marginBottom: '12px',
+              }}
+            >
+              {item.num}
+            </div>
+            <h3 style={{ fontSize: '17px', marginBottom: '7px', fontWeight: 750 }}>{item.title}</h3>
+            <p
+              style={{
+                fontSize: '13px',
+                lineHeight: 1.55,
+                color: 'var(--color-text-muted)',
+                margin: 0,
+              }}
+            >
+              {item.desc}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
