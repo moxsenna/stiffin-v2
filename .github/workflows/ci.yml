@@ -37,5 +37,8 @@ jobs:
       - name: Run Domain & Integration Tests
         run: pnpm test
 
-      - name: Verify Next.js Production Build
+      - name: Verify PromotorClass Production Build
         run: pnpm build:class
+
+      - name: Verify PromotorFlow Production Build
+        run: pnpm build:flow

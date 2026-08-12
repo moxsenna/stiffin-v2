@@ -6,10 +6,13 @@ import {
   EnrollmentRef,
   EligibleProgramsInput,
   ProgramSummary,
+  EnrollmentStatus,
 } from '@promotor/contracts';
 import { MockStateStore } from './mock-state-store';
 
 export class MockPromotorClassAdapter implements PromotorClassAdapterPort {
+  private enrollments = new Map<string, EnrollmentRef>();
+
   constructor(private store: MockStateStore) {}
 
   async getEntitlementsAndHealth(): Promise<{
@@ -47,20 +50,15 @@ export class MockPromotorClassAdapter implements PromotorClassAdapterPort {
     this.store.setScenarioPreset(preset);
   }
 
-  async getLearningContext(contactId: string): Promise<LearningContext | null> {
+  async getLearningContext(contactId: string): Promise<LearningContext> {
     const { entitlements, integrationHealth } = await this.getEntitlementsAndHealth();
-
-    // If Class entitlement not active, return null
-    if (!entitlements.promotorClass) {
-      return null;
-    }
 
     // If Class is UNAVAILABLE, throw/degrade gracefully
     if (integrationHealth.promotorClass === 'UNAVAILABLE') {
       throw new Error('PromotorClass service is currently unavailable.');
     }
 
-    if (contactId === 'contact_ayu') {
+    if (contactId === 'contact_ayu' && entitlements.promotorClass) {
       return {
         contactId,
         activeEnrollments: [
@@ -85,7 +83,7 @@ export class MockPromotorClassAdapter implements PromotorClassAdapterPort {
       };
     }
 
-    if (contactId === 'contact_nina') {
+    if (contactId === 'contact_nina' && entitlements.promotorClass) {
       return {
         contactId,
         activeEnrollments: [
@@ -110,7 +108,12 @@ export class MockPromotorClassAdapter implements PromotorClassAdapterPort {
       };
     }
 
-    return null;
+    // Default empty LearningContext when contact has no learning activity or entitlement disabled
+    return {
+      contactId,
+      activeEnrollments: [],
+      recentSignals: [],
+    };
   }
 
   async listEligiblePrograms(input: EligibleProgramsInput): Promise<ProgramSummary[]> {
@@ -134,12 +137,47 @@ export class MockPromotorClassAdapter implements PromotorClassAdapterPort {
   }
 
   async enrollContact(input: EnrollContactInput): Promise<EnrollmentRef> {
-    return {
+    const key = input.idempotencyKey || `${input.organizationId}:${input.contactId}:${input.programId}`;
+    
+    if (this.enrollments.has(key)) {
+      return this.enrollments.get(key)!;
+    }
+
+    const ref: EnrollmentRef = {
       enrollmentId: `enr_${input.contactId}_${input.programId.substring(0, 8)}`,
       contactId: input.contactId,
       programId: input.programId,
       status: 'aktif',
       enrolledAt: new Date().toISOString(),
+    };
+
+    this.enrollments.set(key, ref);
+    return ref;
+  }
+
+  async getEnrollmentStatus(contactId: string, programId: string): Promise<EnrollmentStatus | null> {
+    const key = Array.from(this.enrollments.values()).find(
+      (e) => e.contactId === contactId && e.programId === programId
+    );
+
+    if (!key) {
+      if (contactId === 'contact_ayu' && programId === 'prog_7_hari_belajar') {
+        return {
+          enrollmentId: 'enr_ayu_7hari',
+          status: 'selesai',
+          progressPercent: 100,
+          enrolledAt: '2026-08-01T10:00:00Z',
+          completedAt: '2026-08-08T10:00:00Z',
+        };
+      }
+      return null;
+    }
+
+    return {
+      enrollmentId: key.enrollmentId,
+      status: key.status as any,
+      progressPercent: 0,
+      enrolledAt: key.enrolledAt,
     };
   }
 }
