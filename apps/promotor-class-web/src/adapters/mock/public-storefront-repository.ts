@@ -86,6 +86,10 @@ export const MOCK_PRESENTATION_MAP: Record<string, ProgramPublicPresentation> = 
 
 export class MockPublicStorefrontRepository implements PublicStorefrontRepositoryPort {
   async getPublicWorkspaceProfile(workspaceSlug: string): Promise<PublicWorkspaceProfile | null> {
+    const storeProfiles = MockStateStore.getState().workspaceProfiles;
+    if (storeProfiles && storeProfiles[workspaceSlug]) {
+      return storeProfiles[workspaceSlug];
+    }
     if (workspaceSlug !== 'rina') return null;
     return MOCK_RINA_PROFILE;
   }

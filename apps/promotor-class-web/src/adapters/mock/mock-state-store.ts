@@ -20,7 +20,25 @@ import {
   SEED_SIGNALS,
 } from '@promotor/promotor-class-fixtures';
 
+import { PublicWorkspaceProfile } from '@/modules/public-storefront/types';
+
 const LOCAL_STORAGE_KEY = 'promotor_class_mock_state_v2';
+
+export const INITIAL_RINA_PROFILE: PublicWorkspaceProfile = {
+  workspaceSlug: 'rina',
+  displayName: 'Rina Prameswari',
+  tagline: 'Ruang belajar untuk orang tua',
+  headline: 'Belajar memahami anak, tanpa membuat rumah jadi ruang kelas.',
+  bio: 'Saya membantu orang tua menerjemahkan hasil tes menjadi kebiasaan yang lebih manusiawi di rumah. Anda tidak harus menghafal banyak teori. Yang penting adalah memahami pola, mencoba satu perubahan kecil, lalu melihat apa yang bekerja untuk keluarga Anda.',
+  city: 'Surabaya',
+  roleLabel: 'Promotor STIFIn',
+  heroProgramId: 'prog_7_hari_belajar',
+  whatsappPhoneE164: '+6281234567890',
+  stats: {
+    programCount: '3 Program Aktif',
+    location: 'Surabaya',
+  },
+};
 
 export interface ClassMockState {
   organization: typeof SEED_ORGANIZATION;
@@ -38,6 +56,7 @@ export interface ClassMockState {
   };
   entitlements: ProductEntitlements;
   integrationHealth: IntegrationHealth;
+  workspaceProfiles: Record<string, PublicWorkspaceProfile>;
   // NOTE: nextActions[] IS INTENTIONALLY FORBIDDEN IN CLASS MOCK STORE.
   // PromotorFlow is the sole canonical owner of nextActions.
 }
@@ -62,6 +81,9 @@ const DEFAULT_STATE: ClassMockState = {
   },
   integrationHealth: {
     promotorFlow: 'AVAILABLE',
+  },
+  workspaceProfiles: {
+    rina: INITIAL_RINA_PROFILE,
   },
 };
 
