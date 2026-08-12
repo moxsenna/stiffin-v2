@@ -104,7 +104,7 @@ export class MockStateStore {
   resetDemo(): void {
     this.state = getInitialState();
     if (typeof window !== 'undefined' && window.localStorage) {
-      localStorage.removeItem(STORAGE_KEY);
+      window.localStorage.removeItem(STORAGE_KEY);
     }
     this.saveState();
   }

@@ -2,7 +2,6 @@ import {
   Enrollment,
   Reflection,
   LearningEvent,
-  LearningEventType,
   LearningSignal,
   IntegrationEventEnvelope,
 } from '@promotor/contracts';
@@ -66,7 +65,7 @@ export class MockLearnerRepository {
       ...curr,
       enrollments: [newEnrollment, ...curr.enrollments],
       learningEvents: [...curr.learningEvents, registeredEvent, enrolledEvent],
-      currentLearnerAccess: { contactId }, // Update current mock learner session
+      currentLearnerAccess: { contactId },
     }));
 
     await this.reevaluateSignal(contactId, newEnrollment.id);
@@ -77,6 +76,11 @@ export class MockLearnerRepository {
     const state = MockStateStore.getState();
     const enr = state.enrollments.find(e => e.id === enrollmentId);
     if (!enr) throw new Error(`Enrollment "${enrollmentId}" tidak ditemukan`);
+
+    // P0 IDEMPOTENCY GUARD: If lesson is already completed, return existing enrollment immediately!
+    if (enr.completedLessonIds.includes(lessonId)) {
+      return enr;
+    }
 
     const prog = state.programs.find(p => p.id === enr.programId);
     if (!prog) throw new Error(`Program "${enr.programId}" tidak ditemukan`);
@@ -182,7 +186,7 @@ export class MockLearnerRepository {
       });
     }
 
-    // 6. Program completed event
+    // 6. Program completed event (idempotent)
     if (isProgramCompleted && !existingTypes.has('program.completed')) {
       newEvents.push({
         id: `evt_${Date.now()}_progcomp`,
@@ -224,7 +228,7 @@ export class MockLearnerRepository {
       };
     });
 
-    // Re-evaluate signal from updated event history
+    // Re-evaluate signal from updated event history (scoped to enrollment)
     await this.reevaluateSignal(enr.contactId, enrollmentId);
 
     const updatedEnr = await this.getEnrollmentById(enrollmentId);
@@ -236,6 +240,15 @@ export class MockLearnerRepository {
     const state = MockStateStore.getState();
     const enr = state.enrollments.find(e => e.id === enrollmentId);
     if (!enr) return;
+
+    // P0 IDEMPOTENCY GUARD: Skip duplicate cta.clicked recording for same lesson & URL
+    const existingCtaEvent = state.learningEvents.find(
+      e => e.enrollmentId === enrollmentId && e.lessonId === lessonId && e.eventType === 'cta.clicked'
+    );
+
+    if (existingCtaEvent) {
+      return;
+    }
 
     const ctaClickedEvent: LearningEvent = {
       id: `evt_${Date.now()}_cta`,
@@ -259,16 +272,27 @@ export class MockLearnerRepository {
 
   async reevaluateSignal(contactId: string, enrollmentId: string): Promise<LearningSignal> {
     const state = MockStateStore.getState();
-    const contactEvents = state.learningEvents.filter(e => e.contactId === contactId);
 
-    const latestReflection = state.reflections.find(r => r.contactId === contactId);
-    const scoreResult = evaluateIntentFromEvents(contactEvents, latestReflection?.answerText);
+    // P0 SCOPING FIX: Filter events strictly by enrollmentId to avoid cross-enrollment score inflation
+    const enrollmentEvents = state.learningEvents.filter(
+      e => e.contactId === contactId && e.enrollmentId === enrollmentId
+    );
+
+    const latestReflection = state.reflections.find(
+      r => r.contactId === contactId && r.enrollmentId === enrollmentId
+    );
+    const scoreResult = evaluateIntentFromEvents(enrollmentEvents, latestReflection?.answerText);
+
+    const sourceEvent = enrollmentEvents[enrollmentEvents.length - 1];
+    const sourceEventId = sourceEvent?.id || `evt_${Date.now()}`;
 
     const newSignal: LearningSignal = {
-      id: `sig_${contactId}_${Date.now()}`,
+      id: `sig_${enrollmentId}_${Date.now()}`,
       organizationId: state.organization.id,
       contactId,
+      programId: enrollmentEvents[0]?.programId,
       enrollmentId,
+      sourceEventId,
       signalLevel: scoreResult.signalLevel,
       intentScore: scoreResult.intentScore,
       primaryReason: scoreResult.primaryReason,
@@ -277,41 +301,67 @@ export class MockLearnerRepository {
       evaluatedAt: new Date().toISOString(),
     };
 
-    // If business integration required (e.g. Program completed or high interest signal) -> write to integrationOutbox[]
-    if (scoreResult.intentScore >= 60 || contactEvents.some(e => e.eventType === 'program.completed')) {
-      const envelope: IntegrationEventEnvelope = {
-        schemaVersion: 1,
-        eventId: `env_${Date.now()}`,
-        eventType: contactEvents.some(e => e.eventType === 'program.completed') ? 'program.completed' : 'lesson.completed',
-        sourceApp: 'promotor-class',
-        organizationId: state.organization.id,
-        contactId,
-        occurredAt: new Date().toISOString(),
-        subject: `Learner signal update: ${scoreResult.signalLevel}`,
-        payload: {
-          intentScore: scoreResult.intentScore,
-          signalLevel: scoreResult.signalLevel,
-          primaryReason: scoreResult.primaryReason,
-        },
-      };
+    // P0 OUTBOX IDEMPOTENCY FIX: Check idempotencyKey before enqueuing to integrationOutbox
+    const isProgramCompleted = enrollmentEvents.some(e => e.eventType === 'program.completed');
+    const ruleId = isProgramCompleted ? 'program_completed' : 'high_intent_milestone';
+    const idempotencyKey = `promotorclass:${sourceEventId}:${ruleId}`;
 
-      const outboxItem = {
-        id: `out_${Date.now()}`,
-        envelope,
-        status: 'PENDING' as const,
-        attempts: 0,
-        createdAt: new Date().toISOString(),
-      };
+    if (scoreResult.intentScore >= 60 || isProgramCompleted) {
+      const existingOutboxItem = state.integrationOutbox.find(item => item.idempotencyKey === idempotencyKey);
 
-      MockStateStore.updateState(curr => ({
-        ...curr,
-        learningSignals: [newSignal, ...curr.learningSignals.filter(s => s.contactId !== contactId)],
-        integrationOutbox: [outboxItem, ...curr.integrationOutbox],
-      }));
+      if (!existingOutboxItem) {
+        const envelope: IntegrationEventEnvelope = {
+          schemaVersion: 1,
+          eventId: `env_${Date.now()}`,
+          eventType: isProgramCompleted ? 'program.completed' : 'lesson.completed',
+          sourceApp: 'PROMOTORCLASS', // Exact uppercase string
+          organizationId: state.organization.id,
+          contactId,
+          occurredAt: new Date().toISOString(),
+          subject: {
+            programId: enrollmentEvents[0]?.programId,
+            enrollmentId,
+          },
+          payload: {
+            intentScore: scoreResult.intentScore,
+            signalLevel: scoreResult.signalLevel,
+            primaryReason: scoreResult.primaryReason,
+          },
+        };
+
+        const outboxItem = {
+          id: `out_${Date.now()}`,
+          idempotencyKey,
+          envelope,
+          status: 'PENDING' as const,
+          attempts: 0,
+          createdAt: new Date().toISOString(),
+        };
+
+        MockStateStore.updateState(curr => ({
+          ...curr,
+          learningSignals: [
+            newSignal,
+            ...curr.learningSignals.filter(s => s.enrollmentId !== enrollmentId),
+          ],
+          integrationOutbox: [outboxItem, ...curr.integrationOutbox],
+        }));
+      } else {
+        MockStateStore.updateState(curr => ({
+          ...curr,
+          learningSignals: [
+            newSignal,
+            ...curr.learningSignals.filter(s => s.enrollmentId !== enrollmentId),
+          ],
+        }));
+      }
     } else {
       MockStateStore.updateState(curr => ({
         ...curr,
-        learningSignals: [newSignal, ...curr.learningSignals.filter(s => s.contactId !== contactId)],
+        learningSignals: [
+          newSignal,
+          ...curr.learningSignals.filter(s => s.enrollmentId !== enrollmentId),
+        ],
       }));
     }
 

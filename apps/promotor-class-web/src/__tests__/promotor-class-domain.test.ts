@@ -5,11 +5,13 @@ import { contactRepository } from '../adapters/mock/contact-repository';
 import { learnerRepository } from '../adapters/mock/learner-repository';
 import { programRepository } from '../adapters/mock/program-repository';
 import { promotorFlowAdapter } from '../adapters/mock/promotorflow-adapter';
+import { getActiveLearnerContactId, clearActiveLearnerSession, setActiveLearnerSession } from '../lib/session';
 import { normalizePhone, formatPhoneDisplay } from '@promotor/platform-core';
 import { evaluateIntentFromEvents } from '../modules/signals/rules';
 import { extractYoutubeId } from '../lib/video/parse-youtube-url';
+import { IntegrationEventEnvelopeSchema } from '@promotor/contracts';
 
-describe('PromotorClass F0.1 Domain & Contract Alignment Test Suite', () => {
+describe('PromotorClass F0.1.1 Contract, Idempotency & Domain Alignment Test Suite', () => {
   beforeEach(() => {
     MockStateStore.resetDemo();
   });
@@ -47,65 +49,133 @@ describe('PromotorClass F0.1 Domain & Contract Alignment Test Suite', () => {
     assert.strictEqual(c2.phoneE164, '+628999888777');
   });
 
-  it('5. Reflection Lock & Persistence: Completing lesson requires & saves reflection', async () => {
-    // Missing reflection -> throws
-    await assert.rejects(
-      async () => {
-        await learnerRepository.completeLesson('enr_nina_7hari', 'les_1_1', '');
-      },
-      (err: Error) => {
-        assert.match(err.message, /Refleksi wajib diisi/);
-        return true;
-      }
-    );
+  it('5. Lesson Completion Idempotency: Repeated completeLesson call produces 0 duplicate reflections/events', async () => {
+    const enrBefore = await learnerRepository.getEnrollmentById('enr_ayu_7hari');
+    assert.strictEqual(enrBefore?.progressPercent, 33);
 
-    // Valid reflection -> persists into reflections[] collection
     const initialReflCount = MockStateStore.getState().reflections.length;
-    await learnerRepository.completeLesson('enr_nina_7hari', 'les_2_1', 'Komitmen belajar bersama anak');
+    const initialEvtCount = MockStateStore.getState().learningEvents.length;
 
-    const finalReflCount = MockStateStore.getState().reflections.length;
-    assert.strictEqual(finalReflCount, initialReflCount + 1);
+    // 1st completion
+    await learnerRepository.completeLesson('enr_ayu_7hari', 'les_1_2', 'Refleksi sesi 2');
+
+    const reflCountAfter1st = MockStateStore.getState().reflections.length;
+    const evtCountAfter1st = MockStateStore.getState().learningEvents.length;
+    assert.strictEqual(reflCountAfter1st, initialReflCount + 1);
+    assert.strictEqual(evtCountAfter1st > initialEvtCount, true);
+
+    // 2nd duplicate completion
+    await learnerRepository.completeLesson('enr_ayu_7hari', 'les_1_2', 'Refleksi sesi 2 duplicate');
+
+    const reflCountAfter2nd = MockStateStore.getState().reflections.length;
+    const evtCountAfter2nd = MockStateStore.getState().learningEvents.length;
+
+    assert.strictEqual(reflCountAfter2nd, reflCountAfter1st, 'Duplicate lesson completion MUST NOT write duplicate Reflection');
+    assert.strictEqual(evtCountAfter2nd, evtCountAfter1st, 'Duplicate lesson completion MUST NOT write duplicate LearningEvent');
   });
 
-  it('6. Event History Intent Scoring: Deterministic intent score evaluation', () => {
-    const events: any[] = [
-      { eventType: 'learner.enrolled' },
-      { eventType: 'lesson.completed' },
-      { eventType: 'program.progress_50' },
-      { eventType: 'program.progress_80' },
-      { eventType: 'program.completed' },
-    ];
+  it('6. CTA Click Idempotency: Repeated recordCtaClick call produces 0 duplicate events', async () => {
+    const initialEventsCount = MockStateStore.getState().learningEvents.length;
 
-    const result = evaluateIntentFromEvents(events);
-    assert.strictEqual(result.intentScore, 80); // 10 + 10 + 20 + 20 + 20 = 80
-    assert.strictEqual(result.signalLevel, 'Minat tinggi');
-    assert.strictEqual(result.primaryReason, 'Program selesai');
-  });
-
-  it('7. CTA Click Tracking: Explicit cta.clicked event adds score', async () => {
-    const eventsBefore = MockStateStore.getState().learningEvents.filter(e => e.contactId === 'contact_ayu');
-    const scoreBefore = evaluateIntentFromEvents(eventsBefore).intentScore;
-
+    // 1st click
     await learnerRepository.recordCtaClick('enr_ayu_7hari', 'les_1_2', 'https://wa.me/...');
+    const countAfter1st = MockStateStore.getState().learningEvents.length;
+    assert.strictEqual(countAfter1st, initialEventsCount + 1);
 
-    const eventsAfter = MockStateStore.getState().learningEvents.filter(e => e.contactId === 'contact_ayu');
-    const scoreAfter = evaluateIntentFromEvents(eventsAfter).intentScore;
-
-    assert.strictEqual(scoreAfter, scoreBefore + 20);
+    // 2nd duplicate click
+    await learnerRepository.recordCtaClick('enr_ayu_7hari', 'les_1_2', 'https://wa.me/...');
+    const countAfter2nd = MockStateStore.getState().learningEvents.length;
+    assert.strictEqual(countAfter2nd, countAfter1st, 'Duplicate CTA click MUST NOT record duplicate LearningEvent');
   });
 
-  it('8. YouTube URL Parser Utility', () => {
+  it('7. Outbox Idempotency with idempotencyKey: Repeated reevaluateSignal produces 0 duplicate pending outbox items', async () => {
+    // Complete lesson to cross 60% intent threshold
+    await learnerRepository.completeLesson('enr_nina_7hari', 'les_2_1', 'Komitmen pendampingan anak');
+
+    const outbox1 = MockStateStore.getState().integrationOutbox;
+    const initialPendingCount = outbox1.filter(o => o.status === 'PENDING').length;
+    assert.strictEqual(initialPendingCount > 0, true);
+
+    // Repeated re-evaluation
+    await learnerRepository.reevaluateSignal('contact_nina', 'enr_nina_7hari');
+    const outbox2 = MockStateStore.getState().integrationOutbox;
+    const secondPendingCount = outbox2.filter(o => o.status === 'PENDING').length;
+
+    assert.strictEqual(secondPendingCount, initialPendingCount, 'Duplicate reevaluateSignal MUST NOT create duplicate pending outbox item');
+  });
+
+  it('8. Cross-Enrollment Intent Isolation: Activity in Program A does NOT inflate Program B score', async () => {
+    // Create second enrollment for Ayu in Program B
+    const newProgB = await programRepository.createProgram('Program B Parenting', 'Sub B', 'Desc B', 'free');
+    const enrB = await learnerRepository.createEnrollment('contact_ayu', newProgB.id);
+
+    const eventsAyuB = MockStateStore.getState().learningEvents.filter(e => e.enrollmentId === enrB.id);
+    const scoreResultB = evaluateIntentFromEvents(eventsAyuB);
+
+    assert.strictEqual(scoreResultB.intentScore, 10, 'Program B intent score MUST only count Program B events (enrolled = 10)');
+  });
+
+  it('9. Session Default Fix: No session returns null without fallback impersonation', () => {
+    clearActiveLearnerSession();
+    assert.strictEqual(getActiveLearnerContactId(), null, 'Anonymous learner session MUST return null');
+
+    setActiveLearnerSession('contact_nina');
+    assert.strictEqual(getActiveLearnerContactId(), 'contact_nina');
+  });
+
+  it('10. Canonical IntegrationEventEnvelope Schema Validation', () => {
+    const validEnvelope = {
+      schemaVersion: 1,
+      eventId: 'env_123',
+      eventType: 'program.completed',
+      sourceApp: 'PROMOTORCLASS', // Exact uppercase string
+      organizationId: 'org_stifin_parenting',
+      contactId: 'contact_nina',
+      occurredAt: '2026-08-12T10:00:00.000Z',
+      subject: {
+        programId: 'prog_7_hari_belajar',
+        enrollmentId: 'enr_nina_7hari',
+      },
+      payload: { intentScore: 80 },
+    };
+
+    const parsed = IntegrationEventEnvelopeSchema.safeParse(validEnvelope);
+    assert.strictEqual(parsed.success, true, 'Valid canonical envelope MUST pass Zod validation');
+
+    const invalidSourceApp = { ...validEnvelope, sourceApp: 'promotor-class' };
+    assert.strictEqual(IntegrationEventEnvelopeSchema.safeParse(invalidSourceApp).success, false, 'Lowercase sourceApp MUST fail validation');
+  });
+
+  it('11. Canonical PromotorFlowAdapter methods', async () => {
+    const context = await promotorFlowAdapter.getContactContext('contact_ayu');
+    assert.strictEqual(context.contactId, 'contact_ayu');
+    assert.strictEqual(context.classification, 'PROSPECT');
+
+    const status = await promotorFlowAdapter.getAssessmentStatus('contact_nina');
+    assert.strictEqual(status, 'COMPLETED');
+
+    const nextActionRef = await promotorFlowAdapter.createNextAction({
+      organizationId: 'org_stifin_parenting',
+      contactId: 'contact_ayu',
+      source: 'PROMOTORCLASS',
+      sourceEventId: 'evt_test_1',
+      actionType: 'FOLLOW_UP',
+      title: 'Follow-up Sesi 1',
+      reason: 'Learner completed lesson 1',
+      idempotencyKey: 'key_test_123',
+      context: { programId: 'prog_7_hari_belajar' },
+    });
+
+    assert.strictEqual(nextActionRef.id, 'key_test_123');
+  });
+
+  it('12. YouTube URL Parser Utility', () => {
     assert.strictEqual(extractYoutubeId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), 'dQw4w9WgXcQ');
     assert.strictEqual(extractYoutubeId('https://youtu.be/dQw4w9WgXcQ'), 'dQw4w9WgXcQ');
     assert.strictEqual(extractYoutubeId('https://www.youtube.com/shorts/dQw4w9WgXcQ'), 'dQw4w9WgXcQ');
   });
 
-  it('9. PromotorFlow Integration Outbox & Health', async () => {
-    const health = await promotorFlowAdapter.getIntegrationHealth();
-    assert.strictEqual(health.promotorFlow, 'AVAILABLE');
-  });
-
-  it('10. resetDemo() restores original seed state deterministically', () => {
+  it('13. resetDemo() restores original seed state deterministically', () => {
     MockStateStore.updateState(state => ({ ...state, contacts: [] }));
     assert.strictEqual(MockStateStore.getState().contacts.length, 0);
 

@@ -58,6 +58,52 @@ importers:
         specifier: ^5.3.3
         version: 5.9.3
 
+  apps/promotor-flow-web:
+    dependencies:
+      '@promotor/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
+      '@promotor/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@promotor/platform-core':
+        specifier: workspace:*
+        version: link:../../packages/platform-core
+      '@promotor/promotor-flow-fixtures':
+        specifier: workspace:*
+        version: link:../../packages/promotor-flow-fixtures
+      next:
+        specifier: ^14.1.0
+        version: 14.2.35(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@types/node':
+        specifier: ^20.11.0
+        version: 20.19.43
+      '@types/react':
+        specifier: ^18.2.0
+        version: 18.3.31
+      '@types/react-dom':
+        specifier: ^18.2.0
+        version: 18.3.7(@types/react@18.3.31)
+      eslint:
+        specifier: ^8.57.1
+        version: 8.57.1
+      eslint-config-next:
+        specifier: ^14.1.0
+        version: 14.1.0(eslint@8.57.1)(typescript@5.9.3)
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
+      typescript:
+        specifier: ^5.3.3
+        version: 5.9.3
+
   packages/api-client:
     dependencies:
       '@promotor/contracts':
@@ -79,6 +125,12 @@ importers:
         version: link:../contracts
 
   packages/promotor-class-fixtures:
+    dependencies:
+      '@promotor/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
+  packages/promotor-flow-fixtures:
     dependencies:
       '@promotor/contracts':
         specifier: workspace:*

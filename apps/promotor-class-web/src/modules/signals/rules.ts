@@ -1,4 +1,4 @@
-import { LearningEvent, LearningSignal, SignalStatus } from '@promotor/contracts';
+import { LearningEvent } from '@promotor/contracts';
 
 export interface ScoreEvaluationResult {
   intentScore: number;
@@ -7,7 +7,8 @@ export interface ScoreEvaluationResult {
 }
 
 /**
- * Calculates deterministic intent score (0 - 100) based strictly on canonical LearningEvent history.
+ * Calculates deterministic intent score (0 - 100) based strictly on canonical LearningEvent history
+ * FOR A SPECIFIC ENROLLMENT.
  *
  * Scoring Rules:
  * - learner.enrolled          : +10
@@ -18,11 +19,11 @@ export interface ScoreEvaluationResult {
  * - cta.clicked               : +20
  */
 export function evaluateIntentFromEvents(
-  events: LearningEvent[],
+  enrollmentEvents: LearningEvent[],
   latestReflectionQuote?: string
 ): ScoreEvaluationResult {
   let score = 0;
-  const eventTypes = new Set(events.map(e => e.eventType));
+  const eventTypes = new Set(enrollmentEvents.map(e => e.eventType));
 
   if (eventTypes.has('learner.enrolled')) score += 10;
   if (eventTypes.has('lesson.completed')) score += 10;

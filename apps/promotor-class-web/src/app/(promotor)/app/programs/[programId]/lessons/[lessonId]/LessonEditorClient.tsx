@@ -35,9 +35,9 @@ export function LessonEditorClient() {
             setTitle(les.title);
             setVideoYoutubeUrl(les.videoYoutubeUrl || '');
             setTextContent(les.textContent || '');
-            setHasReflection(les.hasReflection);
+            setHasReflection(!!les.hasReflection);
             setReflectionPrompt(les.reflectionPrompt || '');
-            setHasCta(les.hasCta);
+            setHasCta(!!les.hasCta);
             setCtaLabel(les.ctaLabel || '');
             setCtaUrl(les.ctaUrl || '');
           }

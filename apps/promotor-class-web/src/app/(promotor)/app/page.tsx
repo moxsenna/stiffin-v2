@@ -20,6 +20,8 @@ export default function PromotorHomePage() {
   const [whatsAppDraftContact, setWhatsAppDraftContact] = useState<Contact | null>(null);
   const [isDevMode, setIsDevMode] = useState(false);
 
+  const isDevelopmentEnv = process.env.NODE_ENV === 'development';
+
   useEffect(() => {
     Promise.all([
       getLearningSignalsQuery(),
@@ -53,7 +55,7 @@ export default function PromotorHomePage() {
   return (
     <PromotorShell>
       <div style={{ padding: '16px' }}>
-        {/* Header & Dev Toggle */}
+        {/* Header Bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>
             <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '2px' }}>Beranda Promotor</h1>
@@ -62,16 +64,19 @@ export default function PromotorHomePage() {
             </p>
           </div>
 
-          <button
-            onClick={() => setIsDevMode(!isDevMode)}
-            style={{ fontSize: '11px', color: 'var(--color-text-subtle)', textDecoration: 'underline' }}
-          >
-            {isDevMode ? 'Sembunyikan Dev Tools' : 'Dev Tools'}
-          </button>
+          {/* Dev capability guard: Only render dev tools toggle in development environment */}
+          {isDevelopmentEnv && (
+            <button
+              onClick={() => setIsDevMode(!isDevMode)}
+              style={{ fontSize: '11px', color: 'var(--color-text-subtle)', textDecoration: 'underline' }}
+            >
+              {isDevMode ? 'Sembunyikan Dev Tools' : 'Dev Tools'}
+            </button>
+          )}
         </div>
 
         {/* Development Only Tools */}
-        {isDevMode && (
+        {isDevelopmentEnv && isDevMode && (
           <div
             style={{
               padding: '12px',

@@ -1,39 +1,131 @@
 import { z } from 'zod';
 
 // ==========================================
-// 1. Phone E.164 Zod Schema & Type
+// 1. Phone E.164 Strict Validation
 // ==========================================
-export const PhoneE164Schema = z.string().regex(/^\+[1-9]\d{1,14}$/, 'Format nomor HP harus E.164 valid (contoh: +6281234567890)');
+export const PhoneE164Schema = z
+  .string()
+  .regex(/^\+[1-9]\d{1,14}$/, 'Must be a valid E.164 phone string starting with + and country code');
+
 export type PhoneE164 = z.infer<typeof PhoneE164Schema>;
 
 // ==========================================
-// 2. Product Entitlements & Integration Health
-// ==========================================
-export const ProductEntitlementsSchema = z.object({
-  promotorClass: z.boolean(),
-  promotorFlow: z.boolean(),
-});
-export type ProductEntitlements = z.infer<typeof ProductEntitlementsSchema>;
-
-export const IntegrationHealthSchema = z.object({
-  promotorFlow: z.enum(['AVAILABLE', 'UNAVAILABLE']),
-});
-export type IntegrationHealth = z.infer<typeof IntegrationHealthSchema>;
-
-// ==========================================
-// 3. Contact DTO & Zod Schema
+// 2. Organization & Contact Contracts
 // ==========================================
 export const ContactSchema = z.object({
   id: z.string(),
   organizationId: z.string(),
-  name: z.string().min(1, 'Nama wajib diisi'),
+  name: z.string().min(1, 'Name cannot be empty'),
   phoneE164: PhoneE164Schema,
   createdAt: z.string(),
 });
+
 export type Contact = z.infer<typeof ContactSchema>;
 
 // ==========================================
-// 4. Canonical Learning Events & Envelopes
+// 3. Learning Domain Models (PromotorClass)
+// ==========================================
+export type ProgramType = 'lead_magnet' | 'aftersales' | 'paid' | 'private' | 'challenge';
+export type AccessType = 'public' | 'private' | 'manual';
+export type ProgramStatus = 'draft' | 'published' | 'archived';
+export type ProgramPricing = 'free' | 'one_time';
+export type ReflectionType = 'long_text' | 'single_select' | 'multi_select';
+
+export const LessonAttachmentSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  url: z.string(),
+  sizeFormatted: z.string().optional(),
+});
+
+export type LessonAttachment = z.infer<typeof LessonAttachmentSchema>;
+
+export const LessonSchema = z.object({
+  id: z.string(),
+  moduleId: z.string(),
+  title: z.string(),
+  order: z.number(),
+  textContent: z.string().optional(),
+  videoYoutubeUrl: z.string().optional(),
+  videoExternalId: z.string().optional(),
+  attachments: z.array(LessonAttachmentSchema).optional(),
+  hasReflection: z.boolean().optional(),
+  reflectionType: z.enum(['long_text', 'single_select', 'multi_select']).optional(),
+  reflectionPrompt: z.string().optional(),
+  hasCta: z.boolean().optional(),
+  ctaLabel: z.string().optional(),
+  ctaUrl: z.string().optional(),
+});
+
+export type Lesson = z.infer<typeof LessonSchema>;
+
+export const ModuleSchema = z.object({
+  id: z.string(),
+  programId: z.string(),
+  title: z.string(),
+  order: z.number(),
+  lessons: z.array(LessonSchema),
+});
+
+export type Module = z.infer<typeof ModuleSchema>;
+
+export const ProgramSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  workspaceSlug: z.string(),
+  programSlug: z.string(),
+  title: z.string(),
+  subtitle: z.string().optional(),
+  description: z.string().optional(),
+  programType: z.enum(['lead_magnet', 'aftersales', 'paid', 'private', 'challenge']),
+  accessType: z.enum(['public', 'private', 'manual']),
+  status: z.enum(['draft', 'published', 'archived']),
+  pricing: z.enum(['free', 'one_time']),
+  priceAmount: z.number().optional(),
+  modules: z.array(ModuleSchema),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type Program = z.infer<typeof ProgramSchema>;
+
+export const EnrollmentSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  contactId: z.string(),
+  programId: z.string(),
+  status: z.enum(['aktif', 'selesai', 'dibatalkan']),
+  enrolledAt: z.string(),
+  completedAt: z.string().optional(),
+  progressPercent: z.number().min(0).max(100),
+  completedLessonIds: z.array(z.string()),
+  lessonProgress: z.record(
+    z.string(),
+    z.object({
+      completed: z.boolean(),
+      completedAt: z.string(),
+      reflectionAnswer: z.string().optional(),
+    })
+  ),
+});
+
+export type Enrollment = z.infer<typeof EnrollmentSchema>;
+
+export const ReflectionSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  enrollmentId: z.string(),
+  lessonId: z.string(),
+  contactId: z.string(),
+  reflectionType: z.enum(['long_text', 'single_select', 'multi_select']),
+  answerText: z.string(),
+  submittedAt: z.string(),
+});
+
+export type Reflection = z.infer<typeof ReflectionSchema>;
+
+// ==========================================
+// 4. Canonical Learning Events
 // ==========================================
 export const LearningEventTypeSchema = z.enum([
   'program.created',
@@ -50,11 +142,9 @@ export const LearningEventTypeSchema = z.enum([
   'cta.clicked',
   'learner.inactive',
 ]);
+
 export type LearningEventType = z.infer<typeof LearningEventTypeSchema>;
 
-/**
- * Canonical Class-owned domain history item
- */
 export const LearningEventSchema = z.object({
   id: z.string(),
   organizationId: z.string(),
@@ -66,156 +156,82 @@ export const LearningEventSchema = z.object({
   payload: z.record(z.string(), z.unknown()),
   occurredAt: z.string(),
 });
+
 export type LearningEvent = z.infer<typeof LearningEventSchema>;
 
-/**
- * Cross-product transport envelope contract
- */
+export type SignalStatus = 'ACTIVE' | 'RESOLVED' | 'DISMISSED';
+
+export const LearningSignalSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  contactId: z.string(),
+  programId: z.string().optional(),
+  enrollmentId: z.string().optional(),
+  sourceEventId: z.string().optional(),
+  signalLevel: z.enum(['Minat tinggi', 'Minat sedang', 'Minat rendah']),
+  intentScore: z.number().min(0).max(100),
+  primaryReason: z.string(),
+  rawReflectionQuote: z.string().optional(),
+  status: z.enum(['ACTIVE', 'RESOLVED', 'DISMISSED']),
+  evaluatedAt: z.string(),
+});
+
+export type LearningSignal = z.infer<typeof LearningSignalSchema>;
+
+// ==========================================
+// 5. Integration Event Envelope (Exact INTEGRATION_CONTRACT.md)
+// ==========================================
 export const IntegrationEventEnvelopeSchema = z.object({
   schemaVersion: z.literal(1),
   eventId: z.string(),
-  eventType: LearningEventTypeSchema,
-  sourceApp: z.literal('promotor-class'),
+  eventType: z.string(),
+  sourceApp: z.enum(['PROMOTORCLASS', 'PROMOTORFLOW']),
   organizationId: z.string(),
   contactId: z.string(),
   occurredAt: z.string(),
-  subject: z.string().optional(),
+  subject: z
+    .object({
+      programId: z.string().optional(),
+      enrollmentId: z.string().optional(),
+      lessonId: z.string().optional(),
+      bookingId: z.string().optional(),
+      serviceId: z.string().optional(),
+    })
+    .optional(),
   payload: z.record(z.string(), z.unknown()),
 });
+
 export type IntegrationEventEnvelope<TPayload = Record<string, unknown>> = Omit<
   z.infer<typeof IntegrationEventEnvelopeSchema>,
   'payload'
-> & { payload: TPayload };
+> & {
+  payload: TPayload;
+};
 
 // ==========================================
-// 5. Program, Module, Lesson & Reflection DTOs
+// 6. Cross-Product Request Contracts & References
 // ==========================================
-export type ProgramType = 'lead_magnet' | 'aftersales' | 'paid' | 'private' | 'challenge';
-export type AccessType = 'public' | 'private' | 'manual';
-export type ProgramStatus = 'draft' | 'published' | 'archived';
-export type PricingType = 'free' | 'one_time';
-export type ReflectionType = 'long_text' | 'single_select' | 'multi_select';
+export const LearningNextActionRequestSchema = z.object({
+  organizationId: z.string(),
+  contactId: z.string(),
+  source: z.literal('PROMOTORCLASS'),
+  sourceEventId: z.string(),
+  sourceSignalId: z.string().optional(),
+  actionType: z.enum(['FOLLOW_UP', 'MANUAL']),
+  title: z.string(),
+  reason: z.string(),
+  dueAt: z.string().optional(),
+  context: z.object({
+    programId: z.string().optional(),
+    programTitle: z.string().optional(),
+    enrollmentId: z.string().optional(),
+    signalType: z.string().optional(),
+    intentLabel: z.enum(['cold', 'warm', 'hot']).optional(),
+  }),
+  idempotencyKey: z.string(),
+});
 
-export interface LessonAttachment {
-  id: string;
-  name: string;
-  url: string;
-  sizeFormatted?: string;
-}
-
-export interface Lesson {
-  id: string;
-  moduleId: string;
-  title: string;
-  order: number;
-  videoYoutubeUrl?: string;
-  videoExternalId?: string;
-  textContent?: string;
-  attachments?: LessonAttachment[];
-  hasReflection: boolean;
-  reflectionType?: ReflectionType;
-  reflectionPrompt?: string;
-  reflectionOptions?: string[];
-  hasCta: boolean;
-  ctaLabel?: string;
-  ctaUrl?: string;
-}
-
-export interface Module {
-  id: string;
-  programId: string;
-  title: string;
-  order: number;
-  lessons: Lesson[];
-}
-
-export interface Program {
-  id: string;
-  organizationId: string;
-  workspaceSlug: string;
-  programSlug: string;
-  title: string;
-  subtitle?: string;
-  description: string;
-  programType: ProgramType;
-  accessType: AccessType;
-  status: ProgramStatus;
-  pricing: PricingType;
-  priceAmount?: number;
-  modules: Module[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-// ==========================================
-// 6. Reflection Submission Record
-// ==========================================
-export interface Reflection {
-  id: string;
-  organizationId: string;
-  enrollmentId: string;
-  lessonId: string;
-  contactId: string;
-  reflectionType: ReflectionType;
-  answerText?: string;
-  selectedOptions?: string[];
-  submittedAt: string;
-}
-
-// ==========================================
-// 7. Enrollment & LessonProgress DTOs
-// ==========================================
-export type EnrollmentStatus = 'aktif' | 'selesai';
-
-export interface LessonProgress {
-  completed: boolean;
-  completedAt?: string;
-  reflectionAnswer?: string;
-  selectedOptions?: string[];
-}
-
-export interface Enrollment {
-  id: string;
-  organizationId: string;
-  contactId: string;
-  programId: string;
-  status: EnrollmentStatus;
-  enrolledAt: string;
-  completedAt?: string;
-  progressPercent: number;
-  completedLessonIds: string[];
-  lessonProgress: Record<string, LessonProgress>;
-}
-
-// ==========================================
-// 8. LearningSignal DTO
-// ==========================================
-export type SignalStatus = 'ACTIVE' | 'RESOLVED' | 'DISMISSED';
-
-export interface LearningSignal {
-  id: string;
-  organizationId: string;
-  contactId: string;
-  enrollmentId: string;
-  signalLevel: 'Minat tinggi' | 'Minat sedang' | 'Minat rendah';
-  intentScore: number; // 0 - 100
-  primaryReason: string;
-  rawReflectionQuote?: string;
-  status: SignalStatus;
-  evaluatedAt: string;
-}
-
-// ==========================================
-// 9. Integration Outbox & Flow Reference
-// ==========================================
-export interface IntegrationOutboxItem {
-  id: string;
-  envelope: IntegrationEventEnvelope;
-  status: 'PENDING' | 'SENT' | 'FAILED';
-  attempts: number;
-  createdAt: string;
-  sentAt?: string;
-}
+export type LearningNextActionRequest = z.infer<typeof LearningNextActionRequestSchema>;
 
 export interface FlowNextActionRef {
   id: string;
@@ -223,4 +239,80 @@ export interface FlowNextActionRef {
   nextActionId: string;
   title: string;
   createdAt: string;
+}
+
+export interface FlowContactContext {
+  contactId: string;
+  stage: 'NEW' | 'CONTACTED' | 'INTERESTED' | 'FOLLOW_UP' | 'BOOKED' | 'COMPLETED' | 'LOST';
+  classification: 'PROSPECT' | 'CLIENT';
+  primaryNextAction?: {
+    id: string;
+    type: string;
+    dueAt: string | null;
+  };
+  activeBooking?: {
+    id: string;
+    serviceId: string;
+    startAt: string;
+    status: string;
+  };
+}
+
+export type AssessmentStatus = 'NOT_STARTED' | 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'UNKNOWN';
+
+export interface LearningContext {
+  contactId: string;
+  activeEnrollments: Array<{
+    enrollmentId: string;
+    programId: string;
+    programTitle: string;
+    progressPercent: number;
+    learningStatus: string;
+    intentLabel: 'cold' | 'warm' | 'hot';
+    lastActivityAt: string | null;
+  }>;
+  recentSignals: Array<{
+    type: string;
+    reason: string;
+    priority: number;
+    createdAt: string;
+  }>;
+}
+
+export interface EnrollContactInput {
+  organizationId: string;
+  contactId: string;
+  programId: string;
+  enrolledByUserId?: string;
+}
+
+// ==========================================
+// 7. Canonical PromotorFlowAdapter Interface
+// ==========================================
+export interface PromotorFlowAdapter {
+  getContactContext(contactId: string): Promise<FlowContactContext>;
+  getAssessmentStatus(contactId: string): Promise<AssessmentStatus>;
+  createNextAction(input: LearningNextActionRequest): Promise<FlowNextActionRef>;
+  appendLearningActivity(input: Record<string, unknown>): Promise<void>;
+}
+
+// Internal Outbox Queue Item
+export interface IntegrationOutboxItem {
+  id: string;
+  idempotencyKey: string;
+  envelope: IntegrationEventEnvelope;
+  status: 'PENDING' | 'SENT' | 'FAILED';
+  attempts: number;
+  createdAt: string;
+  sentAt?: string;
+}
+
+// Product Entitlements & Health
+export interface ProductEntitlements {
+  promotorClass: boolean;
+  promotorFlow: boolean;
+}
+
+export interface IntegrationHealth {
+  promotorFlow: 'AVAILABLE' | 'UNAVAILABLE';
 }

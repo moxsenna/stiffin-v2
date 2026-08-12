@@ -11,9 +11,15 @@ import { Enrollment, Program } from '@promotor/contracts';
 export default function LearnerHomePage() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [programsMap, setProgramsMap] = useState<Map<string, Program>>(new Map());
+  const [noSession, setNoSession] = useState(false);
 
   useEffect(() => {
     const activeContactId = getActiveLearnerContactId();
+
+    if (!activeContactId) {
+      setNoSession(true);
+      return;
+    }
 
     Promise.all([
       getEnrollmentsByContactIdQuery(activeContactId),
@@ -25,6 +31,36 @@ export default function LearnerHomePage() {
       setProgramsMap(pMap);
     });
   }, []);
+
+  if (noSession) {
+    return (
+      <LearnerShell>
+        <div style={{ padding: '40px 16px', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
+            Sesi Pembelajaran Tidak Ditemukan
+          </h2>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
+            Silakan mendaftar terlebih dahulu pada salah satu program publik kami untuk mengakses materi belajar.
+          </p>
+          <Link
+            href="/p/rina/7-hari-mengenal-cara-belajar-anak"
+            className="touch-target-primary"
+            style={{
+              display: 'inline-block',
+              padding: '10px 20px',
+              backgroundColor: 'var(--color-primary)',
+              color: '#FFF',
+              fontWeight: 700,
+              borderRadius: 'var(--border-radius-md)',
+              textDecoration: 'none',
+            }}
+          >
+            Lihat Program Edukasi Gratis →
+          </Link>
+        </div>
+      </LearnerShell>
+    );
+  }
 
   return (
     <LearnerShell>
