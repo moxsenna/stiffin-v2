@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@promotor/contracts": ["./packages/contracts/src/index.ts"],
+      "@promotor/platform-core": ["./packages/platform-core/src/index.ts"],
+      "@promotor/api-client": ["./packages/api-client/src/index.ts"],
+      "@promotor/promotor-class-fixtures": ["./packages/promotor-class-fixtures/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules"]
+}

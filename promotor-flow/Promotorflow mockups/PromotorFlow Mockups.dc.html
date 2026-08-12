@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&display=swap" rel="stylesheet"><style>body{margin:0;background:#EDECE8;font-family:Inter,system-ui,sans-serif}a{color:#167A68}a:hover{color:#126556}*{-webkit-font-smoothing:antialiased}</style></helmet>
+
+<div style="padding:44px 48px 64px;display:flex;flex-direction:column;gap:56px">
+
+<div style="display:flex;flex-direction:column;gap:6px;max-width:720px">
+<div style="font:650 11px/16px Inter,system-ui,sans-serif;letter-spacing:.08em;color:#9C9A94;text-transform:uppercase">PromotorFlow V0.1 · Quiet Operations</div>
+<div style="font:700 26px/32px Inter,system-ui,sans-serif;color:#191918">UI mockups</div>
+<div style="font:400 14px/21px Inter,system-ui,sans-serif;color:#71706B;text-wrap:pretty">Prototipe interaktif enam screen inti di sebelah kiri — bisa diklik: baris kontak, tombol WA, bottom nav, dan alur konfirmasi pesan. Di bawahnya, screen pendukung dan state dalam ukuran asli 390px.</div>
+</div>
+
+<section style="display:flex;gap:44px;align-items:flex-start;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="font:650 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase">Prototipe · klik untuk menjelajah</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#F7F7F5;position:relative;overflow:hidden">
+
+<sc-if value="{{isToday}}" hint-placeholder-val="{{ true }}">
+<div style="flex:1;overflow:auto;padding-top:54px">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:12px 16px 0">
+<div>
+<div style="font:700 24px/29px Inter,system-ui,sans-serif;color:#191918">Hari ini</div>
+<div style="font:400 14px/20px Inter,system-ui,sans-serif;color:#71706B;padding-top:2px">Selasa, 12 Agustus</div>
+</div>
+<button onClick="{{goAdd}}" style="width:44px;height:44px;margin:-8px -10px 0 0;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:#191918"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M10 4v12M4 10h12"></path></svg></button>
+</div>
+<div style="font:450 13px/18px Inter,system-ui,sans-serif;color:#71706B;padding:10px 16px 0">5 tindakan · <span style="color:#B42318">1 terlambat</span></div>
+
+<div style="font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#B42318;text-transform:uppercase;padding:24px 16px 8px">Terlambat</div>
+<div style="background:#fff;border-top:1px solid #E8E7E3">
+<div onClick="{{goContact}}" style="display:flex;gap:12px;padding:13px 16px;border-bottom:1px solid #E8E7E3;cursor:pointer">
+<div style="flex:1;min-width:0">
+<div style="display:flex;justify-content:space-between;gap:8px"><span style="font:600 15.5px/21px Inter,system-ui,sans-serif;color:#191918">Ayu Rahma</span><span style="font:500 12.5px/21px Inter,system-ui,sans-serif;color:#B42318;white-space:nowrap">1 hari</span></div>
+<div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#71706B">Parenting · Instagram</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:3px"><span style="font:400 13.5px/19px Inter,system-ui,sans-serif;color:#191918">Tanya jadwal weekend</span><button onClick="{{openWA}}" aria-label="Kirim WhatsApp" style="width:56px;height:44px;margin:-7px -6px -7px 0;padding:0;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:flex-end"><span style="min-width:44px;height:30px;padding:0 10px;border:1px solid #D5D3CE;border-radius:6px;background:#fff;font:600 12.5px/28px Inter,system-ui,sans-serif;color:#167A68;display:flex;align-items:center;justify-content:center">WA</span></button></div>
+</div>
+</div>
+</div>
+
+<div style="font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase;padding:24px 16px 8px">Hari ini</div>
+<div style="background:#fff;border-top:1px solid #E8E7E3">
+<div onClick="{{goBooking}}" style="display:flex;gap:12px;padding:13px 16px;border-bottom:1px solid #E8E7E3;cursor:pointer">
+<div style="flex:1;min-width:0">
+<div style="display:flex;justify-content:space-between;gap:8px"><span style="font:600 15.5px/21px Inter,system-ui,sans-serif;color:#191918">Arief Santoso</span><span style="font:500 12.5px/21px Inter,system-ui,sans-serif;color:#191918;white-space:nowrap">14:00</span></div>
+<div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#71706B">Tes Family · Home visit</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:3px"><span style="font:400 13.5px/19px Inter,system-ui,sans-serif;color:#067647">DP sudah dibayar</span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#9C9A94" stroke-width="1.6" stroke-linecap="round"><path d="M6 3.5L10.5 8L6 12.5"></path></svg></div>
+</div>
+</div>
+<div style="display:flex;gap:12px;padding:13px 16px;border-bottom:1px solid #E8E7E3">
+<div style="flex:1;min-width:0">
+<div style="display:flex;justify-content:space-between;gap:8px"><span style="font:600 15.5px/21px Inter,system-ui,sans-serif;color:#191918">Dimas Prakoso</span><span style="font:500 12.5px/21px Inter,system-ui,sans-serif;color:#9C9A94;white-space:nowrap">Jumat 10:00</span></div>
+<div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#71706B">Tes Personal · Datang ke lokasi</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:3px"><span style="font:400 13.5px/19px Inter,system-ui,sans-serif;color:#B54708">DP belum dibayar</span><button onClick="{{openWA}}" aria-label="Kirim WhatsApp" style="width:56px;height:44px;margin:-7px -6px -7px 0;padding:0;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:flex-end"><span style="min-width:44px;height:30px;padding:0 10px;border:1px solid #D5D3CE;border-radius:6px;background:#fff;font:600 12.5px/28px Inter,system-ui,sans-serif;color:#167A68;display:flex;align-items:center;justify-content:center">WA</span></button></div>
+</div>
+</div>
+<div style="display:flex;gap:12px;padding:13px 16px;border-bottom:1px solid #E8E7E3">
+<div style="flex:1;min-width:0">
+<div style="display:flex;justify-content:space-between;gap:8px"><span style="font:600 15.5px/21px Inter,system-ui,sans-serif;color:#191918">Reni Wulandari</span><span style="font:500 12.5px/21px Inter,system-ui,sans-serif;color:#9C9A94;white-space:nowrap">Aftercare</span></div>
+<div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#71706B">Klien · Tes Personal, 5 Agu</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:3px"><span style="font:400 13.5px/19px Inter,system-ui,sans-serif;color:#191918">Tanya pemahaman hasil</span><button onClick="{{openWAAftercare}}" aria-label="Kirim WhatsApp" style="width:56px;height:44px;margin:-7px -6px -7px 0;padding:0;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:flex-end"><span style="min-width:44px;height:30px;padding:0 10px;border:1px solid #D5D3CE;border-radius:6px;background:#fff;font:600 12.5px/28px Inter,system-ui,sans-serif;color:#167A68;display:flex;align-items:center;justify-content:center">WA</span></button></div>
+</div>
+</div>
+</div>
+
+<div style="font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase;padding:24px 16px 8px">Berikutnya</div>
+<div style="background:#fff;border-top:1px solid #E8E7E3">
+<div style="display:flex;gap:12px;padding:13px 16px;border-bottom:1px solid #E8E7E3">
+<div style="flex:1;min-width:0">
+<div style="display:flex;justify-content:space-between;gap:8px"><span style="font:600 15.5px/21px Inter,system-ui,sans-serif;color:#191918">Hendra Kusuma</span><span style="font:500 12.5px/21px Inter,system-ui,sans-serif;color:#9C9A94;white-space:nowrap">Besok 09:00</span></div>
+<div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#71706B">Tes Couple · Google</div>
+<div style="font:400 13.5px/19px Inter,system-ui,sans-serif;color:#191918;padding-top:3px">Hubungi prospek baru</div>
+</div>
+</div>
+</div>
+<div style="height:24px"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{isContacts}}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;overflow:auto;padding-top:54px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0">
+<div style="font:700 24px/29px Inter,system-ui,sans-serif;color:#191918">Kontak</div>
+<button onClick="{{goAdd}}" style="width:44px;height:44px;margin-right:-10px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:#191918"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M10 4v12M4 10h12"></path></svg></button>
+</div>
+<div style="padding:12px 16px 0"><div style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;background:#fff;border:1px solid #E8E7E3;border-radius:8px"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#9C9A94" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.4"></circle><path d="M10.3 10.3L14 14"></path></svg><span style="font:400 14px Inter,system-ui,sans-serif;color:#9C9A94">Cari nama atau nomor</span></div></div>
+<div style="display:flex;gap:20px;padding:16px 16px 0;border-bottom:1px solid #E8E7E3">
+<button onClick="{{filterAll}}" style="background:none;border:none;padding:0 0 10px;cursor:pointer;font:600 14px Inter,system-ui,sans-serif;color:{{fAllColor}};border-bottom:2px solid {{fAllBorder}};margin-bottom:-1px">Semua</button>
+<button onClick="{{filterProspek}}" style="background:none;border:none;padding:0 0 10px;cursor:pointer;font:600 14px Inter,system-ui,sans-serif;color:{{fProColor}};border-bottom:2px solid {{fProBorder}};margin-bottom:-1px">Prospek</button>
+<button onClick="{{filterKlien}}" style="background:none;border:none;padding:0 0 10px;cursor:pointer;font:600 14px Inter,system-ui,sans-serif;color:{{fKliColor}};border-bottom:2px solid {{fKliBorder}};margin-bottom:-1px">Klien</button>
+</div>
+<div style="background:#fff">
+<sc-for list="{{contacts}}" as="c" hint-placeholder-count="6">
+<div onClick="{{goContact}}" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid #E8E7E3;cursor:pointer">
+<div style="flex:1;min-width:0">
+<div style="font:600 15.5px/21px Inter,system-ui,sans-serif;color:#191918">{{c.name}}</div>
+<div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#71706B">{{c.sub}}</div>
+</div>
+<span style="font:450 12.5px Inter,system-ui,sans-serif;color:#9C9A94;white-space:nowrap">{{c.trail}}</span>
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#C6C4BE" stroke-width="1.6" stroke-linecap="round"><path d="M6 3.5L10.5 8L6 12.5"></path></svg>
+</div>
+</sc-for>
+</div>
+<div style="height:24px"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{isContact}}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;overflow:auto;padding-top:54px;background:#fff">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px">
+<button onClick="{{back}}" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:#191918"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M11.5 5L6 10l5.5 5"></path></svg></button>
+<button style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer"><svg width="18" height="18" viewBox="0 0 18 18" fill="#71706B"><circle cx="4" cy="9" r="1.5"></circle><circle cx="9" cy="9" r="1.5"></circle><circle cx="14" cy="9" r="1.5"></circle></svg></button>
+</div>
+<div style="padding:4px 16px 0">
+<div style="font:700 22px/28px Inter,system-ui,sans-serif;color:#191918">Ayu Rahma</div>
+<div style="font:400 14px/20px Inter,system-ui,sans-serif;color:#71706B;padding-top:2px">0812 1110 001</div>
+<button onClick="{{openLifecycle}}" style="display:flex;align-items:center;gap:7px;height:44px;margin:0 -6px;padding:0 6px;background:none;border:none;cursor:pointer;text-align:left"><span style="width:6px;height:6px;border-radius:50%;background:{{lifecycleDot}}"></span><span style="font:600 13.5px Inter,system-ui,sans-serif;color:#191918">{{statusLabel}}</span><span style="font:400 13.5px Inter,system-ui,sans-serif;color:#71706B">· Parenting · Instagram</span><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#9C9A94" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 5.5L7 9l3.5-3.5"></path></svg></button>
+</div>
+<div style="font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase;padding:28px 16px 8px">Tindakan berikutnya</div>
+<div style="padding:0 16px">
+<div style="font:600 15.5px/21px Inter,system-ui,sans-serif;color:#191918">Follow-up jadwal weekend</div>
+<div style="font:400 13.5px/19px Inter,system-ui,sans-serif;color:#B42318;padding-top:2px">Terlambat 1 hari · kemarin 10:00</div>
+<button onClick="{{openWA}}" style="width:100%;height:46px;margin-top:14px;border:none;border-radius:8px;background:#167A68;color:#fff;font:600 15px Inter,system-ui,sans-serif;cursor:pointer" style-hover="background:#126556">Buka WhatsApp</button>
+<div style="display:flex;gap:20px;padding-top:12px"><button style="background:none;border:none;padding:4px 0;font:500 14px Inter,system-ui,sans-serif;color:#167A68;cursor:pointer">Atur ulang</button><button style="background:none;border:none;padding:4px 0;font:500 14px Inter,system-ui,sans-serif;color:#167A68;cursor:pointer">Selesai tanpa pesan</button></div>
+</div>
+<div style="font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase;padding:28px 16px 8px">Catatan</div>
+<div style="padding:0 16px">
+<div style="font:400 14px/21px Inter,system-ui,sans-serif;color:#191918;text-wrap:pretty">Anak kelas 9. Sedang bingung memilih SMA. Tanya jadwal weekend karena kerja Senin–Jumat.</div>
+<button style="background:none;border:none;padding:8px 0 0;font:500 14px Inter,system-ui,sans-serif;color:#167A68;cursor:pointer">Edit</button>
+</div>
+<div style="font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase;padding:28px 16px 8px">Booking</div>
+<div style="padding:0 16px"><div style="font:400 14px/20px Inter,system-ui,sans-serif;color:#71706B">Belum ada</div><button onClick="{{goNewBooking}}" style="background:none;border:none;padding:8px 0 0;font:500 14px Inter,system-ui,sans-serif;color:#167A68;cursor:pointer">+ Buat booking</button></div>
+<div style="font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase;padding:28px 16px 8px">Aktivitas</div>
+<div style="padding:0 16px 28px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;gap:14px"><span style="font:450 12.5px/18px Inter,system-ui,sans-serif;color:#9C9A94;width:52px;flex:none">12 Agu</span><span style="font:400 13.5px/18px Inter,system-ui,sans-serif;color:#191918">Follow-up jatuh tempo</span></div>
+<div style="display:flex;gap:14px"><span style="font:450 12.5px/18px Inter,system-ui,sans-serif;color:#9C9A94;width:52px;flex:none">10 Agu</span><span style="font:400 13.5px/18px Inter,system-ui,sans-serif;color:#191918">WhatsApp dikirim</span></div>
+<div style="display:flex;gap:14px"><span style="font:450 12.5px/18px Inter,system-ui,sans-serif;color:#9C9A94;width:52px;flex:none">8 Agu</span><span style="font:400 13.5px/18px Inter,system-ui,sans-serif;color:#191918">Menanyakan harga</span></div>
+<div style="display:flex;gap:14px"><span style="font:450 12.5px/18px Inter,system-ui,sans-serif;color:#9C9A94;width:52px;flex:none">8 Agu</span><span style="font:400 13.5px/18px Inter,system-ui,sans-serif;color:#191918">Prospek ditambahkan</span></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isCalendar}}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;overflow:auto;padding-top:54px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0">
+<div><div style="font:700 24px/29px Inter,system-ui,sans-serif;color:#191918">Agenda</div><div style="font:400 14px/20px Inter,system-ui,sans-serif;color:#71706B;padding-top:2px">Agustus 2026</div></div>
+<button onClick="{{goNewBooking}}" style="width:44px;height:44px;margin-right:-10px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:#191918"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M10 4v12M4 10h12"></path></svg></button>
+</div>
+<div style="font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase;padding:24px 16px 8px">Hari ini · Selasa 12</div>
+<div style="background:#fff;border-top:1px solid #E8E7E3">
+<div onClick="{{goBooking}}" style="display:flex;gap:14px;padding:13px 16px;border-bottom:1px solid #E8E7E3;cursor:pointer">
+<span style="font:600 13.5px/19px Inter,system-ui,sans-serif;color:#191918;width:44px;flex:none">10:00</span>
+<div style="flex:1;min-width:0"><div style="font:600 15.5px/21px Inter,system-ui,sans-serif;color:#191918">Dimas Prakoso</div><div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#71706B">Tes Personal · Datang ke lokasi</div><div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#B54708">DP belum dibayar</div></div>
+</div>
+<div style="display:flex;gap:14px;padding:13px 16px;border-bottom:1px solid #E8E7E3">
+<span style="font:600 13.5px/19px Inter,system-ui,sans-serif;color:#191918;width:44px;flex:none">14:00</span>
+<div style="flex:1;min-width:0"><div style="font:600 15.5px/21px Inter,system-ui,sans-serif;color:#191918">Arief Santoso</div><div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#71706B">Tes Family · Home visit</div></div>
+</div>
+</div>
+<div style="font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase;padding:24px 16px 8px">Kamis 14</div>
+<div style="background:#fff;border-top:1px solid #E8E7E3">
+<div style="display:flex;gap:14px;padding:13px 16px;border-bottom:1px solid #E8E7E3">
+<span style="font:600 13.5px/19px Inter,system-ui,sans-serif;color:#191918;width:44px;flex:none">10:00</span>
+<div style="flex:1;min-width:0"><div style="font:600 15.5px/21px Inter,system-ui,sans-serif;color:#191918">Ayu Rahma</div><div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#71706B">Tes Personal · Datang ke lokasi</div></div>
+</div>
+<div style="display:flex;gap:14px;padding:13px 16px;border-bottom:1px solid #E8E7E3">
+<span style="font:600 13.5px/19px Inter,system-ui,sans-serif;color:#191918;width:44px;flex:none">16:00</span>
+<div style="flex:1;min-width:0"><div style="font:600 15.5px/21px Inter,system-ui,sans-serif;color:#191918">Sari Melati</div><div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#71706B">Tes Couple · Home visit</div><div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#9C9A94">Belum dikonfirmasi</div></div>
+</div>
+</div>
+<div style="height:24px"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{isBooking}}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;overflow:auto;padding-top:54px;background:#fff">
+<div style="padding:8px 12px"><button onClick="{{back}}" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:#191918"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M11.5 5L6 10l5.5 5"></path></svg></button></div>
+<div style="padding:4px 16px 0">
+<div style="font:700 22px/28px Inter,system-ui,sans-serif;color:#191918">Tes Personal</div>
+<div style="font:400 15px/21px Inter,system-ui,sans-serif;color:#191918;padding-top:6px">Dimas Prakoso</div>
+<div style="font:400 14px/20px Inter,system-ui,sans-serif;color:#71706B;padding-top:10px">Selasa, 12 Agustus · 10:00</div>
+<div style="font:400 14px/20px Inter,system-ui,sans-serif;color:#71706B">Datang ke lokasi · Jl. Cihampelas 42</div>
+</div>
+<div style="font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase;padding:28px 16px 8px">Pembayaran</div>
+<div style="padding:0 16px">
+<div style="font:500 14.5px/20px Inter,system-ui,sans-serif;color:#B54708">DP belum dibayar</div>
+<div style="font:400 13.5px/19px Inter,system-ui,sans-serif;color:#71706B;padding-top:2px">Rp150.000 dari Rp500.000</div>
+<button style="width:100%;height:46px;margin-top:14px;border:none;border-radius:8px;background:#167A68;color:#fff;font:600 15px Inter,system-ui,sans-serif;cursor:pointer">Tandai DP dibayar</button>
+</div>
+<div style="font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase;padding:28px 16px 8px">Kontak</div>
+<div style="padding:0 16px"><button onClick="{{openWA}}" style="background:none;border:none;padding:4px 0;font:500 14.5px Inter,system-ui,sans-serif;color:#167A68;cursor:pointer">Buka WhatsApp</button></div>
+<div style="font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase;padding:28px 16px 8px">Lainnya</div>
+<div style="padding:0 16px 28px;display:flex;flex-direction:column;gap:12px;align-items:flex-start">
+<button onClick="{{openComplete}}" style="background:none;border:none;padding:0;font:500 14.5px Inter,system-ui,sans-serif;color:#167A68;cursor:pointer">Tandai tes selesai</button>
+<button onClick="{{goReschedule}}" style="background:none;border:none;padding:0;font:500 14.5px Inter,system-ui,sans-serif;color:#167A68;cursor:pointer">Reschedule</button>
+<button style="background:none;border:none;padding:0;font:500 14.5px Inter,system-ui,sans-serif;color:#B42318;cursor:pointer">Batalkan booking</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isAdd}}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;overflow:auto;padding-top:54px;background:#fff">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px"><button onClick="{{back}}" style="height:44px;padding:0 8px;background:none;border:none;cursor:pointer;font:500 15px Inter,system-ui,sans-serif;color:#71706B">Batal</button></div>
+<div style="padding:4px 16px 0;font:700 22px/28px Inter,system-ui,sans-serif;color:#191918">Prospek baru</div>
+<div style="padding:24px 16px 0;display:flex;flex-direction:column;gap:18px">
+<div><div style="font:500 13px/18px Inter,system-ui,sans-serif;color:#71706B;padding-bottom:6px">Nama</div><div style="height:46px;border:1px solid #D5D3CE;border-radius:8px;display:flex;align-items:center;padding:0 12px;font:400 15px Inter,system-ui,sans-serif;color:#191918">Ayu Rahma</div></div>
+<div><div style="font:500 13px/18px Inter,system-ui,sans-serif;color:#71706B;padding-bottom:6px">WhatsApp</div><div style="height:46px;border:1px solid #167A68;border-radius:8px;display:flex;align-items:center;padding:0 12px;font:400 15px Inter,system-ui,sans-serif;color:#191918">0812 1110 001<span style="width:1.5px;height:20px;background:#167A68;margin-left:2px"></span></div></div>
+<div><div style="font:500 13px/18px Inter,system-ui,sans-serif;color:#71706B;padding-bottom:6px">Kebutuhan</div><div style="height:46px;border:1px solid #D5D3CE;border-radius:8px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font:400 15px Inter,system-ui,sans-serif;color:#191918">Parenting<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#9C9A94" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 5.5L7 9l3.5-3.5"></path></svg></div></div>
+<button style="background:none;border:none;padding:0;text-align:left;font:500 14px Inter,system-ui,sans-serif;color:#167A68;cursor:pointer">+ Tambahkan sumber & catatan</button>
+<button onClick="{{back}}" style="width:100%;height:46px;margin-top:6px;border:none;border-radius:8px;background:#167A68;color:#fff;font:600 15px Inter,system-ui,sans-serif;cursor:pointer">Simpan prospek</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isNewBooking}}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;overflow:auto;padding-top:54px;background:#fff">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px"><button onClick="{{back}}" style="height:44px;padding:0 8px;background:none;border:none;cursor:pointer;font:500 15px Inter,system-ui,sans-serif;color:#71706B">Batal</button></div>
+<div style="padding:4px 16px 0;font:700 22px/28px Inter,system-ui,sans-serif;color:#191918">Booking baru</div>
+<div style="padding:22px 16px 0;display:flex;flex-direction:column;gap:18px">
+<div><div style="font:500 13px/18px Inter,system-ui,sans-serif;color:#71706B;padding-bottom:6px">Kontak</div><div style="height:46px;border:1px solid #D5D3CE;border-radius:8px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font:400 15px Inter,system-ui,sans-serif;color:#191918">Ayu Rahma<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#9C9A94" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 5.5L7 9l3.5-3.5"></path></svg></div></div>
+<div><div style="font:500 13px/18px Inter,system-ui,sans-serif;color:#71706B;padding-bottom:6px">Layanan</div><div style="height:46px;border:1px solid #D5D3CE;border-radius:8px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font:400 15px Inter,system-ui,sans-serif;color:#191918">Tes Personal · Rp500.000<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#9C9A94" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 5.5L7 9l3.5-3.5"></path></svg></div></div>
+<div style="display:flex;gap:12px"><div style="flex:1"><div style="font:500 13px/18px Inter,system-ui,sans-serif;color:#71706B;padding-bottom:6px">Tanggal</div><div style="height:46px;border:1px solid #D5D3CE;border-radius:8px;display:flex;align-items:center;padding:0 12px;font:400 15px Inter,system-ui,sans-serif;color:#191918">14 Agu</div></div><div style="flex:1"><div style="font:500 13px/18px Inter,system-ui,sans-serif;color:#71706B;padding-bottom:6px">Jam</div><div style="height:46px;border:1px solid #D5D3CE;border-radius:8px;display:flex;align-items:center;padding:0 12px;font:400 15px Inter,system-ui,sans-serif;color:#191918">10:00</div></div></div>
+<div><div style="font:500 13px/18px Inter,system-ui,sans-serif;color:#71706B;padding-bottom:6px">Lokasi</div><div style="display:flex;gap:8px"><div style="flex:1;height:44px;border:1px solid #167A68;border-radius:8px;background:#EAF5F2;display:flex;align-items:center;justify-content:center;font:600 14px Inter,system-ui,sans-serif;color:#167A68">Datang ke lokasi</div><div style="flex:1;height:44px;border:1px solid #D5D3CE;border-radius:8px;display:flex;align-items:center;justify-content:center;font:500 14px Inter,system-ui,sans-serif;color:#191918">Home visit</div></div></div>
+<div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#9C9A94;margin-top:-4px">Tidak ada bentrok dengan jadwal lain.</div>
+<div><div style="font:500 13px/18px Inter,system-ui,sans-serif;color:#71706B;padding-bottom:6px">DP</div><div style="height:46px;border:1px solid #D5D3CE;border-radius:8px;display:flex;align-items:center;padding:0 12px;font:400 15px Inter,system-ui,sans-serif;color:#191918">Rp150.000</div></div>
+<button onClick="{{goBooking}}" style="width:100%;height:46px;border:none;border-radius:8px;background:#167A68;color:#fff;font:600 15px Inter,system-ui,sans-serif;cursor:pointer">Simpan booking</button>
+<div style="font:400 12.5px/18px Inter,system-ui,sans-serif;color:#9C9A94;padding-bottom:24px;text-align:center">Setelah disimpan, konfirmasi bisa dikirim via WhatsApp.</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isReschedule}}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;overflow:auto;padding-top:54px;background:#fff">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px"><button onClick="{{back}}" style="height:44px;padding:0 8px;background:none;border:none;cursor:pointer;font:500 15px Inter,system-ui,sans-serif;color:#71706B">Batal</button></div>
+<div style="padding:4px 16px 0"><div style="font:700 22px/28px Inter,system-ui,sans-serif;color:#191918">Reschedule</div><div style="font:400 14px/20px Inter,system-ui,sans-serif;color:#71706B;padding-top:6px">Dimas Prakoso · Tes Personal</div><div style="font:400 14px/20px Inter,system-ui,sans-serif;color:#9C9A94;text-decoration:line-through">Selasa, 12 Agustus · 10:00</div></div>
+<div style="font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase;padding:26px 16px 10px">Jadwal baru</div>
+<div style="padding:0 16px;display:flex;gap:8px;flex-wrap:wrap">
+<div style="height:44px;padding:0 14px;border:1px solid #D5D3CE;border-radius:8px;display:flex;align-items:center;font:500 14px Inter,system-ui,sans-serif;color:#191918">Kam 14 · 13:00</div>
+<div style="height:44px;padding:0 14px;border:1px solid #167A68;border-radius:8px;background:#167A68;display:flex;align-items:center;font:600 14px Inter,system-ui,sans-serif;color:#fff">Kam 14 · 16:00</div>
+<div style="height:44px;padding:0 14px;border:1px solid #D5D3CE;border-radius:8px;display:flex;align-items:center;font:500 14px Inter,system-ui,sans-serif;color:#191918">Jum 15 · 09:00</div>
+<div style="height:44px;padding:0 14px;border:1px solid #D5D3CE;border-radius:8px;display:flex;align-items:center;font:500 14px Inter,system-ui,sans-serif;color:#71706B">Pilih tanggal lain</div>
+</div>
+<div style="font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase;padding:26px 16px 10px">Alasan · opsional</div>
+<div style="padding:0 16px"><div style="min-height:64px;border:1px solid #D5D3CE;border-radius:8px;padding:12px;font:400 14px/20px Inter,system-ui,sans-serif;color:#191918">Klien minta pindah ke sore.</div></div>
+<div style="padding:22px 16px 28px"><button onClick="{{openWA}}" style="width:100%;height:46px;border:none;border-radius:8px;background:#167A68;color:#fff;font:600 15px Inter,system-ui,sans-serif;cursor:pointer">Simpan & kabari via WhatsApp</button><button onClick="{{back}}" style="width:100%;height:44px;margin-top:6px;background:none;border:none;font:500 14.5px Inter,system-ui,sans-serif;color:#167A68;cursor:pointer">Simpan tanpa mengabari</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{showNav}}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;border-top:1px solid #E8E7E3;background:rgba(255,255,255,.94);padding-bottom:26px;flex:none">
+<button onClick="{{goToday}}" style="flex:1;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;cursor:pointer;color:{{navToday}}"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 6h14M4 11h14M4 16h9"></path></svg><span style="font:500 10.5px Inter,system-ui,sans-serif">Hari ini</span></button>
+<button onClick="{{goContacts}}" style="flex:1;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;cursor:pointer;color:{{navContacts}}"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="8" r="3.2"></circle><path d="M4.5 18c0-3.3 2.9-5.2 6.5-5.2s6.5 1.9 6.5 5.2"></path></svg><span style="font:500 10.5px Inter,system-ui,sans-serif">Kontak</span></button>
+<button onClick="{{goCalendar}}" style="flex:1;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;cursor:pointer;color:{{navCalendar}}"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3.5" y="5" width="15" height="13" rx="2"></rect><path d="M3.5 9h15M7.5 3.5v3M14.5 3.5v3"></path></svg><span style="font:500 10.5px Inter,system-ui,sans-serif">Kalender</span></button>
+<button style="flex:1;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;cursor:pointer;color:#9C9A94"><svg width="22" height="22" viewBox="0 0 22 22" fill="currentColor"><circle cx="5" cy="11" r="1.7"></circle><circle cx="11" cy="11" r="1.7"></circle><circle cx="17" cy="11" r="1.7"></circle></svg><span style="font:500 10.5px Inter,system-ui,sans-serif">Lainnya</span></button>
+</div>
+</sc-if>
+
+<sc-if value="{{sheetOpen}}" hint-placeholder-val="{{ false }}">
+<div onClick="{{closeSheet}}" style="position:absolute;inset:0;background:rgba(25,25,24,.32);backdrop-filter:blur(2px);z-index:80"></div>
+</sc-if>
+
+<sc-if value="{{sheetLifecycle}}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:90;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -8px 32px rgba(25,25,24,.18);padding:10px 0 34px">
+<div style="width:36px;height:4px;border-radius:2px;background:#E8E7E3;margin:0 auto 16px"></div>
+<div style="font:600 16px/22px Inter,system-ui,sans-serif;color:#191918;padding:0 16px 4px">Ubah status</div>
+<div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B;padding:0 16px 12px">Ayu Rahma</div>
+<div style="border-top:1px solid #E8E7E3">
+<sc-for list="{{stages}}" as="s" hint-placeholder-count="7">
+<button onClick="{{s.pick}}" style="width:100%;height:48px;padding:0 16px;display:flex;align-items:center;gap:10px;background:{{s.bg}};border:none;border-bottom:1px solid #E8E7E3;cursor:pointer;text-align:left">
+<span style="width:6px;height:6px;border-radius:50%;background:{{s.dot}};flex:none"></span>
+<span style="flex:1;font:400 15px Inter,system-ui,sans-serif;color:#191918;font-weight:{{s.weight}}">{{s.label}}</span>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{sheetLost}}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:90;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -8px 32px rgba(25,25,24,.18);padding:10px 0 34px">
+<div style="width:36px;height:4px;border-radius:2px;background:#E8E7E3;margin:0 auto 16px"></div>
+<div style="font:600 16px/22px Inter,system-ui,sans-serif;color:#191918;padding:0 16px 4px">Kenapa tidak lanjut?</div>
+<div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B;padding:0 16px 12px">Dipakai untuk melihat pola, bukan penilaian.</div>
+<div style="border-top:1px solid #E8E7E3">
+<sc-for list="{{lostList}}" as="r" hint-placeholder-count="6">
+<button onClick="{{r.pick}}" style="width:100%;height:48px;padding:0 16px;text-align:left;background:#fff;border:none;border-bottom:1px solid #E8E7E3;font:400 15px Inter,system-ui,sans-serif;color:#191918;cursor:pointer">{{r.label}}</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{sheetComplete}}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:90;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -8px 32px rgba(25,25,24,.18);padding:10px 16px 34px">
+<div style="width:36px;height:4px;border-radius:2px;background:#E8E7E3;margin:0 auto 16px"></div>
+<div style="font:600 16px/22px Inter,system-ui,sans-serif;color:#191918">Tandai tes selesai?</div>
+<div style="font:400 13.5px/19px Inter,system-ui,sans-serif;color:#71706B;padding-top:4px">Dimas Prakoso · Tes Personal, 12 Agustus</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding:16px 0 4px;font:400 14px/20px Inter,system-ui,sans-serif;color:#191918">
+<div>Booking ditandai selesai.</div>
+<div>Dimas menjadi klien.</div>
+<div>Aftercare dijadwalkan 19 Agustus.</div>
+</div>
+<div style="height:1px;background:#E8E7E3;margin:14px 0"></div>
+<button onClick="{{toCompleted}}" style="width:100%;height:46px;border:none;border-radius:8px;background:#167A68;color:#fff;font:600 15px Inter,system-ui,sans-serif;cursor:pointer">Tandai selesai</button>
+<button onClick="{{closeSheet}}" style="width:100%;height:44px;margin-top:6px;background:none;border:none;font:500 14.5px Inter,system-ui,sans-serif;color:#71706B;cursor:pointer">Batal</button>
+</div>
+</sc-if>
+
+<sc-if value="{{sheetCompleted}}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:90;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -8px 32px rgba(25,25,24,.18);padding:10px 16px 34px">
+<div style="width:36px;height:4px;border-radius:2px;background:#E8E7E3;margin:0 auto 16px"></div>
+<div style="font:600 16px/22px Inter,system-ui,sans-serif;color:#191918">Tes selesai</div>
+<div style="font:400 13.5px/19px Inter,system-ui,sans-serif;color:#71706B;padding-top:4px">Dimas kini tercatat sebagai klien.</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;padding:12px 14px;background:#F6F5F2;border-radius:8px">
+<div><div style="font:500 14px/20px Inter,system-ui,sans-serif;color:#191918">Aftercare dijadwalkan</div><div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B">Selasa, 19 Agustus</div></div>
+<button style="background:none;border:none;padding:0;font:500 14px Inter,system-ui,sans-serif;color:#167A68;cursor:pointer">Ubah</button>
+</div>
+<button onClick="{{closeSheet}}" style="width:100%;height:46px;margin-top:16px;border:none;border-radius:8px;background:#167A68;color:#fff;font:600 15px Inter,system-ui,sans-serif;cursor:pointer">Selesai</button>
+</div>
+</sc-if>
+
+<sc-if value="{{sheetAftercare}}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:90;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -8px 32px rgba(25,25,24,.18);padding:10px 0 34px">
+<div style="width:36px;height:4px;border-radius:2px;background:#E8E7E3;margin:0 auto 16px"></div>
+<div style="font:600 16px/22px Inter,system-ui,sans-serif;color:#191918;padding:0 16px 4px">Bagaimana hasil aftercare?</div>
+<div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B;padding:0 16px 12px">Reni Wulandari · aftercare 7 hari setelah tes.</div>
+<div style="border-top:1px solid #E8E7E3">
+<button onClick="{{closeSheet}}" style="width:100%;padding:12px 16px;text-align:left;background:#fff;border:none;border-bottom:1px solid #E8E7E3;cursor:pointer"><div style="font:400 15px/21px Inter,system-ui,sans-serif;color:#191918">Tidak ada kebutuhan</div><div style="font:400 12.5px/18px Inter,system-ui,sans-serif;color:#9C9A94">Selesai, tidak ada follow-up</div></button>
+<button onClick="{{closeSheet}}" style="width:100%;padding:12px 16px;text-align:left;background:#fff;border:none;border-bottom:1px solid #E8E7E3;cursor:pointer"><div style="font:400 15px/21px Inter,system-ui,sans-serif;color:#191918">Ada pertanyaan</div><div style="font:400 12.5px/18px Inter,system-ui,sans-serif;color:#9C9A94">Follow-up besok</div></button>
+<button onClick="{{closeSheet}}" style="width:100%;padding:12px 16px;text-align:left;background:#EAF5F2;border:none;border-bottom:1px solid #E8E7E3;cursor:pointer"><div style="font:600 15px/21px Inter,system-ui,sans-serif;color:#167A68">Ingin sesi lanjutan</div><div style="font:400 12.5px/18px Inter,system-ui,sans-serif;color:#167A68">Buat booking baru</div></button>
+<button onClick="{{closeSheet}}" style="width:100%;padding:12px 16px;text-align:left;background:#fff;border:none;border-bottom:1px solid #E8E7E3;cursor:pointer"><div style="font:400 15px/21px Inter,system-ui,sans-serif;color:#191918">Hubungi lagi nanti</div><div style="font:400 12.5px/18px Inter,system-ui,sans-serif;color:#9C9A94">Follow-up 1 minggu</div></button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{sheetPreview}}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:90;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -8px 32px rgba(25,25,24,.18);padding:10px 16px 34px">
+<div style="width:36px;height:4px;border-radius:2px;background:#E8E7E3;margin:0 auto 16px"></div>
+<div style="font:600 15.5px/21px Inter,system-ui,sans-serif;color:#191918">{{previewTitle}}</div>
+<div style="font:400 14px/21px Inter,system-ui,sans-serif;color:#191918;padding:10px 0 0;text-wrap:pretty">{{previewMsg}}</div>
+<button style="background:none;border:none;padding:10px 0 0;font:500 14px Inter,system-ui,sans-serif;color:#167A68;cursor:pointer">Edit pesan</button>
+<div style="height:1px;background:#E8E7E3;margin:16px 0"></div>
+<button onClick="{{toSent}}" style="width:100%;height:46px;border:none;border-radius:8px;background:#167A68;color:#fff;font:600 15px Inter,system-ui,sans-serif;cursor:pointer">Buka WhatsApp</button>
+</div>
+</sc-if>
+
+<sc-if value="{{sheetSent}}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:90;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -8px 32px rgba(25,25,24,.18);padding:10px 16px 34px">
+<div style="width:36px;height:4px;border-radius:2px;background:#E8E7E3;margin:0 auto 16px"></div>
+<div style="font:600 16px/22px Inter,system-ui,sans-serif;color:#191918">Pesan sudah dikirim?</div>
+<div style="font:400 13.5px/19px Inter,system-ui,sans-serif;color:#71706B;padding-top:4px">{{sentNote}}</div>
+<div style="display:flex;gap:12px;padding-top:18px">
+<button onClick="{{closeSheet}}" style="flex:1;height:46px;border:1px solid #D5D3CE;border-radius:8px;background:#fff;font:600 15px Inter,system-ui,sans-serif;color:#191918;cursor:pointer">Belum</button>
+<button onClick="{{toSchedule}}" style="flex:1;height:46px;border:none;border-radius:8px;background:#167A68;color:#fff;font:600 15px Inter,system-ui,sans-serif;cursor:pointer">Sudah</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{sheetSchedule}}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:90;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -8px 32px rgba(25,25,24,.18);padding:10px 0 34px">
+<div style="width:36px;height:4px;border-radius:2px;background:#E8E7E3;margin:0 auto 16px"></div>
+<div style="font:600 16px/22px Inter,system-ui,sans-serif;color:#191918;padding:0 16px 4px">Follow-up lagi kapan?</div>
+<div style="border-top:1px solid #E8E7E3;margin-top:12px">
+<button onClick="{{closeSheet}}" style="width:100%;height:52px;padding:0 16px;text-align:left;background:#fff;border:none;border-bottom:1px solid #E8E7E3;font:400 15px Inter,system-ui,sans-serif;color:#191918;cursor:pointer">Besok</button>
+<button onClick="{{closeSheet}}" style="width:100%;height:52px;padding:0 16px;text-align:left;background:#EAF5F2;border:none;border-bottom:1px solid #E8E7E3;font:600 15px Inter,system-ui,sans-serif;color:#167A68;cursor:pointer">2 hari · disarankan</button>
+<button onClick="{{closeSheet}}" style="width:100%;height:52px;padding:0 16px;text-align:left;background:#fff;border:none;border-bottom:1px solid #E8E7E3;font:400 15px Inter,system-ui,sans-serif;color:#191918;cursor:pointer">3 hari</button>
+<button onClick="{{closeSheet}}" style="width:100%;height:52px;padding:0 16px;text-align:left;background:#fff;border:none;border-bottom:1px solid #E8E7E3;font:400 15px Inter,system-ui,sans-serif;color:#191918;cursor:pointer">1 minggu</button>
+<button onClick="{{closeSheet}}" style="width:100%;height:52px;padding:0 16px;text-align:left;background:#fff;border:none;font:400 15px Inter,system-ui,sans-serif;color:#71706B;cursor:pointer">Tidak perlu</button>
+</div>
+</div>
+</sc-if>
+
+</div>
+</x-import>
+<div style="font:400 12px/18px Inter,system-ui,sans-serif;color:#71706B;max-width:402px;text-wrap:pretty">Coba: baris <strong style="font-weight:600">Ayu Rahma</strong> → <strong style="font-weight:600">Buka WhatsApp</strong> → konfirmasi → jadwalkan follow-up. Juga: baris status <strong style="font-weight:600">Follow-up</strong> → ubah lifecycle → <strong style="font-weight:600">Tidak lanjut</strong> → alasan. Di Kalender: <strong style="font-weight:600">+</strong> untuk booking baru; Booking Detail → <strong style="font-weight:600">Reschedule</strong> dan <strong style="font-weight:600">Tandai tes selesai</strong> (booking selesai, kontak jadi klien, aftercare dijadwalkan). Hasil aftercare ditanyakan saat aksinya dikerjakan: baris <strong style="font-weight:600">Reni Wulandari</strong> → <strong style="font-weight:600">WA</strong> → sudah dikirim → hasil aftercare.</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px;max-width:360px;padding-top:34px">
+<div style="font:650 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase">Catatan sistem</div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<div><div style="font:600 13.5px/19px Inter,system-ui,sans-serif;color:#191918">Row, bukan card</div><div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B;text-wrap:pretty">Semua daftar memakai satu grammar: padding 13/16, divider 1px, nama 15.5/600, konteks 13/400, trailing time atau CTA.</div></div>
+<div><div style="font:600 13.5px/19px Inter,system-ui,sans-serif;color:#191918">Satu CTA dominan</div><div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B;text-wrap:pretty">Per konteks hanya satu tombol terisi #167A68 tinggi 46px. Sisanya text action hijau, tanpa outline.</div></div>
+<div><div style="font:600 13.5px/19px Inter,system-ui,sans-serif;color:#191918">Warna hanya saat bermakna</div><div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B;text-wrap:pretty">Merah #B42318 untuk terlambat, oranye #B54708 untuk butuh perhatian, hijau #067647 untuk selesai. Sisanya netral — lolos grayscale test.</div></div>
+<div><div style="font:600 13.5px/19px Inter,system-ui,sans-serif;color:#191918">Tap target 44px</div><div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B;text-wrap:pretty">Tombol WA tetap 30px secara visual, tapi hit area 56×44px dengan negative margin — density baris tidak berubah.</div></div>
+<div><div style="font:600 13.5px/19px Inter,system-ui,sans-serif;color:#191918">Density</div><div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B;text-wrap:pretty">Today 5 baris terlihat, Kontak 7 baris, Agenda 4 booking — sesuai target di design plan §37.</div></div>
+</div>
+</div>
+</section>
+
+<div style="height:1px;background:rgba(0,0,0,.09)"></div>
+
+<section style="display:flex;flex-direction:column;gap:20px">
+<div><div style="font:650 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase">Screen pendukung & state · 390px</div><div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B;padding-top:4px">Ukuran asli, tanpa bezel.</div></div>
+<div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 12px Inter,system-ui,sans-serif;color:#71706B">Onboarding · Welcome</div>
+<div style="width:390px;height:600px;box-sizing:border-box;background:#F7F7F5;border:1px solid #E8E7E3;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding:0 20px 28px">
+<div style="font:700 26px/32px Inter,system-ui,sans-serif;color:#191918">PromotorFlow</div>
+<div style="font:400 15px/22px Inter,system-ui,sans-serif;color:#71706B;padding:8px 0 24px;max-width:280px;text-wrap:pretty">Prospek, booking, dan follow-up dalam satu tempat.</div>
+<div style="height:46px;border-radius:8px;background:#167A68;color:#fff;font:600 15px Inter,system-ui,sans-serif;display:flex;align-items:center;justify-content:center">Mulai</div>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 12px Inter,system-ui,sans-serif;color:#71706B">Onboarding · Profil (1/3)</div>
+<div style="width:390px;height:600px;box-sizing:border-box;background:#fff;border:1px solid #E8E7E3;border-radius:10px;overflow:hidden;padding:20px 16px">
+<div style="display:flex;gap:6px;padding-bottom:24px"><span style="flex:1;height:3px;border-radius:2px;background:#167A68"></span><span style="flex:1;height:3px;border-radius:2px;background:#E8E7E3"></span><span style="flex:1;height:3px;border-radius:2px;background:#E8E7E3"></span></div>
+<div style="font:700 22px/28px Inter,system-ui,sans-serif;color:#191918">Profil Anda</div>
+<div style="font:400 14px/20px Inter,system-ui,sans-serif;color:#71706B;padding-top:6px">Dipakai di pesan WhatsApp dan halaman booking.</div>
+<div style="display:flex;flex-direction:column;gap:16px;padding-top:24px">
+<div><div style="font:500 13px/18px Inter,system-ui,sans-serif;color:#71706B;padding-bottom:6px">Nama</div><div style="height:46px;border:1px solid #D5D3CE;border-radius:8px;display:flex;align-items:center;padding:0 12px;font:400 15px Inter,system-ui,sans-serif;color:#191918">Rina Pratiwi</div></div>
+<div><div style="font:500 13px/18px Inter,system-ui,sans-serif;color:#71706B;padding-bottom:6px">WhatsApp</div><div style="height:46px;border:1px solid #D5D3CE;border-radius:8px;display:flex;align-items:center;padding:0 12px;font:400 15px Inter,system-ui,sans-serif;color:#191918">0813 2200 118</div></div>
+<div><div style="font:500 13px/18px Inter,system-ui,sans-serif;color:#71706B;padding-bottom:6px">Kota</div><div style="height:46px;border:1px solid #D5D3CE;border-radius:8px;display:flex;align-items:center;padding:0 12px;font:400 15px Inter,system-ui,sans-serif;color:#191918">Bandung</div></div>
+<div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#9C9A94">Nama bisnis dan email opsional, bisa diisi nanti.</div>
+<div style="height:46px;border-radius:8px;background:#167A68;color:#fff;font:600 15px Inter,system-ui,sans-serif;display:flex;align-items:center;justify-content:center;margin-top:4px">Lanjut ke layanan</div>
+</div>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 12px Inter,system-ui,sans-serif;color:#71706B">Onboarding · Layanan (2/3)</div>
+<div style="width:390px;height:600px;box-sizing:border-box;background:#fff;border:1px solid #E8E7E3;border-radius:10px;overflow:hidden;padding:20px 0 0">
+<div style="display:flex;gap:6px;padding:0 16px 24px"><span style="flex:1;height:3px;border-radius:2px;background:#167A68"></span><span style="flex:1;height:3px;border-radius:2px;background:#167A68"></span><span style="flex:1;height:3px;border-radius:2px;background:#E8E7E3"></span></div>
+<div style="padding:0 16px"><div style="font:700 22px/28px Inter,system-ui,sans-serif;color:#191918">Layanan Anda</div><div style="font:400 14px/20px Inter,system-ui,sans-serif;color:#71706B;padding-top:6px">Kami sudah siapkan default. Matikan yang tidak dipakai.</div></div>
+<div style="padding-top:20px;border-top:1px solid #E8E7E3;margin-top:20px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #E8E7E3"><div><div style="font:600 15px/21px Inter,system-ui,sans-serif;color:#191918">Tes Personal</div><div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#71706B">60 menit · Rp500.000</div></div><span style="width:40px;height:24px;border-radius:12px;background:#167A68;display:flex;align-items:center;justify-content:flex-end;padding:0 3px"><span style="width:18px;height:18px;border-radius:50%;background:#fff"></span></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #E8E7E3"><div><div style="font:600 15px/21px Inter,system-ui,sans-serif;color:#191918">Tes Couple</div><div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#71706B">90 menit · Rp850.000</div></div><span style="width:40px;height:24px;border-radius:12px;background:#167A68;display:flex;align-items:center;justify-content:flex-end;padding:0 3px"><span style="width:18px;height:18px;border-radius:50%;background:#fff"></span></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #E8E7E3"><div><div style="font:600 15px/21px Inter,system-ui,sans-serif;color:#191918">Tes Family</div><div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#71706B">120 menit · Rp1.400.000</div></div><span style="width:40px;height:24px;border-radius:12px;background:#167A68;display:flex;align-items:center;justify-content:flex-end;padding:0 3px"><span style="width:18px;height:18px;border-radius:50%;background:#fff"></span></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #E8E7E3"><div><div style="font:600 15px/21px Inter,system-ui,sans-serif;color:#9C9A94">Private Session</div><div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#9C9A94">60 menit · harga menyusul</div></div><span style="width:40px;height:24px;border-radius:12px;background:#E8E7E3;display:flex;align-items:center;padding:0 3px"><span style="width:18px;height:18px;border-radius:50%;background:#fff"></span></span></div>
+<div style="padding:14px 16px;font:500 14px Inter,system-ui,sans-serif;color:#167A68">+ Tambah layanan</div>
+</div>
+<div style="padding:8px 16px"><div style="height:46px;border-radius:8px;background:#167A68;color:#fff;font:600 15px Inter,system-ui,sans-serif;display:flex;align-items:center;justify-content:center">Simpan layanan</div></div>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 12px Inter,system-ui,sans-serif;color:#71706B">Today · kosong</div>
+<div style="width:390px;height:600px;box-sizing:border-box;background:#F7F7F5;border:1px solid #E8E7E3;border-radius:10px;overflow:hidden;padding:20px 16px">
+<div style="font:700 24px/29px Inter,system-ui,sans-serif;color:#191918">Hari ini</div>
+<div style="font:400 14px/20px Inter,system-ui,sans-serif;color:#71706B;padding-top:2px">Selasa, 12 Agustus</div>
+<div style="padding-top:56px;max-width:270px">
+<div style="font:600 15.5px/22px Inter,system-ui,sans-serif;color:#191918">Tidak ada yang perlu ditindaklanjuti.</div>
+<div style="font:400 14px/21px Inter,system-ui,sans-serif;color:#71706B;padding-top:6px;text-wrap:pretty">Prospek berikutnya dijadwalkan besok pukul 09:00.</div>
+<div style="font:500 14px Inter,system-ui,sans-serif;color:#167A68;padding-top:16px">+ Tambah prospek</div>
+</div>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 12px Inter,system-ui,sans-serif;color:#71706B">Today · loading</div>
+<div style="width:390px;height:600px;box-sizing:border-box;background:#F7F7F5;border:1px solid #E8E7E3;border-radius:10px;overflow:hidden;padding:20px 0 0">
+<div style="padding:0 16px"><div style="font:700 24px/29px Inter,system-ui,sans-serif;color:#191918">Hari ini</div><div style="font:400 14px/20px Inter,system-ui,sans-serif;color:#71706B;padding-top:2px">Selasa, 12 Agustus</div><div style="width:120px;height:11px;border-radius:3px;background:#E8E7E3;margin-top:14px"></div></div>
+<div style="padding:28px 16px 8px"><div style="width:80px;height:9px;border-radius:3px;background:#E8E7E3"></div></div>
+<div style="background:#fff;border-top:1px solid #E8E7E3">
+<div style="padding:14px 16px;border-bottom:1px solid #E8E7E3;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between"><span style="width:130px;height:13px;border-radius:3px;background:#E8E7E3"></span><span style="width:44px;height:11px;border-radius:3px;background:#EFEEEB"></span></div><span style="width:170px;height:11px;border-radius:3px;background:#EFEEEB"></span><span style="width:120px;height:11px;border-radius:3px;background:#EFEEEB"></span></div>
+<div style="padding:14px 16px;border-bottom:1px solid #E8E7E3;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between"><span style="width:110px;height:13px;border-radius:3px;background:#E8E7E3"></span><span style="width:38px;height:11px;border-radius:3px;background:#EFEEEB"></span></div><span style="width:190px;height:11px;border-radius:3px;background:#EFEEEB"></span><span style="width:104px;height:11px;border-radius:3px;background:#EFEEEB"></span></div>
+<div style="padding:14px 16px;border-bottom:1px solid #E8E7E3;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between"><span style="width:144px;height:13px;border-radius:3px;background:#E8E7E3"></span><span style="width:40px;height:11px;border-radius:3px;background:#EFEEEB"></span></div><span style="width:150px;height:11px;border-radius:3px;background:#EFEEEB"></span></div>
+<div style="padding:14px 16px;border-bottom:1px solid #E8E7E3;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between"><span style="width:120px;height:13px;border-radius:3px;background:#E8E7E3"></span><span style="width:36px;height:11px;border-radius:3px;background:#EFEEEB"></span></div><span style="width:176px;height:11px;border-radius:3px;background:#EFEEEB"></span></div>
+</div>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 12px Inter,system-ui,sans-serif;color:#71706B">Kontak · kosong + duplikat</div>
+<div style="width:390px;height:600px;box-sizing:border-box;background:#F7F7F5;border:1px solid #E8E7E3;border-radius:10px;overflow:hidden;padding:20px 16px;position:relative">
+<div style="font:700 24px/29px Inter,system-ui,sans-serif;color:#191918">Kontak</div>
+<div style="padding-top:48px;max-width:260px"><div style="font:600 15.5px/22px Inter,system-ui,sans-serif;color:#191918">Belum ada prospek</div><div style="font:400 14px/21px Inter,system-ui,sans-serif;color:#71706B;padding-top:6px;text-wrap:pretty">Tambahkan orang yang sedang mempertimbangkan layanan Anda.</div><div style="font:500 14px Inter,system-ui,sans-serif;color:#167A68;padding-top:16px">+ Tambah prospek</div></div>
+<div style="position:absolute;left:16px;right:16px;bottom:16px;background:#fff;border:1px solid #E8E7E3;border-radius:10px;padding:16px;box-shadow:0 6px 20px rgba(25,25,24,.1)">
+<div style="font:600 15px/21px Inter,system-ui,sans-serif;color:#191918">Ayu sudah ada di PromotorFlow</div>
+<div style="font:400 13.5px/19px Inter,system-ui,sans-serif;color:#71706B;padding-top:4px">Nomor 0812 1110 001 terdaftar 8 Agustus.</div>
+<div style="display:flex;gap:20px;padding-top:14px"><span style="font:600 14px Inter,system-ui,sans-serif;color:#167A68">Lihat kontak</span><span style="font:500 14px Inter,system-ui,sans-serif;color:#71706B">Update data</span></div>
+</div>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 12px Inter,system-ui,sans-serif;color:#71706B">Halaman booking publik · promotorflow.id/rina</div>
+<div style="width:390px;height:600px;box-sizing:border-box;background:#fff;border:1px solid #E8E7E3;border-radius:10px;overflow:hidden">
+<div style="padding:24px 20px 20px;border-bottom:1px solid #E8E7E3">
+<div style="font:700 21px/27px Inter,system-ui,sans-serif;color:#191918">Rina Pratiwi</div>
+<div style="font:400 13.5px/19px Inter,system-ui,sans-serif;color:#71706B;padding-top:2px">Promotor · Bandung</div>
+<div style="font:400 14px/21px Inter,system-ui,sans-serif;color:#191918;padding-top:14px">Pilih layanan dan jadwal.</div>
+</div>
+<div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:12px">
+<div style="border:1px solid #167A68;border-radius:10px;padding:14px;background:#EAF5F2">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><div style="font:600 15.5px/21px Inter,system-ui,sans-serif;color:#191918">Tes Personal</div><div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#71706B">60 menit · DP Rp150.000</div></div><div style="font:600 15px Inter,system-ui,sans-serif;color:#191918;white-space:nowrap">Rp500.000</div></div>
+</div>
+<div style="border:1px solid #E8E7E3;border-radius:10px;padding:14px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><div style="font:600 15.5px/21px Inter,system-ui,sans-serif;color:#191918">Tes Couple</div><div style="font:400 13px/18px Inter,system-ui,sans-serif;color:#71706B">90 menit · DP Rp250.000</div></div><div style="font:600 15px Inter,system-ui,sans-serif;color:#191918;white-space:nowrap">Rp850.000</div></div>
+</div>
+</div>
+<div style="font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.07em;color:#9C9A94;text-transform:uppercase;padding:24px 20px 10px">Jumat, 14 Agustus</div>
+<div style="display:flex;gap:8px;padding:0 20px;flex-wrap:wrap">
+<div style="height:40px;padding:0 14px;border:1px solid #167A68;border-radius:8px;background:#167A68;color:#fff;font:600 14px Inter,system-ui,sans-serif;display:flex;align-items:center">10:00</div>
+<div style="height:40px;padding:0 14px;border:1px solid #D5D3CE;border-radius:8px;font:500 14px Inter,system-ui,sans-serif;color:#191918;display:flex;align-items:center">13:00</div>
+<div style="height:40px;padding:0 14px;border:1px solid #E8E7E3;border-radius:8px;font:400 14px Inter,system-ui,sans-serif;color:#C6C4BE;display:flex;align-items:center;text-decoration:line-through">15:00</div>
+</div>
+<div style="padding:24px 20px 0"><div style="height:46px;border-radius:8px;background:#167A68;color:#fff;font:600 15px Inter,system-ui,sans-serif;display:flex;align-items:center;justify-content:center">Lanjut isi data</div><div style="font:400 12.5px/18px Inter,system-ui,sans-serif;color:#9C9A94;padding-top:10px;text-align:center">Tanpa login. Konfirmasi dikirim via WhatsApp.</div></div>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 12px Inter,system-ui,sans-serif;color:#71706B">Booking publik · konfirmasi</div>
+<div style="width:390px;height:600px;box-sizing:border-box;background:#F7F7F5;border:1px solid #E8E7E3;border-radius:10px;overflow:hidden;padding:24px 20px">
+<div style="font:700 21px/27px Inter,system-ui,sans-serif;color:#191918">Permintaan booking terkirim</div>
+<div style="font:400 14px/21px Inter,system-ui,sans-serif;color:#71706B;padding-top:8px;text-wrap:pretty">Rina akan konfirmasi lewat WhatsApp ke 0812 1110 001.</div>
+<div style="background:#fff;border:1px solid #E8E7E3;border-radius:10px;padding:16px;margin-top:20px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;gap:12px"><span style="font:400 13.5px Inter,system-ui,sans-serif;color:#71706B">Layanan</span><span style="font:500 13.5px Inter,system-ui,sans-serif;color:#191918">Tes Personal</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px"><span style="font:400 13.5px Inter,system-ui,sans-serif;color:#71706B">Jadwal</span><span style="font:500 13.5px Inter,system-ui,sans-serif;color:#191918">Jumat, 14 Agu · 10:00</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px"><span style="font:400 13.5px Inter,system-ui,sans-serif;color:#71706B">Peserta</span><span style="font:500 13.5px Inter,system-ui,sans-serif;color:#191918">1 orang</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px"><span style="font:400 13.5px Inter,system-ui,sans-serif;color:#71706B">DP</span><span style="font:500 13.5px Inter,system-ui,sans-serif;color:#191918">Rp150.000</span></div>
+<div style="height:1px;background:#E8E7E3"></div>
+<div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B">Lokasi dan cara pembayaran dikirim saat konfirmasi.</div>
+</div>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 12px Inter,system-ui,sans-serif;color:#71706B">Lainnya + Layanan</div>
+<div style="width:390px;height:600px;box-sizing:border-box;background:#F7F7F5;border:1px solid #E8E7E3;border-radius:10px;overflow:hidden;padding:20px 0 0">
+<div style="padding:0 16px 16px;font:700 24px/29px Inter,system-ui,sans-serif;color:#191918">Lainnya</div>
+<div style="background:#fff;border-top:1px solid #E8E7E3">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #E8E7E3"><div><div style="font:500 15px/21px Inter,system-ui,sans-serif;color:#191918">Layanan</div><div style="font:400 12.5px/18px Inter,system-ui,sans-serif;color:#9C9A94">3 aktif</div></div><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#C6C4BE" stroke-width="1.6" stroke-linecap="round"><path d="M6 3.5L10.5 8L6 12.5"></path></svg></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #E8E7E3"><div><div style="font:500 15px/21px Inter,system-ui,sans-serif;color:#191918">Halaman booking</div><div style="font:400 12.5px/18px Inter,system-ui,sans-serif;color:#9C9A94">promotorflow.id/rina</div></div><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#C6C4BE" stroke-width="1.6" stroke-linecap="round"><path d="M6 3.5L10.5 8L6 12.5"></path></svg></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #E8E7E3"><div style="font:500 15px/21px Inter,system-ui,sans-serif;color:#191918">Template pesan</div><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#C6C4BE" stroke-width="1.6" stroke-linecap="round"><path d="M6 3.5L10.5 8L6 12.5"></path></svg></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #E8E7E3"><div style="font:500 15px/21px Inter,system-ui,sans-serif;color:#191918">Tag</div><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#C6C4BE" stroke-width="1.6" stroke-linecap="round"><path d="M6 3.5L10.5 8L6 12.5"></path></svg></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #E8E7E3"><div style="font:500 15px/21px Inter,system-ui,sans-serif;color:#191918">Profil</div><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#C6C4BE" stroke-width="1.6" stroke-linecap="round"><path d="M6 3.5L10.5 8L6 12.5"></path></svg></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #E8E7E3"><div><div style="font:500 15px/21px Inter,system-ui,sans-serif;color:#191918">Notifikasi</div><div style="font:400 12.5px/18px Inter,system-ui,sans-serif;color:#9C9A94">Ringkasan harian 09:00</div></div><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#C6C4BE" stroke-width="1.6" stroke-linecap="round"><path d="M6 3.5L10.5 8L6 12.5"></path></svg></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #E8E7E3"><div style="font:500 15px/21px Inter,system-ui,sans-serif;color:#191918">Pengaturan</div><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#C6C4BE" stroke-width="1.6" stroke-linecap="round"><path d="M6 3.5L10.5 8L6 12.5"></path></svg></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px"><div style="font:500 15px/21px Inter,system-ui,sans-serif;color:#191918">Bantuan</div><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#C6C4BE" stroke-width="1.6" stroke-linecap="round"><path d="M6 3.5L10.5 8L6 12.5"></path></svg></div>
+</div>
+<div style="padding:20px 16px 0;font:400 12.5px/18px Inter,system-ui,sans-serif;color:#9C9A94">PromotorFlow V0.1 · Rina Pratiwi</div>
+</div></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 12px Inter,system-ui,sans-serif;color:#71706B">Template pesan</div>
+<div style="width:390px;height:660px;box-sizing:border-box;background:#fff;border:1px solid #E8E7E3;border-radius:10px;overflow:hidden;padding:20px 0 0">
+<div style="padding:0 16px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#191918" stroke-width="1.7" stroke-linecap="round"><path d="M11.5 5L6 10l5.5 5"></path></svg><span style="font:700 20px/26px Inter,system-ui,sans-serif;color:#191918">Template pesan</span></div><div style="font:400 13.5px/19px Inter,system-ui,sans-serif;color:#71706B">Variabel tersedia: <span>{</span><span>{first_name}}</span>, <span>{</span><span>{service_name}}</span>, <span>{</span><span>{booking_date}}</span>.</div></div>
+<div style="margin-top:20px;border-top:1px solid #E8E7E3">
+<div style="padding:14px 16px;border-bottom:1px solid #E8E7E3"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:600 15px/21px Inter,system-ui,sans-serif;color:#191918">Kontak pertama</span><span style="font:450 12px Inter,system-ui,sans-serif;color:#9C9A94">Default</span></div><div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B;padding-top:4px">Halo <span>{</span><span>{first_name}}</span>, terima kasih sudah bertanya soal <span>{</span><span>{service_name}}</span>…</div></div>
+<div style="padding:14px 16px;border-bottom:1px solid #E8E7E3"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:600 15px/21px Inter,system-ui,sans-serif;color:#191918">Follow-up</span><span style="font:450 12px Inter,system-ui,sans-serif;color:#167A68">Diedit</span></div><div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B;padding-top:4px">Halo <span>{</span><span>{first_name}}</span>, jadi saya bantu amankan slot weekend ini?</div></div>
+<div style="padding:14px 16px;border-bottom:1px solid #E8E7E3"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:600 15px/21px Inter,system-ui,sans-serif;color:#191918">Pengingat DP</span><span style="font:450 12px Inter,system-ui,sans-serif;color:#9C9A94">Default</span></div><div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B;padding-top:4px">Halo <span>{</span><span>{first_name}}</span>, DP untuk <span>{</span><span>{booking_date}}</span> belum kami terima…</div></div>
+<div style="padding:14px 16px;border-bottom:1px solid #E8E7E3"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:600 15px/21px Inter,system-ui,sans-serif;color:#191918">Pengingat booking</span><span style="font:450 12px Inter,system-ui,sans-serif;color:#9C9A94">Default</span></div><div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B;padding-top:4px">Halo <span>{</span><span>{first_name}}</span>, besok <span>{</span><span>{booking_time}}</span> kita bertemu untuk…</div></div>
+<div style="padding:14px 16px;border-bottom:1px solid #E8E7E3"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:600 15px/21px Inter,system-ui,sans-serif;color:#191918">Aftercare</span><span style="font:450 12px Inter,system-ui,sans-serif;color:#9C9A94">Default</span></div><div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#71706B;padding-top:4px">Sudah sekitar satu minggu sejak sesi kemarin…</div></div>
+</div>
+<div style="padding:16px;background:#FEF3F2;margin-top:12px;border-top:1px solid #F3D9D6"><div style="font:600 13.5px/19px Inter,system-ui,sans-serif;color:#B42318">Belum berhasil menyimpan.</div><div style="font:400 13px/19px Inter,system-ui,sans-serif;color:#8E4038;padding-top:2px">Perubahan Anda masih ada. Coba lagi.</div></div>
+</div></div>
+
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+const ALL = [
+  {name:'Ayu Rahma', sub:'Follow-up · terlambat 1 hari', trail:'', kind:'prospek'},
+  {name:'Dimas Prakoso', sub:'Booking · Selasa 10:00', trail:'', kind:'prospek'},
+  {name:'Reni Wulandari', sub:'Klien · aftercare hari ini', trail:'', kind:'klien'},
+  {name:'Arief Santoso', sub:'Booking · hari ini 14:00', trail:'', kind:'prospek'},
+  {name:'Sari Melati', sub:'Booking · belum dikonfirmasi', trail:'', kind:'prospek'},
+  {name:'Hendra Kusuma', sub:'Baru · Google', trail:'Besok', kind:'prospek'},
+  {name:'Bu Ningsih', sub:'Klien · Tes Family, 2 Agu', trail:'', kind:'klien'},
+  {name:'Yoga Saputra', sub:'Lost · tidak merespons', trail:'', kind:'prospek'}
+];
+
+const STAGES = ['Baru','Sudah dihubungi','Tertarik','Follow-up','Booking','Selesai','Tidak lanjut'];
+const LOST = ['Tidak merespons','Harga','Jadwal','Lokasi','Belum butuh','Lainnya'];
+const DOTS = {'Baru':'#9C9A94','Sudah dihubungi':'#71706B','Tertarik':'#167A68','Follow-up':'#B54708','Booking':'#167A68','Selesai':'#067647','Tidak lanjut':'#B42318'};
+
+class Component extends DCLogic {
+  state = { screen: 'today', sheet: null, filter: 'Semua', lifecycle: 'Follow-up', lostReason: null, flow: 'followup' };
+
+  go = (s) => this.setState({ screen: s, sheet: null });
+
+  renderVals() {
+    const { screen, sheet, filter, lifecycle } = this.state;
+    const aftercare = this.state.flow === 'aftercare';
+    const stages = STAGES.map(s => ({ label: s, dot: DOTS[s], on: s === lifecycle, weight: s === lifecycle ? 600 : 400, bg: s === lifecycle ? '#EAF5F2' : '#fff', pick: s === 'Tidak lanjut' ? () => this.setState({ lifecycle: s, sheet: 'lost' }) : () => this.setState({ lifecycle: s, sheet: null, lostReason: null }) }));
+    const lostList = LOST.map(r => ({ label: r, pick: () => this.setState({ lostReason: r, sheet: null }) }));
+    const list = filter === 'Semua' ? ALL : ALL.filter(c => filter === 'Klien' ? c.kind === 'klien' : c.kind === 'prospek');
+    const tab = (on) => ({ color: on ? '#167A68' : '#71706B', border: on ? '#167A68' : 'transparent' });
+    const a = tab(filter === 'Semua'), p = tab(filter === 'Prospek'), k = tab(filter === 'Klien');
+    return {
+      isToday: screen === 'today', isContacts: screen === 'contacts', isContact: screen === 'contact',
+      isCalendar: screen === 'calendar', isBooking: screen === 'booking', isAdd: screen === 'add',
+      isNewBooking: screen === 'newbooking', isReschedule: screen === 'reschedule',
+      showNav: ['today', 'contacts', 'calendar'].includes(screen),
+      navToday: screen === 'today' ? '#167A68' : '#9C9A94',
+      navContacts: (screen === 'contacts' || screen === 'contact') ? '#167A68' : '#9C9A94',
+      navCalendar: (screen === 'calendar' || screen === 'booking') ? '#167A68' : '#9C9A94',
+      contacts: list, stages, lostList,
+      fAllColor: a.color, fAllBorder: a.border,
+      fProColor: p.color, fProBorder: p.border,
+      fKliColor: k.color, fKliBorder: k.border,
+      filterAll: () => this.setState({ filter: 'Semua' }),
+      filterProspek: () => this.setState({ filter: 'Prospek' }),
+      filterKlien: () => this.setState({ filter: 'Klien' }),
+      goToday: () => this.go('today'), goContacts: () => this.go('contacts'),
+      goCalendar: () => this.go('calendar'), goContact: () => this.go('contact'),
+      goBooking: () => this.go('booking'), goAdd: () => this.go('add'),
+      goNewBooking: () => this.go('newbooking'), goReschedule: () => this.go('reschedule'),
+      back: () => this.go(['booking','newbooking','reschedule'].includes(this.state.screen) ? 'calendar' : this.state.screen === 'add' ? 'today' : 'contacts'),
+      lifecycle, lifecycleDot: DOTS[lifecycle] || '#9C9A94',
+      lostReason: this.state.lostReason,
+      lostLabel: this.state.lostReason ? 'Tidak lanjut · ' + this.state.lostReason : 'Tidak lanjut',
+      statusLabel: lifecycle === 'Tidak lanjut' ? (this.state.lostReason ? 'Tidak lanjut · ' + this.state.lostReason : 'Tidak lanjut') : lifecycle,
+      openLifecycle: () => this.setState({ sheet: 'lifecycle' }),
+      pickStage: (s) => () => s === 'Tidak lanjut' ? this.setState({ lifecycle: s, sheet: 'lost' }) : this.setState({ lifecycle: s, sheet: null, lostReason: null }),
+      pickLost: (r) => () => this.setState({ lostReason: r, sheet: null }),
+      openComplete: () => this.setState({ sheet: 'complete' }),
+      toCompleted: () => this.setState({ sheet: 'completed' }),
+      sheetComplete: sheet === 'complete', sheetCompleted: sheet === 'completed',
+      sheetLifecycle: sheet === 'lifecycle', sheetLost: sheet === 'lost', sheetAftercare: sheet === 'aftercare',
+      sheetOpen: sheet !== null,
+      sheetPreview: sheet === 'preview', sheetSent: sheet === 'sent', sheetSchedule: sheet === 'schedule',
+      previewTitle: aftercare ? 'Pesan untuk Reni' : 'Pesan untuk Ayu',
+      previewMsg: aftercare
+        ? 'Halo Bu Reni, seminggu lalu kita bahas hasil tesnya. Sejauh ini bagian mana yang masih ingin didalami? Kalau ada yang kurang jelas, saya bantu jelaskan.'
+        : 'Halo Kak Ayu, kemarin Kakak sempat bertanya soal jadwal weekend. Sabtu ini masih ada slot 10:00 dan 13:00. Mau saya amankan salah satu?',
+      sentNote: aftercare ? 'Setelah ini kami tanya hasil aftercare-nya.' : 'Kami catat aktivitasnya di riwayat Ayu.',
+      openWA: (e) => { if (e) e.stopPropagation(); this.setState({ sheet: 'preview', flow: 'followup' }); },
+      openWAAftercare: (e) => { if (e) e.stopPropagation(); this.setState({ sheet: 'preview', flow: 'aftercare' }); },
+      toSent: () => this.setState({ sheet: 'sent' }),
+      toSchedule: () => this.setState({ sheet: aftercare ? 'aftercare' : 'schedule' }),
+      closeSheet: () => this.setState({ sheet: null })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><style>body{margin:0;background:#EDEDE9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#20211F}.dv-turn{padding:40px 44px 32px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 16px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#20211F;color:#fff;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 system-ui,sans-serif}.dv-grp{font:500 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;text-transform:uppercase;color:#9A9C97;margin:36px 0 14px}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#20211F;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)}.dv-card{box-sizing:border-box;background:#F7F7F5;border:1px solid #D7D8D3;overflow:hidden}.dv-card *{box-sizing:border-box}.dv-opt:target .dv-oid{background:#167A68;color:#fff}.dv-next{margin:28px 0 0;font:12px/1.6 system-ui,sans-serif;color:rgba(0,0,0,.5)}a{color:#167A68}a:hover{color:#0f5a4d}</style></helmet>
+
+<section class="dv-turn" id="t4">
+<div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">Melengkapi alur HP — beranda, ubah urutan, unggah media, publikasi &amp; bagikan, template, detail peserta, state kosong</span></div>
+<p style="max-width:760px;margin:0 0 6px;font:13px/1.65 system-ui;color:#73756F">Turn 3 menutupi daftar program, buat program, susun kurikulum, editor pelajaran, peserta, aktivitas. Turn 4 menutup sisanya supaya promotor tidak perlu membuka laptop sama sekali: Beranda versi HP <a class="dv-oid" href="#4a">4a</a>, mode Ubah urutan <a class="dv-oid" href="#4b">4b</a>, pasang video (tautan YouTube) &amp; lampiran dari HP <a class="dv-oid" href="#4c">4c</a>, publikasikan lalu bagikan tautan <a class="dv-oid" href="#4d">4d</a>, mulai dari template <a class="dv-oid" href="#4e">4e</a>, detail peserta sebagai halaman penuh <a class="dv-oid" href="#4f">4f</a>, dan state kosong/memuat/gagal <a class="dv-oid" href="#4g">4g</a>.</p>
+<p style="max-width:760px;margin:0;font:13px/1.65 system-ui;color:#73756F">Aturan yang dipakai di semua layar: satu kolom, lebar aman mulai 360px, target sentuh ≥44px (aksi utama 48px), aksi utama menempel di bawah, panel samping jadi halaman penuh, menu jadi bottom sheet, tabel jadi baris. <strong>Bisa diklik:</strong> tombol Ubah urutan di <a class="dv-oid" href="#4b">4b</a> dan tombol Bagikan di <a class="dv-oid" href="#4d">4d</a>.</p>
+
+<div class="dv-opts">
+
+<div class="dv-opt" id="4a"><div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a>Beranda di HP — antrian kerja dulu, angka belakangan</div>
+<div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+  <div style="flex:none;padding:20px 20px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><h1 style="font:600 24px/1.2 inherit;margin:0">Beranda</h1><span style="font-size:12px;color:#9A9C97">Selasa, 11 Agu</span></div>
+    <div style="font-size:13px;color:#73756F;margin-top:6px;line-height:1.5">174 peserta aktif · 32 baru bulan ini · rata-rata 67% selesai</div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:20px;padding-bottom:10px;border-bottom:1px solid #D7D8D3">
+      <h2 style="font:600 17px/1.2 inherit;margin:0">Perlu perhatian</h2><span style="font-size:13px;color:#9A9C97">4</span>
+    </div>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:0 20px">
+    <sc-for list="{{ mQueue }}" as="q" hint-placeholder-count="2">
+      <div style="padding:16px 0;border-bottom:1px solid #E5E5E1">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline">
+          <div style="font-size:16px;font-weight:600">{{ q.name }}</div>
+          <div style="font-size:13px;color:#73756F;flex:none">{{ q.interest }}</div>
+        </div>
+        <div style="font-size:13px;color:#73756F;margin-top:3px">{{ q.event }}</div>
+        <div style="font-size:13.5px;color:#73756F;line-height:1.65;margin-top:8px">{{ q.reasons }}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:12px">
+          <div style="font-size:14px;line-height:1.5;min-width:0">{{ q.next }}</div>
+          <a href="#3e" style="flex:none;display:flex;align-items:center;min-height:44px;padding:0 14px;border:1px solid #D7D8D3;color:#20211F;font-size:14px;font-weight:500;text-decoration:none;border-radius:6px">{{ q.action }} →</a>
+        </div>
+      </div>
+    </sc-for>
+    <div style="padding:12px 0;border-bottom:1px solid #E5E5E1"><span style="font-size:14px;color:#167A68">Lihat 2 lainnya</span></div>
+    <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;padding:18px 0 8px">Aktivitas terbaru</div>
+    <div style="display:grid;grid-template-columns:48px 1fr;gap:10px 12px;font-size:14px;line-height:1.5">
+      <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">03:01</div><div>Ayu menyelesaikan Rencana Tindakan</div>
+      <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">02:44</div><div>Ayu mengisi refleksi</div>
+    </div>
+  </div>
+  <dc-import name="PromotorTabBar" active="Beranda" hint-size="100%,74px"></dc-import>
+</div></div>
+
+<div class="dv-opt" id="4b"><div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a>Ubah urutan — tanpa drag halus <span style="color:#167A68">(bisa diklik)</span></div>
+<div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 20px 0;border-bottom:1px solid #E5E5E1">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px">
+      <span style="font-size:14px;color:#73756F">← Program</span>
+      <button onClick="{{ toggleReorder }}" style="background:none;border:none;font:500 14px inherit;color:#167A68;cursor:pointer;padding:6px 0;min-height:44px">{{ reorderLabel }}</button>
+    </div>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:0 20px">
+    <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;padding:16px 0 4px">Hari 2 — Mengenali pola</div>
+    <sc-if value="{{ reorderOn }}" hint-placeholder-val="{{ false }}">
+    <div>
+      <div style="font-size:13px;color:#73756F;line-height:1.6;padding-bottom:12px">Pindahkan pelajaran dengan tombol panah, atau tahan gagang di kanan untuk menyeret.</div>
+      <div style="display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #E5E5E1;background:#FAFAF8">
+        <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:500;line-height:1.35">Mengenali pola belajar anak</div><div style="font-size:13px;color:#9A9C97;margin-top:2px">Artikel · 6 menit</div></div>
+        <div style="display:flex;gap:6px;flex:none">
+          <div style="width:44px;height:44px;border:1px solid #D7D8D3;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#20211F">↑</div>
+          <div style="width:44px;height:44px;border:1px solid #D7D8D3;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#20211F">↓</div>
+          <div style="width:32px;height:44px;display:flex;align-items:center;justify-content:center;color:#9A9C97">⠿</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #E5E5E1">
+        <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:500;line-height:1.35">Lembar kerja: pola belajar</div><div style="font-size:13px;color:#9A9C97;margin-top:2px">Unduhan · PDF</div></div>
+        <div style="display:flex;gap:6px;flex:none">
+          <div style="width:44px;height:44px;border:1px solid #D7D8D3;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#20211F">↑</div>
+          <div style="width:44px;height:44px;border:1px solid #D7D8D3;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#20211F">↓</div>
+          <div style="width:32px;height:44px;display:flex;align-items:center;justify-content:center;color:#9A9C97">⠿</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #E5E5E1">
+        <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:500;line-height:1.35">Refleksi: kapan konflik muncul?</div><div style="font-size:13px;color:#9A9C97;margin-top:2px">Refleksi · teks panjang</div></div>
+        <div style="display:flex;gap:6px;flex:none">
+          <div style="width:44px;height:44px;border:1px solid #D7D8D3;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#20211F">↑</div>
+          <div style="width:44px;height:44px;border:1px solid #D7D8D3;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#20211F">↓</div>
+          <div style="width:32px;height:44px;display:flex;align-items:center;justify-content:center;color:#9A9C97">⠿</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:#73756F;padding:16px 0">Pindahkan ke hari lain lewat menu ⋯ pada pelajaran.</div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ reorderOff }}" hint-placeholder-val="{{ true }}">
+    <div>
+      <div style="display:flex;gap:12px;align-items:baseline;padding:14px 0;border-bottom:1px solid #E5E5E1">
+        <div style="width:20px;font-size:13px;color:#9A9C97;font-variant-numeric:tabular-nums">04</div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:500;line-height:1.35">Mengenali pola belajar anak</div><div style="font-size:13px;color:#9A9C97;margin-top:2px">Artikel · 6 menit · wajib</div></div>
+        <span style="color:#9A9C97">⋯</span>
+      </div>
+      <div style="display:flex;gap:12px;align-items:baseline;padding:14px 0;border-bottom:1px solid #E5E5E1">
+        <div style="width:20px;font-size:13px;color:#9A9C97;font-variant-numeric:tabular-nums">05</div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:500;line-height:1.35">Lembar kerja: pola belajar</div><div style="font-size:13px;color:#9A9C97;margin-top:2px">Unduhan · PDF · opsional</div></div>
+        <span style="color:#9A9C97">⋯</span>
+      </div>
+      <div style="display:flex;gap:12px;align-items:baseline;padding:14px 0;border-bottom:1px solid #E5E5E1">
+        <div style="width:20px;font-size:13px;color:#9A9C97;font-variant-numeric:tabular-nums">06</div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:500;line-height:1.35">Refleksi: kapan konflik muncul?</div><div style="font-size:13px;color:#9A9C97;margin-top:2px">Refleksi · teks panjang</div></div>
+        <span style="color:#9A9C97">⋯</span>
+      </div>
+      <div style="padding:16px 0"><span style="font-size:14px;color:#73756F">+ Tambah bagian</span></div>
+    </div>
+    </sc-if>
+  </div>
+  <div style="flex:none;padding:12px 20px 20px;border-top:1px solid #D7D8D3;background:#F7F7F5">
+    <button onClick="{{ toggleReorder }}" style="width:100%;min-height:48px;border:1px solid #167A68;background:#167A68;color:#fff;font:500 15px inherit;border-radius:6px;cursor:pointer">{{ reorderLabel }}</button>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="4c"><div class="dv-olabel"><a class="dv-oid" href="#4c">4c</a>Isi pelajaran dari HP — tautan video YouTube, lampiran, dan saat gagal</div>
+<div style="display:flex;gap:20px">
+  <div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+    <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #E5E5E1">
+      <span style="font-size:14px;color:#73756F">← Pelajaran</span><span style="font-size:14px;font-weight:600">Video</span><span style="font-size:14px;color:#167A68">Simpan</span>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:20px">
+      <div style="font-size:14px;line-height:1.65;color:#73756F">Video dipasang lewat tautan YouTube. Unggah berkas video belum tersedia.</div>
+      <div style="margin-top:16px">
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Tautan YouTube</label>
+        <input value="https://youtu.be/8xQ2Kd1vRlA" style="width:100%;min-height:48px;font:16px inherit;padding:12px;border:1px solid #167A68;border-radius:6px;color:#20211F">
+        <div style="display:flex;gap:8px;align-items:baseline;margin-top:8px;font-size:13px;color:#73756F"><span style="color:#167A68">●</span><span style="line-height:1.6">Video terdeteksi · 6:12. Video ditampilkan lewat pemutar YouTube di dalam pelajaran.</span></div>
+      </div>
+      <div style="margin-top:24px;padding-top:16px;border-top:1px solid #E5E5E1">
+        <div style="font-size:13px;font-weight:500">Sedang mengunggah lampiran</div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;margin-top:10px"><span>Lembar-kerja-pola-belajar.pdf</span><span style="color:#73756F;font-variant-numeric:tabular-nums">62%</span></div>
+        <div style="height:4px;background:#E5E5E1;margin-top:6px"><div style="height:4px;background:#167A68;width:62%"></div></div>
+        <div style="font-size:13px;color:#9A9C97;margin-top:6px;line-height:1.6">Anda bisa melanjutkan mengedit setelah unggahan selesai.</div>
+      </div>
+    </div>
+    <div style="flex:none;padding:12px 20px 20px;border-top:1px solid #D7D8D3;background:#F7F7F5">
+      <button style="width:100%;min-height:48px;border:1px solid #167A68;background:#167A68;color:#fff;font:500 15px inherit;border-radius:6px;cursor:pointer">Simpan video</button>
+    </div>
+  </div>
+  <div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+    <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #E5E5E1">
+      <span style="font-size:14px;color:#73756F">← Pelajaran</span><span style="font-size:14px;font-weight:600">Lampiran</span><span style="font-size:14px;color:#D7D8D3">Simpan</span>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:20px">
+      <div style="padding:14px;border:1px solid #A33A32;border-radius:6px;background:#FBF3F2">
+        <div style="font-size:15px;font-weight:600;color:#A33A32">Unggahan gagal</div>
+        <div style="font-size:14px;line-height:1.65;color:#20211F;margin-top:6px">Koneksi terputus saat mengunggah <strong>panduan-rutinitas.pdf</strong> (4,2 MB). Berkas masih tersimpan di HP Anda.</div>
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button style="min-height:44px;padding:0 16px;border:1px solid #A33A32;background:#fff;color:#A33A32;font:500 14px inherit;border-radius:6px;cursor:pointer">Coba lagi</button>
+          <button style="min-height:44px;padding:0 16px;border:none;background:none;color:#73756F;font:14px inherit;cursor:pointer">Batalkan</button>
+        </div>
+      </div>
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin:24px 0 4px">Sudah terpasang</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;min-height:56px;border-bottom:1px solid #E5E5E1">
+        <span style="font-size:15px">Lembar-kerja-pola-belajar.pdf<span style="display:block;font-size:13px;color:#73756F;margin-top:2px">240 KB · diunduh 41 kali</span></span><span style="font-size:14px;color:#73756F">⋯</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;min-height:56px;border-bottom:1px solid #E5E5E1">
+        <span style="font-size:15px">Contoh-jadwal-belajar.png<span style="display:block;font-size:13px;color:#73756F;margin-top:2px">180 KB · diunduh 12 kali</span></span><span style="font-size:14px;color:#73756F">⋯</span>
+      </div>
+      <div style="font-size:13px;color:#9A9C97;line-height:1.6;margin-top:16px">PDF, gambar, atau dokumen. Maksimal 20 MB per berkas. Video tidak diunggah di sini — pakai tautan YouTube pada bagian Video.</div>
+    </div>
+    <div style="flex:none;padding:12px 20px 20px;border-top:1px solid #D7D8D3;background:#F7F7F5;display:flex;gap:10px">
+      <button style="flex:1;min-height:48px;border:1px solid #D7D8D3;background:#fff;color:#20211F;font:500 15px inherit;border-radius:6px;cursor:pointer">Pilih berkas</button>
+      <button style="flex:1;min-height:48px;border:1px solid #D7D8D3;background:#fff;color:#20211F;font:500 15px inherit;border-radius:6px;cursor:pointer">Ambil foto</button>
+    </div>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="4d"><div class="dv-olabel"><a class="dv-oid" href="#4d">4d</a>Publikasikan lalu bagikan tautan <span style="color:#167A68">(bisa diklik)</span></div>
+<div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column;position:relative">
+  <div style="flex:none;padding:14px 20px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:14px;color:#73756F">← Program</span><span style="font-size:13px;color:#73756F">⋯</span></div>
+    <h1 style="font:600 20px/1.35 inherit;margin:12px 0 0">7 Hari Mengenal Cara Belajar Anak</h1>
+    <div style="font-size:13px;color:#73756F;margin-top:4px">Dipublikasikan 11 Agustus · 12 pelajaran · 84 peserta</div>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:20px">
+    <div style="padding:14px;border:1px solid #E5E5E1;background:#F7F7F5">
+      <div style="font-size:13px;color:#9A9C97">Tautan pendaftaran</div>
+      <div style="font-size:15px;margin-top:4px;word-break:break-all">rina.promotorclass.id/belajar-anak</div>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button onClick="{{ openShare }}" style="flex:1;min-height:44px;border:1px solid #167A68;background:#167A68;color:#fff;font:500 14px inherit;border-radius:6px;cursor:pointer">Bagikan</button>
+        <button style="flex:none;min-height:44px;padding:0 16px;border:1px solid #D7D8D3;background:#fff;color:#20211F;font:500 14px inherit;border-radius:6px;cursor:pointer">Salin</button>
+      </div>
+    </div>
+    <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin:24px 0 4px">Siapa yang bisa mendaftar</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;min-height:52px;border-bottom:1px solid #E5E5E1;font-size:15px">Akses<span style="font-size:14px;color:#73756F">Publik →</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;min-height:52px;border-bottom:1px solid #E5E5E1;font-size:15px">Data yang diminta<span style="font-size:14px;color:#73756F">Nama, WhatsApp →</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;min-height:52px;border-bottom:1px solid #E5E5E1;font-size:15px">Batas peserta<span style="font-size:14px;color:#73756F">Tanpa batas →</span></div>
+    <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin:24px 0 4px">Sejak dipublikasikan</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+      <div style="padding:12px 0;border-bottom:1px solid #E5E5E1"><div style="font:600 22px/1 inherit;font-variant-numeric:tabular-nums">312</div><div style="font-size:13px;color:#73756F;margin-top:4px">Tautan dibuka</div></div>
+      <div style="padding:12px 0;border-bottom:1px solid #E5E5E1"><div style="font:600 22px/1 inherit;font-variant-numeric:tabular-nums">84</div><div style="font-size:13px;color:#73756F;margin-top:4px">Mendaftar</div></div>
+    </div>
+    <div style="font-size:13px;color:#73756F;line-height:1.65;margin-top:14px">27% pengunjung tautan menyelesaikan pendaftaran.</div>
+  </div>
+  <div style="flex:none;padding:12px 20px 20px;border-top:1px solid #D7D8D3;background:#F7F7F5;display:flex;gap:10px">
+    <a href="#2m" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:48px;border:1px solid #D7D8D3;background:#fff;color:#20211F;font-size:15px;font-weight:500;text-decoration:none;border-radius:6px">Lihat halaman daftar</a>
+    <button onClick="{{ openShare }}" style="flex:none;min-height:48px;padding:0 18px;border:1px solid #167A68;background:#167A68;color:#fff;font:500 15px inherit;border-radius:6px;cursor:pointer">Bagikan</button>
+  </div>
+  <sc-if value="{{ shareOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeShare }}" style="position:absolute;inset:0;background:rgba(32,33,31,.32)"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:10px 10px 0 0;box-shadow:0 -8px 24px rgba(32,33,31,.18);padding:20px 20px 24px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <div style="font-size:16px;font-weight:600">Bagikan program</div>
+        <button onClick="{{ closeShare }}" style="background:none;border:none;font:14px inherit;color:#73756F;cursor:pointer;padding:0">Tutup</button>
+      </div>
+      <div style="font-size:13px;color:#73756F;margin-top:4px;word-break:break-all">rina.promotorclass.id/belajar-anak</div>
+      <div style="margin-top:14px">
+        <div style="font-size:13px;font-weight:500;margin-bottom:6px">Pesan yang ikut terkirim</div>
+        <textarea style="width:100%;height:104px;font:15px/1.6 inherit;color:#20211F;padding:12px;border:1px solid #D7D8D3;border-radius:6px;resize:none">Saya buka kelas gratis 7 hari untuk orang tua yang anaknya sulit diajak belajar. Satu pelajaran singkat tiap hari, bisa dibuka dari HP. Daftarnya di sini: rina.promotorclass.id/belajar-anak</textarea>
+      </div>
+      <div style="margin-top:12px;border-top:1px solid #E5E5E1">
+        <div style="display:flex;justify-content:space-between;align-items:center;min-height:52px;border-bottom:1px solid #E5E5E1;font-size:15px">Kirim lewat WhatsApp<span style="font-size:13px;color:#9A9C97">Pilih kontak</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;min-height:52px;border-bottom:1px solid #E5E5E1;font-size:15px">Salin teks + tautan<span style="font-size:13px;color:#9A9C97">Untuk caption Instagram</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;min-height:52px;border-bottom:1px solid #E5E5E1;font-size:15px">Unduh kode QR<span style="font-size:13px;color:#9A9C97">Untuk cetak di lokasi</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;min-height:52px;font-size:15px">Bagikan lewat aplikasi lain<span style="font-size:13px;color:#9A9C97">Menu berbagi HP</span></div>
+      </div>
+    </div>
+  </sc-if>
+</div></div>
+
+<div class="dv-opt" id="4e"><div class="dv-olabel"><a class="dv-oid" href="#4e">4e</a>Mulai dari template — jalur tercepat membuat kelas di HP</div>
+<div style="display:flex;gap:20px">
+  <div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+    <div style="flex:none;padding:14px 20px 0">
+      <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:14px;color:#73756F">← Lainnya</span></div>
+      <h1 style="font:600 24px/1.2 inherit;margin:12px 0 0">Template</h1>
+      <div style="font-size:13px;color:#73756F;margin-top:6px;line-height:1.5">Salin, ganti isinya, publikasikan. Semua template memakai bahasa yang bisa Anda ubah.</div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:8px 20px">
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;padding:16px 0 4px">Lead magnet</div>
+      <div style="padding:14px 0;border-bottom:1px solid #E5E5E1">
+        <div style="font-size:16px;font-weight:600;line-height:1.35">7 Hari Kenali Cara Belajar Anak</div>
+        <div style="font-size:13px;color:#73756F;margin-top:4px">7 pelajaran · 2 refleksi · CTA konsultasi</div>
+        <div style="margin-top:10px"><span style="font-size:14px;color:#167A68">Pakai template →</span></div>
+      </div>
+      <div style="padding:14px 0;border-bottom:1px solid #E5E5E1">
+        <div style="font-size:16px;font-weight:600;line-height:1.35">7 Hari Memahami Potensi Remaja</div>
+        <div style="font-size:13px;color:#73756F;margin-top:4px">7 pelajaran · 1 lembar kerja</div>
+        <div style="margin-top:10px"><span style="font-size:14px;color:#167A68">Pakai template →</span></div>
+      </div>
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;padding:20px 0 4px">Aftersales</div>
+      <div style="padding:14px 0;border-bottom:1px solid #E5E5E1">
+        <div style="font-size:16px;font-weight:600;line-height:1.35">30 Hari Setelah Tes</div>
+        <div style="font-size:13px;color:#73756F;margin-top:4px">12 pelajaran · 3 refleksi · CTA sesi privat</div>
+        <div style="margin-top:10px"><span style="font-size:14px;color:#167A68">Pakai template →</span></div>
+      </div>
+    </div>
+    <dc-import name="PromotorTabBar" active="Lainnya" hint-size="100%,74px"></dc-import>
+  </div>
+  <div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+    <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #E5E5E1">
+      <span style="font-size:14px;color:#73756F">Batal</span><span style="font-size:14px;font-weight:600">Pakai template</span><span style="font-size:14px;color:#D7D8D3">Salin</span>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:20px">
+      <h2 style="font:600 20px/1.3 inherit;margin:0">7 Hari Kenali Cara Belajar Anak</h2>
+      <div style="font-size:13px;color:#73756F;margin-top:6px">7 pelajaran · 2 refleksi · perkiraan 42 menit total</div>
+      <div style="margin-top:18px">
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Nama program Anda</label>
+        <input value="7 Hari Mengenal Cara Belajar Anak" style="width:100%;min-height:48px;font:16px inherit;padding:12px;border:1px solid #D7D8D3;border-radius:6px;color:#20211F">
+      </div>
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin:22px 0 4px">Isi template</div>
+      <div style="display:grid;grid-template-columns:22px 1fr;gap:10px 10px;font-size:14px;line-height:1.5;padding-top:8px">
+        <div style="color:#9A9C97;font-variant-numeric:tabular-nums">01</div><div>Selamat datang<span style="color:#9A9C97"> · video 4 menit</span></div>
+        <div style="color:#9A9C97;font-variant-numeric:tabular-nums">02</div><div>Anak bukan tidak mau belajar<span style="color:#9A9C97"> · video</span></div>
+        <div style="color:#9A9C97;font-variant-numeric:tabular-nums">03</div><div>Apa tantangan terbesar Anda?<span style="color:#9A9C97"> · refleksi</span></div>
+        <div style="color:#9A9C97;font-variant-numeric:tabular-nums">04</div><div>Mengenali pola belajar anak<span style="color:#9A9C97"> · artikel</span></div>
+        <div style="color:#9A9C97;font-variant-numeric:tabular-nums">05</div><div>Lembar kerja pola belajar<span style="color:#9A9C97"> · unduhan</span></div>
+      </div>
+      <div style="margin-top:20px;padding-top:14px;border-top:1px solid #E5E5E1">
+        <label style="display:flex;justify-content:space-between;align-items:center;min-height:48px;font-size:15px">Ikut menyalin teks pelajaran<input type="checkbox" checked="checked"></label>
+        <label style="display:flex;justify-content:space-between;align-items:center;min-height:48px;font-size:15px">Ikut menyalin tombol konsultasi<input type="checkbox" checked="checked"></label>
+      </div>
+      <div style="font-size:13px;color:#9A9C97;line-height:1.6;margin-top:8px">Video tetap perlu Anda isi sendiri — template hanya menyiapkan struktur dan teks.</div>
+    </div>
+    <div style="flex:none;padding:12px 20px 20px;border-top:1px solid #D7D8D3;background:#F7F7F5">
+      <a href="#3c" style="display:flex;align-items:center;justify-content:center;min-height:48px;background:#167A68;color:#fff;font-size:15px;font-weight:500;text-decoration:none;border-radius:6px">Salin ke program saya</a>
+    </div>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="4f"><div class="dv-olabel"><a class="dv-oid" href="#4f">4f</a>Detail peserta — panel samping jadi halaman penuh</div>
+<div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+  <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #E5E5E1">
+    <span style="font-size:14px;color:#73756F">← Peserta</span><span style="font-size:13px;color:#73756F">⋯</span>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:20px">
+    <h1 style="font:600 22px/1.2 inherit;margin:0">{{ sel.name }}</h1>
+    <div style="font-size:13px;color:#73756F;margin-top:4px">{{ sel.meta }}</div>
+    <div style="display:flex;align-items:baseline;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid #E5E5E1">
+      <span style="font-size:15px;font-weight:600;color:{{ sel.interestColor }}">{{ sel.interest }}</span><span style="font-size:13px;color:#9A9C97">{{ sel.interestScore }}</span>
+    </div>
+    <div style="font-size:13.5px;color:#73756F;line-height:1.7;margin-top:4px">{{ sel.reasons }}</div>
+    <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin:16px 0 0">Perjalanan belajar</div>
+    <div style="font-size:13px;color:#73756F;margin-top:4px">{{ sel.progressNote }}</div>
+    <div style="margin-top:8px">
+      <sc-for list="{{ sel.timeline }}" as="t" hint-placeholder-count="4">
+        <div style="display:grid;grid-template-columns:52px 14px 1fr;align-items:baseline;gap:8px;padding:5px 0">
+          <div style="font-size:13px;color:#9A9C97">{{ t.date }}</div>
+          <div style="font-size:11px;color:{{ t.dot }}">●</div>
+          <div style="font-size:14px;line-height:1.5">{{ t.text }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid #E5E5E1">
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97">Refleksi</div>
+      <div style="font-size:15px;line-height:1.6;margin-top:6px;text-wrap:pretty">{{ sel.reflection }}</div>
+      <div style="font-size:13px;color:#9A9C97;margin-top:4px">{{ sel.reflectionMeta }}</div>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid #E5E5E1">
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97">Langkah berikutnya</div>
+      <div style="font-size:15px;line-height:1.6;margin-top:6px">{{ sel.nextStep }}</div>
+      <div style="font-size:13px;color:#9A9C97;line-height:1.6;margin-top:6px">{{ linkNote }}</div>
+    </div>
+  </div>
+  <div style="flex:none;padding:12px 20px 20px;border-top:1px solid #D7D8D3;background:#F7F7F5;display:flex;gap:10px">
+    <a href="#3e" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:48px;background:#167A68;color:#fff;font-size:15px;font-weight:500;text-decoration:none;border-radius:6px">Tindak lanjuti</a>
+    <button style="flex:none;min-height:48px;padding:0 16px;border:1px solid #D7D8D3;background:#fff;color:#20211F;font:500 15px inherit;border-radius:6px;cursor:pointer">Catat</button>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="4g"><div class="dv-olabel"><a class="dv-oid" href="#4g">4g</a>Belum ada isi, sedang memuat, dan gagal memuat</div>
+<div style="display:flex;gap:20px">
+  <div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+    <div style="flex:none;padding:20px 20px 0"><h1 style="font:600 24px/1.2 inherit;margin:0">Program</h1></div>
+    <div style="flex:1;padding:20px">
+      <div style="padding-top:40px;max-width:300px">
+        <div style="font-size:17px;font-weight:600">Belum ada program</div>
+        <div style="font-size:14px;color:#73756F;line-height:1.7;margin-top:8px">Buat program pertama Anda, atau mulai dari template yang sudah berisi struktur 7 hari.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;max-width:300px">
+        <a href="#3b" style="display:flex;align-items:center;justify-content:center;min-height:48px;background:#167A68;color:#fff;font-size:15px;font-weight:500;text-decoration:none;border-radius:6px">Buat program</a>
+        <a href="#4e" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1px solid #D7D8D3;color:#20211F;font-size:15px;font-weight:500;text-decoration:none;border-radius:6px">Lihat template</a>
+      </div>
+    </div>
+    <dc-import name="PromotorTabBar" active="Program" hint-size="100%,74px"></dc-import>
+  </div>
+  <div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+    <div style="flex:none;padding:20px 20px 0"><h1 style="font:600 24px/1.2 inherit;margin:0">Peserta</h1><div style="height:12px"></div></div>
+    <div style="flex:1;padding:8px 20px">
+      <div style="padding:16px 0;border-bottom:1px solid #E5E5E1"><div style="height:14px;width:52%;background:#EDEDE9"></div><div style="height:11px;width:74%;background:#F2F2EF;margin-top:10px"></div></div>
+      <div style="padding:16px 0;border-bottom:1px solid #E5E5E1"><div style="height:14px;width:44%;background:#EDEDE9"></div><div style="height:11px;width:66%;background:#F2F2EF;margin-top:10px"></div></div>
+      <div style="padding:16px 0;border-bottom:1px solid #E5E5E1"><div style="height:14px;width:58%;background:#EDEDE9"></div><div style="height:11px;width:70%;background:#F2F2EF;margin-top:10px"></div></div>
+      <div style="padding:16px 0;border-bottom:1px solid #E5E5E1"><div style="height:14px;width:48%;background:#EDEDE9"></div><div style="height:11px;width:62%;background:#F2F2EF;margin-top:10px"></div></div>
+      <div style="font-size:13px;color:#9A9C97;padding-top:16px">Memuat daftar peserta…</div>
+    </div>
+    <dc-import name="PromotorTabBar" active="Peserta" hint-size="100%,74px"></dc-import>
+  </div>
+  <div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+    <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #E5E5E1">
+      <span style="font-size:14px;color:#73756F">← Program</span><span style="font-size:13px;color:#94662F">Mode luring</span>
+    </div>
+    <div style="flex:1;padding:20px">
+      <div style="padding-top:32px;max-width:310px">
+        <div style="font-size:17px;font-weight:600">Program ini belum bisa dimuat</div>
+        <div style="font-size:14px;color:#73756F;line-height:1.7;margin-top:8px">Koneksi terputus. Perubahan terakhir Anda pada Hari 2 masih tersimpan di HP dan akan dikirim saat kembali daring.</div>
+        <div style="display:flex;gap:10px;margin-top:18px">
+          <button style="min-height:48px;padding:0 18px;border:1px solid #167A68;background:#167A68;color:#fff;font:500 15px inherit;border-radius:6px;cursor:pointer">Coba lagi</button>
+          <button style="min-height:48px;padding:0 16px;border:1px solid #D7D8D3;background:#fff;color:#20211F;font:500 15px inherit;border-radius:6px;cursor:pointer">Lihat draf lokal</button>
+        </div>
+      </div>
+      <div style="font-size:13px;color:#9A9C97;line-height:1.6;margin-top:28px;padding-top:14px;border-top:1px solid #E5E5E1">Terakhir tersinkron 09:41 · 2 perubahan menunggu</div>
+    </div>
+  </div>
+</div></div>
+
+</div>
+<p class="dv-next">Coba lanjut: “buat alur daftarkan peserta manual dari HP (satu per satu &amp; impor kontak)” · “tunjukkan notifikasi HP: sinyal minat tinggi masuk” · “rapikan 3c dengan mode Ubah urutan dari 4b”</p>
+</section>
+
+<section class="dv-turn" id="t3">
+<div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Promotor di HP — seluruh alur kerja, termasuk membuat program, dari layar 390px</span></div>
+<p style="max-width:760px;margin:0 0 6px;font:13px/1.65 system-ui;color:#73756F">Prinsipnya: mobile bukan desktop yang dipersempit. Tabel jadi baris, panel samping jadi halaman penuh, menu jadi bottom sheet, aksi utama menempel di bawah dengan target 48px. Penyusunan kurikulum memakai mode “Ubah urutan” alih-alih drag halus, dan editor pelajaran dipecah jadi bagian yang bisa dibuka satu per satu supaya satu layar hanya menangani satu keputusan. Sheet “Tambah pelajaran” di <a class="dv-oid" href="#3c">3c</a> bisa diklik.</p>
+
+<div class="dv-opts">
+
+<div class="dv-opt" id="3a"><div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>Program — daftar + aksi buat</div>
+<div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column;position:relative">
+  <div style="flex:none;padding:20px 20px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><h1 style="font:600 24px/1.2 inherit;margin:0">Program</h1><span style="font-size:13px;color:#73756F">Cari</span></div>
+    <div style="display:flex;gap:14px;margin-top:14px;font-size:13px;color:#73756F;border-bottom:1px solid #D7D8D3;padding-bottom:10px">
+      <span style="color:#167A68;font-weight:500">Semua 4</span><span>Aktif 3</span><span>Draf 1</span>
+    </div>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:0 20px">
+    <a href="#3c" style="display:block;text-decoration:none;color:inherit;padding:16px 0;border-bottom:1px solid #E5E5E1">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline">
+        <div style="font-size:16px;font-weight:600;line-height:1.35">7 Hari Mengenal Cara Belajar Anak</div><span style="color:#9A9C97;flex:none">→</span>
+      </div>
+      <div style="font-size:13px;color:#73756F;margin-top:6px">Lead magnet · 84 peserta · 2 jam lalu</div>
+      <div style="margin-top:8px"><span style="font-size:12px;padding:2px 7px;border-radius:6px;background:#E4EFEB;color:#167A68">Dipublikasikan</span></div>
+    </a>
+    <a href="#3c" style="display:block;text-decoration:none;color:inherit;padding:16px 0;border-bottom:1px solid #E5E5E1">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline">
+        <div style="font-size:16px;font-weight:600;line-height:1.35">30 Hari Setelah Tes</div><span style="color:#9A9C97;flex:none">→</span>
+      </div>
+      <div style="font-size:13px;color:#73756F;margin-top:6px">Aftersales · 31 peserta · 1 hari lalu</div>
+      <div style="margin-top:8px"><span style="font-size:12px;padding:2px 7px;border-radius:6px;background:#E4EFEB;color:#167A68">Dipublikasikan</span></div>
+    </a>
+    <a href="#3c" style="display:block;text-decoration:none;color:inherit;padding:16px 0;border-bottom:1px solid #E5E5E1">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline">
+        <div style="font-size:16px;font-weight:600;line-height:1.35">Parenting Growth Program</div><span style="color:#9A9C97;flex:none">→</span>
+      </div>
+      <div style="font-size:13px;color:#73756F;margin-top:6px">Berbayar · belum ada peserta · 4 hari lalu</div>
+      <div style="margin-top:8px"><span style="font-size:12px;padding:2px 7px;border-radius:6px;background:#F2F2EF;color:#73756F">Draf</span></div>
+    </a>
+    <a href="#3c" style="display:block;text-decoration:none;color:inherit;padding:16px 0">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline">
+        <div style="font-size:16px;font-weight:600;line-height:1.35">7 Hari Memahami Potensi Remaja</div><span style="color:#9A9C97;flex:none">→</span>
+      </div>
+      <div style="font-size:13px;color:#73756F;margin-top:6px">Privat · 17 peserta · 2 minggu lalu</div>
+    </a>
+  </div>
+  <a href="#3b" style="position:absolute;right:20px;bottom:88px;display:flex;align-items:center;gap:8px;min-height:48px;padding:0 18px;background:#167A68;color:#fff;font-size:15px;font-weight:500;text-decoration:none;border-radius:6px;box-shadow:0 6px 18px rgba(32,33,31,.18)">+ Program</a>
+  <dc-import name="PromotorTabBar" active="Program" hint-size="100%,74px"></dc-import>
+</div></div>
+
+<div class="dv-opt" id="3b"><div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a>Buat program — satu halaman, tanpa wizard</div>
+<div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+  <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #E5E5E1">
+    <span style="font-size:14px;color:#73756F">Batal</span><span style="font-size:14px;font-weight:600">Program baru</span><span style="font-size:14px;color:#D7D8D3">Buat</span>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:20px">
+    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Nama program</label>
+    <input placeholder="Misal: 7 Hari Mengenal Cara Belajar Anak" style="width:100%;min-height:48px;font:16px inherit;padding:12px;border:1px solid #D7D8D3;border-radius:6px;color:#20211F">
+    <div style="margin-top:24px">
+      <div style="font-size:13px;font-weight:500;margin-bottom:10px">Jenis</div>
+      <div style="display:flex;flex-direction:column;gap:0;border-top:1px solid #E5E5E1">
+        <label style="display:flex;gap:12px;align-items:flex-start;min-height:56px;padding:12px 0;border-bottom:1px solid #E5E5E1"><input type="radio" name="m3new" checked="checked" style="margin-top:3px"><span style="font-size:15px">Lead magnet<span style="display:block;font-size:13px;color:#73756F;margin-top:2px">Program gratis untuk menarik calon klien</span></span></label>
+        <label style="display:flex;gap:12px;align-items:flex-start;min-height:56px;padding:12px 0;border-bottom:1px solid #E5E5E1"><input type="radio" name="m3new" style="margin-top:3px"><span style="font-size:15px">Aftersales<span style="display:block;font-size:13px;color:#73756F;margin-top:2px">Pendampingan setelah layanan selesai</span></span></label>
+        <label style="display:flex;gap:12px;align-items:flex-start;min-height:56px;padding:12px 0;border-bottom:1px solid #E5E5E1"><input type="radio" name="m3new" style="margin-top:3px"><span style="font-size:15px">Berbayar<span style="display:block;font-size:13px;color:#73756F;margin-top:2px">Peserta didaftarkan manual</span></span></label>
+        <label style="display:flex;gap:12px;align-items:flex-start;min-height:56px;padding:12px 0;border-bottom:1px solid #E5E5E1"><input type="radio" name="m3new" style="margin-top:3px"><span style="font-size:15px">Privat<span style="display:block;font-size:13px;color:#73756F;margin-top:2px">Hanya untuk klien yang Anda pilih</span></span></label>
+      </div>
+    </div>
+    <div style="margin-top:24px">
+      <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Deskripsi singkat</label>
+      <textarea placeholder="Satu-dua kalimat yang dibaca calon peserta" style="width:100%;height:88px;font:16px/1.6 inherit;padding:12px;border:1px solid #D7D8D3;border-radius:6px;color:#20211F;resize:none"></textarea>
+    </div>
+    <div style="font-size:13px;color:#9A9C97;margin-top:16px;line-height:1.6">Cover, tautan publik, dan pengajar bisa diatur setelah program dibuat.</div>
+  </div>
+  <div style="flex:none;padding:12px 20px 20px;border-top:1px solid #D7D8D3;background:#F7F7F5">
+    <a href="#3c" style="display:flex;align-items:center;justify-content:center;min-height:48px;background:#167A68;color:#fff;font-size:15px;font-weight:500;text-decoration:none;border-radius:6px">Buat &amp; susun konten</a>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="3c"><div class="dv-olabel"><a class="dv-oid" href="#3c">3c</a>Susun kurikulum + sheet “Tambah pelajaran” <span style="color:#167A68">(bisa diklik)</span></div>
+<div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column;position:relative">
+  <div style="flex:none;padding:14px 20px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:14px;color:#73756F">← Program</span><span style="font-size:13px;color:#73756F">⋯</span>
+    </div>
+    <h1 style="font:600 20px/1.35 inherit;margin:12px 0 0">7 Hari Mengenal Cara Belajar Anak</h1>
+    <div style="font-size:13px;color:#73756F;margin-top:4px">Lead magnet · 84 peserta · 12 pelajaran</div>
+    <div style="display:flex;gap:18px;margin-top:16px;border-bottom:1px solid #D7D8D3;font-size:14px">
+      <sc-for list="{{ mTabs }}" as="t" hint-placeholder-count="4">
+        <button onClick="{{ t.select }}" style="background:none;border:none;border-bottom:2px solid {{ t.line }};color:{{ t.color }};font:500 14px inherit;padding:0 0 10px;margin:0;cursor:pointer">{{ t.name }}</button>
+      </sc-for>
+    </div>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:0 20px">
+    <sc-if value="{{ mIsContent }}" hint-placeholder-val="{{ true }}">
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;padding:16px 0 4px">
+        <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97">Hari 1 — Memahami masalah</div>
+        <span style="font-size:13px;color:#73756F">Ubah urutan</span>
+      </div>
+      <div style="display:flex;gap:12px;align-items:baseline;padding:14px 0;border-bottom:1px solid #E5E5E1">
+        <div style="width:20px;font-size:13px;color:#9A9C97;font-variant-numeric:tabular-nums">02</div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:500;line-height:1.35">Anak bukan tidak mau belajar</div><div style="font-size:13px;color:#9A9C97;margin-top:2px">Video · 8 menit · wajib</div></div>
+        <span style="color:#9A9C97">⋯</span>
+      </div>
+      <div style="display:flex;gap:12px;align-items:baseline;padding:14px 0;border-bottom:1px solid #E5E5E1">
+        <div style="width:20px;font-size:13px;color:#9A9C97;font-variant-numeric:tabular-nums">03</div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:500;line-height:1.35">Apa tantangan terbesar Anda?</div><div style="font-size:13px;color:#9A9C97;margin-top:2px">Refleksi · teks panjang</div></div>
+        <span style="color:#9A9C97">⋯</span>
+      </div>
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;padding:20px 0 4px">Hari 2 — Mengenali pola</div>
+      <a href="#3d" style="display:flex;gap:12px;align-items:baseline;padding:14px 0;border-bottom:1px solid #E5E5E1;text-decoration:none;color:inherit;background:#FAFAF8">
+        <div style="width:20px;font-size:13px;color:#9A9C97;font-variant-numeric:tabular-nums">04</div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:500;line-height:1.35">Mengenali pola belajar anak</div><div style="font-size:13px;color:#9A9C97;margin-top:2px">Artikel · 6 menit baca · wajib</div></div>
+        <span style="color:#9A9C97">→</span>
+      </a>
+      <div style="display:flex;gap:12px;align-items:baseline;padding:14px 0;border-bottom:1px solid #E5E5E1">
+        <div style="width:20px;font-size:13px;color:#9A9C97;font-variant-numeric:tabular-nums">05</div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:500;line-height:1.35">Lembar kerja: pola belajar</div><div style="font-size:13px;color:#9A9C97;margin-top:2px">Unduhan · PDF · opsional</div></div>
+        <span style="color:#9A9C97">⋯</span>
+      </div>
+      <div style="padding:16px 0"><span style="font-size:14px;color:#73756F">+ Tambah bagian</span></div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ mIsLearners }}" hint-placeholder-val="{{ false }}">
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;padding:16px 0 10px;border-bottom:1px solid #D7D8D3">
+        <span style="font-size:13px;color:#73756F">84 peserta</span><span style="font-size:13px;color:#167A68">Saring</span>
+      </div>
+      <sc-for list="{{ programLearners }}" as="row" hint-placeholder-count="4">
+        <div style="padding:14px 0;border-bottom:1px solid #E5E5E1">
+          <div style="display:flex;justify-content:space-between;gap:12px"><div style="font-size:15px;font-weight:500">{{ row.name }}</div><div style="font-size:14px;font-variant-numeric:tabular-nums">{{ row.progress }}</div></div>
+          <div style="font-size:13px;color:#73756F;margin-top:3px">{{ row.status }} · {{ row.last }} · minat {{ row.interestShort }} {{ row.interestScore }}</div>
+        </div>
+      </sc-for>
+    </div>
+    </sc-if>
+    <sc-if value="{{ mIsAnalytics }}" hint-placeholder-val="{{ false }}">
+    <div style="padding-top:16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+        <div style="padding:12px 0;border-bottom:1px solid #E5E5E1"><div style="font:600 24px/1 inherit;font-variant-numeric:tabular-nums">84</div><div style="font-size:13px;color:#73756F;margin-top:4px">Terdaftar</div></div>
+        <div style="padding:12px 0;border-bottom:1px solid #E5E5E1"><div style="font:600 24px/1 inherit;font-variant-numeric:tabular-nums">76</div><div style="font-size:13px;color:#73756F;margin-top:4px">Mulai belajar</div></div>
+        <div style="padding:12px 0;border-bottom:1px solid #E5E5E1"><div style="font:600 24px/1 inherit;font-variant-numeric:tabular-nums">44</div><div style="font-size:13px;color:#73756F;margin-top:4px">Selesai</div></div>
+        <div style="padding:12px 0;border-bottom:1px solid #E5E5E1"><div style="font:600 24px/1 inherit;font-variant-numeric:tabular-nums">15</div><div style="font-size:13px;color:#73756F;margin-top:4px">Klik konsultasi</div></div>
+      </div>
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin:24px 0 12px">Corong pendaftaran</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div><div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#73756F">Terdaftar</span><span style="font-variant-numeric:tabular-nums">84</span></div><div style="height:8px;background:#167A68;width:100%;margin-top:4px"></div></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#73756F">Mulai belajar</span><span style="font-variant-numeric:tabular-nums">76</span></div><div style="height:8px;background:#167A68;width:90%;margin-top:4px"></div></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#73756F">50% tercapai</span><span style="font-variant-numeric:tabular-nums">62</span></div><div style="height:8px;background:#167A68;width:74%;margin-top:4px"></div></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#73756F">Selesai</span><span style="font-variant-numeric:tabular-nums">44</span></div><div style="height:8px;background:#167A68;width:52%;margin-top:4px"></div></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#73756F">Klik konsultasi</span><span style="font-variant-numeric:tabular-nums">15</span></div><div style="height:8px;background:#167A68;width:18%;margin-top:4px"></div></div>
+      </div>
+      <div style="font-size:13px;color:#73756F;line-height:1.65;margin-top:20px;padding-top:14px;border-top:1px solid #E5E5E1">Penurunan terbesar antara 50% dan selesai — 18 peserta berhenti di Hari 4–5.</div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ mIsSettings }}" hint-placeholder-val="{{ false }}">
+    <div style="padding-top:8px">
+      <div style="padding:16px 0;border-bottom:1px solid #E5E5E1"><div style="font-size:13px;color:#9A9C97;margin-bottom:4px">Akses</div><div style="display:flex;justify-content:space-between"><span style="font-size:15px">Publik</span><span style="color:#9A9C97">→</span></div></div>
+      <div style="padding:16px 0;border-bottom:1px solid #E5E5E1"><div style="font-size:13px;color:#9A9C97;margin-bottom:4px">Tautan publik</div><div style="display:flex;justify-content:space-between;gap:12px"><span style="font-size:14px;color:#73756F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">rina.promotorclass.id/belajar-anak</span><span style="font-size:14px;color:#167A68;flex:none">Salin</span></div></div>
+      <div style="padding:16px 0;border-bottom:1px solid #E5E5E1"><div style="font-size:13px;color:#9A9C97;margin-bottom:8px">Sinyal &amp; rekomendasi</div>
+        <label style="display:flex;justify-content:space-between;align-items:center;min-height:44px;font-size:15px">Saat progres 80%<input type="checkbox" checked="checked"></label>
+        <label style="display:flex;justify-content:space-between;align-items:center;min-height:44px;font-size:15px">Saat program selesai<input type="checkbox" checked="checked"></label>
+        <label style="display:flex;justify-content:space-between;align-items:center;min-height:44px;font-size:15px">Saat konsultasi diklik<input type="checkbox" checked="checked"></label>
+        <label style="display:flex;justify-content:space-between;align-items:center;min-height:44px;font-size:15px">Setelah 7 hari tidak aktif<input type="checkbox"></label>
+        <div style="font-size:12px;color:#9A9C97;line-height:1.6;margin-top:6px">{{ signalNote }}</div>
+      </div>
+      <div style="padding:16px 0"><span style="font-size:14px;color:#A33A32">Arsipkan program</span></div>
+    </div>
+    </sc-if>
+  </div>
+  <div style="flex:none;padding:12px 20px 20px;border-top:1px solid #D7D8D3;background:#F7F7F5;display:flex;gap:10px">
+    <button onClick="{{ openSheet }}" style="flex:1;min-height:48px;border:1px solid #167A68;background:#167A68;color:#fff;font:500 15px inherit;border-radius:6px;cursor:pointer">+ Tambah pelajaran</button>
+    <button style="flex:none;min-height:48px;padding:0 16px;border:1px solid #D7D8D3;background:#fff;color:#20211F;font:500 15px inherit;border-radius:6px;cursor:pointer">Publikasikan</button>
+  </div>
+  <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(32,33,31,.32)"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:10px 10px 0 0;box-shadow:0 -8px 24px rgba(32,33,31,.18);padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:16px;font-weight:600">Tambah pelajaran</div><button onClick="{{ closeSheet }}" style="background:none;border:none;font:14px inherit;color:#73756F;cursor:pointer;padding:0">Tutup</button></div>
+      <div style="font-size:13px;color:#73756F;margin-top:4px">Masuk ke Hari 2 — Mengenali pola</div>
+      <div style="margin-top:12px;border-top:1px solid #E5E5E1">
+        <div style="display:flex;justify-content:space-between;align-items:center;min-height:52px;border-bottom:1px solid #E5E5E1;font-size:15px">Video <span style="font-size:13px;color:#9A9C97">Tautan YouTube unlisted</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;min-height:52px;border-bottom:1px solid #E5E5E1;font-size:15px">Artikel <span style="font-size:13px;color:#9A9C97">Teks</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;min-height:52px;border-bottom:1px solid #E5E5E1;font-size:15px">Refleksi <span style="font-size:13px;color:#9A9C97">Pertanyaan untuk peserta</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;min-height:52px;border-bottom:1px solid #E5E5E1;font-size:15px">Unduhan <span style="font-size:13px;color:#9A9C97">PDF atau gambar</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;min-height:52px;font-size:15px">Tombol tindakan <span style="font-size:13px;color:#9A9C97">WhatsApp atau jadwal</span></div>
+      </div>
+    </div>
+  </sc-if>
+</div></div>
+
+<div class="dv-opt" id="3d"><div class="dv-olabel"><a class="dv-oid" href="#3d">3d</a>Editor pelajaran di HP — satu bagian satu keputusan</div>
+<div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+  <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #E5E5E1">
+    <span style="font-size:14px;color:#73756F">← Konten</span><span style="font-size:13px;color:#9A9C97">Tersimpan 3 mnt lalu</span>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:20px">
+    <input value="Mengenali pola belajar anak" style="width:100%;border:none;padding:0;font:600 22px/1.3 inherit;color:#20211F;background:none">
+    <div style="font-size:13px;color:#9A9C97;margin-top:6px">Hari 2 · Artikel · wajib</div>
+    <div style="margin-top:14px;border-top:1px solid #E5E5E1">
+      <div style="padding:11px 0;border-bottom:1px solid #E5E5E1">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:15px;font-weight:500">Isi pelajaran</span><span style="font-size:13px;color:#167A68">Ubah</span></div>
+        <div style="font-size:14px;color:#73756F;line-height:1.6;margin-top:6px;max-height:44px;overflow:hidden">Setiap anak menunjukkan pola belajar yang berbeda. Sebagian anak butuh suara, sebagian butuh gerak…</div>
+      </div>
+      <div style="padding:11px 0;border-bottom:1px solid #E5E5E1">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:15px;font-weight:500">Video</span><span style="font-size:13px;color:#167A68">Ubah tautan</span></div>
+        <div style="font-size:14px;color:#73756F;margin-top:6px">youtu.be/8xQ2Kd1vRlA</div>
+        <div style="font-size:13px;margin-top:4px;color:#167A68">● Unlisted · 6:12</div>
+      </div>
+      <div style="padding:11px 0;border-bottom:1px solid #E5E5E1">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:15px;font-weight:500">Lampiran</span><span style="font-size:13px;color:#167A68">Tambah</span></div>
+        <div style="font-size:14px;color:#73756F;margin-top:6px">Lembar-kerja-pola-belajar.pdf · 240 KB</div>
+      </div>
+      <div style="padding:11px 0;border-bottom:1px solid #E5E5E1">
+        <div style="display:flex;justify-content:space-between;align-items:center;min-height:44px"><span style="font-size:15px;font-weight:500">Refleksi</span><span style="font-size:13px;color:#167A68">Tambah pertanyaan</span></div>
+      </div>
+      <div style="padding:11px 0;border-bottom:1px solid #E5E5E1">
+        <div style="font-size:15px;font-weight:500;margin-bottom:4px">Penyelesaian</div>
+        <div style="font-size:14px;color:#73756F;line-height:1.6">Peserta menandai pelajaran selesai.</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;min-height:46px;border-bottom:1px solid #E5E5E1;font-size:15px">Visibilitas<span style="font-size:14px;color:#73756F">Terbuka Hari 2 →</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;min-height:46px;font-size:15px">Perkiraan durasi<span style="font-size:14px;color:#73756F">6 menit baca →</span></div>
+    </div>
+  </div>
+  <div style="flex:none;padding:12px 20px 20px;border-top:1px solid #D7D8D3;background:#F7F7F5;display:flex;gap:10px">
+    <button style="flex:1;min-height:48px;border:1px solid #167A68;background:#167A68;color:#fff;font:500 15px inherit;border-radius:6px;cursor:pointer">Simpan</button>
+    <a href="#2p" style="flex:none;display:flex;align-items:center;min-height:48px;padding:0 16px;border:1px solid #D7D8D3;background:#fff;color:#20211F;font-size:15px;font-weight:500;border-radius:6px;text-decoration:none">Pratinjau</a>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="3e"><div class="dv-olabel"><a class="dv-oid" href="#3e">3e</a>Peserta + saring, dan draf tindak lanjut sebagai sheet</div>
+<div style="display:flex;gap:20px">
+  <div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+    <div style="flex:none;padding:20px 20px 0">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><h1 style="font:600 24px/1.2 inherit;margin:0">Peserta</h1><span style="font-size:13px;color:#167A68">Saring</span></div>
+      <div style="font-size:13px;color:#73756F;margin-top:6px">174 peserta · 12 tidak aktif &gt;7 hari</div>
+      <div style="display:flex;gap:8px;margin-top:14px;padding-bottom:12px;border-bottom:1px solid #D7D8D3">
+        <span style="font-size:13px;padding:5px 10px;border-radius:6px;background:#E4EFEB;color:#167A68">Minat tinggi</span>
+        <span style="font-size:13px;padding:5px 10px;border-radius:6px;background:#F2F2EF;color:#73756F">Tidak aktif</span>
+        <span style="font-size:13px;padding:5px 10px;border-radius:6px;background:#F2F2EF;color:#73756F">Selesai</span>
+      </div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:0 20px">
+      <sc-for list="{{ learners }}" as="l" hint-placeholder-count="5">
+        <a href="#2l" style="display:block;text-decoration:none;color:inherit;padding:14px 0;border-bottom:1px solid #E5E5E1">
+          <div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline">
+            <div style="font-size:16px;font-weight:500">{{ l.name }}</div>
+            <div style="font-size:14px;font-variant-numeric:tabular-nums;flex:none">{{ l.progress }}</div>
+          </div>
+          <div style="font-size:13px;color:#73756F;margin-top:3px">{{ l.status }} · {{ l.last }} · minat {{ l.interestShort }} {{ l.interestScore }}</div>
+        </a>
+      </sc-for>
+    </div>
+    <dc-import name="PromotorTabBar" active="Peserta" hint-size="100%,74px"></dc-import>
+  </div>
+  <div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column;position:relative">
+    <div style="flex:1;padding:20px;opacity:.45">
+      <div style="font:600 22px/1.2 inherit">Ayu Rahma</div>
+      <div style="font-size:13px;color:#73756F;margin-top:4px">Instagram · parenting · anak 13 tahun</div>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid #E5E5E1;font-size:15px;font-weight:600">Minat tinggi</div>
+      <div style="font-size:13.5px;color:#73756F;line-height:1.75;margin-top:4px">Selesai 100% · mengisi refleksi · klik konsultasi · belum assessment</div>
+    </div>
+    <div style="position:absolute;inset:0;background:rgba(32,33,31,.32)"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:10px 10px 0 0;box-shadow:0 -8px 24px rgba(32,33,31,.18);padding:20px 20px 24px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <div style="font-size:16px;font-weight:600">Tindak lanjuti — Ayu Rahma</div><span style="font-size:14px;color:#73756F">Tutup</span>
+      </div>
+      <div style="font-size:13px;color:#73756F;margin-top:4px">+62 812-2140-8871 · WhatsApp</div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid #E5E5E1">
+        <div style="font-size:12px;color:#9A9C97;margin-bottom:4px">Alasan</div>
+        <div style="font-size:14px;line-height:1.65">Program selesai · refleksi menyebut konflik soal HP · belum assessment</div>
+      </div>
+      <div style="margin-top:14px">
+        <div style="font-size:13px;font-weight:500;margin-bottom:6px">Draf pesan</div>
+        <textarea style="width:100%;height:132px;font:15px/1.6 inherit;color:#20211F;padding:12px;border:1px solid #D7D8D3;border-radius:6px;resize:none">Bu Ayu, terima kasih sudah menyelesaikan programnya. Dari catatan Anda soal HP dan konflik saat diingatkan, biasanya polanya bisa terlihat lebih jelas lewat tes cara belajar. Kalau bersedia, saya bisa jelaskan singkat 15 menit minggu ini. Hari apa yang paling memungkinkan?</textarea>
+      </div>
+      <div style="font-size:12px;color:#9A9C97;margin-top:8px;line-height:1.6">{{ draftFooter }}</div>
+      <button style="width:100%;min-height:48px;margin-top:14px;border:1px solid #167A68;background:#167A68;color:#fff;font:500 15px inherit;border-radius:6px;cursor:pointer">Buka WhatsApp →</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px">
+        <span style="font-size:14px;color:#73756F">{{ afterSendPrompt }}</span>
+        <span style="display:flex;gap:8px"><span style="min-height:40px;display:flex;align-items:center;padding:0 14px;border:1px solid #D7D8D3;border-radius:6px;font-size:14px">Belum</span><span style="min-height:40px;display:flex;align-items:center;padding:0 14px;border:1px solid #D7D8D3;border-radius:6px;font-size:14px;font-weight:500">Sudah</span></span>
+      </div>
+      <div style="font-size:12px;color:#9A9C97;margin-top:10px;line-height:1.6">{{ afterSendNote }}</div>
+    </div>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="3f"><div class="dv-olabel"><a class="dv-oid" href="#3f">3f</a>Aktivitas, Template, dan menu Lainnya</div>
+<div style="display:flex;gap:20px">
+  <div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+    <div style="flex:none;padding:20px 20px 0">
+      <h1 style="font:600 24px/1.2 inherit;margin:0">Aktivitas</h1>
+      <div style="display:flex;gap:8px;margin-top:14px;padding-bottom:12px;border-bottom:1px solid #D7D8D3">
+        <span style="font-size:13px;padding:5px 10px;border-radius:6px;background:#E4EFEB;color:#167A68">Semua</span>
+        <span style="font-size:13px;padding:5px 10px;border-radius:6px;background:#F2F2EF;color:#73756F">Selesai</span>
+        <span style="font-size:13px;padding:5px 10px;border-radius:6px;background:#F2F2EF;color:#73756F">Refleksi</span>
+      </div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:0 20px">
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;padding:16px 0 8px">Hari ini</div>
+      <div style="display:grid;grid-template-columns:48px 1fr;gap:12px 12px;font-size:14px;line-height:1.5">
+        <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">03:01</div><div>Ayu menyelesaikan Rencana Tindakan — program selesai</div>
+        <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">02:57</div><div>Ayu menyelesaikan Hari 6</div>
+        <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">02:44</div><div>Ayu mengisi refleksi</div>
+        <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">01:12</div><div>{{ recCreatedText }}</div>
+        <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">00:23</div><div>Nina menyelesaikan Hari 5</div>
+      </div>
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;padding:20px 0 8px">Kemarin</div>
+      <div style="display:grid;grid-template-columns:48px 1fr;gap:12px 12px;font-size:14px;line-height:1.5">
+        <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">21:17</div><div>Dimas mengklik Sesi Privat</div>
+        <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">20:08</div><div>Nadia tidak aktif 7 hari</div>
+        <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">18:42</div><div>Fani mendaftar 7 Hari Mengenal Cara Belajar Anak</div>
+      </div>
+    </div>
+    <dc-import name="PromotorTabBar" active="Aktivitas" hint-size="100%,74px"></dc-import>
+  </div>
+  <div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+    <div style="flex:none;padding:20px 20px 0"><h1 style="font:600 24px/1.2 inherit;margin:0">Lainnya</h1></div>
+    <div style="flex:1;overflow:hidden;padding:8px 20px">
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;padding:16px 0 4px">Template</div>
+      <a href="#2h" style="display:flex;justify-content:space-between;align-items:center;min-height:56px;border-bottom:1px solid #E5E5E1;text-decoration:none;color:inherit"><span style="font-size:15px">Pakai template program<span style="display:block;font-size:13px;color:#73756F;margin-top:2px">5 template siap pakai</span></span><span style="color:#9A9C97">→</span></a>
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;padding:20px 0 4px">Akun</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;min-height:52px;border-bottom:1px solid #E5E5E1;font-size:15px">Profil publik<span style="color:#9A9C97">→</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;min-height:52px;border-bottom:1px solid #E5E5E1;font-size:15px">Bahasa<span style="font-size:14px;color:#73756F">Indonesia →</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;min-height:52px;border-bottom:1px solid #E5E5E1;font-size:15px">Tagihan<span style="font-size:14px;color:#73756F">{{ planLabel }} →</span></div>
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;padding:20px 0 4px">Integrasi</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:60px;border-bottom:1px solid #E5E5E1">
+        <span style="font-size:15px">PromotorFlow<span style="display:block;font-size:13px;color:#73756F;margin-top:2px">Kelola prospek dan follow-up. {{ flowIntegrationNote }}</span></span>
+        <span style="font-size:14px;color:#167A68;flex:none">{{ flowIntegrationAction }}</span>
+      </div>
+      <div style="padding:20px 0;font-size:15px;color:#A33A32">Keluar</div>
+    </div>
+    <dc-import name="PromotorTabBar" active="Lainnya" hint-size="100%,74px"></dc-import>
+  </div>
+</div></div>
+
+</div>
+<p class="dv-next">Coba lanjut: “tambah alur bagikan tautan program dari HP (salin tautan + share sheet)” · “buat state upload lampiran dan video dari HP” · “tunjukkan mode Ubah urutan pelajaran di <a class="dv-oid" href="#3c">3c</a>”</p>
+</section>
+
+<section class="dv-turn" id="t2">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Revisi V0.1 — bahasa Indonesia penuh, aksen platform #167A68, minat kualitatif, alasan sebelum aksi</span></div>
+<p style="max-width:760px;margin:0 0 6px;font:13px/1.65 system-ui;color:#73756F">Yang berubah dari turn 1: skor numerik hilang dari vocabulary utama (jadi <strong>Minat tinggi/sedang/rendah</strong> + daftar alasan; angka hanya di Analitik), refleksi di Beranda diringkas dan kutipan mentah pindah ke detail peserta, seluruh chrome berbahasa Indonesia, aksen promotor disatukan ke #167A68 sementara pengalaman peserta tetap netral-editorial, PromotorFlow jadi entitlement-aware, dan istilah teknis (unlisted/embed) hilang dari sisi peserta. Layar baru: <a class="dv-oid" href="#2i">2i</a> program baru, <a class="dv-oid" href="#2j">2j</a> pengaturan, <a class="dv-oid" href="#2k">2k</a> state kosong/memuat/gagal, <a class="dv-oid" href="#2m">2m</a> landing publik, <a class="dv-oid" href="#2o">2o</a> ringkasan program.</p>
+<p style="max-width:760px;margin:0;font:13px/1.65 system-ui;color:#73756F">Panel Tweaks punya dua sakelar: <strong>Bundle aktif</strong> (Class-only vs Class + Flow) dan <strong>Tampilkan skor minat</strong> (mode advanced/debug). Semua layar ikut berubah.</p>
+
+<div class="dv-grp">Workspace promotor · desktop 1280</div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="2a"><div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Beranda — antrian kerja, alasan sebelum aksi</div>
+<div class="dv-card" style="width:1280px;display:flex;min-height:820px">
+  <div style="width:200px;flex:none;background:#F2F2EF;border-right:1px solid #E5E5E1;padding:16px 12px;display:flex;flex-direction:column;font-size:13px">
+    <div style="font-weight:600;padding:0 8px 24px">PromotorClass</div>
+    <nav style="display:flex;flex-direction:column;gap:2px">
+      <div style="padding:7px 8px;border-radius:6px;background:#E4EFEB;color:#167A68;font-weight:500">Beranda</div>
+      <div style="padding:7px 8px;border-radius:6px;color:#73756F">Program</div>
+      <div style="padding:7px 8px;border-radius:6px;color:#73756F">Peserta</div>
+      <div style="padding:7px 8px;border-radius:6px;color:#73756F">Aktivitas</div>
+      <div style="height:1px;background:#E5E5E1;margin:12px 8px"></div>
+      <div style="padding:7px 8px;border-radius:6px;color:#73756F">Template</div>
+      <sc-if value="{{ bundleOn }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:7px 8px;border-radius:6px;color:#73756F">PromotorFlow ↗</div>
+      </sc-if>
+    </nav>
+    <div style="margin-top:auto;padding:8px;border-top:1px solid #E5E5E1;font-size:12px;color:#73756F">Rina Maharani<br><span style="color:#9A9C97">{{ planLabel }}</span></div>
+  </div>
+  <div style="flex:1;background:#FFFFFF;padding:32px 40px 48px;min-width:0">
+    <div style="display:flex;align-items:baseline;justify-content:space-between">
+      <h1 style="font:600 28px/1.2 inherit;margin:0">Beranda</h1>
+      <div style="font-size:12px;color:#9A9C97">Selasa, 11 Agustus</div>
+    </div>
+    <div style="font-size:13px;color:#73756F;margin-top:8px">174 peserta aktif · 32 baru bulan ini · rata-rata 67% selesai</div>
+
+    <div style="display:flex;align-items:baseline;gap:10px;margin:40px 0 0;padding-bottom:12px;border-bottom:1px solid #D7D8D3">
+      <h2 style="font:600 20px/1.2 inherit;margin:0">Perlu perhatian</h2><span style="font-size:13px;color:#9A9C97">4</span>
+    </div>
+
+    <sc-for list="{{ queue }}" as="q" hint-placeholder-count="4">
+      <div style="padding:20px 0;border-bottom:1px solid #E5E5E1" style-hover="background:#FAFAF8">
+        <div style="display:flex;justify-content:space-between;gap:32px">
+          <div style="min-width:0">
+            <div style="font-size:16px;font-weight:600">{{ q.name }}</div>
+            <div style="font-size:13px;color:#73756F;margin-top:3px">{{ q.event }}</div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-top:10px">
+              <span style="font-size:14px;font-weight:500;color:{{ q.interestColor }}">{{ q.interest }}</span>
+              <span style="font-size:13px;color:#9A9C97">{{ q.interestScore }}</span>
+            </div>
+            <div style="font-size:13.5px;color:#73756F;line-height:1.7;margin-top:6px">{{ q.reasons }}</div>
+            <div style="margin-top:14px">
+              <div style="font-size:12px;color:#9A9C97;margin-bottom:3px">Langkah berikutnya</div>
+              <div style="font-size:14px">{{ q.next }}</div>
+            </div>
+          </div>
+          <div style="flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+            <a href="#2f" style="font-size:13px;font-weight:500;text-decoration:none;color:#167A68">{{ q.action }} →</a>
+            <a href="#2e" style="font-size:13px;text-decoration:none;color:#73756F">Lihat peserta</a>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+
+    <h2 style="font:600 20px/1.2 inherit;margin:40px 0 0;padding-bottom:12px;border-bottom:1px solid #D7D8D3">Aktivitas terbaru</h2>
+    <div style="display:grid;grid-template-columns:64px 1fr;gap:10px 16px;font-size:13px;padding-top:14px">
+      <div style="color:#9A9C97;font-variant-numeric:tabular-nums">03:01</div><div>Ayu menyelesaikan Rencana Tindakan</div>
+      <div style="color:#9A9C97;font-variant-numeric:tabular-nums">02:57</div><div>Ayu menyelesaikan Hari 6</div>
+      <div style="color:#9A9C97;font-variant-numeric:tabular-nums">02:44</div><div>Ayu mengisi refleksi</div>
+      <div style="color:#9A9C97;font-variant-numeric:tabular-nums">00:23</div><div>Nina menyelesaikan Hari 5</div>
+    </div>
+    <a href="#2g" style="display:inline-block;margin-top:16px;font-size:13px;text-decoration:none;color:#73756F">Semua aktivitas →</a>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="2b"><div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Program — daftar</div>
+<div class="dv-card" style="width:1280px;display:flex;min-height:520px">
+  <div style="width:200px;flex:none;background:#F2F2EF;border-right:1px solid #E5E5E1;padding:16px 12px;font-size:13px">
+    <div style="font-weight:600;padding:0 8px 24px">PromotorClass</div>
+    <nav style="display:flex;flex-direction:column;gap:2px">
+      <div style="padding:7px 8px;border-radius:6px;color:#73756F">Beranda</div>
+      <div style="padding:7px 8px;border-radius:6px;background:#E4EFEB;color:#167A68;font-weight:500">Program</div>
+      <div style="padding:7px 8px;border-radius:6px;color:#73756F">Peserta</div>
+      <div style="padding:7px 8px;border-radius:6px;color:#73756F">Aktivitas</div>
+      <div style="height:1px;background:#E5E5E1;margin:12px 8px"></div>
+      <div style="padding:7px 8px;border-radius:6px;color:#73756F">Template</div>
+      <sc-if value="{{ bundleOn }}" hint-placeholder-val="{{ true }}"><div style="padding:7px 8px;border-radius:6px;color:#73756F">PromotorFlow ↗</div></sc-if>
+    </nav>
+  </div>
+  <div style="flex:1;background:#FFFFFF;padding:32px 40px 48px;min-width:0">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <h1 style="font:600 28px/1.2 inherit;margin:0">Program</h1>
+      <a href="#2i" style="border:1px solid #167A68;background:#167A68;color:#fff;font:500 13px inherit;padding:9px 14px;border-radius:6px;text-decoration:none">Program baru</a>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 120px 80px 130px 100px;gap:0 24px;font-size:12px;color:#9A9C97;padding:24px 0 8px;border-bottom:1px solid #D7D8D3">
+      <div>Nama</div><div>Jenis</div><div style="text-align:right">Peserta</div><div>Status</div><div>Diperbarui</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 120px 80px 130px 100px;gap:0 24px;align-items:center;font-size:14px;padding:14px 0;border-bottom:1px solid #E5E5E1;cursor:pointer" style-hover="background:#FAFAF8">
+      <a href="#2c" style="text-decoration:none;color:#20211F;font-weight:500">7 Hari Mengenal Cara Belajar Anak</a><div style="color:#73756F;font-size:13px">Lead magnet</div><div style="text-align:right;font-variant-numeric:tabular-nums">84</div>
+      <div><span style="font-size:12px;padding:2px 7px;border-radius:6px;background:#E4EFEB;color:#167A68">Dipublikasikan</span></div><div style="font-size:13px;color:#9A9C97">2 jam lalu</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 120px 80px 130px 100px;gap:0 24px;align-items:center;font-size:14px;padding:14px 0;border-bottom:1px solid #E5E5E1" style-hover="background:#FAFAF8">
+      <div style="font-weight:500">30 Hari Setelah Tes — Kenali Diri Lebih Dalam</div><div style="color:#73756F;font-size:13px">Aftersales</div><div style="text-align:right;font-variant-numeric:tabular-nums">31</div>
+      <div><span style="font-size:12px;padding:2px 7px;border-radius:6px;background:#E4EFEB;color:#167A68">Dipublikasikan</span></div><div style="font-size:13px;color:#9A9C97">1 hari lalu</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 120px 80px 130px 100px;gap:0 24px;align-items:center;font-size:14px;padding:14px 0;border-bottom:1px solid #E5E5E1" style-hover="background:#FAFAF8">
+      <div style="font-weight:500">Parenting Growth Program</div><div style="color:#73756F;font-size:13px">Berbayar</div><div style="text-align:right;color:#9A9C97">—</div>
+      <div><span style="font-size:12px;padding:2px 7px;border-radius:6px;background:#F2F2EF;color:#73756F">Draf</span></div><div style="font-size:13px;color:#9A9C97">4 hari lalu</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 120px 80px 130px 100px;gap:0 24px;align-items:center;font-size:14px;padding:14px 0;border-bottom:1px solid #E5E5E1" style-hover="background:#FAFAF8">
+      <div style="font-weight:500">7 Hari Memahami Potensi Remaja</div><div style="color:#73756F;font-size:13px">Privat</div><div style="text-align:right;font-variant-numeric:tabular-nums">17</div>
+      <div><span style="font-size:12px;padding:2px 7px;border-radius:6px;background:#E4EFEB;color:#167A68">Dipublikasikan</span></div><div style="font-size:13px;color:#9A9C97">2 minggu lalu</div>
+    </div>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="2c"><div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a>Program → Konten · Peserta · Analitik · Pengaturan (tab aktif)</div>
+<div class="dv-card" style="width:1280px;display:flex;min-height:780px">
+  <div style="width:200px;flex:none;background:#F2F2EF;border-right:1px solid #E5E5E1;padding:16px 12px;font-size:13px">
+    <div style="font-weight:600;padding:0 8px 24px">PromotorClass</div>
+    <nav style="display:flex;flex-direction:column;gap:2px">
+      <div style="padding:7px 8px;border-radius:6px;color:#73756F">Beranda</div>
+      <div style="padding:7px 8px;border-radius:6px;background:#E4EFEB;color:#167A68;font-weight:500">Program</div>
+      <div style="padding:7px 8px;border-radius:6px;color:#73756F">Peserta</div>
+      <div style="padding:7px 8px;border-radius:6px;color:#73756F">Aktivitas</div>
+    </nav>
+  </div>
+  <div style="flex:1;background:#FFFFFF;min-width:0;display:flex;flex-direction:column">
+    <div style="padding:28px 40px 0">
+      <div style="font-size:12px;color:#9A9C97">Program</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;gap:24px">
+        <h1 style="font:600 28px/1.25 inherit;margin:0">7 Hari Mengenal Cara Belajar Anak</h1>
+        <div style="display:flex;gap:8px;align-items:center;flex:none">
+          <a href="#2m" style="font-size:13px;color:#73756F;text-decoration:none;padding:8px 12px;border:1px solid #D7D8D3;border-radius:6px">Pratinjau</a>
+          <button style="border:1px solid #167A68;background:#167A68;color:#fff;font:500 13px inherit;padding:9px 14px;border-radius:6px;cursor:pointer">Publikasikan perubahan</button>
+        </div>
+      </div>
+      <div style="font-size:13px;color:#73756F;margin-top:6px">Lead magnet · 84 peserta · dipublikasikan</div>
+      <div style="display:flex;gap:24px;margin-top:24px;border-bottom:1px solid #D7D8D3">
+        <sc-for list="{{ tabs }}" as="tab" hint-placeholder-count="4">
+          <button onClick="{{ tab.select }}" style="background:none;border:none;border-bottom:2px solid {{ tab.line }};color:{{ tab.color }};font:500 14px inherit;padding:0 0 10px;margin:0;cursor:pointer">{{ tab.name }}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <sc-if value="{{ isContent }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:8px 40px 40px;max-width:820px">
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin:28px 0 4px">Pembuka</div>
+      <div style="display:flex;align-items:baseline;gap:16px;padding:12px 0;border-bottom:1px solid #E5E5E1" style-hover="background:#FAFAF8">
+        <div style="width:24px;font-size:13px;color:#9A9C97;font-variant-numeric:tabular-nums">01</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:500">Selamat datang</div><div style="font-size:12px;color:#9A9C97;margin-top:2px">Video · 4 menit</div></div>
+        <div style="font-size:13px;color:#9A9C97">Wajib</div>
+      </div>
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin:28px 0 4px">Hari 1 — Memahami masalah</div>
+      <div style="display:flex;align-items:baseline;gap:16px;padding:12px 0;border-bottom:1px solid #E5E5E1" style-hover="background:#FAFAF8">
+        <div style="width:24px;font-size:13px;color:#9A9C97;font-variant-numeric:tabular-nums">02</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:500">Anak bukan tidak mau belajar</div><div style="font-size:12px;color:#9A9C97;margin-top:2px">Video · 8 menit</div></div>
+        <div style="font-size:13px;color:#9A9C97">Wajib</div>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:16px;padding:12px 0;border-bottom:1px solid #E5E5E1" style-hover="background:#FAFAF8">
+        <div style="width:24px;font-size:13px;color:#9A9C97;font-variant-numeric:tabular-nums">03</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:500">Apa tantangan terbesar Anda?</div><div style="font-size:12px;color:#9A9C97;margin-top:2px">Refleksi · teks panjang</div></div>
+        <div style="font-size:13px;color:#9A9C97">Wajib</div>
+      </div>
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin:28px 0 4px">Hari 2 — Mengenali pola</div>
+      <div style="display:flex;align-items:baseline;gap:16px;padding:12px 0;border-bottom:1px solid #E5E5E1;background:#F7F7F5">
+        <div style="width:24px;font-size:13px;color:#9A9C97;font-variant-numeric:tabular-nums">04</div>
+        <div style="flex:1"><a href="#2d" style="font-size:14px;font-weight:500;color:#20211F;text-decoration:none">Mengenali pola belajar anak</a><div style="font-size:12px;color:#9A9C97;margin-top:2px">Artikel · 6 menit baca</div></div>
+        <div style="display:flex;gap:14px;font-size:13px;color:#73756F"><span>Ubah</span><span>Duplikat</span><span>⋯</span></div>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:16px;padding:12px 0;border-bottom:1px solid #E5E5E1" style-hover="background:#FAFAF8">
+        <div style="width:24px;font-size:13px;color:#9A9C97;font-variant-numeric:tabular-nums">05</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:500">Lembar kerja: pola belajar</div><div style="font-size:12px;color:#9A9C97;margin-top:2px">Unduhan · PDF</div></div>
+        <div style="font-size:13px;color:#9A9C97">Opsional</div>
+      </div>
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin:28px 0 4px">Hari 7 — Rencana</div>
+      <div style="display:flex;align-items:baseline;gap:16px;padding:12px 0;border-bottom:1px solid #E5E5E1" style-hover="background:#FAFAF8">
+        <div style="width:24px;font-size:13px;color:#9A9C97;font-variant-numeric:tabular-nums">12</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:500">Rencana tindakan &amp; langkah lanjutan</div><div style="font-size:12px;color:#9A9C97;margin-top:2px">Teks + tombol tindakan · konsultasi via WhatsApp</div></div>
+        <div style="font-size:13px;color:#9A9C97">Wajib</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:20px">
+        <div style="display:flex;gap:16px;font-size:13px;color:#73756F"><span>+ Tambah pelajaran</span><span>+ Tambah bagian</span></div>
+        <div style="font-size:12px;color:#9A9C97">12 pelajaran · 2 refleksi · 1 tombol tindakan</div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isLearners }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:8px 40px 40px">
+      <div style="display:grid;grid-template-columns:1fr 90px 120px 110px 80px;gap:0 20px;font-size:12px;color:#9A9C97;padding:24px 0 8px;border-bottom:1px solid #D7D8D3">
+        <div>Nama</div><div style="text-align:right">Progres</div><div>Minat</div><div>Status</div><div>Terakhir</div>
+      </div>
+      <sc-for list="{{ programLearners }}" as="row" hint-placeholder-count="5">
+        <div style="display:grid;grid-template-columns:1fr 90px 120px 110px 80px;gap:0 20px;align-items:center;font-size:14px;padding:13px 0;border-bottom:1px solid #E5E5E1" style-hover="background:#FAFAF8">
+          <div style="font-weight:500">{{ row.name }}</div>
+          <div style="text-align:right;font-variant-numeric:tabular-nums">{{ row.progress }}</div>
+          <div style="font-size:13px;color:{{ row.interestColor }}">{{ row.interestShort }} {{ row.interestScore }}</div>
+          <div style="font-size:13px;color:#73756F">{{ row.status }}</div>
+          <div style="font-size:13px;color:#9A9C97">{{ row.last }}</div>
+        </div>
+      </sc-for>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isAnalytics }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:8px 40px 40px;max-width:820px">
+      <div style="display:flex;gap:48px;margin:28px 0 0">
+        <div><div style="font:600 28px/1 inherit;font-variant-numeric:tabular-nums">84</div><div style="font-size:13px;color:#73756F;margin-top:6px">Terdaftar</div></div>
+        <div><div style="font:600 28px/1 inherit;font-variant-numeric:tabular-nums">76</div><div style="font-size:13px;color:#73756F;margin-top:6px">Mulai belajar</div></div>
+        <div><div style="font:600 28px/1 inherit;font-variant-numeric:tabular-nums">44</div><div style="font-size:13px;color:#73756F;margin-top:6px">Selesai</div></div>
+        <div><div style="font:600 28px/1 inherit;font-variant-numeric:tabular-nums">15</div><div style="font-size:13px;color:#73756F;margin-top:6px">Klik konsultasi</div></div>
+        <div><div style="font:600 28px/1 inherit;font-variant-numeric:tabular-nums">67%</div><div style="font-size:13px;color:#73756F;margin-top:6px">Rata-rata progres</div></div>
+      </div>
+      <h2 style="font:600 20px/1.2 inherit;margin:40px 0 0;padding-bottom:12px;border-bottom:1px solid #D7D8D3">Corong pendaftaran</h2>
+      <div style="display:flex;flex-direction:column;gap:2px;padding-top:20px">
+        <div style="display:flex;align-items:center;gap:16px"><div style="width:140px;font-size:13px;color:#73756F">Terdaftar</div><div style="height:22px;width:580px;background:#167A68"></div><div style="font-size:13px;font-variant-numeric:tabular-nums">84</div></div>
+        <div style="display:flex;align-items:center;gap:16px"><div style="width:140px;font-size:13px;color:#73756F">Mulai belajar</div><div style="height:22px;width:525px;background:#167A68"></div><div style="font-size:13px;font-variant-numeric:tabular-nums">76</div></div>
+        <div style="display:flex;align-items:center;gap:16px"><div style="width:140px;font-size:13px;color:#73756F">50% tercapai</div><div style="height:22px;width:428px;background:#167A68"></div><div style="font-size:13px;font-variant-numeric:tabular-nums">62</div></div>
+        <div style="display:flex;align-items:center;gap:16px"><div style="width:140px;font-size:13px;color:#73756F">Selesai</div><div style="height:22px;width:304px;background:#167A68"></div><div style="font-size:13px;font-variant-numeric:tabular-nums">44</div></div>
+        <div style="display:flex;align-items:center;gap:16px"><div style="width:140px;font-size:13px;color:#73756F">Klik konsultasi</div><div style="height:22px;width:104px;background:#167A68"></div><div style="font-size:13px;font-variant-numeric:tabular-nums">15</div></div>
+      </div>
+      <div style="font-size:13px;color:#73756F;margin-top:24px;max-width:560px">Penurunan terbesar terjadi antara 50% dan selesai — 18 peserta berhenti di Hari 4–5.</div>
+      <div style="margin-top:32px;padding-top:16px;border-top:1px solid #E5E5E1;max-width:560px">
+        <div style="font-size:12px;color:#9A9C97;margin-bottom:8px">Rincian lanjutan</div>
+        <div style="font-size:13px;color:#73756F;line-height:1.7">Minat tinggi 21 · sedang 38 · rendah 25. Skor rata-rata 58 dari 100 (dihitung dari pendaftaran, penyelesaian, dan klik konsultasi).</div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:8px 40px 40px;max-width:620px">
+      <div style="padding:28px 0 20px;border-bottom:1px solid #E5E5E1">
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Nama program</label>
+        <input value="7 Hari Mengenal Cara Belajar Anak" style="width:100%;font:14px inherit;padding:9px 10px;border:1px solid #D7D8D3;border-radius:6px;background:#fff;color:#20211F">
+      </div>
+      <div style="padding:20px 0;border-bottom:1px solid #E5E5E1">
+        <div style="font-size:13px;font-weight:500;margin-bottom:8px">Akses</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:14px">
+          <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="v2acc" checked="checked">Publik — siapa pun dengan tautan bisa mendaftar</label>
+          <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="v2acc">Privat — hanya pendaftaran manual</label>
+          <label style="display:flex;gap:8px;align-items:center"><input type="radio" name="v2acc">Khusus klien yang sudah ada</label>
+        </div>
+      </div>
+      <div style="padding:20px 0;border-bottom:1px solid #E5E5E1">
+        <div style="font-size:13px;font-weight:500;margin-bottom:4px">Tautan publik</div>
+        <div style="font-size:13px;color:#73756F">rina.promotorclass.id/belajar-anak</div>
+      </div>
+      <div style="padding:20px 0;border-bottom:1px solid #E5E5E1">
+        <div style="font-size:13px;font-weight:500;margin-bottom:10px">Sinyal belajar &amp; rekomendasi</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:14px">
+          <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" checked="checked">Saat progres 80% — tandai minat naik</label>
+          <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" checked="checked">Saat program selesai — buat rekomendasi “Tindak lanjuti soal assessment”</label>
+          <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" checked="checked">Saat tombol konsultasi diklik — buat rekomendasi</label>
+          <label style="display:flex;gap:8px;align-items:center"><input type="checkbox">Setelah 7 hari tidak aktif — buat pengingat</label>
+        </div>
+        <div style="font-size:12px;color:#9A9C97;margin-top:10px">{{ signalNote }}</div>
+      </div>
+      <div style="padding-top:20px;display:flex;gap:14px;align-items:center">
+        <button style="border:1px solid #167A68;background:#167A68;color:#fff;font:500 13px inherit;padding:9px 14px;border-radius:6px;cursor:pointer">Simpan perubahan</button>
+        <span style="font-size:13px;color:#A33A32">Arsipkan program</span>
+      </div>
+    </div>
+    </sc-if>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="2d"><div class="dv-olabel"><a class="dv-oid" href="#2d">2d</a>Editor pelajaran — istilah teknis tetap di sisi penyusun</div>
+<div class="dv-card" style="width:1280px;display:flex;min-height:700px;background:#FFFFFF">
+  <div style="flex:1;padding:28px 48px 48px;min-width:0;max-width:760px">
+    <a href="#2c" style="font-size:13px;color:#73756F;text-decoration:none">← Konten</a>
+    <input value="Mengenali pola belajar anak" style="display:block;width:100%;margin:18px 0 0;border:none;padding:0;font:600 28px/1.25 inherit;color:#20211F;background:none">
+    <div style="font-size:12px;color:#9A9C97;margin-top:6px">Hari 2 · Artikel · tersimpan 3 menit lalu</div>
+    <div style="margin-top:32px;padding-top:24px;border-top:1px solid #D7D8D3">
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px">Video (opsional)</div>
+      <input value="https://youtu.be/8xQ2Kd1vRlA" style="width:100%;font:14px inherit;padding:9px 10px;border:1px solid #D7D8D3;border-radius:6px;color:#20211F">
+      <div style="display:flex;gap:12px;align-items:center;margin-top:8px;font-size:12px;color:#73756F">
+        <span style="color:#167A68">● Unlisted</span><span>YouTube · 6:12 · tidak muncul di pencarian</span>
+      </div>
+      <div style="font-size:12px;color:#9A9C97;margin-top:6px">Pakai tautan unlisted. Video private tidak bisa diputar di halaman pelajaran.</div>
+    </div>
+    <div style="margin-top:24px">
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px">Isi</div>
+      <div style="border:1px solid #D7D8D3;border-radius:6px">
+        <div style="display:flex;gap:14px;padding:8px 12px;border-bottom:1px solid #E5E5E1;font-size:13px;color:#73756F"><span style="font-weight:600">B</span><span style="font-style:italic">I</span><span>H2</span><span>Daftar</span><span>Tautan</span><span>Gambar</span></div>
+        <div style="padding:16px;font-size:16px;line-height:1.65;max-width:680px;text-wrap:pretty">Setiap anak menunjukkan pola belajar yang berbeda. Sebagian anak butuh suara, sebagian butuh gerak, sebagian butuh gambar.<br><br>Sebelum mengubah jadwal belajar, perhatikan dulu tiga hal sederhana selama satu minggu: kapan anak paling fokus, apa yang membuatnya berhenti, dan bagaimana ia menjelaskan kembali hal yang baru dipelajari.</div>
+      </div>
+    </div>
+    <div style="margin-top:32px;padding-top:20px;border-top:1px solid #E5E5E1">
+      <div style="font-size:13px;font-weight:500;margin-bottom:10px">Lampiran</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #E5E5E1;font-size:14px">
+        <span>Lembar-kerja-pola-belajar.pdf <span style="color:#9A9C97;font-size:13px">· 240 KB</span></span><span style="font-size:13px;color:#73756F">Hapus</span>
+      </div>
+      <div style="font-size:13px;color:#73756F;padding-top:12px">+ Tambah lampiran</div>
+    </div>
+    <div style="margin-top:32px;padding-top:20px;border-top:1px solid #E5E5E1">
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px">Penyelesaian</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:14px">
+        <div style="color:#73756F;line-height:1.6">Peserta menandai pelajaran selesai.</div>
+      </div>
+    </div>
+    <div style="margin-top:32px;padding-top:20px;border-top:1px solid #E5E5E1">
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px">Refleksi</div>
+      <div style="font-size:14px;color:#73756F">Tidak ada pertanyaan di pelajaran ini. <span style="color:#167A68">Tambah pertanyaan</span></div>
+    </div>
+  </div>
+  <div style="width:280px;flex:none;border-left:1px solid #E5E5E1;background:#F7F7F5;padding:24px 20px;font-size:13px">
+    <div style="display:flex;gap:8px;margin-bottom:24px">
+      <button style="border:1px solid #167A68;background:#167A68;color:#fff;font:500 13px inherit;padding:8px 12px;border-radius:6px;cursor:pointer">Simpan</button>
+      <a href="#2p" style="text-decoration:none;color:#73756F;padding:8px 12px;border:1px solid #D7D8D3;border-radius:6px;background:#fff">Lihat sebagai peserta</a>
+    </div>
+    <div style="padding-bottom:14px;border-bottom:1px solid #E5E5E1"><div style="color:#9A9C97;margin-bottom:4px">Jenis</div>Artikel</div>
+    <div style="padding:14px 0;border-bottom:1px solid #E5E5E1"><div style="color:#9A9C97;margin-bottom:4px">Visibilitas</div>Terbuka pada Hari 2</div>
+    <div style="padding:14px 0;border-bottom:1px solid #E5E5E1"><div style="color:#9A9C97;margin-bottom:4px">Perkiraan durasi</div>6 menit baca</div>
+    <div style="padding:14px 0;border-bottom:1px solid #E5E5E1"><div style="color:#9A9C97;margin-bottom:4px">Wajib</div>Ya</div>
+    <div style="padding:14px 0"><div style="color:#9A9C97;margin-bottom:4px">Tombol tindakan</div>Tidak ada · <span style="color:#167A68">Tambah</span></div>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="2e"><div class="dv-olabel"><a class="dv-oid" href="#2e">2e</a>Peserta + panel samping — kutipan mentah &amp; alasan lengkap ada di sini</div>
+<div class="dv-card" style="width:1280px;display:flex;min-height:760px">
+  <div style="width:200px;flex:none;background:#F2F2EF;border-right:1px solid #E5E5E1;padding:16px 12px;font-size:13px">
+    <div style="font-weight:600;padding:0 8px 24px">PromotorClass</div>
+    <nav style="display:flex;flex-direction:column;gap:2px">
+      <div style="padding:7px 8px;border-radius:6px;color:#73756F">Beranda</div>
+      <div style="padding:7px 8px;border-radius:6px;color:#73756F">Program</div>
+      <div style="padding:7px 8px;border-radius:6px;background:#E4EFEB;color:#167A68;font-weight:500">Peserta</div>
+      <div style="padding:7px 8px;border-radius:6px;color:#73756F">Aktivitas</div>
+    </nav>
+  </div>
+  <div style="flex:1;background:#FFFFFF;padding:32px 32px 40px;min-width:0">
+    <h1 style="font:600 28px/1.2 inherit;margin:0">Peserta</h1>
+    <div style="font-size:13px;color:#73756F;margin-top:8px">174 peserta · 12 tidak aktif lebih dari 7 hari</div>
+    <div style="display:grid;grid-template-columns:1fr 62px 96px 82px 44px;gap:0 12px;font-size:12px;color:#9A9C97;padding:24px 0 8px;border-bottom:1px solid #D7D8D3">
+      <div>Nama</div><div style="text-align:right">Progres</div><div>Minat</div><div>Status</div><div>Terakhir</div>
+    </div>
+    <sc-for list="{{ learners }}" as="l" hint-placeholder-count="5">
+      <div onClick="{{ l.select }}" style="display:grid;grid-template-columns:1fr 62px 96px 82px 44px;gap:0 12px;align-items:center;font-size:14px;padding:13px 0;border-bottom:1px solid #E5E5E1;cursor:pointer;background:{{ l.bg }}">
+        <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.name }}</div>
+        <div style="text-align:right;font-variant-numeric:tabular-nums">{{ l.progress }}</div>
+        <div style="font-size:13px;color:{{ l.interestColor }};white-space:nowrap">{{ l.interestShort }} {{ l.interestScore }}</div>
+        <div style="font-size:13px;color:#73756F">{{ l.status }}</div>
+        <div style="font-size:13px;color:#9A9C97">{{ l.last }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="width:400px;flex:none;background:#fff;border-left:1px solid #D7D8D3;box-shadow:-8px 0 24px rgba(32,33,31,.06);padding:24px 24px 40px;overflow:hidden">
+    <div style="display:flex;justify-content:space-between;align-items:baseline">
+      <div><div style="font:600 20px/1.2 inherit">{{ sel.name }}</div><div style="font-size:13px;color:#73756F;margin-top:4px">{{ sel.meta }}</div></div>
+      <span style="font-size:13px;color:#9A9C97">Tutup</span>
+    </div>
+    <div style="margin-top:20px;padding-top:14px;border-top:1px solid #E5E5E1">
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span style="font-size:15px;font-weight:600;color:{{ sel.interestColor }}">{{ sel.interest }}</span>
+        <span style="font-size:13px;color:#9A9C97">{{ sel.interestScore }}</span>
+      </div>
+      <div style="font-size:13.5px;color:#73756F;line-height:1.75;margin-top:6px">{{ sel.reasons }}</div>
+    </div>
+    <div style="margin-top:20px;padding-top:14px;border-top:1px solid #E5E5E1">
+      <div style="font-size:12px;color:#9A9C97;margin-bottom:8px">Belajar</div>
+      <div style="font-size:14px;font-weight:500">{{ sel.program }}</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
+        <div style="flex:1;height:3px;background:#E5E5E1"><div style="height:3px;background:#167A68;width:{{ sel.progress }}"></div></div>
+        <div style="font-size:13px;font-variant-numeric:tabular-nums">{{ sel.progress }}</div>
+      </div>
+      <div style="font-size:13px;color:#73756F;margin-top:8px">{{ sel.progressNote }}</div>
+    </div>
+    <div style="margin-top:20px;padding-top:14px;border-top:1px solid #E5E5E1">
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin-bottom:10px">Refleksi</div>
+      <div style="font-size:15px;line-height:1.6;padding-left:12px;border-left:2px solid #D7D8D3;text-wrap:pretty">{{ sel.reflection }}</div>
+      <div style="font-size:12px;color:#9A9C97;margin-top:8px">{{ sel.reflectionMeta }}</div>
+    </div>
+    <div style="margin-top:20px;padding-top:14px;border-top:1px solid #E5E5E1">
+      <div style="font-size:12px;color:#9A9C97;margin-bottom:12px">Riwayat belajar</div>
+      <sc-for list="{{ sel.timeline }}" as="e" hint-placeholder-count="4">
+        <div style="display:grid;grid-template-columns:52px 12px 1fr;gap:8px;align-items:start">
+          <div style="font-size:12px;color:#9A9C97;padding-top:1px">{{ e.date }}</div>
+          <div style="display:flex;flex-direction:column;align-items:center"><div style="width:5px;height:5px;border-radius:3px;background:{{ e.dot }};margin-top:6px"></div><div style="width:1px;flex:1;min-height:20px;background:#E5E5E1"></div></div>
+          <div style="font-size:13.5px;padding-bottom:10px">{{ e.text }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <sc-if value="{{ bundleOn }}" hint-placeholder-val="{{ true }}">
+      <div style="margin-top:12px;padding-top:14px;border-top:1px solid #E5E5E1">
+        <div style="font-size:12px;color:#9A9C97;margin-bottom:6px">PromotorFlow</div>
+        <div style="font-size:14px">Tahap · {{ sel.stage }}</div>
+        <div style="font-size:14px;color:#73756F;margin-top:4px">Assessment · {{ sel.assessment }}</div>
+      </div>
+    </sc-if>
+    <div style="margin-top:16px;padding:16px 0 0;border-top:1px solid #D7D8D3">
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin-bottom:4px">Langkah berikutnya</div>
+      <div style="font-size:15px;font-weight:500">{{ sel.nextStep }}</div>
+      <div style="display:flex;gap:12px;align-items:center;margin-top:16px">
+        <button onClick="{{ openDraft }}" style="border:1px solid #167A68;background:#167A68;color:#fff;font:500 13px inherit;padding:9px 14px;border-radius:6px;cursor:pointer">Tindak lanjuti →</button>
+        <span style="font-size:13px;color:#73756F">{{ secondaryAction }}</span>
+      </div>
+      <div style="font-size:12px;color:#9A9C97;margin-top:10px">{{ linkNote }}</div>
+    </div>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="2f"><div class="dv-olabel"><a class="dv-oid" href="#2f">2f</a>Draf tindak lanjut — {{ draftModeLabel }}</div>
+<div class="dv-card" style="width:600px;background:#fff;border-radius:10px;box-shadow:0 12px 32px rgba(32,33,31,.14);padding:24px">
+  <div style="display:flex;justify-content:space-between;align-items:baseline">
+    <div style="font:600 20px/1.2 inherit">Tindak lanjuti — Ayu Rahma</div><span style="font-size:13px;color:#9A9C97">Esc</span>
+  </div>
+  <div style="font-size:13px;color:#73756F;margin-top:6px">+62 812-2140-8871 · WhatsApp</div>
+  <div style="margin-top:20px;padding-top:16px;border-top:1px solid #E5E5E1">
+    <div style="font-size:12px;color:#9A9C97;margin-bottom:6px">Alasan</div>
+    <div style="font-size:14px;line-height:1.7;color:#20211F">Menyelesaikan seluruh program · refleksi menyebut konflik soal HP · belum melakukan assessment</div>
+  </div>
+  <div style="margin-top:20px">
+    <div style="font-size:13px;font-weight:500;margin-bottom:8px">Draf pesan</div>
+    <textarea style="width:100%;height:150px;font:15px/1.65 inherit;color:#20211F;padding:12px;border:1px solid #D7D8D3;border-radius:6px;resize:vertical">Bu Ayu, terima kasih sudah menyelesaikan programnya. Dari catatan Anda soal HP dan konflik saat diingatkan, biasanya polanya bisa terlihat lebih jelas lewat tes cara belajar. Kalau bersedia, saya bisa jelaskan singkat 15 menit minggu ini. Hari apa yang paling memungkinkan?</textarea>
+    <div style="font-size:12px;color:#9A9C97;margin-top:6px">Draf disusun dari aktivitas belajar. Periksa dulu sebelum dikirim.</div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid #E5E5E1;gap:16px">
+    <div style="font-size:12px;color:#9A9C97;line-height:1.6">{{ draftFooter }}</div>
+    <div style="display:flex;gap:12px;align-items:center;flex:none">
+      <span style="font-size:13px;color:#73756F">Batal</span>
+      <button style="border:1px solid #167A68;background:#167A68;color:#fff;font:500 13px inherit;padding:9px 14px;border-radius:6px;cursor:pointer">Buka WhatsApp →</button>
+    </div>
+  </div>
+  <div style="margin-top:16px;padding-top:14px;border-top:1px dashed #E5E5E1">
+    <div style="font-size:12px;color:#9A9C97;margin-bottom:6px">Setelah pesan dibuka</div>
+    <div style="font-size:14px">{{ afterSendPrompt }}</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+      <button style="border:1px solid #D7D8D3;background:#fff;color:#20211F;font:500 13px inherit;padding:8px 12px;border-radius:6px;cursor:pointer">Sudah</button>
+      <button style="border:1px solid #D7D8D3;background:#fff;color:#73756F;font:500 13px inherit;padding:8px 12px;border-radius:6px;cursor:pointer">Belum</button>
+    </div>
+    <div style="font-size:13px;color:#73756F;margin-top:12px">{{ nextFollowPrompt }}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:13px;color:#73756F">
+      <span style="padding:6px 10px;border:1px solid #D7D8D3;border-radius:6px">Besok</span>
+      <span style="padding:6px 10px;border:1px solid #D7D8D3;border-radius:6px">2 hari</span>
+      <span style="padding:6px 10px;border:1px solid #D7D8D3;border-radius:6px">3 hari</span>
+      <span style="padding:6px 10px;border:1px solid #D7D8D3;border-radius:6px">1 minggu</span>
+      <span style="padding:6px 10px;border:1px solid #D7D8D3;border-radius:6px">Tidak perlu</span>
+    </div>
+    <div style="font-size:12px;color:#9A9C97;margin-top:10px;line-height:1.6">{{ afterSendNote }}</div>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="2g"><div class="dv-olabel"><a class="dv-oid" href="#2g">2g</a>Aktivitas</div>
+<div class="dv-card" style="width:760px;background:#fff;min-height:560px;padding:32px 40px 40px">
+  <h1 style="font:600 28px/1.2 inherit;margin:0">Aktivitas</h1>
+  <div style="display:flex;gap:20px;margin-top:16px;font-size:13px;color:#73756F;border-bottom:1px solid #D7D8D3;padding-bottom:10px">
+    <span style="color:#167A68;font-weight:500">Semua</span><span>Pendaftaran</span><span>Selesai</span><span>Refleksi</span><span>Konsultasi</span>
+  </div>
+  <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin:24px 0 4px">Hari ini</div>
+  <div style="display:grid;grid-template-columns:56px 1fr;gap:11px 16px;font-size:14px;padding-top:8px">
+    <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">03:01</div><div>Ayu Rahma menyelesaikan <span style="color:#73756F">Rencana Tindakan</span> — program selesai</div>
+    <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">02:57</div><div>Ayu Rahma menyelesaikan <span style="color:#73756F">Hari 6</span></div>
+    <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">02:44</div><div>Ayu Rahma mengisi refleksi</div>
+    <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">01:12</div><div>{{ recCreatedText }}</div>
+    <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">00:23</div><div>Nina Wulandari menyelesaikan <span style="color:#73756F">Hari 5</span></div>
+  </div>
+  <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin:28px 0 4px">Kemarin</div>
+  <div style="display:grid;grid-template-columns:56px 1fr;gap:11px 16px;font-size:14px;padding-top:8px">
+    <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">21:17</div><div>Dimas Pratama mengklik <span style="color:#73756F">Sesi Privat</span></div>
+    <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">20:08</div><div>Nadia Putri tidak aktif selama 7 hari</div>
+    <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">18:42</div><div>Fani Oktaviani mendaftar <span style="color:#73756F">7 Hari Mengenal Cara Belajar Anak</span></div>
+    <div style="color:#9A9C97;font-size:13px;font-variant-numeric:tabular-nums">14:05</div><div>Hendra Saputra mencapai 50%</div>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="2h"><div class="dv-olabel"><a class="dv-oid" href="#2h">2h</a>Template</div>
+<div class="dv-card" style="width:760px;background:#fff;min-height:460px;padding:32px 40px 40px">
+  <h1 style="font:600 28px/1.2 inherit;margin:0">Template</h1>
+  <div style="font-size:13px;color:#73756F;margin-top:8px">Struktur, pelajaran, refleksi, dan tombol tindakan ikut tercopy. Semua bisa diubah.</div>
+  <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin:32px 0 4px">Lead magnet</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:24px;padding:16px 0;border-bottom:1px solid #E5E5E1" style-hover="background:#FAFAF8">
+    <div><div style="font-size:15px;font-weight:500">7 Hari Mengenal Cara Belajar Anak</div><div style="font-size:13px;color:#73756F;margin-top:3px">7 pelajaran · 2 refleksi · konsultasi</div></div>
+    <span style="font-size:13px;color:#167A68;flex:none">Pakai template →</span>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:24px;padding:16px 0;border-bottom:1px solid #E5E5E1" style-hover="background:#FAFAF8">
+    <div><div style="font-size:15px;font-weight:500">7 Hari Memahami Potensi Remaja</div><div style="font-size:13px;color:#73756F;margin-top:3px">7 pelajaran · 1 lembar kerja</div></div>
+    <span style="font-size:13px;color:#167A68;flex:none">Pakai template →</span>
+  </div>
+  <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin:32px 0 4px">Aftersales</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:24px;padding:16px 0;border-bottom:1px solid #E5E5E1" style-hover="background:#FAFAF8">
+    <div><div style="font-size:15px;font-weight:500">30 Hari Setelah Tes</div><div style="font-size:13px;color:#73756F;margin-top:3px">12 pelajaran · 4 refleksi · sesi privat</div></div>
+    <span style="font-size:13px;color:#167A68;flex:none">Pakai template →</span>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:24px;padding:16px 0;border-bottom:1px solid #E5E5E1" style-hover="background:#FAFAF8">
+    <div><div style="font-size:15px;font-weight:500">14 Hari Komunikasi Orang Tua &amp; Anak</div><div style="font-size:13px;color:#73756F;margin-top:3px">14 pelajaran · 3 refleksi</div></div>
+    <span style="font-size:13px;color:#167A68;flex:none">Pakai template →</span>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="2i"><div class="dv-olabel"><a class="dv-oid" href="#2i">2i</a>Program baru — satu halaman, bukan wizard</div>
+<div class="dv-card" style="width:760px;background:#fff;min-height:560px;padding:32px 40px 40px">
+  <div style="font-size:12px;color:#9A9C97">Program / Baru</div>
+  <h1 style="font:600 28px/1.2 inherit;margin:8px 0 0">Buat program</h1>
+  <div style="max-width:520px">
+    <div style="padding:28px 0 20px;border-bottom:1px solid #E5E5E1">
+      <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Nama program</label>
+      <input placeholder="Misal: 7 Hari Mengenal Cara Belajar Anak" style="width:100%;font:14px inherit;padding:9px 10px;border:1px solid #D7D8D3;border-radius:6px;color:#20211F">
+    </div>
+    <div style="padding:20px 0;border-bottom:1px solid #E5E5E1">
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px">Jenis</div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:14px">
+        <label style="display:flex;gap:8px;align-items:baseline"><input type="radio" name="v2new" checked="checked"><span>Lead magnet<span style="display:block;font-size:13px;color:#73756F;margin-top:2px">Program gratis untuk menarik calon klien</span></span></label>
+        <label style="display:flex;gap:8px;align-items:baseline"><input type="radio" name="v2new"><span>Aftersales<span style="display:block;font-size:13px;color:#73756F;margin-top:2px">Pendampingan setelah layanan selesai</span></span></label>
+        <label style="display:flex;gap:8px;align-items:baseline"><input type="radio" name="v2new"><span>Berbayar<span style="display:block;font-size:13px;color:#73756F;margin-top:2px">Peserta didaftarkan manual di V0.1</span></span></label>
+        <label style="display:flex;gap:8px;align-items:baseline"><input type="radio" name="v2new"><span>Privat<span style="display:block;font-size:13px;color:#73756F;margin-top:2px">Hanya untuk klien yang Anda pilih</span></span></label>
+      </div>
+    </div>
+    <div style="padding:20px 0;border-bottom:1px solid #E5E5E1">
+      <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Deskripsi singkat</label>
+      <textarea placeholder="Satu sampai dua kalimat yang akan dibaca calon peserta" style="width:100%;height:84px;font:14px/1.6 inherit;padding:10px;border:1px solid #D7D8D3;border-radius:6px;color:#20211F;resize:vertical"></textarea>
+    </div>
+    <div style="padding:20px 0;border-bottom:1px solid #E5E5E1">
+      <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Pengajar</label>
+      <select style="width:100%;font:14px inherit;padding:9px 10px;border:1px solid #D7D8D3;border-radius:6px;background:#fff;color:#20211F"><option>Bu Rina — Promotor &amp; Parenting Educator</option></select>
+    </div>
+    <div style="padding-top:20px;display:flex;gap:14px;align-items:center">
+      <a href="#2c" style="border:1px solid #167A68;background:#167A68;color:#fff;font:500 13px inherit;padding:9px 14px;border-radius:6px;text-decoration:none">Buat program</a>
+      <span style="font-size:13px;color:#73756F">Batal</span>
+      <span style="font-size:12px;color:#9A9C97;margin-left:auto">Cover dan tautan publik diatur nanti</span>
+    </div>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="2j"><div class="dv-olabel"><a class="dv-oid" href="#2j">2j</a>Akun &amp; pengaturan — PromotorFlow di Integrasi saat Class-only</div>
+<div class="dv-card" style="width:760px;background:#fff;min-height:600px;padding:32px 40px 40px">
+  <h1 style="font:600 28px/1.2 inherit;margin:0">Pengaturan</h1>
+  <div style="display:flex;gap:20px;margin-top:16px;font-size:13px;color:#73756F;border-bottom:1px solid #D7D8D3;padding-bottom:10px">
+    <span style="color:#167A68;font-weight:500">Akun</span><span>Profil publik</span><span>Integrasi</span><span>Tagihan</span>
+  </div>
+  <div style="max-width:520px">
+    <div style="padding:24px 0 20px;border-bottom:1px solid #E5E5E1">
+      <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Nama</label>
+      <input value="Rina Maharani" style="width:100%;font:14px inherit;padding:9px 10px;border:1px solid #D7D8D3;border-radius:6px;color:#20211F">
+    </div>
+    <div style="padding:20px 0;border-bottom:1px solid #E5E5E1">
+      <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px">Nama publik</label>
+      <input value="Bu Rina — Promotor &amp; Parenting Educator" style="width:100%;font:14px inherit;padding:9px 10px;border:1px solid #D7D8D3;border-radius:6px;color:#20211F">
+      <div style="font-size:12px;color:#9A9C97;margin-top:6px">Muncul di halaman program dan pesan tindak lanjut.</div>
+    </div>
+    <div style="padding:20px 0;border-bottom:1px solid #E5E5E1">
+      <div style="font-size:13px;font-weight:500;margin-bottom:6px">Bahasa</div>
+      <select style="width:220px;font:14px inherit;padding:9px 10px;border:1px solid #D7D8D3;border-radius:6px;background:#fff;color:#20211F"><option>Bahasa Indonesia</option><option>English</option></select>
+    </div>
+    <div style="padding:20px 0;border-bottom:1px solid #E5E5E1">
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin-bottom:12px">Integrasi</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:24px">
+        <div><div style="font-size:15px;font-weight:500">PromotorFlow</div><div style="font-size:13px;color:#73756F;margin-top:3px">Kelola prospek dan follow-up. {{ flowIntegrationNote }}</div></div>
+        <span style="font-size:13px;color:#167A68;flex:none">{{ flowIntegrationAction }}</span>
+      </div>
+    </div>
+    <div style="padding:20px 0">
+      <div style="font-size:13px;color:#A33A32">Keluar</div>
+    </div>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="2k"><div class="dv-olabel"><a class="dv-oid" href="#2k">2k</a>State kosong · memuat · gagal</div>
+<div style="display:flex;gap:20px">
+  <div class="dv-card" style="width:400px;height:300px;background:#fff;padding:28px">
+    <h2 style="font:600 20px/1.2 inherit;margin:0">Program</h2>
+    <div style="margin-top:56px">
+      <div style="font-size:16px;font-weight:600">Belum ada program</div>
+      <div style="font-size:14px;color:#73756F;margin-top:6px;line-height:1.6">Buat satu program untuk mulai menerima peserta.</div>
+      <a href="#2i" style="display:inline-block;margin-top:20px;border:1px solid #167A68;background:#167A68;color:#fff;font:500 13px inherit;padding:9px 14px;border-radius:6px;text-decoration:none">Buat program</a>
+    </div>
+  </div>
+  <div class="dv-card" style="width:400px;height:300px;background:#fff;padding:28px">
+    <h2 style="font:600 20px/1.2 inherit;margin:0">Peserta</h2>
+    <div style="display:grid;grid-template-columns:1fr 60px 70px;gap:0 16px;font-size:12px;color:#9A9C97;padding:20px 0 8px;border-bottom:1px solid #D7D8D3"><div>Nama</div><div>Progres</div><div>Minat</div></div>
+    <div style="display:flex;flex-direction:column">
+      <div style="display:grid;grid-template-columns:1fr 60px 70px;gap:0 16px;padding:14px 0;border-bottom:1px solid #E5E5E1"><div style="height:12px;background:#F2F2EF;width:70%"></div><div style="height:12px;background:#F2F2EF"></div><div style="height:12px;background:#F2F2EF"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 60px 70px;gap:0 16px;padding:14px 0;border-bottom:1px solid #E5E5E1"><div style="height:12px;background:#F2F2EF;width:55%"></div><div style="height:12px;background:#F2F2EF"></div><div style="height:12px;background:#F2F2EF"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 60px 70px;gap:0 16px;padding:14px 0;border-bottom:1px solid #E5E5E1"><div style="height:12px;background:#F2F2EF;width:62%"></div><div style="height:12px;background:#F2F2EF"></div><div style="height:12px;background:#F2F2EF"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 60px 70px;gap:0 16px;padding:14px 0"><div style="height:12px;background:#F2F2EF;width:48%"></div><div style="height:12px;background:#F2F2EF"></div><div style="height:12px;background:#F2F2EF"></div></div>
+    </div>
+  </div>
+  <div class="dv-card" style="width:400px;height:300px;background:#fff;padding:28px;display:flex;flex-direction:column;justify-content:center">
+    <div style="font-size:16px;font-weight:600">Program tidak bisa dimuat</div>
+    <div style="font-size:14px;color:#73756F;margin-top:6px;line-height:1.6">Koneksi terputus saat memuat konten. Draf terakhir masih tersimpan di perangkat ini.</div>
+    <div style="display:flex;gap:14px;align-items:center;margin-top:20px">
+      <button style="border:1px solid #D7D8D3;background:#fff;font:500 13px inherit;padding:9px 14px;border-radius:6px;cursor:pointer;color:#20211F">Coba lagi</button>
+      <span style="font-size:13px;color:#73756F">Lihat draf lokal</span>
+    </div>
+  </div>
+</div></div>
+
+</div>
+
+<div class="dv-grp">Promotor mobile · 390 — lebih ketat dari desktop</div>
+<div class="dv-opts">
+<div class="dv-opt" id="2l"><div class="dv-olabel"><a class="dv-oid" href="#2l">2l</a>Beranda ringkas + detail peserta layar penuh</div>
+<div style="display:flex;gap:20px">
+  <div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+    <div style="padding:20px 20px 0;flex:1;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><h1 style="font:600 24px/1.2 inherit;margin:0">Beranda</h1><span style="font-size:12px;color:#9A9C97">11 Agt</span></div>
+      <div style="font-size:13px;color:#73756F;margin-top:6px">174 aktif · 32 baru · 67% selesai</div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin:24px 0 0;padding-bottom:10px;border-bottom:1px solid #D7D8D3"><h2 style="font:600 18px/1.2 inherit;margin:0">Perlu perhatian</h2><span style="font-size:13px;color:#9A9C97">4</span></div>
+      <a href="#2l" style="display:block;text-decoration:none;color:inherit;padding:16px 0;border-bottom:1px solid #E5E5E1">
+        <div style="display:flex;justify-content:space-between;gap:12px"><div style="font-size:16px;font-weight:600">Ayu Rahma</div><span style="color:#9A9C97;flex:none">→</span></div>
+        <div style="font-size:13px;color:#73756F;margin-top:2px">Program selesai · 2 jam lalu</div>
+        <div style="font-size:14px;font-weight:500;margin-top:10px">Minat tinggi</div>
+        <div style="font-size:13px;color:#73756F;margin-top:2px">Belum assessment</div>
+        <div style="font-size:14px;margin-top:10px">Tindak lanjuti soal assessment.</div>
+      </a>
+      <a href="#2l" style="display:block;text-decoration:none;color:inherit;padding:16px 0;border-bottom:1px solid #E5E5E1">
+        <div style="display:flex;justify-content:space-between;gap:12px"><div style="font-size:16px;font-weight:600">Nina Wulandari</div><span style="color:#9A9C97;flex:none">→</span></div>
+        <div style="font-size:13px;color:#73756F;margin-top:2px">86% · 3 jam lalu</div>
+        <div style="font-size:14px;font-weight:500;margin-top:10px">Minat tinggi</div>
+        <div style="font-size:14px;margin-top:6px">Sapa langsung.</div>
+      </a>
+      <a href="#2l" style="display:block;text-decoration:none;color:inherit;padding:16px 0;border-bottom:1px solid #E5E5E1">
+        <div style="display:flex;justify-content:space-between;gap:12px"><div style="font-size:16px;font-weight:600">Dimas Pratama</div><span style="color:#9A9C97;flex:none">→</span></div>
+        <div style="font-size:13px;color:#73756F;margin-top:2px">Klik Sesi Privat · kemarin</div>
+        <div style="font-size:14px;font-weight:500;margin-top:10px">Minat sedang</div>
+        <div style="font-size:14px;margin-top:6px">Tawarkan sesi privat.</div>
+      </a>
+      <a href="#2l" style="display:block;text-decoration:none;color:inherit;padding:16px 0">
+        <div style="display:flex;justify-content:space-between;gap:12px"><div style="font-size:16px;font-weight:600">Nadia Putri</div><span style="color:#9A9C97;flex:none">→</span></div>
+        <div style="font-size:13px;color:#73756F;margin-top:2px">Tidak aktif 7 hari · 21%</div>
+        <div style="font-size:14px;margin-top:10px">Kirim pengingat ringan.</div>
+      </a>
+    </div>
+    <dc-import name="PromotorTabBar" active="Beranda" hint-size="100%,74px"></dc-import>
+  </div>
+  <div class="dv-card" style="width:390px;height:760px;background:#fff;display:flex;flex-direction:column">
+    <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #E5E5E1">
+      <span style="font-size:14px;color:#73756F">← Peserta</span><span style="font-size:13px;color:#73756F">⋯</span>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:20px">
+      <div style="font:600 22px/1.2 inherit">Ayu Rahma</div>
+      <div style="font-size:13px;color:#73756F;margin-top:4px">Instagram · parenting · anak 13 tahun</div>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid #E5E5E1">
+        <div style="font-size:15px;font-weight:600">Minat tinggi</div>
+        <div style="font-size:13.5px;color:#73756F;line-height:1.75;margin-top:4px">Selesai 100% · mengisi refleksi · klik konsultasi · belum assessment</div>
+      </div>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid #E5E5E1">
+        <div style="font-size:14px;font-weight:500">7 Hari Mengenal Cara Belajar Anak</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px"><div style="flex:1;height:3px;background:#E5E5E1"><div style="height:3px;width:100%;background:#167A68"></div></div><span style="font-size:13px">100%</span></div>
+        <div style="font-size:13px;color:#73756F;margin-top:6px">Selesai 11 Agustus · 12 dari 12 pelajaran</div>
+      </div>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid #E5E5E1">
+        <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97;margin-bottom:6px">Refleksi</div>
+        <div style="font-size:15px;line-height:1.6;padding-left:10px;border-left:2px solid #D7D8D3">“Kalau sudah main HP, anak saya sulit berhenti dan kalau diingatkan sering jadi konflik.”</div>
+        <div style="font-size:12px;color:#9A9C97;margin-top:6px">Hari 6 · 11 Agustus</div>
+      </div>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid #E5E5E1">
+        <div style="font-size:12px;color:#9A9C97;margin-bottom:10px">Riwayat belajar</div>
+        <div style="display:grid;grid-template-columns:52px 12px 1fr;gap:6px;font-size:13px">
+          <div style="color:#9A9C97;font-size:12px">11 Agt</div><div style="display:flex;flex-direction:column;align-items:center"><div style="width:5px;height:5px;border-radius:3px;background:#167A68;margin-top:5px"></div><div style="width:1px;flex:1;background:#E5E5E1"></div></div><div style="padding-bottom:8px">Program selesai</div>
+          <div style="color:#9A9C97;font-size:12px">11 Agt</div><div style="display:flex;flex-direction:column;align-items:center"><div style="width:5px;height:5px;border-radius:3px;background:#D7D8D3;margin-top:5px"></div><div style="width:1px;flex:1;background:#E5E5E1"></div></div><div style="padding-bottom:8px">Klik konsultasi</div>
+          <div style="color:#9A9C97;font-size:12px">10 Agt</div><div style="display:flex;flex-direction:column;align-items:center"><div style="width:5px;height:5px;border-radius:3px;background:#D7D8D3;margin-top:5px"></div></div><div>Mencapai 80%</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:none;padding:12px 20px 20px;border-top:1px solid #D7D8D3;background:#F7F7F5">
+      <div style="font-size:12px;color:#9A9C97">Langkah berikutnya</div>
+      <div style="font-size:15px;font-weight:500;margin-top:2px">Tindak lanjuti soal assessment.</div>
+      <a href="#2f" style="display:flex;align-items:center;justify-content:center;min-height:48px;margin-top:12px;background:#167A68;color:#fff;font-size:15px;font-weight:500;text-decoration:none;border-radius:6px">Tindak lanjuti →</a>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<div class="dv-grp">Pengalaman peserta · netral-editorial, tanpa istilah teknis</div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="2m"><div class="dv-olabel"><a class="dv-oid" href="#2m">2m</a>Halaman program publik + pendaftaran</div>
+<div class="dv-card" style="width:900px;background:#FFFFFF;min-height:820px;padding:0">
+  <div style="border-bottom:1px solid #E5E5E1;padding:16px 40px;font-size:13px;color:#73756F">rina.promotorclass.id/belajar-anak</div>
+  <div style="max-width:700px;margin:0 auto;padding:56px 24px 64px">
+    <div style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#9A9C97">Program gratis · 7 hari</div>
+    <h1 style="font:600 40px/1.2 inherit;margin:16px 0 0;text-wrap:pretty">7 Hari Mengenal Cara Belajar Anak</h1>
+    <p style="font-size:18px;line-height:1.7;color:#20211F;margin:20px 0 0;max-width:620px;text-wrap:pretty">Tujuh hari, satu pelajaran singkat setiap hari. Anda akan melihat kapan anak paling mudah fokus, apa yang membuatnya berhenti, dan bagaimana menyusun rutinitas belajar yang tidak memicu konflik.</p>
+    <div style="display:flex;gap:24px;align-items:center;margin-top:28px;padding-top:20px;border-top:1px solid #E5E5E1;font-size:14px;color:#73756F">
+      <div style="width:44px;height:44px;flex:none;border-radius:22px;background:repeating-linear-gradient(135deg,#F2F2EF,#F2F2EF 6px,#EAEAE6 6px,#EAEAE6 12px)"></div>
+      <div><div style="color:#20211F;font-weight:500">Bu Rina — Promotor &amp; Parenting Educator</div><div style="margin-top:2px">Bandung · 84 orang tua sudah mengikuti</div></div>
+    </div>
+    <div style="margin-top:40px">
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97">Yang akan Anda pelajari</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px;font-size:17px;line-height:1.6">
+        <div style="padding-bottom:12px;border-bottom:1px solid #E5E5E1">Hari 1 · Kenapa anak terlihat tidak mau belajar</div>
+        <div style="padding-bottom:12px;border-bottom:1px solid #E5E5E1">Hari 2–4 · Mengenali pola belajar anak Anda</div>
+        <div style="padding-bottom:12px;border-bottom:1px solid #E5E5E1">Hari 5–6 · Menyusun rutinitas yang lebih ringan</div>
+        <div>Hari 7 · Rencana tindakan untuk dua minggu ke depan</div>
+      </div>
+    </div>
+    <div style="margin-top:48px;padding-top:28px;border-top:1px solid #D7D8D3">
+      <h2 style="font:600 24px/1.3 inherit;margin:0">Daftar untuk mulai</h2>
+      <div style="display:flex;flex-direction:column;gap:16px;margin-top:20px;max-width:440px">
+        <div><label style="display:block;font-size:14px;margin-bottom:6px">Nama</label><input style="width:100%;font:16px inherit;padding:12px;border:1px solid #D7D8D3;border-radius:6px;color:#20211F"></div>
+        <div><label style="display:block;font-size:14px;margin-bottom:6px">Nomor WhatsApp</label><input placeholder="08…" style="width:100%;font:16px inherit;padding:12px;border:1px solid #D7D8D3;border-radius:6px;color:#20211F"></div>
+        <div><label style="display:block;font-size:14px;margin-bottom:6px">Usia anak <span style="color:#9A9C97">· opsional</span></label><select style="width:100%;font:16px inherit;padding:12px;border:1px solid #D7D8D3;border-radius:6px;background:#fff;color:#20211F"><option>Pilih</option><option>Di bawah 7 tahun</option><option>7–12 tahun</option><option>13–15 tahun</option><option>16 tahun ke atas</option></select></div>
+        <a href="#2n" style="display:flex;align-items:center;justify-content:center;min-height:52px;background:#20211F;color:#fff;font-size:16px;font-weight:500;text-decoration:none;border-radius:6px">Mulai belajar</a>
+        <div style="font-size:13px;color:#9A9C97;line-height:1.6">Nomor WhatsApp digunakan untuk akses program dan komunikasi terkait program atau layanan Bu Rina.</div>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="2n"><div class="dv-olabel"><a class="dv-oid" href="#2n">2n</a>Beranda peserta</div>
+<div class="dv-card" style="width:390px;height:700px;background:#FFFFFF;display:flex;flex-direction:column">
+  <div style="flex:1;overflow:hidden;padding:28px 24px 0">
+  <div style="font-size:13px;color:#73756F">Bu Rina — Parenting Educator</div>
+  <h1 style="font:600 24px/1.3 inherit;margin:20px 0 0">Program</h1>
+  <div style="margin-top:32px;padding-top:20px;border-top:1px solid #E5E5E1">
+    <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97">Lanjutkan belajar</div>
+    <div style="font:600 20px/1.35 inherit;margin-top:12px">7 Hari Mengenal Cara Belajar Anak</div>
+    <div style="font-size:13px;color:#73756F;margin-top:10px">Hari 6 dari 7</div>
+    <div style="font-size:16px;line-height:1.55;margin-top:4px">Membuat Rutinitas Belajar yang Lebih Ringan</div>
+    <div style="height:2px;background:#E5E5E1;margin-top:20px"><div style="height:2px;width:74%;background:#20211F"></div></div>
+    <a href="#2p" style="display:flex;align-items:center;justify-content:center;min-height:48px;margin-top:20px;background:#20211F;color:#fff;font-size:15px;font-weight:500;text-decoration:none;border-radius:6px">Lanjutkan</a>
+    <a href="#2o" style="display:block;text-align:center;font-size:13px;color:#73756F;text-decoration:none;margin-top:12px">Lihat semua pelajaran</a>
+  </div>
+  <div style="margin-top:40px;padding-top:20px;border-top:1px solid #E5E5E1">
+    <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97">Program Anda</div>
+    <div style="padding:16px 0;border-bottom:1px solid #E5E5E1">
+      <div style="font-size:16px;font-weight:500">30 Hari Parenting Growth</div>
+      <div style="font-size:13px;color:#73756F;margin-top:3px">Belum dimulai · 12 pelajaran</div>
+    </div>
+    <div style="padding:16px 0">
+      <div style="font-size:16px;font-weight:500">7 Hari Mengenal Cara Belajar Anak</div>
+      <div style="font-size:13px;color:#73756F;margin-top:3px">Hari 6 dari 7 · terakhir dibuka kemarin</div>
+    </div>
+  </div>
+  </div>
+  <dc-import name="LearnerTabBar" active="Belajar" hint-size="100%,74px"></dc-import>
+</div></div>
+
+<div class="dv-opt" id="2o"><div class="dv-olabel"><a class="dv-oid" href="#2o">2o</a>Ringkasan program peserta</div>
+<div class="dv-card" style="width:390px;height:760px;background:#FFFFFF;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 24px;border-bottom:1px solid #E5E5E1;font-size:14px;color:#73756F">← Program</div>
+  <div style="flex:1;overflow:hidden;padding:24px">
+    <h1 style="font:600 22px/1.35 inherit;margin:0;text-wrap:pretty">7 Hari Mengenal Cara Belajar Anak</h1>
+    <div style="font-size:13px;color:#73756F;margin-top:8px">Bu Rina · 7 pelajaran · Hari 6 dari 7</div>
+    <div style="height:2px;background:#E5E5E1;margin-top:16px"><div style="height:2px;width:74%;background:#20211F"></div></div>
+    <div style="display:flex;flex-direction:column;margin-top:16px">
+      <div style="display:flex;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid #E5E5E1"><span style="color:#20211F;font-size:13px;width:14px">✓</span><div><div style="font-size:15px">Selamat datang</div><div style="font-size:13px;color:#9A9C97;margin-top:2px">4 menit</div></div></div>
+      <div style="display:flex;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid #E5E5E1"><span style="color:#20211F;font-size:13px;width:14px">✓</span><div><div style="font-size:15px">Anak bukan tidak mau belajar</div><div style="font-size:13px;color:#9A9C97;margin-top:2px">8 menit</div></div></div>
+      <div style="display:flex;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid #E5E5E1"><span style="color:#20211F;font-size:13px;width:14px">✓</span><div><div style="font-size:15px">Apa tantangan terbesar Anda?</div><div style="font-size:13px;color:#9A9C97;margin-top:2px">Refleksi · sudah dijawab</div></div></div>
+      <div style="display:flex;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid #E5E5E1"><span style="color:#20211F;font-size:13px;width:14px">✓</span><div><div style="font-size:15px">Mengenali pola belajar anak</div><div style="font-size:13px;color:#9A9C97;margin-top:2px">6 menit baca</div></div></div>
+      <div style="display:flex;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid #D7D8D3;background:#FAFAF8"><span style="color:#9A9C97;font-size:13px;width:14px">→</span><div><div style="font-size:15px;font-weight:600">Membuat Rutinitas Belajar yang Lebih Ringan</div><div style="font-size:13px;color:#73756F;margin-top:2px">Hari 6 · 6 menit · ada refleksi</div></div></div>
+      <div style="display:flex;gap:12px;align-items:baseline;padding:10px 0"><span style="color:#D7D8D3;font-size:13px;width:14px">·</span><div><div style="font-size:15px;color:#73756F">Rencana tindakan</div><div style="font-size:13px;color:#9A9C97;margin-top:2px">Terbuka besok</div></div></div>
+    </div>
+  </div>
+  <div style="flex:none;padding:12px 24px 24px;border-top:1px solid #E5E5E1">
+    <a href="#2p" style="display:flex;align-items:center;justify-content:center;min-height:48px;background:#20211F;color:#fff;font-size:15px;font-weight:500;text-decoration:none;border-radius:6px">Lanjutkan Hari 6</a>
+  </div>
+  <dc-import name="LearnerTabBar" active="Program" hint-size="100%,74px"></dc-import>
+</div></div>
+
+<div class="dv-opt" id="2p"><div class="dv-olabel"><a class="dv-oid" href="#2p">2p</a>Pembaca pelajaran — refleksi wajib mengunci tombol selesai</div>
+<div class="dv-card" style="width:900px;background:#FFFFFF;min-height:860px;padding:0">
+  <div style="border-bottom:1px solid #E5E5E1;padding:16px 32px;display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:14px;color:#73756F">← 7 Hari Mengenal Cara Belajar Anak</span>
+    <span style="font-size:13px;color:#9A9C97">Hari 6 dari 7</span>
+  </div>
+  <sc-if value="{{ lessonOpen }}" hint-placeholder-val="{{ true }}">
+  <div style="max-width:700px;margin:0 auto;padding:48px 24px 64px">
+    <div style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#9A9C97">Hari 6 dari 7</div>
+    <h1 style="font:600 36px/1.25 inherit;margin:16px 0 0;text-wrap:pretty">Membuat Rutinitas Belajar yang Lebih Ringan</h1>
+    <div style="font-size:13px;color:#9A9C97;margin-top:12px">6 menit</div>
+    <div style="margin-top:32px;aspect-ratio:16/9;background:repeating-linear-gradient(135deg,#F2F2EF,#F2F2EF 8px,#EAEAE6 8px,#EAEAE6 16px);border:1px solid #E5E5E1;display:flex;align-items:center;justify-content:center">
+      <span style="font:12px ui-monospace,Menlo,monospace;color:#73756F">video 6:12</span>
+    </div>
+    <div style="font-size:13px;color:#9A9C97;margin-top:8px">Video sulit diputar? <span style="color:#20211F;text-decoration:underline">Buka di YouTube</span></div>
+    <h2 style="font:600 20px/1.4 inherit;margin:40px 0 0">Tidak semua anak membutuhkan rutinitas yang sama</h2>
+    <p style="font-size:18px;line-height:1.7;margin:16px 0 0;text-wrap:pretty">Tujuan rutinitas bukan membuat anak mengikuti jadwal secara kaku. Tujuannya mengurangi jumlah keputusan yang harus diambil setiap hari, supaya energi anak tidak habis sebelum belajar dimulai.</p>
+    <p style="font-size:18px;line-height:1.7;margin:20px 0 0;text-wrap:pretty">Mulai dari satu titik saja. Pilih satu waktu yang paling stabil dalam sehari, lalu tempelkan kegiatan belajar di sana selama satu minggu. Setelah pola itu berjalan, baru tambahkan bagian berikutnya.</p>
+    <div style="margin-top:32px;padding:16px 0;border-top:1px solid #E5E5E1;border-bottom:1px solid #E5E5E1;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:16px">Lembar kerja rutinitas</span><span style="font-size:14px;text-decoration:underline">Unduh</span>
+    </div>
+    <div style="margin-top:48px">
+      <div style="display:flex;align-items:baseline;gap:10px">
+        <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97">Refleksi</div>
+        <div style="font-size:12px;color:#73756F">Wajib dijawab</div>
+      </div>
+      <div style="font-size:18px;line-height:1.6;margin-top:12px;text-wrap:pretty">Apa yang biasanya paling memicu konflik ketika waktu belajar tiba?</div>
+      <textarea onInput="{{ onReflect }}" placeholder="Tulis jawaban Anda" style="width:100%;height:110px;margin-top:14px;font:16px/1.6 inherit;color:#20211F;padding:12px;border:1px solid #D7D8D3;border-radius:6px;resize:vertical"></textarea>
+      <div style="font-size:13px;color:#9A9C97;margin-top:8px">{{ reflectHint }}</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:40px;padding-top:20px;border-top:1px solid #D7D8D3">
+      <span style="font-size:15px;color:#73756F">← Sebelumnya</span>
+      <button onClick="{{ completeLesson }}" style="border:1px solid {{ ctaBorder }};background:{{ ctaBg }};color:{{ ctaColor }};font:500 15px inherit;padding:13px 20px;border-radius:6px;cursor:{{ ctaCursor }}">Simpan &amp; selesaikan pelajaran</button>
+    </div>
+  </div>
+  </sc-if>
+  <sc-if value="{{ lessonDone }}" hint-placeholder-val="{{ false }}">
+  <div style="max-width:700px;margin:0 auto;padding:88px 24px">
+    <div style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#9A9C97">Hari 6 selesai</div>
+    <h1 style="font:600 32px/1.3 inherit;margin:16px 0 0">Jawaban Anda tersimpan</h1>
+    <p style="font-size:18px;line-height:1.7;color:#73756F;margin:16px 0 0">Besok: rencana tindakan dan langkah lanjutan.</p>
+    <div style="display:flex;gap:20px;align-items:center;margin-top:32px">
+      <a href="#2q" style="display:inline-flex;align-items:center;background:#20211F;color:#fff;font-size:15px;font-weight:500;text-decoration:none;padding:13px 20px;border-radius:6px">Pelajaran berikutnya</a>
+      <button onClick="{{ reopenLesson }}" style="background:none;border:none;font:15px inherit;color:#73756F;cursor:pointer;padding:0">Kembali ke pelajaran</button>
+    </div>
+  </div>
+  </sc-if>
+</div></div>
+
+<div class="dv-opt" id="2q"><div class="dv-olabel"><a class="dv-oid" href="#2q">2q</a>Program selesai — hasil dulu, tawaran kemudian</div>
+<div class="dv-card" style="width:390px;height:760px;background:#FFFFFF;display:flex;flex-direction:column">
+  <div style="flex:1;overflow:hidden;padding:56px 24px 0">
+    <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9A9C97">Program selesai</div>
+    <h1 style="font:600 26px/1.3 inherit;margin:14px 0 0;text-wrap:pretty">7 Hari Mengenal Cara Belajar Anak</h1>
+    <p style="font-size:16px;line-height:1.6;color:#73756F;margin:12px 0 0">Anda telah menyelesaikan 7 dari 7 pelajaran.</p>
+    <div style="height:2px;background:#20211F;margin-top:20px"></div>
+    <div style="margin-top:32px">
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97">Yang sudah Anda kerjakan</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px;font-size:16px;line-height:1.5">
+        <div style="display:flex;gap:10px"><span>✓</span><span>Mengenali pola belajar anak</span></div>
+        <div style="display:flex;gap:10px"><span>✓</span><span>Menemukan pemicu konflik saat belajar</span></div>
+        <div style="display:flex;gap:10px"><span>✓</span><span>Menyusun rutinitas dan rencana tindakan</span></div>
+      </div>
+    </div>
+    <div style="margin-top:36px;padding-top:20px;border-top:1px solid #E5E5E1">
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9A9C97">Langkah berikutnya</div>
+      <p style="font-size:16px;line-height:1.65;margin:10px 0 0;text-wrap:pretty">Kalau ingin membahas pola belajar anak Anda lebih spesifik, Bu Rina bisa membantu.</p>
+    </div>
+    <div style="margin-top:28px;padding-top:16px;border-top:1px solid #E5E5E1">
+      <div style="font-size:13px;color:#9A9C97">Program lanjutan</div>
+      <div style="font-size:15px;margin-top:4px">30 Hari Parenting Growth <span style="color:#73756F">· 12 pelajaran</span></div>
+    </div>
+  </div>
+  <div style="flex:none;padding:16px 24px 24px;border-top:1px solid #E5E5E1">
+    <a href="#2n" style="display:flex;align-items:center;justify-content:center;min-height:48px;background:#20211F;color:#fff;font-size:15px;font-weight:500;text-decoration:none;border-radius:6px">Hubungi Bu Rina</a>
+    <a href="#2n" style="display:flex;align-items:center;justify-content:center;min-height:44px;margin-top:8px;color:#73756F;font-size:14px;text-decoration:none">Kembali ke program</a>
+  </div>
+</div></div>
+
+</div>
+
+<p class="dv-next">Coba lanjut: “buat versi Class-only dan bundle berdampingan untuk <a class="dv-oid" href="#2e">2e</a>” · “tambah state pendaftaran berhasil + magic link di <a class="dv-oid" href="#2m">2m</a>” · “tunjukkan aturan minat: dari sinyal apa saja label tinggi/sedang/rendah dihitung”</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1400,&quot;height&quot;:900},&quot;bundle&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Entitlement&quot;},&quot;showInterestScore&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Entitlement&quot;}}">
+class Component extends DCLogic {
+  state = { tab: 'Konten', mTab: 'Konten', sheetOpen: false, reorder: false, shareOpen: false, sel: 0, lessonDone: false, answered: false };
+  get bundle() { return this.props.bundle ?? true; }
+  get showScore() { return this.props.showInterestScore ?? false; }
+  get data() {
+    return [
+      { name: 'Ayu Rahma', program: '7 Hari Mengenal Cara Belajar Anak', progress: '100%', interest: 'Minat tinggi', short: 'Tinggi', score: 92, status: 'Selesai', last: '2j',
+        meta: 'Instagram · parenting · anak 13 tahun', stage: 'Tertarik', assessment: 'belum',
+        progressNote: 'Selesai 11 Agustus · 12 dari 12 pelajaran',
+        reasons: 'Selesai 100% · mengisi refleksi tentang konflik penggunaan HP · klik konsultasi · belum assessment',
+        reflection: '“Kalau sudah main HP, anak saya sulit berhenti dan kalau diingatkan sering jadi konflik.”',
+        reflectionMeta: 'Hari 6 · 11 Agustus',
+        nextStep: 'Tindak lanjuti soal assessment anak.',
+        timeline: [
+          { date: '11 Agt', text: 'Program selesai', dot: '#167A68' },
+          { date: '11 Agt', text: 'Klik tombol konsultasi', dot: '#167A68' },
+          { date: '11 Agt', text: 'Mengisi refleksi', dot: '#D7D8D3' },
+          { date: '10 Agt', text: 'Mencapai 80%', dot: '#D7D8D3' },
+          { date: '05 Agt', text: 'Mendaftar dari Instagram', dot: '#D7D8D3' }
+        ] },
+      { name: 'Nina Wulandari', program: '7 Hari Mengenal Cara Belajar Anak', progress: '86%', interest: 'Minat tinggi', short: 'Tinggi', score: 87, status: 'Aktif', last: '3j',
+        meta: 'Google Maps · anak kelas 8', stage: 'Tertarik', assessment: 'belum',
+        progressNote: 'Hari 6 dari 7 · aktif tiga hari terakhir',
+        reasons: 'Progres 86% · mengisi refleksi · aktif tiga hari terakhir · belum assessment',
+        reflection: '“Anak saya kelas 8 dan belakangan sulit diajak belajar.”',
+        reflectionMeta: 'Hari 4 · 9 Agustus',
+        nextStep: 'Sapa langsung sebelum program selesai.',
+        timeline: [
+          { date: '11 Agt', text: 'Mencapai 86%', dot: '#167A68' },
+          { date: '11 Agt', text: 'Menyelesaikan Hari 5', dot: '#D7D8D3' },
+          { date: '09 Agt', text: 'Mengisi refleksi', dot: '#D7D8D3' },
+          { date: '06 Agt', text: 'Mendaftar dari Google Maps', dot: '#D7D8D3' }
+        ] },
+      { name: 'Dimas Pratama', program: '30 Hari Setelah Tes', progress: '100%', interest: 'Minat sedang', short: 'Sedang', score: 78, status: 'Selesai', last: '1h',
+        meta: 'Referral · klien lama', stage: 'Klien', assessment: 'selesai 12 Juli',
+        progressNote: 'Selesai 10 Agustus · program aftersales',
+        reasons: 'Program aftersales selesai · klik Sesi Privat · belum ada sesi privat terjadwal',
+        reflection: '“Saya mulai paham kenapa cara belajar saya berbeda dari anak pertama.”',
+        reflectionMeta: 'Hari 24 · 8 Agustus',
+        nextStep: 'Tawarkan sesi privat.',
+        timeline: [
+          { date: '10 Agt', text: 'Klik Sesi Privat', dot: '#167A68' },
+          { date: '10 Agt', text: 'Program selesai', dot: '#D7D8D3' },
+          { date: '02 Agt', text: 'Mencapai 50%', dot: '#D7D8D3' },
+          { date: '14 Jul', text: 'Didaftarkan setelah tes', dot: '#D7D8D3' }
+        ] },
+      { name: 'Nadia Putri', program: '7 Hari Mengenal Cara Belajar Anak', progress: '21%', interest: 'Minat rendah', short: 'Rendah', score: 24, status: 'Tidak aktif', last: '7h',
+        meta: 'Instagram · anak 9 tahun', stage: 'Prospek baru', assessment: 'belum',
+        progressNote: 'Hari 2 dari 7 · tidak aktif 7 hari',
+        reasons: 'Tidak aktif 7 hari · progres di bawah 50% · belum mengisi refleksi',
+        reflection: 'Belum ada refleksi.',
+        reflectionMeta: '—',
+        nextStep: 'Kirim pengingat ringan.',
+        timeline: [
+          { date: '04 Agt', text: 'Berhenti aktif', dot: '#94662F' },
+          { date: '03 Agt', text: 'Menyelesaikan Hari 1', dot: '#D7D8D3' },
+          { date: '03 Agt', text: 'Mendaftar dari Instagram', dot: '#D7D8D3' }
+        ] },
+      { name: 'Hendra Saputra', program: '7 Hari Memahami Potensi Remaja', progress: '54%', interest: 'Minat sedang', short: 'Sedang', score: 61, status: 'Aktif', last: '2h',
+        meta: 'Referral · anak 16 tahun', stage: 'Tertarik', assessment: 'belum',
+        progressNote: 'Hari 4 dari 7',
+        reasons: 'Progres 54% · refleksi menyebut kebingungan memilih jurusan',
+        reflection: '“Anak saya bingung memilih jurusan.”',
+        reflectionMeta: 'Hari 3 · 8 Agustus',
+        nextStep: 'Kirim panduan pemilihan jurusan.',
+        timeline: [
+          { date: '09 Agt', text: 'Mencapai 50%', dot: '#167A68' },
+          { date: '08 Agt', text: 'Mengisi refleksi', dot: '#D7D8D3' },
+          { date: '04 Agt', text: 'Mendaftar', dot: '#D7D8D3' }
+        ] }
+    ];
+  }
+  color(interest) { return interest === 'Minat tinggi' ? '#20211F' : interest === 'Minat sedang' ? '#4A4C47' : '#73756F'; }
+  renderVals() {
+    const d = this.data, i = this.state.sel, sel = d[i], bundle = this.bundle, score = this.showScore;
+    const s = v => score ? '· ' + v : '';
+    const answered = this.state.answered;
+    return {
+      bundleOn: bundle,
+      planLabel: bundle ? 'Class + Flow' : 'Class',
+      signalNote: bundle
+        ? 'Rekomendasi dicatat sebagai Next Action di PromotorFlow. Tidak ada pesan yang dikirim otomatis.'
+        : 'Rekomendasi muncul di Beranda PromotorClass. Tidak ada pesan yang dikirim otomatis.',
+      recCreatedText: bundle ? 'Next Action dibuat di PromotorFlow — Tindak lanjuti soal assessment' : 'Rekomendasi dibuat — Tindak lanjuti soal assessment',
+      flowIntegrationNote: bundle ? 'Terhubung sebagai satu akun.' : 'Belum aktif di langganan Anda.',
+      flowIntegrationAction: bundle ? 'Buka PromotorFlow ↗' : 'Pelajari',
+      draftModeLabel: bundle ? 'mode Class + Flow' : 'mode Class-only',
+      draftFooter: bundle ? 'Rekomendasi ini tercatat di PromotorFlow.' : 'Rekomendasi ini tersimpan di PromotorClass.',
+      afterSendPrompt: 'Pesan sudah dikirim?',
+      nextFollowPrompt: 'Follow-up berikutnya?',
+      afterSendNote: bundle
+        ? '“Sudah” menyelesaikan Next Action yang sudah ada di PromotorFlow. Pilihan jadwal membuat Next Action berikutnya — tidak ada aksi ganda.'
+        : '“Sudah” menyelesaikan rekomendasi ini di PromotorClass. Pilihan jadwal memunculkannya lagi di Beranda.',
+      afterSendPrimary: 'Sudah',
+      secondaryAction: bundle ? 'Tunda 3 hari' : 'Tandai selesai',
+      linkNote: bundle ? 'Tercatat di PromotorFlow · Buka di PromotorFlow ↗' : 'Rekomendasi ini hanya tersimpan di PromotorClass.',
+      tabs: ['Konten', 'Peserta', 'Analitik', 'Pengaturan'].map(name => ({
+        name,
+        line: this.state.tab === name ? '#167A68' : 'transparent',
+        color: this.state.tab === name ? '#167A68' : '#73756F',
+        select: () => this.setState({ tab: name })
+      })),
+      mQueue: [
+        { name: d[0].name, event: 'Program selesai · 2 jam lalu', interest: d[0].interest, interestScore: s(d[0].score),
+          reasons: 'Selesai 100% · refleksi menyebut konflik penggunaan HP · belum assessment', next: d[0].nextStep, action: 'Tindak lanjuti' },
+        { name: d[1].name, event: 'Mencapai 86% · 3 jam lalu', interest: d[1].interest, interestScore: s(d[1].score),
+          reasons: 'Aktif tiga hari terakhir · refleksi menyebut anak sulit diajak belajar', next: d[1].nextStep, action: 'Sapa' }
+      ],
+      mTabs: ['Konten', 'Peserta', 'Analitik', 'Pengaturan'].map(name => ({
+        name,
+        line: this.state.mTab === name ? '#167A68' : 'transparent',
+        color: this.state.mTab === name ? '#167A68' : '#73756F',
+        select: () => this.setState({ mTab: name })
+      })),
+      mIsContent: this.state.mTab === 'Konten',
+      mIsLearners: this.state.mTab === 'Peserta',
+      mIsAnalytics: this.state.mTab === 'Analitik',
+      mIsSettings: this.state.mTab === 'Pengaturan',
+      sheetOpen: this.state.sheetOpen,
+      openSheet: () => this.setState({ sheetOpen: true }),
+      closeSheet: () => this.setState({ sheetOpen: false }),
+      reorderOn: this.state.reorder,
+      reorderOff: !this.state.reorder,
+      reorderLabel: this.state.reorder ? 'Selesai' : 'Ubah urutan',
+      toggleReorder: () => this.setState({ reorder: !this.state.reorder }),
+      shareOpen: this.state.shareOpen,
+      openShare: () => this.setState({ shareOpen: true }),
+      closeShare: () => this.setState({ shareOpen: false }),
+      isContent: this.state.tab === 'Konten',
+      isLearners: this.state.tab === 'Peserta',
+      isAnalytics: this.state.tab === 'Analitik',
+      isSettings: this.state.tab === 'Pengaturan',
+      queue: [
+        { name: d[0].name, event: 'Program selesai · 2 jam lalu', interest: d[0].interest, interestColor: this.color(d[0].interest), interestScore: s(d[0].score),
+          reasons: 'Selesai 100% · refleksi menyebut konflik penggunaan HP · belum assessment', next: d[0].nextStep, action: 'Tindak lanjuti' },
+        { name: d[1].name, event: 'Mencapai 86% · 3 jam lalu', interest: d[1].interest, interestColor: this.color(d[1].interest), interestScore: s(d[1].score),
+          reasons: 'Aktif tiga hari terakhir · refleksi menyebut anak sulit diajak belajar', next: d[1].nextStep, action: 'Sapa' },
+        { name: d[2].name, event: 'Klik Sesi Privat · kemarin 21:17', interest: d[2].interest, interestColor: this.color(d[2].interest), interestScore: s(d[2].score),
+          reasons: 'Program aftersales selesai · belum ada sesi privat terjadwal', next: d[2].nextStep, action: 'Kirim tawaran' },
+        { name: d[3].name, event: 'Tidak aktif 7 hari · 21% selesai', interest: d[3].interest, interestColor: this.color(d[3].interest), interestScore: s(d[3].score),
+          reasons: 'Berhenti di Hari 2 · belum mengisi refleksi', next: d[3].nextStep, action: 'Ingatkan' }
+      ],
+      programLearners: d.slice(0, 4).map(l => ({ name: l.name, progress: l.progress, interestShort: l.short, interestScore: s(l.score), interestColor: this.color(l.interest), status: l.status, last: l.last })),
+      learners: d.map((l, n) => ({
+        name: l.name, progress: l.progress, interestShort: l.short, interestScore: s(l.score), interestColor: this.color(l.interest), status: l.status, last: l.last,
+        bg: n === i ? '#F2F2EF' : 'transparent',
+        select: () => this.setState({ sel: n })
+      })),
+      sel: Object.assign({}, sel, { interestColor: this.color(sel.interest), interestScore: score ? '· skor ' + sel.score : '' }),
+      openDraft: () => { window.location.hash = '#2f'; },
+      lessonOpen: !this.state.lessonDone,
+      lessonDone: this.state.lessonDone,
+      onReflect: e => { const has = e.target.value.trim().length > 0; if (has !== answered) this.setState({ answered: has }); },
+      reflectHint: answered ? 'Jawaban akan tersimpan saat Anda menyelesaikan pelajaran. Hanya Bu Rina yang bisa melihatnya.' : 'Jawab dulu untuk menyelesaikan pelajaran ini. Hanya Bu Rina yang bisa melihatnya.',
+      ctaBg: answered ? '#20211F' : '#F2F2EF',
+      ctaColor: answered ? '#FFFFFF' : '#9A9C97',
+      ctaBorder: answered ? '#20211F' : '#E5E5E1',
+      ctaCursor: answered ? 'pointer' : 'not-allowed',
+      completeLesson: () => { if (this.state.answered) this.setState({ lessonDone: true }); },
+      reopenLesson: () => this.setState({ lessonDone: false })
+    };
+  }
+}
+</script>
+</body>
+</html>
