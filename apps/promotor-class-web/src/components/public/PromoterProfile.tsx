@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element */
 
 import React from 'react';
 import { PublicWorkspaceProfile } from '@/modules/public-storefront/types';
@@ -18,40 +19,29 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
           alignItems: 'center',
         }}
       >
-        {/* Portrait Container */}
+        {/* Portrait Container with Generated WebP Image */}
         <div
           style={{
             maxWidth: '360px',
+            width: '100%',
             aspectRatio: '4 / 5',
             borderRadius: '26px',
-            backgroundColor: '#e8ded2',
             overflow: 'hidden',
             position: 'relative',
             border: '1px solid var(--color-divider)',
+            boxShadow: 'var(--shadow-md)',
+            margin: '0 auto',
           }}
         >
-          <div
+          <img
+            src="/images/promoter_profile_rina.webp"
+            alt={profile.displayName}
             style={{
-              position: 'absolute',
-              width: '116px',
-              height: '116px',
-              borderRadius: '50%',
-              backgroundColor: '#8a5843',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              top: '65px',
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              width: '270px',
-              height: '330px',
-              backgroundColor: '#254f3a',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              bottom: '-80px',
-              borderRadius: '130px 130px 26px 26px',
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center top',
+              display: 'block',
             }}
           />
           <div
@@ -59,13 +49,17 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
               position: 'absolute',
               left: '18px',
               bottom: '18px',
+              right: '18px',
               padding: '10px 14px',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: 'rgba(255, 255, 255, 0.94)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
               border: '1px solid var(--color-divider)',
-              borderRadius: '12px',
+              borderRadius: '14px',
               fontSize: '13px',
               fontWeight: 750,
               color: '#191918',
+              boxShadow: 'var(--shadow-sm)',
             }}
           >
             {profile.displayName} · {profile.roleLabel}
@@ -110,7 +104,7 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
             {profile.bio}
           </p>
 
-          {/* Neutral demonstrative facts (No fabricated customer counts) */}
+          {/* Neutral demonstrative facts */}
           <div
             style={{
               display: 'grid',

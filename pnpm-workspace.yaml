@@ -2,6 +2,25 @@ packages:
   - 'apps/*'
   - 'packages/*'
 allowBuilds:
+  '@img/colour': true
+  '@next/env': true
+  '@swc/helpers': true
+  busboy: true
+  caniuse-lite: true
+  client-only: true
+  detect-libc: true
   esbuild: true
+  graceful-fs: true
+  nanoid: true
+  next: true
+  picocolors: true
+  postcss: true
+  react: true
+  react-dom: true
+  scheduler: true
+  semver: true
+  source-map-js: true
+  streamsearch: true
+  styled-jsx: true
   unrs-resolver: true
   workerd: true

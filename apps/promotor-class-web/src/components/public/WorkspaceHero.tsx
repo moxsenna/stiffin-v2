@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element */
 
 import React from 'react';
 import Link from 'next/link';
@@ -48,9 +49,9 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
 
           <h1
             style={{
-              fontSize: 'clamp(38px, 5vw, 64px)',
-              lineHeight: 0.98,
-              letterSpacing: '-0.045em',
+              fontSize: 'clamp(36px, 5vw, 60px)',
+              lineHeight: 1.02,
+              letterSpacing: '-0.04em',
               marginBottom: '22px',
               fontWeight: 800,
             }}
@@ -135,7 +136,7 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
           </div>
         </div>
 
-        {/* Right Featured Art Card */}
+        {/* Right Featured Art Card with Generated WebP Photo */}
         {featuredItem && (
           <Link
             href={`/p/${profile.workspaceSlug}/${featuredItem.program.programSlug}`}
@@ -147,16 +148,37 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                 position: 'relative',
                 borderRadius: '30px',
                 overflow: 'hidden',
-                backgroundColor: '#e8eee8',
                 border: '1px solid #dbe5dd',
-                boxShadow: 'var(--shadow)',
+                boxShadow: 'var(--shadow-md)',
                 padding: '34px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
               }}
             >
-              <div>
+              <img
+                src="/images/program_cover_7hari.webp"
+                alt={featuredItem.program.title}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                }}
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background:
+                    'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0.85) 100%)',
+                  zIndex: 1,
+                }}
+              />
+
+              <div style={{ position: 'relative', zIndex: 2 }}>
                 <span
                   style={{
                     display: 'inline-block',
@@ -164,9 +186,10 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                     fontWeight: 820,
                     letterSpacing: '0.08em',
                     textTransform: 'uppercase',
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid #dfe5e0',
-                    padding: '7px 12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.5)',
+                    padding: '7px 14px',
                     borderRadius: '999px',
                     marginBottom: '18px',
                     color: 'var(--color-primary)',
@@ -177,12 +200,13 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
 
                 <div
                   style={{
-                    fontSize: '44px',
-                    lineHeight: 0.96,
-                    letterSpacing: '-0.05em',
+                    fontSize: '40px',
+                    lineHeight: 0.98,
+                    letterSpacing: '-0.045em',
                     fontWeight: 850,
-                    color: '#191918',
+                    color: '#FFFFFF',
                     marginBottom: '16px',
+                    textShadow: '0 2px 6px rgba(0,0,0,0.4)',
                   }}
                 >
                   {featuredItem.program.title}
@@ -191,7 +215,7 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                 <p
                   style={{
                     fontSize: '14px',
-                    color: '#53605a',
+                    color: '#e2ece5',
                     maxWidth: '320px',
                     lineHeight: 1.55,
                     margin: 0,
@@ -201,34 +225,6 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                 </p>
               </div>
 
-              {/* Decorative shapes */}
-              <div
-                style={{
-                  position: 'absolute',
-                  right: '-55px',
-                  bottom: '-42px',
-                  width: '280px',
-                  height: '280px',
-                  borderRadius: '44% 56% 48% 52%',
-                  backgroundColor: 'var(--color-primary)',
-                  transform: 'rotate(-12deg)',
-                  opacity: 0.9,
-                }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  right: '60px',
-                  bottom: '24px',
-                  width: '130px',
-                  height: '190px',
-                  borderRadius: '90px 90px 28px 28px',
-                  backgroundColor: '#f7d6b6',
-                  transform: 'rotate(9deg)',
-                  border: '10px solid rgba(255,255,255,0.44)',
-                }}
-              />
-
               <div
                 style={{
                   display: 'flex',
@@ -236,27 +232,22 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                   alignItems: 'center',
                   fontSize: '13px',
                   fontWeight: 700,
-                  color: '#33443a',
-                  zIndex: 3,
+                  color: '#FFFFFF',
+                  zIndex: 2,
                   position: 'relative',
                 }}
               >
-                <div
+                <img
+                  src="/images/promoter_profile_rina.webp"
+                  alt={profile.displayName}
                   style={{
-                    width: '34px',
-                    height: '34px',
+                    width: '36px',
+                    height: '36px',
                     borderRadius: '50%',
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid #d9e1db',
-                    display: 'grid',
-                    placeItems: 'center',
-                    fontSize: '12px',
-                    fontWeight: 800,
-                    color: 'var(--color-primary)',
+                    objectFit: 'cover',
+                    border: '2px solid #FFFFFF',
                   }}
-                >
-                  {profile.displayName.charAt(0)}
-                </div>
+                />
                 <span>oleh {profile.displayName}</span>
               </div>
             </div>

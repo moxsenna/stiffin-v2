@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element */
 
 import React from 'react';
 
@@ -6,6 +7,7 @@ interface ProgramCoverProps {
   title: string;
   publicLabel: string;
   variant?: 'cover-a' | 'cover-b' | 'cover-c';
+  imageUrl?: string;
   aspectRatio?: string;
 }
 
@@ -13,19 +15,22 @@ export function ProgramCover({
   title,
   publicLabel,
   variant = 'cover-a',
+  imageUrl,
   aspectRatio = '16 / 10',
 }: ProgramCoverProps) {
+  const imageMap = {
+    'cover-a': '/images/program_cover_7hari.webp',
+    'cover-b': '/images/program_cover_30hari.webp',
+    'cover-c': '/images/program_cover_parenting.webp',
+  };
+
   const bgColors = {
     'cover-a': '#dce9de',
     'cover-b': '#ede3d1',
     'cover-c': '#e1e5ee',
   };
 
-  const bubbleColors = {
-    'cover-a': 'var(--color-primary)',
-    'cover-b': '#a56d43',
-    'cover-c': '#495e8c',
-  };
+  const activeImage = imageUrl || imageMap[variant] || imageMap['cover-a'];
 
   return (
     <div
@@ -39,28 +44,56 @@ export function ProgramCover({
         backgroundColor: bgColors[variant] || bgColors['cover-a'],
       }}
     >
+      {/* Background Cover Image */}
+      {activeImage && (
+        <img
+          src={activeImage}
+          alt={title}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+          }}
+        />
+      )}
+
+      {/* Gradient Overlay for Text Readability */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%)',
+          zIndex: 1,
+        }}
+      />
+
       <div
         style={{
           position: 'absolute',
           left: '20px',
           top: '20px',
           right: '20px',
-          fontSize: '28px',
-          lineHeight: 0.98,
-          letterSpacing: '-0.045em',
+          fontSize: '26px',
+          lineHeight: 1.05,
+          letterSpacing: '-0.035em',
           fontWeight: 850,
-          color: '#191918',
+          color: '#FFFFFF',
           zIndex: 2,
+          textShadow: '0 2px 4px rgba(0,0,0,0.3)',
         }}
       >
         <small
           style={{
             display: 'block',
             fontSize: '11px',
-            letterSpacing: '0.08em',
+            letterSpacing: '0.09em',
             textTransform: 'uppercase',
             marginBottom: '8px',
-            color: '#4c5b50',
+            color: '#e2f0e6',
             fontWeight: 800,
           }}
         >
@@ -68,31 +101,6 @@ export function ProgramCover({
         </small>
         {title}
       </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          right: '-24px',
-          bottom: '-36px',
-          width: '160px',
-          height: '160px',
-          borderRadius: '50%',
-          backgroundColor: bubbleColors[variant] || bubbleColors['cover-a'],
-          opacity: 0.85,
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          right: '80px',
-          bottom: '24px',
-          width: '78px',
-          height: '78px',
-          borderRadius: '50%',
-          backgroundColor: '#f4c49e',
-          opacity: 0.9,
-        }}
-      />
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { WorkspaceHero } from '@/components/public/WorkspaceHero';
 import { ValueStrip } from '@/components/public/ValueStrip';
 import { ProgramCatalog } from '@/components/public/ProgramCatalog';
 import { PromoterProfile } from '@/components/public/PromoterProfile';
-import { StickyProgramCTA } from '@/components/public/StickyProgramCTA';
+import { LearnerTabBar } from '@/components/layout/LearnerTabBar';
 
 interface StorefrontClientProps {
   profile: PublicWorkspaceProfile;
@@ -19,7 +19,14 @@ export function StorefrontClient({ profile, catalog }: StorefrontClientProps) {
   const featuredItem = catalog.find(item => item.presentation.featured) || catalog[0];
 
   return (
-    <div style={{ backgroundColor: 'var(--color-surface-muted)', minHeight: '100vh', color: 'var(--color-text-main)' }}>
+    <div
+      className="page-wrapper-with-bottom-nav"
+      style={{
+        backgroundColor: 'var(--color-surface-muted)',
+        minHeight: '100vh',
+        color: 'var(--color-text-main)',
+      }}
+    >
       <PublicHeader
         workspaceSlug={profile.workspaceSlug}
         displayName={profile.displayName}
@@ -35,10 +42,7 @@ export function StorefrontClient({ profile, catalog }: StorefrontClientProps) {
 
       <PublicFooter displayName={profile.displayName.split(' ')[0]} />
 
-      <StickyProgramCTA
-        label="Lihat program gratis"
-        targetId="programs"
-      />
+      <LearnerTabBar />
     </div>
   );
 }

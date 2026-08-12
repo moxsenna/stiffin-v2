@@ -27,7 +27,14 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
   };
 
   return (
-    <div style={{ backgroundColor: 'var(--color-surface-muted)', minHeight: '100vh', color: 'var(--color-text-main)' }}>
+    <div
+      className="page-wrapper-with-bottom-nav"
+      style={{
+        backgroundColor: 'var(--color-surface-muted)',
+        minHeight: '100vh',
+        color: 'var(--color-text-main)',
+      }}
+    >
       <PublicHeader
         workspaceSlug={promoter.workspaceSlug}
         displayName={promoter.displayName}
@@ -37,7 +44,7 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
 
       <main>
         {/* Back Link */}
-        <div className="container" style={{ paddingTop: '20px' }}>
+        <div className="container" style={{ paddingTop: '24px' }}>
           <Link
             href={`/p/${promoter.workspaceSlug}`}
             style={{
@@ -45,6 +52,9 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
               fontSize: '13px',
               textDecoration: 'none',
               fontWeight: 650,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
             }}
           >
             ← Kembali ke ruang belajar
