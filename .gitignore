@@ -2,11 +2,15 @@
 node_modules
 .pnpm-store
 
-# Next.js build output
+# Next.js & OpenNext build output
 .next/
+.open-next/
+.wrangler/
 out/
 build/
 dist/
+cloudflare-env.d.ts
+patch-symlink.cjs
 
 # Logs & temp
 *.log
@@ -18,6 +22,7 @@ pnpm-debug.log*
 # Environment & local files
 .env
 .env*.local
+.dev.vars*
 .DS_Store
 Thumbs.db
 

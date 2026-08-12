@@ -6,11 +6,20 @@
     "dev:class": "pnpm --filter @promotor/promotor-class-web dev",
     "build:class": "pnpm --filter @promotor/promotor-class-web build",
     "build:flow": "pnpm --filter @promotor/promotor-flow-web build",
+    "preview:class:cf": "pnpm --filter @promotor/promotor-class-web preview:cf",
+    "preview:flow:cf": "pnpm --filter @promotor/promotor-flow-web preview:cf",
+    "deploy:class:cf": "pnpm --filter @promotor/promotor-class-web deploy:cf",
+    "deploy:flow:cf": "pnpm --filter @promotor/promotor-flow-web deploy:cf",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test"
   },
+  "overrides": {
+    "@aws-sdk/xml-builder": "3.972.33",
+    "@aws-sdk/signature-v4-multi-region": "3.996.38"
+  },
   "devDependencies": {
+    "esbuild": "^0.28.2",
     "typescript": "^5.3.3"
   }
 }

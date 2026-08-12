@@ -5,6 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "preview:cf": "cross-env NODE_OPTIONS=\"-r ../../scripts/patch-symlink.cjs\" opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion && opennextjs-cloudflare preview",
+    "deploy:cf": "cross-env NODE_OPTIONS=\"-r ../../scripts/patch-symlink.cjs\" opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion && opennextjs-cloudflare deploy",
+    "upload:cf": "cross-env NODE_OPTIONS=\"-r ../../scripts/patch-symlink.cjs\" opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion && opennextjs-cloudflare deploy",
+    "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "start": "next start",
     "lint": "next lint",
     "test": "tsx --test src/__tests__/*.test.ts",
@@ -20,12 +24,15 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.2",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "cross-env": "^10.1.0",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.1.0",
     "tsx": "^4.23.12",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "wrangler": "^4.120.1"
   }
 }
