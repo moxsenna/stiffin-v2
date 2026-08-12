@@ -72,18 +72,7 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
             <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
           <span className="mobile-bottom-nav__label">Beranda</span>
-          {activeTab === 'beranda' && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '3px',
-                width: '14px',
-                height: '2px',
-                backgroundColor: 'var(--color-primary)',
-                borderRadius: '1px',
-              }}
-            />
-          )}
+          {activeTab === 'beranda' && <div className="mobile-bottom-nav__indicator" />}
         </Link>
 
         {/* Tab 2: Katalog */}
@@ -111,18 +100,7 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
             <rect x="3" y="14" width="7" height="7" rx="1" />
           </svg>
           <span className="mobile-bottom-nav__label">Katalog</span>
-          {activeTab === 'katalog' && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '3px',
-                width: '14px',
-                height: '2px',
-                backgroundColor: 'var(--color-primary)',
-                borderRadius: '1px',
-              }}
-            />
-          )}
+          {activeTab === 'katalog' && <div className="mobile-bottom-nav__indicator" />}
         </Link>
 
         {/* Tab 3: Belajar / Program Saya */}
@@ -147,18 +125,7 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
             <polygon points="5 3 19 12 5 21 5 3" />
           </svg>
           <span className="mobile-bottom-nav__label">Belajar</span>
-          {activeTab === 'belajar' && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '3px',
-                width: '14px',
-                height: '2px',
-                backgroundColor: 'var(--color-primary)',
-                borderRadius: '1px',
-              }}
-            />
-          )}
+          {activeTab === 'belajar' && <div className="mobile-bottom-nav__indicator" />}
         </Link>
 
         {/* Tab 4: Profil */}
@@ -184,18 +151,7 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
             <path d="M20 21a8 8 0 0 0-16 0" />
           </svg>
           <span className="mobile-bottom-nav__label">Profil</span>
-          {activeTab === 'profil' && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '3px',
-                width: '14px',
-                height: '2px',
-                backgroundColor: 'var(--color-primary)',
-                borderRadius: '1px',
-              }}
-            />
-          )}
+          {activeTab === 'profil' && <div className="mobile-bottom-nav__indicator" />}
         </Link>
       </div>
     </nav>

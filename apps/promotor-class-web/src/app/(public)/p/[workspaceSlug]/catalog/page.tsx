@@ -13,7 +13,7 @@ export default async function CatalogPage({ params }: CatalogPageProps) {
 
   const profile = await getPublicWorkspaceQuery(workspaceSlug);
   if (!profile) {
-    notFound();
+    return notFound();
   }
 
   const catalog = await listPublicProgramsQuery(workspaceSlug);

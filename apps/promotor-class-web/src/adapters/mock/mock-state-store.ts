@@ -34,6 +34,7 @@ export interface ClassMockState {
   flowNextActionRefs: FlowNextActionRef[];
   currentLearnerAccess: {
     contactId: string | null;
+    workspaceSlug?: string | null;
   };
   entitlements: ProductEntitlements;
   integrationHealth: IntegrationHealth;
@@ -52,7 +53,8 @@ const DEFAULT_STATE: ClassMockState = {
   integrationOutbox: [],
   flowNextActionRefs: [],
   currentLearnerAccess: {
-    contactId: 'contact_ayu', // Default demo active learner session
+    contactId: null,
+    workspaceSlug: null,
   },
   entitlements: {
     promotorClass: true,

@@ -9,6 +9,7 @@ export interface PublicWorkspaceProfile {
   city: string;
   roleLabel: string;
   heroProgramId: string;
+  whatsappPhoneE164?: string;
   stats: {
     familiesHelped?: string;
     programCount: string;

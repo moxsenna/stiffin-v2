@@ -11,7 +11,7 @@ import {
 } from '@/lib/session';
 import { getEnrollmentsByContactIdQuery } from '@/modules/enrollments/queries';
 import { getProgramsQuery } from '@/modules/programs/queries';
-import { contactRepository } from '@/adapters/mock/contact-repository';
+import { getContactByIdQuery } from '@/modules/contacts/queries';
 import { Enrollment, Program, Contact } from '@promotor/contracts';
 
 export function LearnerProfileClient() {
@@ -32,7 +32,7 @@ export function LearnerProfileClient() {
     }
 
     Promise.all([
-      contactRepository.getContactById(activeSession.contactId),
+      getContactByIdQuery(activeSession.contactId),
       getEnrollmentsByContactIdQuery(activeSession.contactId),
       getProgramsQuery(),
     ]).then(([cnt, enrList, progList]) => {

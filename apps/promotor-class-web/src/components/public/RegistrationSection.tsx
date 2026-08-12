@@ -279,27 +279,48 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                 {registrationStatusNotice ||
                   'Pendaftaran mandiri secara umum tidak tersedia untuk materi ini.'}
               </p>
-              <a
-                href="https://wa.me/6281234567890?text=Saya%20ingin%20tanya%20akses%20program%20ini"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '100%',
-                  minHeight: '44px',
-                  borderRadius: '10px',
-                  backgroundColor: 'var(--color-primary)',
-                  color: '#FFFFFF',
-                  fontWeight: 700,
-                  fontSize: '13px',
-                  textDecoration: 'none',
-                  marginTop: '12px',
-                }}
-              >
-                Hubungi Promotor via WhatsApp
-              </a>
+              {detail.promoter.whatsappPhoneE164 ? (
+                <a
+                  href={`https://wa.me/${detail.promoter.whatsappPhoneE164.replace(/\+/g, '')}?text=Saya%20ingin%20tanya%20akses%20program%20ini`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                    minHeight: '44px',
+                    borderRadius: '10px',
+                    backgroundColor: 'var(--color-primary)',
+                    color: '#FFFFFF',
+                    fontWeight: 700,
+                    fontSize: '13px',
+                    textDecoration: 'none',
+                    marginTop: '12px',
+                  }}
+                >
+                  Hubungi Promotor via WhatsApp
+                </a>
+              ) : (
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                    minHeight: '44px',
+                    borderRadius: '10px',
+                    backgroundColor: 'var(--color-surface)',
+                    border: '1px solid var(--color-divider)',
+                    color: 'var(--color-text-main)',
+                    fontWeight: 700,
+                    fontSize: '13px',
+                    marginTop: '12px',
+                  }}
+                >
+                  Hubungi Promotor untuk Akses
+                </div>
+              )}
             </div>
           )}
         </div>

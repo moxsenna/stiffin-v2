@@ -57,16 +57,16 @@ html, body {
   left: 0;
   right: 0;
   z-index: 1000;
-  background-color: rgba(255, 255, 255, 0.96);
+  background-color: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--color-divider);
-  box-shadow: var(--shadow-sheet);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.05);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .mobile-bottom-nav__container {
-  max-width: 600px;
+  max-width: 500px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -88,16 +88,30 @@ html, body {
   transition: color 0.15s ease;
   background-color: transparent;
   box-sizing: border-box;
+  padding: 4px 0;
 }
 
 .mobile-bottom-nav__label {
+  display: block;
+  width: 100%;
   font-size: 11px;
-  line-height: 1.1;
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
   text-align: center;
+  box-sizing: border-box;
+}
+
+.mobile-bottom-nav__indicator {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background-color: var(--color-primary);
+  border-radius: 1px;
 }
 
 .mobile-bottom-nav__item:focus:not(:focus-visible) {
