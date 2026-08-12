@@ -162,24 +162,17 @@ export type LearningEvent = z.infer<typeof LearningEventSchema>;
 export const LearningActivityProjectionSchema = z.object({
   organizationId: z.string(),
   contactId: z.string(),
-  activityType: z.enum([
+  source: z.literal('PROMOTORCLASS'),
+  sourceEventId: z.string(),
+  eventType: z.enum([
     'PROGRAM_COMPLETED',
     'CTA_CLICKED',
     'LEARNER_INACTIVE',
-    'HIGH_INTENT_MILESTONE',
-    'REFLECTION_INSIGHT',
+    'LEARNING_SIGNAL',
   ]),
-  title: z.string(),
   summary: z.string(),
-  occurredAt: z.string(),
-  context: z
-    .object({
-      programId: z.string().optional(),
-      enrollmentId: z.string().optional(),
-      lessonId: z.string().optional(),
-      signalType: z.string().optional(),
-    })
-    .optional(),
+  context: z.record(z.string(), z.unknown()),
+  idempotencyKey: z.string(),
 });
 
 export type LearningActivityProjection = z.infer<typeof LearningActivityProjectionSchema>;

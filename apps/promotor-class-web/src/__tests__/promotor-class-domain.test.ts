@@ -150,7 +150,7 @@ describe('PromotorClass F0.1.1 Contract, Idempotency & Domain Alignment Test Sui
     assert.strictEqual(IntegrationEventEnvelopeSchema.safeParse(invalidSourceApp).success, false, 'Lowercase sourceApp MUST fail validation');
   });
 
-  it('11. Canonical PromotorFlowAdapter & LearningActivityProjection Validation', async () => {
+  it('11. Canonical PromotorFlowAdapter methods', async () => {
     const context = await promotorFlowAdapter.getContactContext('contact_ayu');
     assert.strictEqual(context.contactId, 'contact_ayu');
     assert.strictEqual(context.classification, 'PROSPECT');
@@ -171,21 +171,37 @@ describe('PromotorClass F0.1.1 Contract, Idempotency & Domain Alignment Test Sui
     });
 
     assert.strictEqual(nextActionRef.id, 'key_test_123');
+  });
 
+  it('12. Canonical LearningActivityProjection Validation', () => {
     const validActivity = {
       organizationId: 'org_stifin_parenting',
       contactId: 'contact_nina',
-      activityType: 'PROGRAM_COMPLETED' as const,
-      title: 'Program Selesai',
+      source: 'PROMOTORCLASS' as const,
+      sourceEventId: 'evt_123',
+      eventType: 'PROGRAM_COMPLETED' as const,
       summary: 'Nina telah menyelesaikan 100% materi program.',
-      occurredAt: '2026-08-12T10:00:00.000Z',
       context: { programId: 'prog_7_hari_belajar' },
+      idempotencyKey: 'promotorclass:evt_123:program_completed',
     };
 
+    // 1. Canonical projection passes
     assert.strictEqual(LearningActivityProjectionSchema.safeParse(validActivity).success, true);
+
+    // 2. Missing sourceEventId fails
+    const missingSourceEventId = { ...validActivity, sourceEventId: undefined };
+    assert.strictEqual(LearningActivityProjectionSchema.safeParse(missingSourceEventId).success, false);
+
+    // 3. Missing idempotencyKey fails
+    const missingIdempotencyKey = { ...validActivity, idempotencyKey: undefined };
+    assert.strictEqual(LearningActivityProjectionSchema.safeParse(missingIdempotencyKey).success, false);
+
+    // 4. Unsupported eventType fails
+    const unsupportedEventType = { ...validActivity, eventType: 'HIGH_INTENT_MILESTONE' };
+    assert.strictEqual(LearningActivityProjectionSchema.safeParse(unsupportedEventType).success, false);
   });
 
-  it('12. Canonical EnrollContactInput Schema Validation', () => {
+  it('13. Canonical EnrollContactInput Schema Validation', () => {
     const validEnrollInput = {
       organizationId: 'org_stifin_parenting',
       contactId: 'contact_ayu',
@@ -201,13 +217,13 @@ describe('PromotorClass F0.1.1 Contract, Idempotency & Domain Alignment Test Sui
     assert.strictEqual(EnrollContactInputSchema.safeParse(invalidSource).success, false, 'Invalid source MUST fail Zod validation');
   });
 
-  it('13. YouTube URL Parser Utility', () => {
+  it('14. YouTube URL Parser Utility', () => {
     assert.strictEqual(extractYoutubeId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), 'dQw4w9WgXcQ');
     assert.strictEqual(extractYoutubeId('https://youtu.be/dQw4w9WgXcQ'), 'dQw4w9WgXcQ');
     assert.strictEqual(extractYoutubeId('https://www.youtube.com/shorts/dQw4w9WgXcQ'), 'dQw4w9WgXcQ');
   });
 
-  it('14. resetDemo() restores original seed state deterministically', () => {
+  it('15. resetDemo() restores original seed state deterministically', () => {
     MockStateStore.updateState(state => ({ ...state, contacts: [] }));
     assert.strictEqual(MockStateStore.getState().contacts.length, 0);
 
