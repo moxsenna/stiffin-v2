@@ -10,22 +10,22 @@ interface PromoterProfileProps {
 
 export function PromoterProfile({ profile }: PromoterProfileProps) {
   return (
-    <section id="about" className="container" style={{ padding: '72px 0' }}>
+    <section id="about" className="container" style={{ paddingTop: '64px', paddingBottom: '64px' }}>
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '50px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: '40px',
           alignItems: 'center',
         }}
       >
         {/* Portrait Container with Generated WebP Image */}
         <div
           style={{
-            maxWidth: '360px',
+            maxWidth: '340px',
             width: '100%',
             aspectRatio: '4 / 5',
-            borderRadius: '26px',
+            borderRadius: '24px',
             overflow: 'hidden',
             position: 'relative',
             border: '1px solid var(--color-divider)',
@@ -47,9 +47,9 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
           <div
             style={{
               position: 'absolute',
-              left: '18px',
-              bottom: '18px',
-              right: '18px',
+              left: '14px',
+              bottom: '14px',
+              right: '14px',
               padding: '10px 14px',
               backgroundColor: 'rgba(255, 255, 255, 0.94)',
               backdropFilter: 'blur(8px)',
@@ -75,7 +75,7 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               color: 'var(--color-primary)',
-              marginBottom: '14px',
+              marginBottom: '12px',
             }}
           >
             Tentang pembuat
@@ -83,9 +83,9 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
 
           <h2
             style={{
-              fontSize: '36px',
+              fontSize: 'clamp(26px, 3.5vw, 36px)',
               letterSpacing: '-0.04em',
-              marginBottom: '18px',
+              marginBottom: '16px',
               fontWeight: 750,
               lineHeight: 1.15,
             }}
@@ -96,9 +96,9 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
           <p
             style={{
               color: '#55544f',
-              fontSize: '16px',
-              lineHeight: 1.75,
-              marginBottom: '24px',
+              fontSize: '15px',
+              lineHeight: 1.7,
+              marginBottom: '20px',
             }}
           >
             {profile.bio}
@@ -108,9 +108,9 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '20px',
-              paddingTop: '24px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))',
+              gap: '16px',
+              paddingTop: '20px',
               borderTop: '1px solid var(--color-divider)',
             }}
           >

@@ -12,12 +12,14 @@ export function LearningOutcomes({ outcomes }: LearningOutcomesProps) {
 
   return (
     <section
+      id="outcomes"
       className="container"
       style={{
         borderTop: '1px solid var(--color-divider)',
-        padding: '54px 0',
+        paddingTop: '54px',
+        paddingBottom: '54px',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
         gap: '40px',
       }}
     >
@@ -42,7 +44,7 @@ export function LearningOutcomes({ outcomes }: LearningOutcomesProps) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
           gap: '24px',
         }}
       >

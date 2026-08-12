@@ -28,16 +28,16 @@ export function ValueStrip() {
           borderTop: '1px solid var(--color-divider)',
           borderBottom: '1px solid var(--color-divider)',
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: '24px',
+          padding: '12px 0',
         }}
       >
-        {items.map((item, idx) => (
+        {items.map((item) => (
           <div
             key={item.num}
             style={{
-              padding: '26px 30px 26px 0',
-              borderLeft: idx > 0 ? '1px solid var(--color-divider)' : 'none',
-              paddingLeft: idx > 0 ? '30px' : '0',
+              padding: '16px 12px',
             }}
           >
             <div
@@ -45,12 +45,12 @@ export function ValueStrip() {
                 color: 'var(--color-primary)',
                 fontSize: '12px',
                 fontWeight: 850,
-                marginBottom: '12px',
+                marginBottom: '10px',
               }}
             >
               {item.num}
             </div>
-            <h3 style={{ fontSize: '17px', marginBottom: '7px', fontWeight: 750 }}>{item.title}</h3>
+            <h3 style={{ fontSize: '16px', marginBottom: '6px', fontWeight: 750 }}>{item.title}</h3>
             <p
               style={{
                 fontSize: '13px',

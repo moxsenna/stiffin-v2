@@ -10,7 +10,8 @@ export function PublicFooter({ displayName }: PublicFooterProps) {
   return (
     <footer
       style={{
-        padding: '38px 0 54px',
+        paddingTop: '38px',
+        paddingBottom: '54px',
         borderTop: '1px solid var(--color-divider)',
         color: 'var(--color-text-muted)',
         fontSize: '12px',

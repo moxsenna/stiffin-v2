@@ -46,12 +46,12 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
   };
 
   return (
-    <section id="register" className="container" style={{ padding: '72px 0' }}>
+    <section id="register" className="container" style={{ paddingTop: '64px', paddingBottom: '64px' }}>
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          gap: '50px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: '40px',
           alignItems: 'start',
         }}
       >
@@ -64,14 +64,14 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               color: 'var(--color-primary)',
-              marginBottom: '14px',
+              marginBottom: '12px',
             }}
           >
             Mulai sekarang
           </div>
           <h2
             style={{
-              fontSize: '36px',
+              fontSize: 'clamp(26px, 3.5vw, 36px)',
               letterSpacing: '-0.04em',
               marginBottom: '14px',
               fontWeight: 750,
@@ -83,8 +83,8 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
           <p
             style={{
               color: 'var(--color-text-muted)',
-              fontSize: '16px',
-              lineHeight: 1.7,
+              fontSize: '15px',
+              lineHeight: 1.65,
             }}
           >
             Masukkan nama dan nomor WhatsApp. Materi langsung terbuka dan progres belajar tersimpan di ruang belajar Anda.
@@ -97,7 +97,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
             backgroundColor: '#FFFFFF',
             border: '1px solid var(--color-divider)',
             borderRadius: '20px',
-            padding: '28px',
+            padding: '24px',
             boxShadow: 'var(--shadow)',
           }}
         >

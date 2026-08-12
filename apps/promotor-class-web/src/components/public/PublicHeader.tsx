@@ -24,7 +24,7 @@ export function PublicHeader({
         position: 'sticky',
         top: 0,
         zIndex: 30,
-        backgroundColor: 'rgba(247, 247, 245, 0.92)',
+        backgroundColor: 'rgba(247, 247, 245, 0.94)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--color-divider)',
@@ -33,11 +33,11 @@ export function PublicHeader({
       <div
         className="container"
         style={{
-          height: '72px',
+          height: '68px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '20px',
+          gap: '16px',
         }}
       >
         <Link
@@ -61,6 +61,7 @@ export function PublicHeader({
               placeItems: 'center',
               fontWeight: 800,
               fontSize: '15px',
+              flexShrink: 0,
             }}
           >
             {avatarLetter}
@@ -72,7 +73,7 @@ export function PublicHeader({
             <span
               style={{
                 display: 'block',
-                fontSize: '12px',
+                fontSize: '11px',
                 color: 'var(--color-text-muted)',
                 marginTop: '2px',
               }}
@@ -82,11 +83,11 @@ export function PublicHeader({
           </div>
         </Link>
 
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <nav className="desktop-only" style={{ alignItems: 'center', gap: '8px' }}>
           <a
             href="#programs"
             style={{
-              padding: '10px 12px',
+              padding: '8px 12px',
               borderRadius: '10px',
               color: 'var(--color-text-muted)',
               fontWeight: 650,
@@ -99,7 +100,7 @@ export function PublicHeader({
           <a
             href="#about"
             style={{
-              padding: '10px 12px',
+              padding: '8px 12px',
               borderRadius: '10px',
               color: 'var(--color-text-muted)',
               fontWeight: 650,
@@ -118,7 +119,7 @@ export function PublicHeader({
                 color: '#FFFFFF',
                 fontWeight: 780,
                 fontSize: '13px',
-                padding: '10px 16px',
+                padding: '8px 16px',
                 borderRadius: '12px',
                 cursor: 'pointer',
               }}
@@ -133,7 +134,7 @@ export function PublicHeader({
                 color: '#FFFFFF',
                 fontWeight: 780,
                 fontSize: '13px',
-                padding: '10px 16px',
+                padding: '8px 16px',
                 borderRadius: '12px',
                 textDecoration: 'none',
               }}

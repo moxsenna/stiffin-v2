@@ -11,7 +11,7 @@ interface ProgramCatalogProps {
 
 export function ProgramCatalog({ items, workspaceSlug }: ProgramCatalogProps) {
   return (
-    <section id="programs" className="container" style={{ padding: '72px 0' }}>
+    <section id="programs" className="container" style={{ paddingTop: '56px', paddingBottom: '56px' }}>
       <div
         style={{
           display: 'flex',
@@ -22,7 +22,7 @@ export function ProgramCatalog({ items, workspaceSlug }: ProgramCatalogProps) {
         }}
       >
         <div>
-          <h2 style={{ fontSize: '34px', letterSpacing: '-0.035em', margin: 0, fontWeight: 750 }}>
+          <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 34px)', letterSpacing: '-0.035em', margin: 0, fontWeight: 750 }}>
             Program untuk Anda
           </h2>
           <p
@@ -42,8 +42,8 @@ export function ProgramCatalog({ items, workspaceSlug }: ProgramCatalogProps) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '28px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: '24px',
         }}
       >
         {items.map(item => (
