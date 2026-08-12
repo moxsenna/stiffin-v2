@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { PublicWorkspaceProfile, PublicProgramCatalogItem } from '@/modules/public-storefront/types';
 import { PublicHeader } from '@/components/public/PublicHeader';
 import { PublicFooter } from '@/components/public/PublicFooter';
@@ -9,6 +9,7 @@ import { ValueStrip } from '@/components/public/ValueStrip';
 import { ProgramCatalog } from '@/components/public/ProgramCatalog';
 import { PromoterProfile } from '@/components/public/PromoterProfile';
 import { LearnerTabBar } from '@/components/layout/LearnerTabBar';
+import { setLastPublicWorkspaceSlug } from '@/lib/session';
 
 interface StorefrontClientProps {
   profile: PublicWorkspaceProfile;
@@ -17,6 +18,12 @@ interface StorefrontClientProps {
 
 export function StorefrontClient({ profile, catalog }: StorefrontClientProps) {
   const featuredItem = catalog.find(item => item.presentation.featured) || catalog[0];
+
+  useEffect(() => {
+    if (profile.workspaceSlug) {
+      setLastPublicWorkspaceSlug(profile.workspaceSlug);
+    }
+  }, [profile.workspaceSlug]);
 
   return (
     <div
@@ -42,7 +49,7 @@ export function StorefrontClient({ profile, catalog }: StorefrontClientProps) {
 
       <PublicFooter displayName={profile.displayName.split(' ')[0]} />
 
-      <LearnerTabBar />
+      <LearnerTabBar workspaceSlug={profile.workspaceSlug} />
     </div>
   );
 }

@@ -1,44 +1,42 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { LearnerTabBar } from './LearnerTabBar';
+import { MobileAppHeader } from './MobileAppHeader';
 
 interface LearnerShellProps {
   children: React.ReactNode;
+  title?: string;
+  subtitle?: string;
+  showBack?: boolean;
+  backHref?: string;
+  workspaceSlug?: string;
 }
 
-export function LearnerShell({ children }: LearnerShellProps) {
+export function LearnerShell({
+  children,
+  title = 'Program Saya',
+  subtitle,
+  showBack = false,
+  backHref,
+  workspaceSlug,
+}: LearnerShellProps) {
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-canvas)' }}>
-      {/* Learner Top Header */}
-      <header
-        style={{
-          height: '56px',
-          backgroundColor: 'var(--color-surface)',
-          borderBottom: '1px solid var(--color-divider)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 16px',
-          position: 'sticky',
-          top: 0,
-          zIndex: 70,
-        }}
-      >
-        <Link href="/learn" style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-primary)' }}>
-          PromotorClass
-        </Link>
-        <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-          Mode Belajar
-        </div>
-      </header>
+    <div className="page-wrapper-with-bottom-nav" style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-canvas)' }}>
+      {/* Mobile Top App Header */}
+      <MobileAppHeader
+        title={title}
+        subtitle={subtitle}
+        showBack={showBack}
+        backHref={backHref}
+        showProfile={true}
+        workspaceSlug={workspaceSlug}
+      />
 
       {/* Main Content Area */}
       <main
         style={{
           flex: 1,
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', // Clearance for learner bottom tab bar
           maxWidth: '800px',
           width: '100%',
           margin: '0 auto',
@@ -48,7 +46,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
       </main>
 
       {/* Mobile Sticky Tab Bar */}
-      <LearnerTabBar />
+      <LearnerTabBar workspaceSlug={workspaceSlug} />
     </div>
   );
 }

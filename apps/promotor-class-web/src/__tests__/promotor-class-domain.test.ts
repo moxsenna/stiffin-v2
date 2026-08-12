@@ -123,7 +123,7 @@ describe('PromotorClass F0.1.1 Contract, Idempotency & Domain Alignment Test Sui
     clearActiveLearnerSession();
     assert.strictEqual(getActiveLearnerContactId(), null, 'Anonymous learner session MUST return null');
 
-    setActiveLearnerSession('contact_nina');
+    setActiveLearnerSession({ contactId: 'contact_nina', workspaceSlug: 'rina' });
     assert.strictEqual(getActiveLearnerContactId(), 'contact_nina');
   });
 

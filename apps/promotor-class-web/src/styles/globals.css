@@ -43,7 +43,71 @@ html, body {
 
 /* Page Wrapper clearance for fixed bottom navigation bar */
 .page-wrapper-with-bottom-nav {
-  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+}
+
+.page-wrapper-with-bottom-nav-and-cta {
+  padding-bottom: calc(144px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Mobile Bottom Navigation Bar Styles */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--color-divider);
+  box-shadow: var(--shadow-sheet);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile-bottom-nav__container {
+  max-width: 600px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: 56px;
+  align-items: center;
+}
+
+.mobile-bottom-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  text-decoration: none;
+  position: relative;
+  transition: color 0.15s ease;
+  background-color: transparent;
+  box-sizing: border-box;
+}
+
+.mobile-bottom-nav__label {
+  font-size: 11px;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
+}
+
+.mobile-bottom-nav__item:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.mobile-bottom-nav__item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  border-radius: 8px;
 }
 
 /* Tabular Numbers for Timestamps, Ranks & Counts */
@@ -103,4 +167,10 @@ button {
   .desktop-only {
     display: flex !important;
   }
+  
+  .page-wrapper-with-bottom-nav,
+  .page-wrapper-with-bottom-nav-and-cta {
+    padding-bottom: 0;
+  }
 }
+

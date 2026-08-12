@@ -31,8 +31,11 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
       // 1. Match or Create Contact
       const contact = await matchOrCreateContactCommand(name.trim(), phone.trim());
 
-      // 2. Set active learner session
-      setActiveLearnerSession(contact.id);
+      // 2. Set active learner session with workspace context
+      setActiveLearnerSession({
+        contactId: contact.id,
+        workspaceSlug: detail.promoter.workspaceSlug,
+      });
 
       // 3. Create enrollment (idempotent)
       const enrollment = await createEnrollmentCommand(contact.id, program.id);

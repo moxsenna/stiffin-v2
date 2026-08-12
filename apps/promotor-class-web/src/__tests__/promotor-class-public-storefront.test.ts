@@ -88,7 +88,7 @@ describe('PromotorClass F0.2 Public Storefront & Access Policy Test Suite', () =
     const c1 = await matchOrCreateContactCommand('Ayu Test', '081987654321');
     assert.strictEqual(c1.id, 'contact_ayu', 'Same normalized phone MUST reuse existing Contact ID');
 
-    setActiveLearnerSession(c1.id);
+    setActiveLearnerSession({ contactId: c1.id, workspaceSlug: 'rina' });
     assert.strictEqual(getActiveLearnerContactId(), 'contact_ayu');
 
     const enr1 = await createEnrollmentCommand(c1.id, 'prog_7_hari_belajar');
