@@ -208,7 +208,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
               {profile.tagline || 'Tagline Storefront'} · {profile.roleLabel}
             </div>
             <div style={{ fontSize: '13.5px', color: '#FFF', fontWeight: 700, lineHeight: 1.3 }}>
-              "{profile.headline || 'Headline Utama Landing Page'}"
+              &quot;{profile.headline || 'Headline Utama Landing Page'}&quot;
             </div>
           </div>
         </div>

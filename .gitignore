@@ -10,7 +10,6 @@ out/
 build/
 dist/
 cloudflare-env.d.ts
-patch-symlink.cjs
 
 # Logs & temp
 *.log

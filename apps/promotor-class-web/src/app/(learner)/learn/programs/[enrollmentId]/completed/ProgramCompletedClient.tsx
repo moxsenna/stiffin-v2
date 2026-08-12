@@ -4,7 +4,10 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { LearnerShell } from '@/components/layout/LearnerShell';
-import { MockStateStore } from '@/adapters/mock/mock-state-store';
+import { getEnrollmentByIdQuery } from '@/modules/enrollments/queries';
+import { getProgramByIdQuery } from '@/modules/programs/queries';
+import { getPublicWorkspaceQuery } from '@/modules/public-storefront/queries';
+import { resolveWorkspaceSlug } from '@/lib/session';
 import { Enrollment, Program } from '@promotor/contracts';
 
 export function ProgramCompletedClient() {
@@ -13,14 +16,26 @@ export function ProgramCompletedClient() {
 
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [program, setProgram] = useState<Program | null>(null);
+  const [promoterPhone, setPromoterPhone] = useState<string | null>(null);
 
   useEffect(() => {
-    const state = MockStateStore.getState();
-    const enr = state.enrollments.find(e => e.id === enrollmentId);
-    if (!enr) return;
-    setEnrollment(enr);
-    const prog = state.programs.find(p => p.id === enr.programId);
-    if (prog) setProgram(prog);
+    async function loadData() {
+      const enr = await getEnrollmentByIdQuery(enrollmentId);
+      if (!enr) return;
+      setEnrollment(enr);
+
+      const prog = await getProgramByIdQuery(enr.programId);
+      if (prog) setProgram(prog);
+
+      const currentWorkspace = resolveWorkspaceSlug();
+      if (currentWorkspace) {
+        const workspaceProfile = await getPublicWorkspaceQuery(currentWorkspace);
+        if (workspaceProfile?.whatsappPhoneE164) {
+          setPromoterPhone(workspaceProfile.whatsappPhoneE164.replace(/[^0-9]/g, ''));
+        }
+      }
+    }
+    loadData();
   }, [enrollmentId]);
 
   if (!enrollment || !program) {
@@ -31,7 +46,9 @@ export function ProgramCompletedClient() {
     );
   }
 
-  const waBookingUrl = `https://wa.me/6281234567890?text=${encodeURIComponent(`Halo Mbak Rina, saya telah menyelesaikan program "${program.title}". Saya ingin konsultasi / booking Tes STIFIn.`)}`;
+  const waBookingUrl = promoterPhone
+    ? `https://wa.me/${promoterPhone}?text=${encodeURIComponent(`Halo, saya telah menyelesaikan program "${program.title}". Saya ingin konsultasi / booking Tes STIFIn.`)}`
+    : null;
 
   return (
     <LearnerShell>
@@ -81,27 +98,29 @@ export function ProgramCompletedClient() {
             Langkah Berikutnya
           </h3>
           <p style={{ fontSize: '13px', color: 'var(--color-text-main)', marginBottom: '14px' }}>
-            Lanjutkan pemahaman potensi genetik anak dengan menjadwalkan <strong>Tes STIFIn Resmi</strong> atau sesi konsultasi langsung dengan Mbak Rina.
+            Lanjutkan pemahaman potensi genetik anak dengan menjadwalkan <strong>Tes STIFIn Resmi</strong> atau sesi konsultasi langsung dengan Promotor Anda.
           </p>
 
-          <a
-            href={waBookingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="touch-target-primary"
-            style={{
-              width: '100%',
-              backgroundColor: 'var(--color-primary)',
-              color: '#FFF',
-              fontWeight: 700,
-              borderRadius: 'var(--border-radius-md)',
-              textAlign: 'center',
-              textDecoration: 'none',
-              display: 'block',
-            }}
-          >
-            Hubungi Promotor via WhatsApp
-          </a>
+          {waBookingUrl && (
+            <a
+              href={waBookingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="touch-target-primary"
+              style={{
+                width: '100%',
+                backgroundColor: 'var(--color-primary)',
+                color: '#FFF',
+                fontWeight: 700,
+                borderRadius: 'var(--border-radius-md)',
+                textAlign: 'center',
+                textDecoration: 'none',
+                display: 'block',
+              }}
+            >
+              Hubungi Promotor via WhatsApp
+            </a>
+          )}
         </div>
 
         <Link

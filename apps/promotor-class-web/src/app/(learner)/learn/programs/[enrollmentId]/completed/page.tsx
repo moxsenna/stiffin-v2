@@ -1,8 +1,7 @@
-import { SEED_ENROLLMENTS } from '@promotor/promotor-class-fixtures';
 import { ProgramCompletedClient } from './ProgramCompletedClient';
 
 export function generateStaticParams() {
-  return SEED_ENROLLMENTS.map(e => ({ enrollmentId: e.id }));
+  return [{ enrollmentId: 'enr_ayu_7hari' }, { enrollmentId: 'enr_nina_7hari' }];
 }
 
 export default function ProgramCompletedPage() {
