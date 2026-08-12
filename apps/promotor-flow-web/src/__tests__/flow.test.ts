@@ -409,6 +409,17 @@ test('Integration: FLOW_ONLY, BUNDLE_AVAILABLE, BUNDLE_CLASS_UNAVAILABLE resilie
   });
 
   assert.equal(act1.id, act2.id, 'Repeated request must reuse canonical Flow action');
+
+  // 4. Canonical enrollContact test
+  const enrollRef = await adapter.enrollContact({
+    organizationId: 'org_rina_stifin',
+    contactId: 'contact_ayu',
+    programId: 'prog_30_hari_setelah_tes',
+    source: 'PROMOTORFLOW_AFTERSALES',
+    idempotencyKey: 'promotorflow:aftersales:contact_ayu:prog_30_hari',
+  });
+  assert.equal(enrollRef.contactId, 'contact_ayu');
+  assert.equal(enrollRef.status, 'aktif');
 });
 
 // ----------------------------------------------------

@@ -21,8 +21,8 @@ import {
 } from '@/lib/container';
 import { FlowContact, FlowNextAction, FlowBooking, FlowActivity, LifecycleStage } from '@promotor/promotor-flow-fixtures';
 import { formatPhoneDisplay } from '@promotor/platform-core';
-import { ProductEntitlements } from '@promotor/contracts';
-import { FlowLearningContext, FlowIntegrationHealth } from '@/modules/promotorclass/ports';
+import { ProductEntitlements, LearningContext } from '@promotor/contracts';
+import { FlowIntegrationHealth } from '@/modules/promotorclass/ports';
 
 export default function ContactDetailPage() {
   const params = useParams();
@@ -33,7 +33,7 @@ export default function ContactDetailPage() {
   const [actions, setActions] = useState<FlowNextAction[]>([]);
   const [bookings, setBookings] = useState<FlowBooking[]>([]);
   const [activities, setActivities] = useState<FlowActivity[]>([]);
-  const [learningContext, setLearningContext] = useState<FlowLearningContext | null>(null);
+  const [learningContext, setLearningContext] = useState<LearningContext | null>(null);
   const [classState, setClassState] = useState<{
     entitlements: ProductEntitlements;
     integrationHealth: FlowIntegrationHealth;
@@ -351,7 +351,7 @@ export default function ContactDetailPage() {
                 </div>
               ) : learningContext && learningContext.activeEnrollments.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {learningContext.activeEnrollments.map((enr: FlowLearningContext['activeEnrollments'][number]) => (
+                  {learningContext.activeEnrollments.map((enr: LearningContext['activeEnrollments'][number]) => (
                     <div
                       key={enr.enrollmentId}
                       style={{

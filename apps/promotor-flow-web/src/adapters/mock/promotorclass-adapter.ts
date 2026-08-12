@@ -1,5 +1,12 @@
-import { PromotorClassAdapterPort, DemoScenarioPreset, FlowIntegrationHealth, FlowLearningContext } from '@/modules/promotorclass/ports';
-import { ProductEntitlements } from '@promotor/contracts';
+import { PromotorClassAdapterPort, DemoScenarioPreset, FlowIntegrationHealth } from '@/modules/promotorclass/ports';
+import {
+  ProductEntitlements,
+  LearningContext,
+  EnrollContactInput,
+  EnrollmentRef,
+  EligibleProgramsInput,
+  ProgramSummary,
+} from '@promotor/contracts';
 import { MockStateStore } from './mock-state-store';
 
 export class MockPromotorClassAdapter implements PromotorClassAdapterPort {
@@ -40,7 +47,7 @@ export class MockPromotorClassAdapter implements PromotorClassAdapterPort {
     this.store.setScenarioPreset(preset);
   }
 
-  async getLearningContext(contactId: string): Promise<FlowLearningContext | null> {
+  async getLearningContext(contactId: string): Promise<LearningContext | null> {
     const { entitlements, integrationHealth } = await this.getEntitlementsAndHealth();
 
     // If Class entitlement not active, return null
@@ -106,9 +113,33 @@ export class MockPromotorClassAdapter implements PromotorClassAdapterPort {
     return null;
   }
 
-  async enrollContact(contactId: string, programId: string): Promise<{ enrollmentId: string }> {
+  async listEligiblePrograms(input: EligibleProgramsInput): Promise<ProgramSummary[]> {
+    return [
+      {
+        programId: 'prog_30_hari_setelah_tes',
+        title: '30 Hari Setelah Tes STIFIn',
+        subtitle: 'Panduan Pendampingan Pasca Tes Biometrik',
+        programType: 'aftersales',
+        pricing: 'free',
+      },
+      {
+        programId: 'prog_parenting_growth',
+        title: 'Parenting Growth Program',
+        subtitle: 'Program Pendampingan Orang Tua 3 Bulan',
+        programType: 'paid',
+        pricing: 'one_time',
+        priceAmount: 450000,
+      },
+    ];
+  }
+
+  async enrollContact(input: EnrollContactInput): Promise<EnrollmentRef> {
     return {
-      enrollmentId: `enr_${contactId}_${programId.substring(0, 8)}`,
+      enrollmentId: `enr_${input.contactId}_${input.programId.substring(0, 8)}`,
+      contactId: input.contactId,
+      programId: input.programId,
+      status: 'aktif',
+      enrolledAt: new Date().toISOString(),
     };
   }
 }
