@@ -9,9 +9,9 @@ interface PromoterProfileProps {
 }
 
 export function PromoterProfile({ profile }: PromoterProfileProps) {
-  const waCleanPhone = profile.whatsappPhoneE164 ? profile.whatsappPhoneE164.replace(/[^0-9]/g, '') : '6281234567890';
+  const waCleanPhone = profile.whatsappPhoneE164 ? profile.whatsappPhoneE164.replace(/[^0-9]/g, '') : null;
   const waText = encodeURIComponent(`Halo ${profile.displayName}, saya ingin konsultasi mengenai program pendampingan STIFIn.`);
-  const waUrl = `https://wa.me/${waCleanPhone}?text=${waText}`;
+  const waUrl = waCleanPhone ? `https://wa.me/${waCleanPhone}?text=${waText}` : null;
 
   return (
     <section id="about" className="container" style={{ paddingTop: '64px', paddingBottom: '64px' }}>
@@ -108,29 +108,31 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
             {profile.bio}
           </p>
 
-          <div style={{ marginBottom: '24px' }}>
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="touch-target-primary"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '0 20px',
-                backgroundColor: '#25D366',
-                color: '#FFF',
-                borderRadius: '12px',
-                fontWeight: 750,
-                fontSize: '14px',
-                textDecoration: 'none',
-                boxShadow: 'var(--shadow-sm)',
-              }}
-            >
-              <span>💬</span> Hubungi {profile.displayName.split(' ')[0]} via WhatsApp
-            </a>
-          </div>
+          {waUrl && (
+            <div style={{ marginBottom: '24px' }}>
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="touch-target-primary"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '0 20px',
+                  backgroundColor: '#25D366',
+                  color: '#FFF',
+                  borderRadius: '12px',
+                  fontWeight: 750,
+                  fontSize: '14px',
+                  textDecoration: 'none',
+                  boxShadow: 'var(--shadow-sm)',
+                }}
+              >
+                <span>💬</span> Hubungi {profile.displayName.split(' ')[0]} via WhatsApp
+              </a>
+            </div>
+          )}
 
           {/* Neutral demonstrative facts */}
           <div
