@@ -46,7 +46,7 @@ jobs:
   deploy-class:
     name: Deploy PromotorClass to Cloudflare Workers
     needs: verify
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -67,7 +67,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Log Deployment GITHUB_SHA
-        run: echo "Deploying PromotorClass from GITHUB_SHA: ${{ github.sha }}"
+        run: echo "Deploying PromotorClass from GITHUB_SHA=${{ github.sha }}"
 
       - name: Deploy PromotorClass to Cloudflare Workers
         env:
