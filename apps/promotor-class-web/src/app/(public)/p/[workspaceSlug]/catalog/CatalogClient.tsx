@@ -66,10 +66,10 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
         {/* Title & Description */}
         <div style={{ marginBottom: '24px' }}>
           <h1 style={{ fontSize: 'clamp(24px, 3.5vw, 32px)', fontWeight: 750, letterSpacing: '-0.03em', marginBottom: '8px' }}>
-            Katalog Program Edukasi
+            Katalog Program & Pendampingan STIFIn
           </h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', lineHeight: 1.6 }}>
-            Pilih program yang sesuai dengan kebutuhan pengembangan diri dan pola belajar Anda.
+            Selamat datang! Baik Anda yang sedang mengenal STIFIn maupun peserta yang sudah melakukan tes, temukan program edukasi, e-course, dan pendampingan lanjutan yang dirancang sesuai kebutuhan Anda.
           </p>
         </div>
 
@@ -88,7 +88,7 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Cari program belajar..."
+              placeholder="Cari e-course, materi, atau program pendampingan..."
               style={{
                 width: '100%',
                 minHeight: '44px',
@@ -137,7 +137,7 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
                 cursor: 'pointer',
               }}
             >
-              Semua ({catalog.length})
+              Semua Program ({catalog.length})
             </button>
             <button
               onClick={() => setFilter('free')}
@@ -152,7 +152,7 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
                 cursor: 'pointer',
               }}
             >
-              Gratis
+              Umum & Calon Klien
             </button>
             <button
               onClick={() => setFilter('client')}
@@ -167,7 +167,7 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
                 cursor: 'pointer',
               }}
             >
-              Untuk Klien
+              Pendampingan Pasca-Tes
             </button>
           </div>
         </div>

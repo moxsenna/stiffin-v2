@@ -40,15 +40,15 @@ export default function LearnerHomePage() {
       <LearnerShell title="Program Saya">
         <div style={{ padding: '40px 16px', textAlign: 'center' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 750, marginBottom: '8px' }}>
-            Sesi Pembelajaran Belum Aktif
+            Belum Memiliki Program Aktif
           </h2>
           <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '24px', lineHeight: 1.6 }}>
-            Silakan mendaftar terlebih dahulu pada salah satu program edukasi promotor Anda untuk mengakses materi belajar.
+            Halaman ini menampilkan kelas dan e-course yang sedang Anda ikuti. Baik Anda calon peserta maupun peserta yang sudah melakukan tes STIFIn, Anda dapat mendaftar dan mulai belajar melalui Katalog Program.
           </p>
 
           {fallbackWorkspace ? (
             <Link
-              href={`/p/${fallbackWorkspace}`}
+              href={`/p/${fallbackWorkspace}/catalog`}
               className="touch-target-primary"
               style={{
                 display: 'inline-flex',
@@ -62,7 +62,7 @@ export default function LearnerHomePage() {
                 textDecoration: 'none',
               }}
             >
-              Kembali ke Ruang Belajar →
+              Lihat Katalog Program →
             </Link>
           ) : (
             <div style={{ fontSize: '13px', color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>

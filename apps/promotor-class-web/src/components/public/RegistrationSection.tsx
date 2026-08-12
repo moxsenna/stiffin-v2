@@ -70,7 +70,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
               marginBottom: '12px',
             }}
           >
-            Mulai sekarang
+            Akses Ruang Belajar
           </div>
           <h2
             style={{
@@ -81,7 +81,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
               lineHeight: 1.15,
             }}
           >
-            Tujuh hari ke depan cukup untuk mulai melihat pola yang sebelumnya terlewat.
+            Mulai kenali dan optimalkan potensi genetik Anda sekarang.
           </h2>
           <p
             style={{
@@ -90,7 +90,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
               lineHeight: 1.65,
             }}
           >
-            Masukkan nama dan nomor WhatsApp. Materi langsung terbuka dan progres belajar tersimpan di ruang belajar Anda.
+            Masukkan nama dan nomor WhatsApp aktif Anda. Materi pembelajaran langsung terbuka dan progres Anda tersimpan dengan rapi di aplikasi.
           </p>
         </div>
 
@@ -149,7 +149,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
           ) : isRegistrationAllowed ? (
             <div>
               <h3 style={{ fontSize: '20px', marginBottom: '6px', fontWeight: 750 }}>
-                Daftar Gratis
+                Daftar & Buka Akses
               </h3>
               <p
                 style={{
@@ -159,7 +159,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                   marginBottom: '18px',
                 }}
               >
-                Tidak ada biaya. Anda bisa langsung memulai setelah pendaftaran.
+                Program ini gratis untuk umum & calon klien STIFIn. Materi langsung dapat diakses setelah mendaftar.
               </p>
 
               {error && (

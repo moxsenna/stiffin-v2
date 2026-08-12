@@ -14,9 +14,9 @@ export function ProgramCard({ item, workspaceSlug }: ProgramCardProps) {
   const { program, presentation, registrationStatusNotice } = item;
 
   // Format price/access label cleanly
-  let priceMeta = 'Gratis';
+  let priceMeta = 'Gratis (Umum)';
   if (program.programType === 'aftersales') {
-    priceMeta = 'Khusus Klien';
+    priceMeta = 'Khusus Peserta Tes STIFIn';
   } else if (program.pricing === 'one_time' && program.priceAmount) {
     priceMeta = `Rp${program.priceAmount.toLocaleString('id-ID')}`;
   }

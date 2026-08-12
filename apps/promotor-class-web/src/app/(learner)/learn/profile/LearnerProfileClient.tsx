@@ -96,12 +96,12 @@ export function LearnerProfileClient() {
             Sesi Belajar Belum Aktif
           </h2>
           <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '24px', lineHeight: 1.6 }}>
-            Anda belum mendaftar atau mengakses program belajar. Silakan buka halaman program publik promotor Anda untuk memulai.
+            Halaman ini menyimpan profil dan riwayat program belajar Anda. Jika Anda calon peserta atau baru pertama kali datang, silakan buka Katalog Program untuk memilih e-course gratis atau program pendampingan STIFIn.
           </p>
 
           {targetWorkspace ? (
             <Link
-              href={`/p/${targetWorkspace}`}
+              href={`/p/${targetWorkspace}/catalog`}
               className="touch-target-primary"
               style={{
                 display: 'inline-flex',
@@ -115,7 +115,7 @@ export function LearnerProfileClient() {
                 textDecoration: 'none',
               }}
             >
-              Kembali ke Ruang Belajar →
+              Lihat Katalog Program →
             </Link>
           ) : (
             <div style={{ fontSize: '13px', color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>
