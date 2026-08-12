@@ -81,7 +81,8 @@ export class MockProgramRepository implements ProgramRepositoryPort {
     programType: 'lead_magnet' | 'aftersales' | 'paid';
     heroEyebrow?: string;
     durationLabel?: string;
-    coverVariant?: 'cover-a' | 'cover-b' | 'cover-c' | 'cover-d';
+    coverVariant?: 'cover-a' | 'cover-b' | 'cover-c';
+    imageUrl?: string;
     priceAmount?: number;
     outcomes?: Array<{ title: string; description: string }>;
   }): Promise<Program> {
@@ -136,6 +137,7 @@ export class MockProgramRepository implements ProgramRepositoryPort {
     // Register presentation mapping if custom outcomes / cover were provided
     const presentation = {
       coverVariant: input.coverVariant || 'cover-a',
+      imageUrl: input.imageUrl,
       featured: false,
       heroEyebrow: input.heroEyebrow || (input.programType === 'lead_magnet' ? 'Program Gratis' : input.programType === 'aftersales' ? 'Khusus Peserta Tes' : 'Program Berbayar'),
       shortOutcome: input.subtitle || input.description || '',

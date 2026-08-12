@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PromotorShell } from '@/components/layout/PromotorShell';
@@ -12,6 +12,7 @@ function NewProgramForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const templateId = searchParams.get('templateId');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
@@ -20,6 +21,7 @@ function NewProgramForm() {
   const [heroEyebrow, setHeroEyebrow] = useState('Program Gratis');
   const [durationLabel, setDurationLabel] = useState('7 hari');
   const [coverVariant, setCoverVariant] = useState<'cover-a' | 'cover-b' | 'cover-c'>('cover-a');
+  const [coverImageUrl, setCoverImageUrl] = useState<string>('');
   const [priceAmount, setPriceAmount] = useState(150000);
   const [loading, setLoading] = useState(false);
 
@@ -57,6 +59,18 @@ function NewProgramForm() {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = event => {
+      if (event.target?.result) {
+        setCoverImageUrl(event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleAddOutcome = () => {
     setOutcomes([...outcomes, { title: '', description: '' }]);
   };
@@ -86,6 +100,7 @@ function NewProgramForm() {
         heroEyebrow: heroEyebrow.trim(),
         durationLabel: durationLabel.trim(),
         coverVariant,
+        imageUrl: coverImageUrl || undefined,
         priceAmount: programType === 'paid' ? priceAmount : 0,
         outcomes: outcomes.filter(o => o.title.trim()),
       });
@@ -289,7 +304,7 @@ function NewProgramForm() {
           </div>
         </div>
 
-        {/* Section 3: Visual & Format Presentation */}
+        {/* Section 3: Visual Cover & Image Upload */}
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
@@ -298,9 +313,9 @@ function NewProgramForm() {
             padding: '20px',
           }}
         >
-          <h2 style={{ fontSize: '16px', fontWeight: 750, marginBottom: '14px' }}>3. Tampilan Visual & Label Storefront</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: 750, marginBottom: '14px' }}>3. Gambar Cover & Label Storefront</h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
@@ -343,30 +358,88 @@ function NewProgramForm() {
               </div>
             </div>
 
+            {/* Custom Image Upload Section */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '10px' }}>
-                Pilih Varian Cover Gambar Program
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '8px' }}>
+                Upload Gambar Cover Program *
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-                {(['cover-a', 'cover-b', 'cover-c'] as const).map(variant => (
-                  <div
-                    key={variant}
-                    onClick={() => setCoverVariant(variant)}
-                    style={{
-                      border: coverVariant === variant ? '2px solid var(--color-primary)' : '1px solid var(--color-divider)',
-                      borderRadius: '12px',
-                      padding: '8px',
-                      cursor: 'pointer',
-                      backgroundColor: coverVariant === variant ? 'var(--color-primary-light)' : 'transparent',
-                    }}
-                  >
-                    <ProgramCover title={title || 'Judul Contoh'} publicLabel={heroEyebrow} variant={variant} />
-                    <div style={{ fontSize: '11px', textAlign: 'center', fontWeight: 700, marginTop: '6px', textTransform: 'uppercase' }}>
-                      {variant}
-                    </div>
-                  </div>
-                ))}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  border: coverImageUrl ? '2px solid var(--color-primary)' : '2px dashed var(--color-divider)',
+                  borderRadius: '14px',
+                  padding: '20px 16px',
+                  textAlign: 'center',
+                  backgroundColor: coverImageUrl ? 'var(--color-primary-light)' : 'var(--color-canvas)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <div style={{ fontSize: '28px', marginBottom: '6px' }}>📸</div>
+                <div style={{ fontSize: '14px', fontWeight: 750, color: 'var(--color-primary)', marginBottom: '4px' }}>
+                  {coverImageUrl ? 'Ganti File Gambar Upload' : 'Klik untuk Upload Gambar Cover Baru'}
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                  Format PNG, JPG, WEBP (Rekomendasi rasio 16:9 atau 16:10, max 5MB)
+                </div>
               </div>
+
+              {/* Live Preview of Uploaded Image */}
+              {coverImageUrl ? (
+                <div style={{ marginTop: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 750, color: 'var(--color-status-success)' }}>
+                      ✓ Gambar Kustom Terpilih (Live Preview)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCoverImageUrl('')}
+                      style={{ fontSize: '12px', color: 'var(--color-status-danger)', fontWeight: 700, border: 0, background: 'none', cursor: 'pointer' }}
+                    >
+                      Hapus Gambar & Gunakan Preset
+                    </button>
+                  </div>
+                  <ProgramCover title={title || 'Judul Program'} publicLabel={heroEyebrow} imageUrl={coverImageUrl} />
+                </div>
+              ) : (
+                <div style={{ marginTop: '16px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '10px', fontWeight: 600 }}>
+                    Atau pilih gambar preset bawaan:
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                    {(['cover-a', 'cover-b', 'cover-c'] as const).map(variant => (
+                      <div
+                        key={variant}
+                        onClick={() => {
+                          setCoverVariant(variant);
+                          setCoverImageUrl('');
+                        }}
+                        style={{
+                          border: coverVariant === variant ? '2px solid var(--color-primary)' : '1px solid var(--color-divider)',
+                          borderRadius: '12px',
+                          padding: '8px',
+                          cursor: 'pointer',
+                          backgroundColor: coverVariant === variant ? 'var(--color-primary-light)' : 'transparent',
+                        }}
+                      >
+                        <ProgramCover title={title || 'Judul Contoh'} publicLabel={heroEyebrow} variant={variant} />
+                        <div style={{ fontSize: '11px', textAlign: 'center', fontWeight: 700, marginTop: '6px', textTransform: 'uppercase' }}>
+                          {variant === 'cover-a' ? 'Preset A' : variant === 'cover-b' ? 'Preset B' : 'Preset C'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -428,7 +501,7 @@ function NewProgramForm() {
                     <button
                       type="button"
                       onClick={() => handleRemoveOutcome(idx)}
-                      style={{ fontSize: '12px', color: 'var(--color-status-danger)', fontWeight: 600 }}
+                      style={{ fontSize: '12px', color: 'var(--color-status-danger)', fontWeight: 600, border: 0, background: 'none', cursor: 'pointer' }}
                     >
                       Hapus
                     </button>
