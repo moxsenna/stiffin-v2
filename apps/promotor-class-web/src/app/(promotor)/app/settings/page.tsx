@@ -5,9 +5,9 @@ import { PromotorShell } from '@/components/layout/PromotorShell';
 import { MockStateStore } from '@/adapters/mock/mock-state-store';
 import { promotorFlowAdapter } from '@/adapters/mock/promotorflow-adapter';
 import { IntegrationHealth } from '@promotor/contracts';
+import { StorefrontSettingsClient } from '@/components/promotor/StorefrontSettingsClient';
 
 export default function SettingsPage() {
-  const [org, setOrg] = useState(MockStateStore.getState().organization);
   const [health, setHealth] = useState<IntegrationHealth>({ promotorFlow: 'AVAILABLE' });
 
   useEffect(() => {
@@ -23,51 +23,79 @@ export default function SettingsPage() {
 
   return (
     <PromotorShell>
-      <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '4px' }}>Pengaturan & Integrasi</h1>
-        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
-          Profil promotor & status koneksi sistem
+      <div style={{ padding: '20px 16px', maxWidth: '840px', margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{ marginBottom: '20px' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.025em', marginBottom: '2px' }}>
+            Pengaturan & Lainnya
+          </h1>
+          <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+            Kelola branding storefront publik, profil promotor, dan status koneksi sistem
+          </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* User Profile */}
-          <div style={{ padding: '16px', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--border-radius-md)', border: '1px solid var(--color-divider)' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '12px' }}>Profil Promotor</h3>
-            <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div><strong>Nama:</strong> Rina Wulandari</div>
-              <div><strong>Email:</strong> rina@stifinpromotor.id</div>
-              <div><strong>No. HP (E.164):</strong> +6281234567890</div>
-              <div><strong>Organisasi / Brand:</strong> {org.name}</div>
-            </div>
-          </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+          {/* Main Storefront Settings Section */}
+          <StorefrontSettingsClient />
 
           {/* Integration Health Card */}
-          <div style={{ padding: '16px', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--border-radius-md)', border: '1px solid var(--color-divider)' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '4px' }}>Koneksi PromotorFlow</h3>
-            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
+          <div
+            style={{
+              padding: '20px',
+              backgroundColor: 'var(--color-surface)',
+              borderRadius: '18px',
+              border: '1px solid var(--color-divider)',
+              boxShadow: 'var(--shadow-sm)',
+            }}
+          >
+            <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '4px' }}>Koneksi PromotorFlow</h3>
+            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '14px' }}>
               Menghubungkan sinyal belajar peserta dengan sistem aksi PromotorFlow
             </div>
 
-            <div style={{ padding: '10px 14px', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-divider)', backgroundColor: 'var(--color-primary-light)', fontSize: '13px' }}>
-              <div><strong>Status Integrasi:</strong> {health.promotorFlow === 'AVAILABLE' ? 'Aktif Terhubung (AVAILABLE)' : 'Terpisah (UNAVAILABLE)'}</div>
+            <div
+              style={{
+                padding: '12px 16px',
+                borderRadius: '12px',
+                border: '1px solid #b8d4c5',
+                backgroundColor: 'var(--color-primary-light)',
+                fontSize: '13px',
+                fontWeight: 700,
+                color: 'var(--color-primary)',
+              }}
+            >
+              <div>Status Integrasi: {health.promotorFlow === 'AVAILABLE' ? '✓ Aktif Terhubung (AVAILABLE)' : 'Terpisah (UNAVAILABLE)'}</div>
             </div>
           </div>
 
           {/* Reset Demo State */}
-          <div style={{ padding: '16px', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--border-radius-md)', border: '1px solid var(--color-divider)' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '6px' }}>Reset Data Demo</h3>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
+          <div
+            style={{
+              padding: '20px',
+              backgroundColor: 'var(--color-surface)',
+              borderRadius: '18px',
+              border: '1px solid var(--color-divider)',
+              boxShadow: 'var(--shadow-sm)',
+            }}
+          >
+            <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '4px', color: 'var(--color-status-danger)' }}>
+              Reset Data Demo
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '14px' }}>
               Kembalikan seluruh data LocalStorage ke kondisi seed awal.
             </p>
             <button
               onClick={handleResetDemo}
               className="touch-target-primary"
               style={{
-                padding: '0 16px',
+                padding: '0 20px',
                 border: '1px solid var(--color-status-danger)',
+                backgroundColor: 'var(--color-status-danger-bg)',
                 color: 'var(--color-status-danger)',
-                borderRadius: 'var(--border-radius-sm)',
-                fontWeight: 600,
+                borderRadius: '12px',
+                fontWeight: 750,
+                cursor: 'pointer',
+                fontSize: '13.5px',
               }}
             >
               Reset State Demo
