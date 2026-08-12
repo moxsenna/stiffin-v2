@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PublicWorkspaceProfile, PublicProgramCatalogItem } from '@/modules/public-storefront/types';
 import { PublicHeader } from '@/components/public/PublicHeader';
 import { PublicFooter } from '@/components/public/PublicFooter';
@@ -10,20 +10,33 @@ import { ProgramCatalog } from '@/components/public/ProgramCatalog';
 import { PromoterProfile } from '@/components/public/PromoterProfile';
 import { LearnerTabBar } from '@/components/layout/LearnerTabBar';
 import { setLastPublicWorkspaceSlug } from '@/lib/session';
+import { getPublicWorkspaceQuery, listPublicProgramsQuery } from '@/modules/public-storefront/queries';
 
 interface StorefrontClientProps {
   profile: PublicWorkspaceProfile;
   catalog: PublicProgramCatalogItem[];
 }
 
-export function StorefrontClient({ profile, catalog }: StorefrontClientProps) {
-  const featuredItem = catalog.find(item => item.presentation.featured) || catalog[0];
+export function StorefrontClient({ profile: initialProfile, catalog: initialCatalog }: StorefrontClientProps) {
+  const [profile, setProfile] = useState<PublicWorkspaceProfile>(initialProfile);
+  const [catalog, setCatalog] = useState<PublicProgramCatalogItem[]>(initialCatalog);
 
   useEffect(() => {
-    if (profile.workspaceSlug) {
-      setLastPublicWorkspaceSlug(profile.workspaceSlug);
+    if (initialProfile.workspaceSlug) {
+      setLastPublicWorkspaceSlug(initialProfile.workspaceSlug);
+
+      // Re-fetch client state from MockStateStore in LocalStorage if customized
+      getPublicWorkspaceQuery(initialProfile.workspaceSlug).then(p => {
+        if (p) setProfile(p);
+      });
+
+      listPublicProgramsQuery(initialProfile.workspaceSlug).then(c => {
+        if (c && c.length > 0) setCatalog(c);
+      });
     }
-  }, [profile.workspaceSlug]);
+  }, [initialProfile.workspaceSlug]);
+
+  const featuredItem = catalog.find(item => item.presentation.featured) || catalog[0];
 
   return (
     <div

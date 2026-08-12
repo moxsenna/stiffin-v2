@@ -9,6 +9,10 @@ interface PromoterProfileProps {
 }
 
 export function PromoterProfile({ profile }: PromoterProfileProps) {
+  const waCleanPhone = profile.whatsappPhoneE164 ? profile.whatsappPhoneE164.replace(/[^0-9]/g, '') : '6281234567890';
+  const waText = encodeURIComponent(`Halo ${profile.displayName}, saya ingin konsultasi mengenai program pendampingan STIFIn.`);
+  const waUrl = `https://wa.me/${waCleanPhone}?text=${waText}`;
+
   return (
     <section id="about" className="container" style={{ paddingTop: '64px', paddingBottom: '64px' }}>
       <div
@@ -83,14 +87,14 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
 
           <h2
             style={{
-              fontSize: 'clamp(26px, 3.5vw, 36px)',
+              fontSize: 'clamp(24px, 3.5vw, 36px)',
               letterSpacing: '-0.04em',
               marginBottom: '16px',
               fontWeight: 750,
               lineHeight: 1.15,
             }}
           >
-            Saya membantu orang tua menerjemahkan hasil tes menjadi kebiasaan yang lebih manusiawi di rumah.
+            {profile.headline || 'Saya membantu orang tua menerjemahkan hasil tes menjadi kebiasaan yang lebih manusiawi di rumah.'}
           </h2>
 
           <p
@@ -103,6 +107,30 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
           >
             {profile.bio}
           </p>
+
+          <div style={{ marginBottom: '24px' }}>
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="touch-target-primary"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '0 20px',
+                backgroundColor: '#25D366',
+                color: '#FFF',
+                borderRadius: '12px',
+                fontWeight: 750,
+                fontSize: '14px',
+                textDecoration: 'none',
+                boxShadow: 'var(--shadow-sm)',
+              }}
+            >
+              <span>💬</span> Hubungi {profile.displayName.split(' ')[0]} via WhatsApp
+            </a>
+          </div>
 
           {/* Neutral demonstrative facts */}
           <div
