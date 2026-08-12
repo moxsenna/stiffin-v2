@@ -36,7 +36,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/promotor-class-fixtures
       next:
-        specifier: ^14.1.0
+        specifier: 14.2.35
         version: 14.2.35(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18.2.0
@@ -91,7 +91,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/promotor-flow-fixtures
       next:
-        specifier: ^14.1.0
+        specifier: 14.2.35
         version: 14.2.35(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18.2.0

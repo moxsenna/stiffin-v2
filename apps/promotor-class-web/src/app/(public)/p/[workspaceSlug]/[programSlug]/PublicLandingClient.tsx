@@ -10,7 +10,7 @@ import { LearningOutcomes } from '@/components/public/LearningOutcomes';
 import { CurriculumPreview } from '@/components/public/CurriculumPreview';
 import { PromoterProfile } from '@/components/public/PromoterProfile';
 import { RegistrationSection } from '@/components/public/RegistrationSection';
-import { StickyProgramCTA } from '@/components/public/StickyProgramCTA';
+import { LearnerTabBar } from '@/components/layout/LearnerTabBar';
 
 interface PublicLandingClientProps {
   detail: PublicProgramDetail;
@@ -79,9 +79,12 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
 
       <PublicFooter displayName={promoter.displayName.split(' ')[0]} />
 
-      <StickyProgramCTA
-        label={detail.isRegistrationAllowed ? 'Mulai belajar gratis' : 'Informasi Pendaftaran'}
-        targetId="register"
+      {/* Universal Bottom Navigation Bar with integrated program action */}
+      <LearnerTabBar
+        ctaLabel={detail.isRegistrationAllowed ? 'Mulai Belajar' : 'Informasi'}
+        ctaTargetId="register"
+        workspaceSlug={promoter.workspaceSlug}
+        onCtaClick={scrollToRegister}
       />
     </div>
   );

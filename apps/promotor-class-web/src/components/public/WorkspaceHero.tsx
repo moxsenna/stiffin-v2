@@ -12,12 +12,12 @@ interface WorkspaceHeroProps {
 
 export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
   return (
-    <section className="container" style={{ padding: '64px 0 28px' }}>
+    <section className="container" style={{ paddingTop: '48px', paddingBottom: '32px' }}>
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          gap: '54px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '40px',
           alignItems: 'center',
         }}
       >
@@ -33,7 +33,7 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               color: 'var(--color-primary)',
-              marginBottom: '18px',
+              marginBottom: '16px',
             }}
           >
             <span
@@ -49,10 +49,10 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
 
           <h1
             style={{
-              fontSize: 'clamp(36px, 5vw, 60px)',
-              lineHeight: 1.02,
+              fontSize: 'clamp(32px, 4.5vw, 56px)',
+              lineHeight: 1.04,
               letterSpacing: '-0.04em',
-              marginBottom: '22px',
+              marginBottom: '18px',
               fontWeight: 800,
             }}
           >
@@ -61,11 +61,11 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
 
           <p
             style={{
-              fontSize: '17px',
-              lineHeight: 1.7,
+              fontSize: '16px',
+              lineHeight: 1.65,
               color: '#4f4e4a',
               maxWidth: '650px',
-              marginBottom: '28px',
+              marginBottom: '24px',
             }}
           >
             Materi singkat untuk membantu orang tua mengenali cara belajar anak, mengurangi konflik sehari-hari, dan mendampingi dengan lebih tenang.
@@ -75,9 +75,9 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
             <a
               href="#programs"
               style={{
-                minHeight: '48px',
+                minHeight: '46px',
                 borderRadius: '13px',
-                padding: '0 22px',
+                padding: '0 20px',
                 backgroundColor: 'var(--color-primary)',
                 color: '#FFFFFF',
                 fontWeight: 780,
@@ -93,9 +93,9 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
             <a
               href="#about"
               style={{
-                minHeight: '48px',
+                minHeight: '46px',
                 borderRadius: '13px',
-                padding: '0 22px',
+                padding: '0 20px',
                 border: '1px solid var(--color-divider)',
                 backgroundColor: '#FFFFFF',
                 color: '#191918',
@@ -113,24 +113,24 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
 
           <div
             style={{
-              marginTop: '24px',
+              marginTop: '20px',
               display: 'flex',
-              gap: '18px',
+              gap: '16px',
               flexWrap: 'wrap',
               color: 'var(--color-text-muted)',
-              fontSize: '13px',
+              fontSize: '12px',
             }}
           >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-              <i style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#aaa79f', display: 'inline-block' }} />
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <i style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#aaa79f', display: 'inline-block' }} />
               Materi praktis
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-              <i style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#aaa79f', display: 'inline-block' }} />
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <i style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#aaa79f', display: 'inline-block' }} />
               Bisa dipelajari kapan saja
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-              <i style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#aaa79f', display: 'inline-block' }} />
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <i style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#aaa79f', display: 'inline-block' }} />
               Mulai dari program gratis
             </span>
           </div>
@@ -144,13 +144,13 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
           >
             <div
               style={{
-                minHeight: '440px',
+                minHeight: '380px',
                 position: 'relative',
-                borderRadius: '30px',
+                borderRadius: '24px',
                 overflow: 'hidden',
                 border: '1px solid #dbe5dd',
                 boxShadow: 'var(--shadow-md)',
-                padding: '34px',
+                padding: '28px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -189,9 +189,9 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                     backgroundColor: 'rgba(255, 255, 255, 0.92)',
                     backdropFilter: 'blur(8px)',
                     border: '1px solid rgba(255, 255, 255, 0.5)',
-                    padding: '7px 14px',
+                    padding: '6px 12px',
                     borderRadius: '999px',
-                    marginBottom: '18px',
+                    marginBottom: '14px',
                     color: 'var(--color-primary)',
                   }}
                 >
@@ -200,12 +200,12 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
 
                 <div
                   style={{
-                    fontSize: '40px',
-                    lineHeight: 0.98,
-                    letterSpacing: '-0.045em',
+                    fontSize: '34px',
+                    lineHeight: 1.02,
+                    letterSpacing: '-0.04em',
                     fontWeight: 850,
                     color: '#FFFFFF',
-                    marginBottom: '16px',
+                    marginBottom: '12px',
                     textShadow: '0 2px 6px rgba(0,0,0,0.4)',
                   }}
                 >
@@ -214,10 +214,10 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
 
                 <p
                   style={{
-                    fontSize: '14px',
+                    fontSize: '13px',
                     color: '#e2ece5',
-                    maxWidth: '320px',
-                    lineHeight: 1.55,
+                    maxWidth: '300px',
+                    lineHeight: 1.5,
                     margin: 0,
                   }}
                 >
@@ -228,7 +228,7 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
               <div
                 style={{
                   display: 'flex',
-                  gap: '12px',
+                  gap: '10px',
                   alignItems: 'center',
                   fontSize: '13px',
                   fontWeight: 700,
@@ -241,8 +241,8 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                   src="/images/promoter_profile_rina.webp"
                   alt={profile.displayName}
                   style={{
-                    width: '36px',
-                    height: '36px',
+                    width: '32px',
+                    height: '32px',
                     borderRadius: '50%',
                     objectFit: 'cover',
                     border: '2px solid #FFFFFF',
