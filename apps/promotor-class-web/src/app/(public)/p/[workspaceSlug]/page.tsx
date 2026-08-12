@@ -1,0 +1,23 @@
+import { notFound } from 'next/navigation';
+import { getPublicWorkspaceQuery, listPublicProgramsQuery } from '@/modules/public-storefront/queries';
+import { StorefrontClient } from './StorefrontClient';
+
+export function generateStaticParams() {
+  return [{ workspaceSlug: 'rina' }];
+}
+
+interface PageProps {
+  params: { workspaceSlug: string };
+}
+
+export default async function PublicStorefrontPage({ params }: PageProps) {
+  const profile = await getPublicWorkspaceQuery(params.workspaceSlug);
+  if (!profile) {
+    notFound();
+    return null;
+  }
+
+  const catalog = await listPublicProgramsQuery(params.workspaceSlug);
+
+  return <StorefrontClient profile={profile} catalog={catalog} />;
+}
