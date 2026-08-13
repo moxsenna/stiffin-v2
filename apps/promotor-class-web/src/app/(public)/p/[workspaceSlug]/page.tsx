@@ -1,3 +1,4 @@
+import React, { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getPublicWorkspaceQuery, listPublicProgramsQuery } from '@/modules/public-storefront/queries';
 import { StorefrontClient } from './StorefrontClient';
@@ -19,5 +20,9 @@ export default async function PublicStorefrontPage({ params }: PageProps) {
 
   const catalog = await listPublicProgramsQuery(params.workspaceSlug);
 
-  return <StorefrontClient profile={profile} catalog={catalog} />;
+  return (
+    <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Memuat Storefront...</div>}>
+      <StorefrontClient profile={profile} catalog={catalog} />
+    </Suspense>
+  );
 }
