@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { PublicProgramDetail } from '@/modules/public-storefront/types';
 import { PublicHeader } from '@/components/public/PublicHeader';
 import { PublicFooter } from '@/components/public/PublicFooter';
@@ -13,19 +14,25 @@ import { RegistrationSection } from '@/components/public/RegistrationSection';
 import { LearnerTabBar } from '@/components/layout/LearnerTabBar';
 import { MobileAppHeader } from '@/components/layout/MobileAppHeader';
 import { setLastPublicWorkspaceSlug } from '@/lib/session';
+import { capturePrototypeReferralCode } from '@/lib/referral-capture';
 
 interface PublicLandingClientProps {
   detail: PublicProgramDetail;
 }
 
 export function PublicLandingClient({ detail }: PublicLandingClientProps) {
+  const searchParams = useSearchParams();
+  const refCode = searchParams.get('ref');
   const { promoter, presentation, program, isRegistrationAllowed } = detail;
 
   useEffect(() => {
     if (promoter.workspaceSlug) {
       setLastPublicWorkspaceSlug(promoter.workspaceSlug);
     }
-  }, [promoter.workspaceSlug]);
+    if (refCode) {
+      capturePrototypeReferralCode(refCode);
+    }
+  }, [promoter.workspaceSlug, refCode]);
 
   const scrollToRegister = () => {
     const el = document.getElementById('register');

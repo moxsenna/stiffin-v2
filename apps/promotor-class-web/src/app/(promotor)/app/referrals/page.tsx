@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PromotorShell } from '@/components/layout/PromotorShell';
+import { resolveWorkspaceSlug } from '@/lib/session';
 import { getPromoterReferralOverviewQuery } from '@/modules/referrals/queries';
 import { PromoterReferralOverview } from '@/modules/referrals/types';
 
@@ -10,7 +11,8 @@ export default function PromotorReferralPage() {
   const [overview, setOverview] = useState<PromoterReferralOverview | null>(null);
 
   useEffect(() => {
-    getPromoterReferralOverviewQuery('rina').then(res => setOverview(res));
+    const slug = resolveWorkspaceSlug() || 'rina';
+    getPromoterReferralOverviewQuery(slug).then(res => setOverview(res));
   }, []);
 
   if (!overview) {
