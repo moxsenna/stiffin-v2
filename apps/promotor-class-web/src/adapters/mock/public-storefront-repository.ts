@@ -85,6 +85,27 @@ export const MOCK_PRESENTATION_MAP: Record<string, ProgramPublicPresentation> = 
 };
 
 export class MockPublicStorefrontRepository implements PublicStorefrontRepositoryPort {
+  private getPresentation(programId: string, program: { description?: string; subtitle?: string; pricing?: string }): ProgramPublicPresentation {
+    const storePresentations = MockStateStore.getState().programPresentations;
+    if (storePresentations && storePresentations[programId]) {
+      return storePresentations[programId];
+    }
+    if (MOCK_PRESENTATION_MAP[programId]) {
+      return MOCK_PRESENTATION_MAP[programId];
+    }
+    return {
+      coverVariant: 'cover-a',
+      featured: false,
+      heroEyebrow: program.pricing === 'free' ? 'Program Gratis' : 'Program Berbayar',
+      shortOutcome: program.description || program.subtitle || '',
+      durationLabel: 'Mandiri',
+      learningOutcomes: [
+        { title: 'Memahami Konsep Dasar', description: 'Mendapat gambaran utuh materi yang dipelajari.' },
+        { title: 'Aplikasi Praktis', description: 'Mencoba penyesuaian kecil di rumah atau kegiatan harian.' },
+      ],
+    };
+  }
+
   async getPublicWorkspaceProfile(workspaceSlug: string): Promise<PublicWorkspaceProfile | null> {
     const storeProfiles = MockStateStore.getState().workspaceProfiles;
     if (storeProfiles && storeProfiles[workspaceSlug]) {
@@ -106,14 +127,7 @@ export class MockPublicStorefrontRepository implements PublicStorefrontRepositor
     });
 
     return programs.map(program => {
-      const presentation = MOCK_PRESENTATION_MAP[program.id] || {
-        coverVariant: 'cover-a',
-        featured: false,
-        heroEyebrow: program.pricing === 'free' ? 'Program Gratis' : 'Program Berbayar',
-        shortOutcome: program.description || program.subtitle || '',
-        durationLabel: 'Mandiri',
-        learningOutcomes: [],
-      };
+      const presentation = this.getPresentation(program.id, program);
 
       const isRegistrationAllowed =
         program.programType === 'lead_magnet' &&
@@ -150,14 +164,7 @@ export class MockPublicStorefrontRepository implements PublicStorefrontRepositor
     if (program.status !== 'published') return null;
     if (program.accessType === 'private' || program.programType === 'private') return null;
 
-    const presentation = MOCK_PRESENTATION_MAP[program.id] || {
-      coverVariant: 'cover-a',
-      featured: false,
-      heroEyebrow: program.pricing === 'free' ? 'Program Gratis' : 'Program Berbayar',
-      shortOutcome: program.description || program.subtitle || '',
-      durationLabel: 'Mandiri',
-      learningOutcomes: [],
-    };
+    const presentation = this.getPresentation(program.id, program);
 
     const isRegistrationAllowed =
       program.programType === 'lead_magnet' &&
@@ -171,13 +178,41 @@ export class MockPublicStorefrontRepository implements PublicStorefrontRepositor
       registrationStatusNotice = 'Program Berbayar — Hubungi Promotor / Tersedia via Konsultasi.';
     }
 
+    const promoter = await this.getPublicWorkspaceProfile(workspaceSlug) || MOCK_RINA_PROFILE;
+
     return {
       program,
       presentation,
-      promoter: MOCK_RINA_PROFILE,
+      promoter,
       isRegistrationAllowed,
       registrationStatusNotice,
     };
+  }
+
+  async updatePublicWorkspaceProfile(
+    workspaceSlug: string,
+    profile: Partial<PublicWorkspaceProfile>
+  ): Promise<PublicWorkspaceProfile> {
+    let updatedProfile: PublicWorkspaceProfile;
+    MockStateStore.updateState(curr => {
+      const existing = (curr.workspaceProfiles && curr.workspaceProfiles[workspaceSlug]) || MOCK_RINA_PROFILE;
+      updatedProfile = {
+        ...existing,
+        ...profile,
+        stats: {
+          ...existing.stats,
+          ...(profile.stats || {}),
+        },
+      };
+      return {
+        ...curr,
+        workspaceProfiles: {
+          ...curr.workspaceProfiles,
+          [workspaceSlug]: updatedProfile,
+        },
+      };
+    });
+    return updatedProfile!;
   }
 }
 

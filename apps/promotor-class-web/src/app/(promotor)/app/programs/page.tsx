@@ -4,28 +4,21 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { getProgramsQuery } from '@/modules/programs/queries';
+import { getPublicWorkspaceProfileQuery } from '@/modules/public-storefront/queries';
 import { Program } from '@promotor/contracts';
-import { MockStateStore } from '@/adapters/mock/mock-state-store';
 
 export default function ProgramsPage() {
-  // Synchronous initial state from MockStateStore prevents initial empty count
-  const [programs, setPrograms] = useState<Program[]>(() => {
-    return MockStateStore.getState().programs || [];
-  });
-
+  const [programs, setPrograms] = useState<Program[]>([]);
   const [workspaceSlug, setWorkspaceSlug] = useState('rina');
 
   useEffect(() => {
     getProgramsQuery().then(data => {
-      if (data && data.length > 0) {
-        setPrograms(data);
-      }
+      if (data) setPrograms(data);
     });
 
-    const storeProfiles = MockStateStore.getState().workspaceProfiles;
-    if (storeProfiles && storeProfiles.rina) {
-      setWorkspaceSlug(storeProfiles.rina.workspaceSlug);
-    }
+    getPublicWorkspaceProfileQuery('rina').then(profile => {
+      if (profile) setWorkspaceSlug(profile.workspaceSlug);
+    });
   }, []);
 
   return (
@@ -216,7 +209,7 @@ export default function ProgramsPage() {
 
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <Link
-                      href={`/p/rina/${prog.programSlug}`}
+                      href={`/p/${workspaceSlug}/${prog.programSlug}`}
                       target="_blank"
                       style={{
                         fontSize: '13px',

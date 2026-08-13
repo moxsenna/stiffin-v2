@@ -3,7 +3,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { MockStateStore, INITIAL_RINA_PROFILE } from '@/adapters/mock/mock-state-store';
+import { getPublicWorkspaceProfileQuery } from '@/modules/public-storefront/queries';
+import { updateWorkspaceProfileCommand } from '@/modules/public-storefront/commands';
+import { getProgramsQuery } from '@/modules/programs/queries';
 import { PublicWorkspaceProfile } from '@/modules/public-storefront/types';
 import { Program } from '@promotor/contracts';
 
@@ -11,24 +13,33 @@ interface StorefrontSettingsClientProps {
   programs?: Program[];
 }
 
+const DEFAULT_PROFILE: PublicWorkspaceProfile = {
+  workspaceSlug: 'rina',
+  displayName: 'Rina Prameswari',
+  tagline: 'Ruang belajar untuk orang tua',
+  headline: 'Belajar memahami anak, tanpa membuat rumah jadi ruang kelas.',
+  bio: 'Saya membantu orang tua menerjemahkan hasil tes menjadi kebiasaan yang lebih manusiawi di rumah.',
+  city: 'Surabaya',
+  roleLabel: 'Promotor STIFIn',
+  heroProgramId: 'prog_7_hari_belajar',
+  stats: {
+    programCount: '3 Program Aktif',
+    location: 'Surabaya',
+  },
+};
+
 export function StorefrontSettingsClient({ programs: initialPrograms = [] }: StorefrontSettingsClientProps) {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [programs, setPrograms] = useState<Program[]>(initialPrograms);
-  const [profile, setProfile] = useState<PublicWorkspaceProfile>(() => {
-    const storeProfiles = MockStateStore.getState().workspaceProfiles;
-    return storeProfiles && storeProfiles.rina ? storeProfiles.rina : INITIAL_RINA_PROFILE;
-  });
+  const [profile, setProfile] = useState<PublicWorkspaceProfile>(DEFAULT_PROFILE);
 
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
-    const storeState = MockStateStore.getState();
-    if (storeState.programs) {
-      setPrograms(storeState.programs);
-    }
-    if (storeState.workspaceProfiles && storeState.workspaceProfiles.rina) {
-      setProfile(storeState.workspaceProfiles.rina);
-    }
+    getProgramsQuery().then(setPrograms);
+    getPublicWorkspaceProfileQuery('rina').then(res => {
+      if (res) setProfile(res);
+    });
   }, []);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,32 +54,26 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
     reader.readAsDataURL(file);
   };
 
-  const handleSaveStorefront = (e: React.FormEvent) => {
+  const handleSaveStorefront = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const updatedProfile: PublicWorkspaceProfile = {
+    const updated = await updateWorkspaceProfileCommand('rina', {
       ...profile,
       stats: {
         programCount: `${programs.length} Program Aktif`,
         location: profile.city || 'Surabaya',
       },
-    };
+    });
 
-    MockStateStore.updateState(curr => ({
-      ...curr,
-      workspaceProfiles: {
-        ...curr.workspaceProfiles,
-        rina: updatedProfile,
-      },
-    }));
-
-    setProfile(updatedProfile);
+    setProfile(updated);
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 4000);
   };
 
-  const waCleanPhone = profile.whatsappPhoneE164 ? profile.whatsappPhoneE164.replace(/[^0-9]/g, '') : '6281234567890';
-  const waTestUrl = `https://wa.me/${waCleanPhone}?text=${encodeURIComponent(`Halo ${profile.displayName}, saya tes tautan WhatsApp storefront Anda.`)}`;
+  const waCleanPhone = profile.whatsappPhoneE164 ? profile.whatsappPhoneE164.replace(/[^0-9]/g, '') : '';
+  const waTestUrl = waCleanPhone
+    ? `https://wa.me/${waCleanPhone}?text=${encodeURIComponent(`Halo ${profile.displayName}, saya tes tautan WhatsApp storefront Anda.`)}`
+    : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -429,14 +434,13 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
-                Nomor WhatsApp Promotor (Format E.164) *
+                Nomor WhatsApp Promotor (Format E.164)
               </label>
               <input
                 type="tel"
-                required
                 value={profile.whatsappPhoneE164 || ''}
                 onChange={e => setProfile({ ...profile, whatsappPhoneE164: e.target.value })}
-                placeholder="+6281234567890"
+                placeholder="+62812345678"
                 style={{
                   width: '100%',
                   padding: '10px 14px',
@@ -446,16 +450,18 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                   outline: 'none',
                 }}
               />
-              <div style={{ marginTop: '6px' }}>
-                <a
-                  href={waTestUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ fontSize: '12px', color: '#10B981', fontWeight: 750, textDecoration: 'none' }}
-                >
-                  Uji Coba Tautan WhatsApp 💬 ↗
-                </a>
-              </div>
+              {waTestUrl && (
+                <div style={{ marginTop: '6px' }}>
+                  <a
+                    href={waTestUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: '12px', color: '#10B981', fontWeight: 750, textDecoration: 'none' }}
+                  >
+                    Uji Coba Tautan WhatsApp 💬 ↗
+                  </a>
+                </div>
+              )}
             </div>
 
             <div>

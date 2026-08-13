@@ -1,8 +1,9 @@
-import { SEED_PROGRAMS } from '@promotor/promotor-class-fixtures';
+import { getProgramsQuery } from '@/modules/programs/queries';
 import { ProgramDetailClient } from './ProgramDetailClient';
 
-export function generateStaticParams() {
-  return SEED_PROGRAMS.map(p => ({ programId: p.id }));
+export async function generateStaticParams() {
+  const programs = await getProgramsQuery();
+  return programs.map(p => ({ programId: p.id }));
 }
 
 export default function ProgramDetailPage() {

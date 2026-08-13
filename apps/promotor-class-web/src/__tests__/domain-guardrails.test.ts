@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
-import { MockStateStore } from '../adapters/mock/mock-state-store';
+import { MockStateStore, INITIAL_RINA_PROFILE } from '../adapters/mock/mock-state-store';
 
 describe('Domain Guardrails & Architecture Integrity Tests', () => {
   it('1. Class State MUST NOT contain nextActions collection', () => {
@@ -24,7 +24,7 @@ describe('Domain Guardrails & Architecture Integrity Tests', () => {
     });
   });
 
-  it('4. Learner UI pages and components MUST NOT directly import MockStateStore or mock adapters', () => {
+  it('4. ALL UI pages & components (learner, public, promotor) MUST NOT directly import MockStateStore or mock adapters', () => {
     function scanDir(dirPath: string): string[] {
       let results: string[] = [];
       if (!fs.existsSync(dirPath)) return results;
@@ -41,45 +41,84 @@ describe('Domain Guardrails & Architecture Integrity Tests', () => {
       return results;
     }
 
-    const learnerAppFiles = scanDir(path.join(__dirname, '../app/(learner)'));
-    const learnerCompFiles = scanDir(path.join(__dirname, '../components/learner'));
-    const allLearnerFiles = [...learnerAppFiles, ...learnerCompFiles];
+    const uiDirectories = [
+      path.join(__dirname, '../app/(learner)'),
+      path.join(__dirname, '../app/(public)'),
+      path.join(__dirname, '../app/(promotor)'),
+      path.join(__dirname, '../components/learner'),
+      path.join(__dirname, '../components/public'),
+      path.join(__dirname, '../components/promotor'),
+    ];
 
-    assert.ok(allLearnerFiles.length > 0, 'Learner files must be found for testing');
+    let allUiFiles: string[] = [];
+    for (const dir of uiDirectories) {
+      allUiFiles = allUiFiles.concat(scanDir(dir));
+    }
 
-    for (const filePath of allLearnerFiles) {
+    assert.ok(allUiFiles.length > 0, 'UI files must be found for testing');
+
+    for (const filePath of allUiFiles) {
       const content = fs.readFileSync(filePath, 'utf-8');
+      const relPath = path.relative(path.join(__dirname, '..'), filePath);
+
       assert.strictEqual(
         content.includes('MockStateStore'),
         false,
-        `Learner file ${path.basename(filePath)} MUST NOT directly import MockStateStore`
+        `UI layer file ${relPath} MUST NOT directly import MockStateStore`
       );
       assert.strictEqual(
         content.includes('/adapters/mock/'),
         false,
-        `Learner file ${path.basename(filePath)} MUST NOT directly import from /adapters/mock/`
+        `UI layer file ${relPath} MUST NOT directly import from /adapters/mock/`
       );
       assert.strictEqual(
         content.includes('@promotor/promotor-class-fixtures'),
         false,
-        `Learner file ${path.basename(filePath)} MUST NOT directly import fixtures`
+        `UI layer file ${relPath} MUST NOT directly import fixtures`
       );
     }
   });
 
-  it('5. Public UI components MUST NOT contain hardcoded phone numbers like 6281234567890', () => {
-    const publicComponentsDir = path.join(__dirname, '../components/public');
-    if (fs.existsSync(publicComponentsDir)) {
-      const files = fs.readdirSync(publicComponentsDir).filter(f => f.endsWith('.tsx') || f.endsWith('.ts'));
+  it('5. Public & Promotor UI components & default seed profile MUST NOT contain fake phone numbers like 6281234567890', () => {
+    function scanDir(dirPath: string): string[] {
+      let results: string[] = [];
+      if (!fs.existsSync(dirPath)) return results;
+      const list = fs.readdirSync(dirPath);
+      for (const file of list) {
+        const fullPath = path.join(dirPath, file);
+        const stat = fs.statSync(fullPath);
+        if (stat && stat.isDirectory()) {
+          results = results.concat(scanDir(fullPath));
+        } else if (file.endsWith('.tsx') || file.endsWith('.ts')) {
+          results.push(fullPath);
+        }
+      }
+      return results;
+    }
+
+    const uiDirs = [
+      path.join(__dirname, '../components/public'),
+      path.join(__dirname, '../components/promotor'),
+    ];
+
+    for (const dir of uiDirs) {
+      const files = scanDir(dir);
       for (const file of files) {
-        const content = fs.readFileSync(path.join(publicComponentsDir, file), 'utf-8');
+        const content = fs.readFileSync(file, 'utf-8');
+        const relPath = path.relative(path.join(__dirname, '..'), file);
         assert.strictEqual(
           content.includes('6281234567890'),
           false,
-          `Public component ${file} MUST NOT contain hardcoded phone string 6281234567890`
+          `UI component ${relPath} MUST NOT contain hardcoded phone string 6281234567890`
         );
       }
     }
+
+    assert.strictEqual(
+      !!INITIAL_RINA_PROFILE.whatsappPhoneE164?.includes('6281234567890'),
+      false,
+      'INITIAL_RINA_PROFILE MUST NOT contain fake phone number 6281234567890'
+    );
   });
 
   it('6. session.ts MUST NOT contain tenant fallbacks like || rina or workspaceSlug: rina', () => {

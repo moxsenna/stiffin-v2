@@ -2,21 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { PromotorShell } from '@/components/layout/PromotorShell';
-import { MockStateStore } from '@/adapters/mock/mock-state-store';
-import { promotorFlowAdapter } from '@/adapters/mock/promotorflow-adapter';
+import { getIntegrationHealthQuery } from '@/modules/promotorflow/queries';
+import { resetDemoStateCommand } from '@/modules/developer/commands';
 import { IntegrationHealth } from '@promotor/contracts';
 import { StorefrontSettingsClient } from '@/components/promotor/StorefrontSettingsClient';
 
 export default function SettingsPage() {
   const [health, setHealth] = useState<IntegrationHealth>({ promotorFlow: 'AVAILABLE' });
+  const isDev = process.env.NODE_ENV === 'development';
 
   useEffect(() => {
-    promotorFlowAdapter.getIntegrationHealth().then(setHealth);
+    getIntegrationHealthQuery().then(setHealth);
   }, []);
 
-  const handleResetDemo = () => {
+  const handleResetDemo = async () => {
     if (confirm('Apakah Anda yakin ingin meriset seluruh data demo ke kondisi awal (seeds)?')) {
-      MockStateStore.resetDemo();
+      await resetDemoStateCommand();
       window.location.reload();
     }
   };
@@ -64,43 +65,45 @@ export default function SettingsPage() {
                 color: 'var(--color-primary)',
               }}
             >
-              <div>Status Integrasi: {health.promotorFlow === 'AVAILABLE' ? '✓ Aktif Terhubung (AVAILABLE)' : 'Terpisah (UNAVAILABLE)'}</div>
+              <div>Status Integrasi: {health.promotorFlow === 'AVAILABLE' ? '✓ Aktif Terhubung' : 'Terpisah'}</div>
             </div>
           </div>
 
-          {/* Reset Demo State */}
-          <div
-            style={{
-              padding: '20px',
-              backgroundColor: 'var(--color-surface)',
-              borderRadius: '18px',
-              border: '1px solid var(--color-divider)',
-              boxShadow: 'var(--shadow-sm)',
-            }}
-          >
-            <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '4px', color: 'var(--color-status-danger)' }}>
-              Reset Data Demo
-            </h3>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '14px' }}>
-              Kembalikan seluruh data LocalStorage ke kondisi seed awal.
-            </p>
-            <button
-              onClick={handleResetDemo}
-              className="touch-target-primary"
+          {/* Reset Demo State (Development Only) */}
+          {isDev && (
+            <div
               style={{
-                padding: '0 20px',
-                border: '1px solid var(--color-status-danger)',
-                backgroundColor: 'var(--color-status-danger-bg)',
-                color: 'var(--color-status-danger)',
-                borderRadius: '12px',
-                fontWeight: 750,
-                cursor: 'pointer',
-                fontSize: '13.5px',
+                padding: '20px',
+                backgroundColor: 'var(--color-surface)',
+                borderRadius: '18px',
+                border: '1px solid var(--color-divider)',
+                boxShadow: 'var(--shadow-sm)',
               }}
             >
-              Reset State Demo
-            </button>
-          </div>
+              <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '4px', color: 'var(--color-status-danger)' }}>
+                Reset Data Demo
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '14px' }}>
+                Kembalikan seluruh data ke kondisi seed awal.
+              </p>
+              <button
+                onClick={handleResetDemo}
+                className="touch-target-primary"
+                style={{
+                  padding: '0 20px',
+                  border: '1px solid var(--color-status-danger)',
+                  backgroundColor: 'var(--color-status-danger-bg)',
+                  color: 'var(--color-status-danger)',
+                  borderRadius: '12px',
+                  fontWeight: 750,
+                  cursor: 'pointer',
+                  fontSize: '13.5px',
+                }}
+              >
+                Reset State Demo
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </PromotorShell>

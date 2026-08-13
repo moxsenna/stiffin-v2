@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { PromotorShell } from '@/components/layout/PromotorShell';
-import { programRepository } from '@/adapters/mock/program-repository';
+import { getProgramByIdQuery } from '@/modules/programs/queries';
+import { saveLessonCommand } from '@/modules/programs/commands';
 import { Program, Lesson } from '@promotor/contracts';
 
 export function LessonEditorClient() {
@@ -25,7 +26,7 @@ export function LessonEditorClient() {
   const [moduleId, setModuleId] = useState('');
 
   useEffect(() => {
-    programRepository.getProgramById(programId).then((prog: Program | undefined) => {
+    getProgramByIdQuery(programId).then((prog: Program | undefined) => {
       if (!prog) return;
       setProgram(prog);
       for (const mod of prog.modules) {
@@ -58,13 +59,13 @@ export function LessonEditorClient() {
       videoYoutubeUrl: videoYoutubeUrl.trim() || undefined,
       textContent: textContent.trim() || undefined,
       hasReflection,
-      reflectionPrompt: reflectionPrompt.trim() || undefined,
+      reflectionPrompt: hasReflection ? reflectionPrompt : undefined,
       hasCta,
-      ctaLabel: ctaLabel.trim() || undefined,
-      ctaUrl: ctaUrl.trim() || undefined,
+      ctaLabel: hasCta ? ctaLabel : undefined,
+      ctaUrl: hasCta ? ctaUrl : undefined,
     };
 
-    await programRepository.saveLesson(programId, moduleId, updatedLesson);
+    await saveLessonCommand(programId, moduleId, updatedLesson);
     router.push(`/app/programs/${programId}`);
   };
 
