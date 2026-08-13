@@ -1,3 +1,4 @@
+import React, { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getPublicProgramDetailQuery } from '@/modules/public-storefront/queries';
 import { PublicLandingClient } from './PublicLandingClient';
@@ -21,5 +22,9 @@ export default async function PublicProgramLandingPage({ params }: PageProps) {
     return null;
   }
 
-  return <PublicLandingClient detail={detail} />;
+  return (
+    <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Memuat Landing Page...</div>}>
+      <PublicLandingClient detail={detail} />
+    </Suspense>
+  );
 }

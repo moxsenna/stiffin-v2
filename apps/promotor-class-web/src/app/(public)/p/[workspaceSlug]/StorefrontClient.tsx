@@ -13,6 +13,8 @@ import { LearnerTabBar } from '@/components/layout/LearnerTabBar';
 import { setLastPublicWorkspaceSlug } from '@/lib/session';
 import { getPublicWorkspaceQuery, listPublicProgramsQuery } from '@/modules/public-storefront/queries';
 
+import { capturePrototypeReferralCode } from '@/lib/referral-capture';
+
 interface StorefrontClientProps {
   profile: PublicWorkspaceProfile;
   catalog: PublicProgramCatalogItem[];
@@ -38,13 +40,8 @@ export function StorefrontClient({ profile: initialProfile, catalog: initialCata
       });
     }
 
-    if (refCode && typeof window !== 'undefined') {
-      // Prototype-only client presentation capture (Does NOT mutate Contact/Enrollment/Contracts)
-      try {
-        sessionStorage.setItem('stiffin_demo_ref_code', refCode);
-      } catch {
-        // Ignore storage restrictions
-      }
+    if (refCode) {
+      capturePrototypeReferralCode(refCode);
     }
   }, [initialProfile.workspaceSlug, refCode]);
 
