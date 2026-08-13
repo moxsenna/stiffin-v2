@@ -8,7 +8,6 @@ import { MockStateStore } from '../adapters/mock/mock-state-store';
 
 describe('Milestone R0.1 — Referral Prototype Closure Test Suite', () => {
   it('1. capturePrototypeReferralCode normalizes valid code to uppercase and trims whitespace', () => {
-    // Mock window & sessionStorage in Node test environment
     const mockStorage: Record<string, string> = {};
     (globalThis as any).window = {};
     (globalThis as any).sessionStorage = {
@@ -38,21 +37,39 @@ describe('Milestone R0.1 — Referral Prototype Closure Test Suite', () => {
     }
   });
 
-  it('3. isReferralPrototypeEnabled returns true in dev mode and false when disabled', () => {
-    const isEnabled = isReferralPrototypeEnabled();
-    assert.strictEqual(typeof isEnabled, 'boolean');
+  it('3. isReferralPrototypeEnabled enforces production feature flag semantics strictly', () => {
+    // Explicit enable flag -> true
+    assert.strictEqual(isReferralPrototypeEnabled({ enableFlag: 'true' }), true);
+    // Development mode -> true
+    assert.strictEqual(isReferralPrototypeEnabled({ nodeEnv: 'development' }), true);
+    // Production mode without flag -> false
+    assert.strictEqual(isReferralPrototypeEnabled({ nodeEnv: 'production', enableFlag: 'false' }), false);
+    assert.strictEqual(isReferralPrototypeEnabled({ nodeEnv: 'production', enableFlag: '' }), false);
+    assert.strictEqual(isReferralPrototypeEnabled({ nodeEnv: 'production', enableFlag: undefined }), false);
   });
 
-  it('4. Architecture Guardrail: app/referrals/page.tsx does NOT hardcode tenant "rina"', () => {
+  it('4. Architecture Guardrail: app/referrals/page.tsx contains zero tenant guessing / rina fallback patterns', () => {
     const pageFilePath = path.join(__dirname, '../app/(promotor)/app/referrals/page.tsx');
     const content = fs.readFileSync(pageFilePath, 'utf8');
 
-    // Must NOT call getPromoterReferralOverviewQuery('rina') directly
-    assert.strictEqual(
-      content.includes("getPromoterReferralOverviewQuery('rina')"),
-      false,
-      'app/referrals/page.tsx must NOT contain hardcoded getPromoterReferralOverviewQuery(\'rina\')'
-    );
+    // Forbidden tenant guessing patterns inside Promotor Referral Page
+    const forbiddenPatterns = [
+      "getPromoterReferralOverviewQuery('rina')",
+      "|| 'rina'",
+      "|| \"rina\"",
+      "?? 'rina'",
+      "?? \"rina\"",
+      "workspaceSlug: 'rina'",
+      "workspaceSlug: \"rina\"",
+    ];
+
+    for (const pattern of forbiddenPatterns) {
+      assert.strictEqual(
+        content.includes(pattern),
+        false,
+        `app/referrals/page.tsx must NOT contain tenant guessing pattern: "${pattern}"`
+      );
+    }
   });
 
   it('5. Architecture Guardrail: MockStateStore contains zero referral collections or state mutations', () => {
