@@ -33,8 +33,11 @@ export function createApp(deps?: AppDependencies) {
         serverTime,
       }, 200);
     } catch (err: any) {
-      // Log sanitized server-side error trace
-      console.error('[DB Health Probe Failed]:', err?.message || 'Unknown database error');
+      // Log sanitized server-side error trace (zero raw pg errors/hostnames leaked)
+      console.error('[DB Health Probe Failed]', {
+        code: 'DB_HEALTH_PROBE_FAILED',
+        timestamp: new Date().toISOString(),
+      });
 
       return c.json({
         status: 'error',
