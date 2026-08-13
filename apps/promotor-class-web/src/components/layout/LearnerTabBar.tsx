@@ -27,7 +27,7 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
   // Determine active tab cleanly based on locked active-tab routing
   let activeTab: 'beranda' | 'katalog' | 'belajar' | 'profil' = 'beranda';
 
-  if (pathname === '/learn/profile') {
+  if (pathname === '/learn/profile' || pathname === '/learn/referral') {
     activeTab = 'profil';
   } else if (pathname === '/learn' || pathname.startsWith('/learn/programs')) {
     activeTab = 'belajar';

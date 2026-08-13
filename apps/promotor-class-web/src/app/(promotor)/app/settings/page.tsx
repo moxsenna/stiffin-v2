@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { getIntegrationHealthQuery } from '@/modules/promotorflow/queries';
 import { resetDemoStateCommand } from '@/modules/developer/commands';
@@ -38,6 +39,41 @@ export default function SettingsPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
           {/* Main Storefront Settings Section */}
           <StorefrontSettingsClient />
+
+          {/* Program Referral Entry Card */}
+          <div
+            style={{
+              padding: '20px',
+              backgroundColor: 'var(--color-surface)',
+              borderRadius: '18px',
+              border: '1px solid var(--color-divider)',
+              boxShadow: 'var(--shadow-sm)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '4px' }}>Program Referral Promotor</h3>
+                <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+                  Pantau performa referral learner, leaderboard referrer teraktif, dan audit sinyal risiko.
+                </div>
+              </div>
+              <Link
+                href="/app/referrals"
+                style={{
+                  padding: '10px 16px',
+                  backgroundColor: 'var(--color-primary-light)',
+                  color: 'var(--color-primary)',
+                  borderRadius: '10px',
+                  fontWeight: 750,
+                  fontSize: '13px',
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Buka Referral →
+              </Link>
+            </div>
+          </div>
 
           {/* Integration Health Card */}
           <div

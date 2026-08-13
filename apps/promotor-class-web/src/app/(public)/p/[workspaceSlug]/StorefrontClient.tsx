@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { PublicWorkspaceProfile, PublicProgramCatalogItem } from '@/modules/public-storefront/types';
 import { PublicHeader } from '@/components/public/PublicHeader';
 import { PublicFooter } from '@/components/public/PublicFooter';
@@ -18,6 +19,8 @@ interface StorefrontClientProps {
 }
 
 export function StorefrontClient({ profile: initialProfile, catalog: initialCatalog }: StorefrontClientProps) {
+  const searchParams = useSearchParams();
+  const refCode = searchParams.get('ref');
   const [profile, setProfile] = useState<PublicWorkspaceProfile>(initialProfile);
   const [catalog, setCatalog] = useState<PublicProgramCatalogItem[]>(initialCatalog);
 
@@ -34,7 +37,16 @@ export function StorefrontClient({ profile: initialProfile, catalog: initialCata
         if (c && c.length > 0) setCatalog(c);
       });
     }
-  }, [initialProfile.workspaceSlug]);
+
+    if (refCode && typeof window !== 'undefined') {
+      // Prototype-only client presentation capture (Does NOT mutate Contact/Enrollment/Contracts)
+      try {
+        sessionStorage.setItem('stiffin_demo_ref_code', refCode);
+      } catch {
+        // Ignore storage restrictions
+      }
+    }
+  }, [initialProfile.workspaceSlug, refCode]);
 
   const featuredItem = catalog.find(item => item.presentation.featured) || catalog[0];
 

@@ -280,6 +280,54 @@ export function LearnerProfileClient() {
           )}
         </div>
 
+        {/* Referral Program Banner / Entry Card */}
+        <div style={{ marginBottom: '24px' }}>
+          <Link
+            href="/learn/referral"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              backgroundColor: 'var(--color-surface)',
+              border: '1px solid #BFDBFE',
+              borderRadius: '14px',
+              padding: '16px',
+              textDecoration: 'none',
+              color: 'var(--color-text-main)',
+              boxShadow: 'var(--shadow-sm)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  backgroundColor: '#EFF6FF',
+                  color: '#2563EB',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '20px',
+                }}
+              >
+                🎁
+              </div>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 750, color: '#1E40AF' }}>
+                  Referral & Reward
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                  Ajak teman belajar STIFIn & dapatkan voucher reward
+                </div>
+              </div>
+            </div>
+            <span style={{ fontSize: '13px', fontWeight: 750, color: '#2563EB' }}>
+              Lihat →
+            </span>
+          </Link>
+        </div>
+
         {/* Session Action */}
         <div>
           <button
