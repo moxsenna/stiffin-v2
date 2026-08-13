@@ -1,6 +1,6 @@
 # Milestone B0 — Platform API Foundation
 
-**Status:** IMPLEMENTED  
+**Status:** IMPLEMENTED & SECURITY-CLOSED (B0.1)  
 **Date:** 2026-08-13  
 **Worker App:** `apps/platform-api` (`@promotor/platform-api`)  
 **Worker Name:** `stiffin-promotor-api`  
@@ -17,17 +17,19 @@ Milestone B0 establishes the canonical backend application foundation for the Pr
 ## 2. Infrastructure & Drivers
 
 - **Runtime**: Cloudflare Workers (`stiffin-promotor-api`).
-- **HTTP Framework**: Hono (`hono/quick`).
+- **HTTP Framework**: Hono.
 - **ORM & Driver**: `drizzle-orm` + `pg` (`node-postgres` driver as recommended by Cloudflare for Hyperdrive integration).
 - **Hyperdrive Binding**:
   - Binding Name: `HYPERDRIVE`.
+  - Config ID: `1cb577ffc7524f4591a89206bb19d535`.
   - Caching Strategy: Query caching **DISABLED** on primary binding to ensure read-after-write consistency for upcoming transactional/auth operations.
-  - Connection Pool: Hyperdrive manages native PostgreSQL pooling.
-- **Neon PostgreSQL Origin**:
-  - Origin Connection: Direct / Unpooled Neon connection string (Neon serverless pooling MUST be disabled for Hyperdrive origins).
-  - Credentials: Stored in Hyperdrive configuration origin, never hardcoded in source.
+  - Connection Pool: Hyperdrive manages native PostgreSQL connection pooling.
+- **Neon PostgreSQL Role Architecture (Security Closure B0.1)**:
+  - **Migration / Owner Role (`neondb_owner`)**: Reserved exclusively for Drizzle Kit schema migrations and DDL. Never stored in Hyperdrive runtime configuration.
+  - **Application Runtime Role (`promotor_runtime`)**: Restricted SQL-created PostgreSQL role with least-privilege access. Used exclusively by Hyperdrive origin connection string. Zero database ownership or DDL privileges.
+  - **Credential Rotation**: Any previously exposed owner credentials are rotated and invalidated in Neon. Passwords are never committed to source, docs, or git history.
 - **Request-Scoped Connections**:
-  - Database client connections use request-scoped `withDb` helper (`Client.connect()` and `Client.end()` per request execution) to avoid stale I/O context errors.
+  - Database client connections use request-scoped `withDb` helper (`Client.connect()` and `Client.end()` per request execution) to prevent stale I/O context errors across Worker invocations.
 
 ---
 
@@ -68,7 +70,7 @@ Milestone B0 establishes the canonical backend application foundation for the Pr
     "timestamp": "2026-08-13T08:00:00.000Z"
   }
   ```
-- **Security Guardrail**: Failure responses NEVER expose raw PostgreSQL errors, hostnames, connection strings, or stack traces. Errors are sanitized and logged server-side only.
+- **Sanitized Server Logging (B0.1)**: Server logs use structured metadata `{ code: 'DB_HEALTH_PROBE_FAILED' }` and NEVER print `err.message`, hostnames, usernames, connection strings, or stack traces.
 - **Headers**: `Cache-Control: no-store`
 
 ---
@@ -76,7 +78,7 @@ Milestone B0 establishes the canonical backend application foundation for the Pr
 ## 4. Commands & Scripts
 
 - **Local Dev**: `pnpm dev:api` (`wrangler dev`)
-- **Typecheck**: `pnpm typecheck`
+- **Typecheck / Static Gate**: `pnpm typecheck` (`tsc --noEmit`)
 - **Lint**: `pnpm lint`
 - **Unit Tests**: `pnpm test`
 - **Build / Dry-Run Bundle Verification**: `pnpm build:api` (`wrangler deploy --dry-run --outdir dist`)
@@ -84,7 +86,15 @@ Milestone B0 establishes the canonical backend application foundation for the Pr
 
 ---
 
-## 5. Explicit B0 Scope Exclusions
+## 5. Deployment Parity Policy (B0.1)
+
+Production Worker deployments must strictly originate from a clean canonical `master` commit SHA:
+- `git status --porcelain` must be EMPTY prior to deployment.
+- Deployed SHA must match `git rev-parse HEAD` on `master`.
+
+---
+
+## 6. Explicit B0 Scope Exclusions
 
 Milestone B0 explicitly does **NOT** contain:
 - Better Auth tables (`user`, `session`, `account`, `verification`) $\rightarrow$ Deferred to B2.
