@@ -1,0 +1,27 @@
+{
+  "name": "@promotor/platform-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "tsx --test src/__tests__/*.test.ts",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "deploy:cf": "wrangler deploy"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.40.0",
+    "hono": "^4.7.2",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250204.0",
+    "@types/node": "^20.11.0",
+    "@types/pg": "^8.11.11",
+    "tsx": "^4.19.3",
+    "typescript": "^5.3.3",
+    "wrangler": "^3.114.0"
+  }
+}
