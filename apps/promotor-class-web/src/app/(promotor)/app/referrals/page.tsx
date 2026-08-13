@@ -9,17 +9,57 @@ import { PromoterReferralOverview } from '@/modules/referrals/types';
 
 export default function PromotorReferralPage() {
   const [overview, setOverview] = useState<PromoterReferralOverview | null>(null);
+  const [resolvedSlug, setResolvedSlug] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const slug = resolveWorkspaceSlug() || 'rina';
-    getPromoterReferralOverviewQuery(slug).then(res => setOverview(res));
+    const slug = resolveWorkspaceSlug();
+    setResolvedSlug(slug);
+
+    if (slug) {
+      getPromoterReferralOverviewQuery(slug)
+        .then(res => setOverview(res))
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
   }, []);
 
-  if (!overview) {
+  if (loading) {
     return (
       <PromotorShell>
         <div style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
           Memuat data referral promotor...
+        </div>
+      </PromotorShell>
+    );
+  }
+
+  if (!resolvedSlug || !overview) {
+    return (
+      <PromotorShell>
+        <div style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 780, marginBottom: '8px', color: 'var(--color-text-main)' }}>
+            Workspace Promotor Tidak Ditemukan
+          </h2>
+          <p style={{ fontSize: '13px', marginBottom: '16px' }}>
+            Silakan pilih atau buka workspace promotor aktif terlebih dahulu di Pengaturan.
+          </p>
+          <Link
+            href="/app/settings"
+            style={{
+              display: 'inline-block',
+              padding: '10px 18px',
+              backgroundColor: 'var(--color-primary-light)',
+              color: 'var(--color-primary)',
+              borderRadius: '10px',
+              fontWeight: 750,
+              fontSize: '13px',
+              textDecoration: 'none',
+            }}
+          >
+            ← Buka Pengaturan & Lainnya
+          </Link>
         </div>
       </PromotorShell>
     );
