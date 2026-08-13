@@ -4,12 +4,15 @@
   "version": "0.1.0",
   "scripts": {
     "dev:class": "pnpm --filter @promotor/promotor-class-web dev",
+    "dev:api": "pnpm --filter @promotor/platform-api dev",
     "build:class": "pnpm --filter @promotor/promotor-class-web build",
     "build:flow": "pnpm --filter @promotor/promotor-flow-web build",
+    "build:api": "pnpm --filter @promotor/platform-api build",
     "preview:class:cf": "pnpm --filter @promotor/promotor-class-web preview:cf",
     "preview:flow:cf": "pnpm --filter @promotor/promotor-flow-web preview:cf",
     "deploy:class:cf": "pnpm --filter @promotor/promotor-class-web deploy:cf",
     "deploy:flow:cf": "pnpm --filter @promotor/promotor-flow-web deploy:cf",
+    "deploy:api:cf": "pnpm --filter @promotor/platform-api deploy:cf",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test"

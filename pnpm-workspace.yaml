@@ -19,6 +19,7 @@ allowBuilds:
   react-dom: true
   scheduler: true
   semver: true
+  sharp: true
   source-map-js: true
   streamsearch: true
   styled-jsx: true
