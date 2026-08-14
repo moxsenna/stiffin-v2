@@ -1,10 +1,10 @@
 # Milestone B6 — PromotorFlow Domain Plan
 
-**Status:** DRAFT — REVISION R2.1 (responds to EXACT SOURCE AUDIT (PR #15): HOLD — targeted R2.1 consistency patch; no design changes; awaiting final source review)
+**Status:** PLAN ACCEPTED / FROZEN — REVISION R2.1 (final source review: domain architecture ACCEPTED / FROZEN — no architecture changes permitted from this point; final publication/chronology sync applied — B2 Phase B schema/migration/grants are now canonical on master). **IMPLEMENTATION BLOCKED** until the B2 milestone is FINAL ACCEPTED / FROZEN **and an explicit B6 implementation GO is issued**. B6 is NOT implemented.
 **Date:** 2026-08-15
-**Base:** canonical master (B1 FINAL ACCEPTED / FROZEN; B2 implementation NOT canonical/final; B3 content plan ACCEPTED / FROZEN, docs only)
+**Base:** canonical master (B1 FINAL ACCEPTED / FROZEN; B2 Phase B auth schema/migration/grants canonical/frozen — B2 milestone overall NOT yet FINAL ACCEPTED / FROZEN; B3 content plan ACCEPTED / FROZEN, docs only)
 **Scope:** Plan + domain design ONLY. No code, no migration, no grants, no routes, nothing deployed.
-**Dependencies (semantic):** B6 implementation is BLOCKED until B2 is FINAL ACCEPTED / FROZEN **and an explicit B6 implementation GO is issued** — until then B6 is PLAN/DESIGN ONLY (§0). Migration numbering is assigned by the Migration Integrator against canonical master at B6 implementation time (no predecessor filenames/numbers are canonical input). This document carries no workstation chronology (no branch names, no B2 migration filenames, no commit hashes).
+**Dependencies (semantic):** B2 Phase B (auth schema, canonical Drizzle migration, grants) is canonical/frozen on master. The B2 milestone overall is NOT yet FINAL ACCEPTED / FROZEN (Auth Core / authorization / rehearsal remain) — so B6 implementation remains BLOCKED until the B2 milestone is FINAL ACCEPTED / FROZEN **and an explicit B6 implementation GO is issued**; until then B6 is PLAN/DESIGN ONLY (§0). Migration numbering is assigned by the Migration Integrator against canonical master at B6 implementation time (no predecessor filenames/numbers are canonical input). This document carries no workstation chronology (no branch names, no B2 migration filenames, no commit hashes).
 
 **Revision R1 — HOLD resolutions (review verdict):**
 
@@ -93,10 +93,10 @@ NOT own a second canonical action table (`INTEGRATION_CONTRACT.md` §23).
 | Area | State |
 |---|---|
 | Worker | Hono app, only `/health` + `/health/db`. Request-scoped `pg.Client` via `withDb()` ([client.ts](../apps/platform-api/src/db/client.ts)) — frozen B1 discipline |
-| Schema | Shared Core tables in `src/db/schema/` (organizations, users, organization_members, contacts, product_entitlements) + B2 auth tables (sessions, accounts, verifications, organization_invitations, auth_rate_limits — in flight, NOT canonical/final); uuid PKs, timestamptz mode `'string'`, CHECK constraints, no triggers |
+| Schema | Shared Core tables in `src/db/schema/` (organizations, users, organization_members, contacts, product_entitlements) + canonical B2 Phase B auth tables (sessions, accounts, verifications, organization_invitations, auth_rate_limits); uuid PKs, timestamptz mode `'string'`, CHECK constraints, no triggers |
 | Contacts | Canonical identity ONLY: `id, organization_id, name, phone_e164 (NOT NULL, UNIQUE org+phone), email, created_at, updated_at, deleted_at`. **No lifecycle fields** — stage/interest/notes/lost_reason do NOT exist anywhere in the backend |
-| Migrations | ONE Drizzle history: `0000_modern_hydra.sql` (B1, frozen); B2's entry is in flight (implementation NOT canonical/final — no B2 migration filename/number is canonical input, R2-3). Next slot is B6's — number assigned by the Migration Integrator against canonical master at implementation time |
-| Grants | `docs/sql/grants_b1.sql` (20 CRUD checks) + `docs/sql/grants_b2.sql` (20, B2 in flight — NOT canonical/final); `scripts/ci-setup-db.sh` runs both. No ALTER DEFAULT PRIVILEGES |
+| Migrations | ONE Drizzle history; canonical B1 + B2 Phase B history exists on master. At B6 implementation time the Migration Integrator reads the canonical journal and assigns the next sequential B6 migration — B6 never rewrites predecessor migrations (no B2 migration filename/number is canonical input, R2-3) |
+| Grants | `docs/sql/grants_b1.sql` (20 CRUD checks) + `docs/sql/grants_b2.sql` (canonical/frozen Phase B: 5 tables × 4 CRUD = 20 privilege capabilities); `scripts/ci-setup-db.sh` runs both. No ALTER DEFAULT PRIVILEGES |
 | Core | `OrganizationContext { organizationId }` (frozen/minimal), `DomainError` (6 codes), safe error envelope |
 | Repos/Services | Org-scoped factories: `createContactRepository(db, normalizePhone, normalizeEmail)`, `createContactService(db)`; every query WHERE includes `organization_id` |
 | Tests | node:test + tsx; unit (no DB) + integration (real PG via `TEST_DATABASE_URL`/`OWNER_DATABASE_URL`, CI `postgres:16` service); `tooling/b1-live-acceptance.ts` operator-run |
@@ -1144,21 +1144,21 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.contact_assessments TO prom
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.message_templates TO promotor_runtime;
 ```
 
-- `grants_b1.sql` (20) untouched; `grants_b2.sql` (20) is B2's — in flight, NOT canonical/final (recomputed at B6 implementation time, R2-3).
+- `grants_b1.sql` (20) and `grants_b2.sql` (20) are the canonical/frozen predecessors (B1 + B2 Phase B: 5 tables × 4 CRUD each). B6 contributes its own `grants_b6.sql`: 8 × 4 = 32. Current expected predecessor arithmetic: B1 20 + B2 Phase B 20 = 40.
 - `scripts/ci-setup-db.sh` appends `-f docs/sql/grants_b6.sql` (edited at B6
   implementation time; coordinated with the B2 milestone).
 - Still NO `ALTER DEFAULT PRIVILEGES`, no DDL, no ownership.
-- **Runtime least privilege checks: B1 5×4 = 20 + B2 5×4 = 20 + B6 8×4 = 32. Expected total 72 IF canonical B2 remains 5 runtime tables — recomputed from canonical master at implementation time (R2-3).**
+- **Runtime least privilege checks: B1 5×4 = 20 + B2 Phase B 5×4 = 20 + B6 8×4 = 32 = expected total 72. Safety rule (retained): the final privilege count is recomputed from canonical master at B6 implementation time, in case later B2 phases legitimately add runtime tables (R2-3).**
 - `availability_rules`/`tags` are NOT counted (deferred, OPEN PRODUCT DECISION).
 
 ---
 
 ## 16. Migration plan
 
-- ONE Drizzle history. `0000_modern_hydra.sql` (B1) frozen. B2's entry is in flight —
-  implementation NOT canonical/final; **no B2 migration filename/number is canonical
-  input (R2-3)**. B6 generates the next entry in the same journal; its number is
-  assigned by the Migration Integrator against canonical master at implementation time.
+- ONE Drizzle history; canonical B1 + B2 Phase B history exists on master. At B6
+  implementation time the Migration Integrator reads the canonical journal and generates
+  the next sequential B6 entry — **no B2 migration filename/number is canonical input
+  (R2-3)**; workstation chronology is not baked into the architecture.
 - B6: 8 schema files (§3), `pnpm --filter @promotor/platform-api db:generate` →
   B6 entry + journal entry + snapshot. **Final numbering/history is serialized by the
   Migration Integrator against canonical master at implementation time** — B6 never
