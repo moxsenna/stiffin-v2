@@ -12,7 +12,7 @@ import { createHash } from 'node:crypto';
  * 2. packages/contracts is FROZEN during B1 — its source hash must
  *    stay identical to the committed baseline.
  */
-const CONTRACTS_BASELINE_HASH = '9e6ce07a223dd066eb484408e3a03568b8f1a4db03f01cd4c59e33ee3035028f';
+const CONTRACTS_BASELINE_HASH = '563ba91b8d790813530351ef4cb257dd048d49a6367f33b47fe45dbb2d08672a';
 
 describe('B1 — source guardrails', () => {
   it('runtime src/ code never references DATABASE_URL', () => {
@@ -39,7 +39,9 @@ describe('B1 — source guardrails', () => {
   it('packages/contracts is unchanged (frozen Shared Contracts V1)', () => {
     const contractsIndex = join(process.cwd(), '..', '..', 'packages', 'contracts', 'src', 'index.ts');
     assert.ok(existsSync(contractsIndex), 'contracts source must exist');
-    const hash = createHash('sha256').update(readFileSync(contractsIndex)).digest('hex');
+    // Normalize CRLF→LF so the hash is identical on Windows and Linux checkout.
+    const normalized = readFileSync(contractsIndex, 'utf8').replace(/\r\n/g, '\n');
+    const hash = createHash('sha256').update(normalized).digest('hex');
     assert.strictEqual(
       hash,
       CONTRACTS_BASELINE_HASH,
