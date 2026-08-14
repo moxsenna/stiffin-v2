@@ -1,10 +1,11 @@
 # B2 Reconnaissance — Better Auth on Promotor Platform
 
-**Status:** DRAFT — PENDING REVIEW (not implemented)
+**Status:** PLAN ACCEPTED / FROZEN — implementation not started (Phase B in review)
 **Date:** 2026-08-14
-**Revision:** 2 — final patch after architecture review round 3
+**Revision:** 3 — source audit PASS + version-pin note
 **Base:** master @ `c121f860fa03e5338286483c368e99dbe07add22` (B1 FINAL ACCEPTED / FROZEN)
-**Better Auth docs basis:** official better-auth.com, **v1.6 stable track only** (v1.7 beta/RC out of scope)
+**Better Auth docs basis:** official better-auth.com, **v1.6 stable track only** (v1.7 beta/RC out of scope).
+**Version pin:** Phase C must install and pin the exact stable Better Auth 1.6.x version used for schema reference generation (at time of writing: `better-auth@1.6.28` + the matching `@better-auth/drizzle-adapter` 1.6.x — reconfirm latest stable 1.6.x at implementation start and record it in the Phase C PR; no `auth@latest` floating reference). The `npx auth generate` reference output is generated with that pinned version and never applied — Drizzle/drizzle-kit remains the sole migration authority.
 **Scope:** Reconnaissance only. No dependency installed, no schema/migration generated, no grants applied, production Neon untouched, nothing deployed.
 
 ---
@@ -100,7 +101,7 @@ Field-level matrix:
 | cookie/session behavior | none | signed `better-auth.session_token` cookie (httpOnly, secure in prod), secret from `BETTER_AUTH_SECRET` | B2 IMPLEMENTATION | Worker **env binding** for secret — Workers has no `process.env` (§7/§11) |
 | trusted origins / CORS | none | `trustedOrigins` + explicit CORS origins + credentials | B2 IMPLEMENTATION | §7/§11 |
 | Hono/Workers runtime | Hono Worker, nodejs_compat set | `app.all('/api/auth/*', c => auth.handler(c.req.raw))` | COMPATIBLE | Mount per-request auth instance (§3) |
-| BA CLI `migrate` | — | Kysely-only; **not supported with Drizzle adapter** | **DO NOT USE** | `npx auth generate` reference-only cross-check to temp output; never applied. Drizzle/drizzle-kit stays sole authority |
+| BA CLI `migrate` | — | Kysely-only; **not supported with Drizzle adapter** | **DO NOT USE** | `npx auth@<pinned 1.6.x> generate` reference-only cross-check to temp output (exact version from the version-pin header — never `auth@latest`); never applied. Drizzle/drizzle-kit stays sole authority |
 
 **Role policy (locked): KEEP SINGLE ROLE for V0.1.**
 
@@ -277,7 +278,7 @@ All additions follow B1 conventions (uuid PK `DEFAULT gen_random_uuid()`, timest
 
 **Not added (V0.1):** teams/teamMember, organizationRole, `active_team_id` (unless BA requires).
 
-**Migration mechanics:** hand-write Drizzle tables in `src/db/schema/{sessions,accounts,verifications,organization-invitations,auth-rate-limits}.ts` + extend `organizations.ts`, then `pnpm --filter @promotor/platform-api db:generate` → `0001_*.sql` joins the existing journal. Cross-check with `npx auth@latest generate --output <temp>` as reference only; never `auth migrate` (unsupported with Drizzle adapter; prohibited as competing authority).
+**Migration mechanics:** hand-write Drizzle tables in `src/db/schema/{sessions,accounts,verifications,organization-invitations,auth-rate-limits}.ts` + extend `organizations.ts`, then `pnpm --filter @promotor/platform-api db:generate` → `0001_*.sql` joins the existing journal. Cross-check with `npx auth@1.6.x generate --output <temp>` (exact pinned stable 1.6.x from the version-pin header — never `auth@latest`) as reference only; never `auth migrate` (unsupported with Drizzle adapter; prohibited as competing authority).
 
 ## 5. OrganizationContext design
 
