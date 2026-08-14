@@ -15,6 +15,6 @@ SQL
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/${DB_NAME}" \
   pnpm --filter @promotor/platform-api db:migrate
 
-# Apply least-privilege runtime grants (owner_role=postgres in CI)
-sed 's/:owner_role/postgres/g' docs/sql/grants_b1.sql | \
-  psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME"
+# Apply least-privilege runtime grants for the five B1 tables
+psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
+  -f docs/sql/grants_b1.sql

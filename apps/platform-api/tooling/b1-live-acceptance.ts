@@ -11,19 +11,30 @@ import { contacts, organizations } from '../src/db/schema';
 /**
  * B1 — Live Neon acceptance script (run manually by an operator).
  *
- * Environment:
+ * Environment (canonical names):
  *   OWNER_DATABASE_URL   : neondb_owner credentials (migration + grant application)
  *   RUNTIME_DATABASE_URL : promotor_runtime credentials (what Hyperdrive uses)
  *
  * NEVER commit these values.
  *
  * REQUIRED OPERATOR SEQUENCE (this script does NOT run grants for you):
- *   1. Apply migration as owner:
+ *
+ *   POSIX (bash/zsh):
+ *     1. Apply migration as owner (migrator reads DATABASE_URL):
+ *          export DATABASE_URL="$OWNER_DATABASE_URL"
+ *          pnpm --filter @promotor/platform-api db:migrate
+ *     2. Apply B1 grants as owner:
+ *          psql "$OWNER_DATABASE_URL" -f docs/sql/grants_b1.sql
+ *     3. Run acceptance (runtime role):
+ *          pnpm --filter @promotor/platform-api b1:live-acceptance
+ *
+ *   PowerShell (Windows):
+ *     1. $env:DATABASE_URL = $env:OWNER_DATABASE_URL
  *        pnpm --filter @promotor/platform-api db:migrate
- *   2. Apply B1 grants as owner:
- *        psql "$OWNER_URL" -v owner_role=neondb_owner -f docs/sql/grants_b1.sql
- *   3. Run this acceptance script (runtime role)
- *   4. Verify Worker health (this script checks it too)
+ *     2. psql "$env:OWNER_DATABASE_URL" -f docs/sql/grants_b1.sql
+ *     3. pnpm --filter @promotor/platform-api b1:live-acceptance
+ *
+ *   (Step 4 — Worker /health and /health/db — is checked by this script.)
  *
  * Rehearse on a Neon BRANCH first, then repeat for production Neon.
  * If runtime grants are missing, this script FAILS with a clear message
@@ -74,8 +85,18 @@ async function main(): Promise<void> {
       );
       record('runtime role sees all five B1 tables', tables.rows.length === 5);
 
+      // Grants probe: ALL four CRUD privileges must independently be true.
+      // PostgreSQL's comma-separated privilege list returns true when ANY
+      // listed privilege is held, so we must AND four separate checks.
       const hasGrants = await client
-        .query(`SELECT has_table_privilege(current_user, 'public.contacts', 'SELECT,INSERT,UPDATE,DELETE') AS ok`)
+        .query(
+          `SELECT
+             has_table_privilege(current_user, 'public.contacts', 'SELECT')
+             AND has_table_privilege(current_user, 'public.contacts', 'INSERT')
+             AND has_table_privilege(current_user, 'public.contacts', 'UPDATE')
+             AND has_table_privilege(current_user, 'public.contacts', 'DELETE')
+             AS ok`
+        )
         .then((r) => r.rows[0].ok === true)
         .catch(() => false);
       record(

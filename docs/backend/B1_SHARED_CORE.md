@@ -81,8 +81,10 @@ promotor_runtime  application runtime role — SELECT/INSERT/UPDATE/DELETE only.
 ```
 
 - `docs/sql/grants_b1.sql` is the committed, auditable grant script
-  (role names only — never credentials). Parameterized `:owner_role` so the
-  same file works on Neon (`neondb_owner`) and CI (`postgres`).
+  (role names only — never credentials). It explicitly grants CRUD on the
+  five B1 tables ONLY — there is deliberately no `ALTER DEFAULT PRIVILEGES`.
+  B2/B3/B4/B5/B6 must explicitly extend runtime grants for the tables they
+  introduce, keeping least privilege reviewable per milestone.
 - `promotor_runtime` receives no DDL, no schema ownership, no CREATEDB/CREATEROLE.
 - Request-scoped connections preserved (`withDb`: connect → operate → finally end).
 - Hyperdrive primary binding caching remains DISABLED (read-after-write consistency).
@@ -152,20 +154,39 @@ CI runs this suite on every PR/push via `scripts/ci-setup-db.sh`
 
 ### Live acceptance (Neon — operator-run)
 
-Explicit operator sequence (the acceptance script does NOT run grants for you):
+Explicit operator sequence (the acceptance script does NOT run grants for you).
+
+Canonical environment names:
+- `OWNER_DATABASE_URL` — owner connection, stored securely (never committed).
+- `DATABASE_URL` — temporarily set from `OWNER_DATABASE_URL` for `db:migrate`
+  (the migrator tool reads `DATABASE_URL`).
+- `RUNTIME_DATABASE_URL` — runtime role connection used by the acceptance script.
+
+POSIX (bash/zsh):
 
 ```
-1. pnpm --filter @promotor/platform-api db:migrate            # as owner
-2. psql "$OWNER_URL" -v owner_role=neondb_owner \
-     -f docs/sql/grants_b1.sql                                 # as owner
-3. pnpm --filter @promotor/platform-api b1:live-acceptance    # runtime role
-4. verify Worker /health and /health/db return 200             # checked by script
+1. export DATABASE_URL="$OWNER_DATABASE_URL"
+   pnpm --filter @promotor/platform-api db:migrate           # as owner
+2. psql "$OWNER_DATABASE_URL" -f docs/sql/grants_b1.sql       # as owner
+3. pnpm --filter @promotor/platform-api b1:live-acceptance   # runtime role
 ```
+
+PowerShell (Windows):
+
+```
+1. $env:DATABASE_URL = $env:OWNER_DATABASE_URL
+   pnpm --filter @promotor/platform-api db:migrate           # as owner
+2. psql "$env:OWNER_DATABASE_URL" -f docs/sql/grants_b1.sql   # as owner
+3. pnpm --filter @promotor/platform-api b1:live-acceptance   # runtime role
+```
+
+(Worker `/health` and `/health/db` are verified by the script itself.)
 
 The script asserts: migration applied, runtime sees tables, **runtime grants
-present** (fails clearly if `grants_b1.sql` was not applied), CRUD works, DDL
-forbidden, tenant isolation, live Worker health. It prints only fixed safe
-error codes — never hostnames, usernames, connection strings, or raw pg errors.
+present** (four independent `has_table_privilege` checks AND-ed — SELECT AND
+INSERT AND UPDATE AND DELETE), CRUD works, DDL forbidden, tenant isolation,
+live Worker health. It prints only fixed safe error codes — never hostnames,
+usernames, connection strings, or raw pg errors.
 
 **Rehearse on a Neon branch first; production run is human-approved.**
 
@@ -178,7 +199,8 @@ error codes — never hostnames, usernames, connection strings, or raw pg errors
 - `contacts` stays domain-owned; Better Auth never writes it.
 - B2 auth tables (`sessions`, `accounts`, `verifications`, `organization_invitations`)
   join the same migration history.
-- Runtime grants use default privileges, so future tables inherit CRUD automatically.
+- B2 must explicitly extend `grants_b1.sql` (or its successor) for its new
+  tables — there is no automatic default-privileges grant.
 
 ---
 
