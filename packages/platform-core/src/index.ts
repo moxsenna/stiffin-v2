@@ -31,6 +31,35 @@ export function normalizePhone(rawPhone: string): PhoneE164 {
 }
 
 /**
+ * Canonical default organization timezone (INTEGRATION_CONTRACT §11).
+ */
+export const DEFAULT_ORGANIZATION_TIMEZONE = 'Asia/Jakarta';
+
+/**
+ * Canonical email normalization for contact identity matching
+ * (INTEGRATION_CONTRACT §10: "optional normalized-email fallback").
+ * B1 policy: trim + lowercase. Persistence and lookup MUST use this
+ * same helper — never normalize differently across the boundary.
+ */
+export function normalizeEmail(rawEmail: string): string {
+  return rawEmail.trim().toLowerCase();
+}
+
+/**
+ * Validates an IANA timezone identifier by format + existence check.
+ * Accepts "Region/City" style identifiers (optional sub-regions).
+ */
+export function isValidIanaTimezone(input: string): boolean {
+  if (!input || typeof input !== 'string') return false;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: input }).format(new Date());
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Formats E.164 phone string for human readable UI display (+62 812-3456-7890)
  */
 export function formatPhoneDisplay(e164: string): string {
