@@ -10,9 +10,14 @@
 --                      Neon: neondb_owner. CI/local: postgres.
 --   promotor_runtime : application runtime role used by the Worker via Hyperdrive.
 --
--- Run this AS the owner role AFTER the B1 migration has been applied:
---   Neon:  psql "$OWNER_DATABASE_URL" -f docs/sql/grants_b1.sql
+-- Run this AS the owner role AFTER the B1 migration has been applied.
+-- ALWAYS use -v ON_ERROR_STOP=1 so a partial grant failure cannot be
+-- mistaken for completed provisioning:
+--   Neon:  psql "$OWNER_DATABASE_URL" \
+--            -v ON_ERROR_STOP=1 \
+--            -f docs/sql/grants_b1.sql
 --   CI:    PGPASSWORD=postgres psql -h localhost -U postgres -d postgres \
+--            -v ON_ERROR_STOP=1 \
 --            -f docs/sql/grants_b1.sql
 -- ============================================================
 

@@ -167,7 +167,9 @@ POSIX (bash/zsh):
 ```
 1. export DATABASE_URL="$OWNER_DATABASE_URL"
    pnpm --filter @promotor/platform-api db:migrate           # as owner
-2. psql "$OWNER_DATABASE_URL" -f docs/sql/grants_b1.sql       # as owner
+2. psql "$OWNER_DATABASE_URL" \
+     -v ON_ERROR_STOP=1 \
+     -f docs/sql/grants_b1.sql                               # as owner, fail-fast
 3. pnpm --filter @promotor/platform-api b1:live-acceptance   # runtime role
 ```
 
@@ -176,17 +178,24 @@ PowerShell (Windows):
 ```
 1. $env:DATABASE_URL = $env:OWNER_DATABASE_URL
    pnpm --filter @promotor/platform-api db:migrate           # as owner
-2. psql "$env:OWNER_DATABASE_URL" -f docs/sql/grants_b1.sql   # as owner
+2. psql "$env:OWNER_DATABASE_URL" `
+     -v ON_ERROR_STOP=1 `
+     -f docs/sql/grants_b1.sql                               # as owner, fail-fast
 3. pnpm --filter @promotor/platform-api b1:live-acceptance   # runtime role
 ```
 
-(Worker `/health` and `/health/db` are verified by the script itself.)
+(Worker `/health` and `/health/db` are verified by the script itself.
+NOTE: `/health/db` proves the existing production Hyperdrive path, not the
+rehearsal branch — branch proof comes from `RUNTIME_DATABASE_URL`.)
 
-The script asserts: migration applied, runtime sees tables, **runtime grants
-present** (four independent `has_table_privilege` checks AND-ed — SELECT AND
-INSERT AND UPDATE AND DELETE), CRUD works, DDL forbidden, tenant isolation,
-live Worker health. It prints only fixed safe error codes — never hostnames,
-usernames, connection strings, or raw pg errors.
+The script asserts: migration applied, runtime sees all five tables,
+**runtime grants complete — 5 tables × 4 CRUD privileges (SELECT/INSERT/
+UPDATE/DELETE) = 20 independent `has_table_privilege` checks, all must be
+true**, runtime cannot CREATE in `public` schema (via privilege
+introspection — no DDL is attempted, so production acceptance is
+side-effect-free), CRUD works, tenant isolation, live Worker health. It
+prints only fixed safe error codes — never hostnames, usernames, connection
+strings, or raw pg errors.
 
 **Rehearse on a Neon branch first; production run is human-approved.**
 

@@ -8,6 +8,9 @@ import { createOrganizationRepository } from '../src/repositories/organization-r
 import { createContactRepository } from '../src/repositories/contact-repository';
 import { contacts, organizations } from '../src/db/schema';
 
+const B1_TABLES = ['organizations', 'users', 'organization_members', 'contacts', 'product_entitlements'] as const;
+const CRUD_PRIVILEGES = ['SELECT', 'INSERT', 'UPDATE', 'DELETE'] as const;
+
 /**
  * B1 — Live Neon acceptance script (run manually by an operator).
  *
@@ -23,22 +26,31 @@ import { contacts, organizations } from '../src/db/schema';
  *     1. Apply migration as owner (migrator reads DATABASE_URL):
  *          export DATABASE_URL="$OWNER_DATABASE_URL"
  *          pnpm --filter @promotor/platform-api db:migrate
- *     2. Apply B1 grants as owner:
- *          psql "$OWNER_DATABASE_URL" -f docs/sql/grants_b1.sql
+ *     2. Apply B1 grants as owner (FAIL-FAST):
+ *          psql "$OWNER_DATABASE_URL" \
+ *            -v ON_ERROR_STOP=1 \
+ *            -f docs/sql/grants_b1.sql
  *     3. Run acceptance (runtime role):
  *          pnpm --filter @promotor/platform-api b1:live-acceptance
  *
  *   PowerShell (Windows):
  *     1. $env:DATABASE_URL = $env:OWNER_DATABASE_URL
  *        pnpm --filter @promotor/platform-api db:migrate
- *     2. psql "$env:OWNER_DATABASE_URL" -f docs/sql/grants_b1.sql
+ *     2. psql "$env:OWNER_DATABASE_URL" `
+ *          -v ON_ERROR_STOP=1 `
+ *          -f docs/sql/grants_b1.sql
  *     3. pnpm --filter @promotor/platform-api b1:live-acceptance
  *
- *   (Step 4 — Worker /health and /health/db — is checked by this script.)
+ *   (Step 4 — Worker /health and /health/db — is checked by this script.
+ *    NOTE: Worker /health/db proves the EXISTING production Hyperdrive path,
+ *    NOT the rehearsal branch. Branch proof comes from RUNTIME_DATABASE_URL.)
  *
  * Rehearse on a Neon BRANCH first, then repeat for production Neon.
- * If runtime grants are missing, this script FAILS with a clear message
- * instead of assuming they exist.
+ *
+ * SIDE-EFFECT-FREE for production: this script never executes DDL and never
+ * leaves test tables behind. DDL denial is verified via privilege
+ * introspection (has_schema_privilege CREATE = false); the ACTIVE
+ * CREATE TABLE rejection test lives only in the ephemeral CI PostgreSQL.
  *
  * Security: this script never prints connection strings, secrets, hostnames,
  * usernames, or raw database error messages. Failures use fixed safe codes.
@@ -75,35 +87,16 @@ async function main(): Promise<void> {
     }
   }
 
-  // 2. Runtime: verify tables visible AND grants present.
+  // 2. Runtime: all five tables visible.
   {
     const client = new Client({ connectionString: RUNTIME_URL });
     try {
       await client.connect();
       const tables = await client.query(
-        `SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename IN ('organizations','users','organization_members','contacts','product_entitlements')`
+        `SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename = ANY($1::text[])`,
+        [[...B1_TABLES]]
       );
-      record('runtime role sees all five B1 tables', tables.rows.length === 5);
-
-      // Grants probe: ALL four CRUD privileges must independently be true.
-      // PostgreSQL's comma-separated privilege list returns true when ANY
-      // listed privilege is held, so we must AND four separate checks.
-      const hasGrants = await client
-        .query(
-          `SELECT
-             has_table_privilege(current_user, 'public.contacts', 'SELECT')
-             AND has_table_privilege(current_user, 'public.contacts', 'INSERT')
-             AND has_table_privilege(current_user, 'public.contacts', 'UPDATE')
-             AND has_table_privilege(current_user, 'public.contacts', 'DELETE')
-             AS ok`
-        )
-        .then((r) => r.rows[0].ok === true)
-        .catch(() => false);
-      record(
-        'runtime grants present (B1 CRUD)',
-        hasGrants,
-        hasGrants ? undefined : 'GRANTS_MISSING_RUN_grants_b1_sql'
-      );
+      record('runtime role sees all five B1 tables', tables.rows.length === B1_TABLES.length);
     } catch {
       record('runtime role sees all five B1 tables', false, 'RUNTIME_ACCESS_FAILED');
     } finally {
@@ -111,7 +104,56 @@ async function main(): Promise<void> {
     }
   }
 
-  // 3. Runtime: CRUD roundtrip.
+  // 3. Runtime: grants on ALL FIVE tables × FOUR privileges = 20 checks.
+  //    PostgreSQL's comma-separated privilege list returns true when ANY
+  //    listed privilege is held, so every check is its own has_table_privilege.
+  {
+    const client = new Client({ connectionString: RUNTIME_URL });
+    try {
+      await client.connect();
+      const conditions: string[] = [];
+      for (const table of B1_TABLES) {
+        for (const priv of CRUD_PRIVILEGES) {
+          conditions.push(`has_table_privilege(current_user, 'public.${table}', '${priv}')`);
+        }
+      }
+      const res = await client.query(`SELECT (${conditions.join(' AND ')}) AS ok`);
+      const allGrants = res.rows[0].ok === true;
+      record(
+        'runtime grants complete (5 tables x 4 CRUD = 20/20)',
+        allGrants,
+        allGrants ? undefined : 'GRANTS_INCOMPLETE_RUN_grants_b1_sql'
+      );
+    } catch {
+      record('runtime grants complete (5 tables x 4 CRUD = 20/20)', false, 'GRANTS_CHECK_FAILED');
+    } finally {
+      await client.end().catch(() => undefined);
+    }
+  }
+
+  // 4. Runtime: no CREATE privilege in public schema (introspection only —
+  //    no DDL is attempted, so production acceptance is side-effect-free).
+  {
+    const client = new Client({ connectionString: RUNTIME_URL });
+    try {
+      await client.connect();
+      const res = await client.query(
+        `SELECT has_schema_privilege(current_user, 'public', 'CREATE') AS ok`
+      );
+      const denied = res.rows[0].ok === false;
+      record(
+        'runtime role cannot CREATE in public schema',
+        denied,
+        denied ? undefined : 'CREATE_PRIVILEGE_UNEXPECTEDLY_GRANTED'
+      );
+    } catch {
+      record('runtime role cannot CREATE in public schema', false, 'PRIVILEGE_CHECK_FAILED');
+    } finally {
+      await client.end().catch(() => undefined);
+    }
+  }
+
+  // 5. Runtime: CRUD roundtrip (organizations; cleans up after itself).
   {
     const client = new Client({ connectionString: RUNTIME_URL });
     try {
@@ -133,21 +175,7 @@ async function main(): Promise<void> {
     }
   }
 
-  // 4. Runtime: forbidden DDL must fail.
-  {
-    const client = new Client({ connectionString: RUNTIME_URL });
-    try {
-      await client.connect();
-      await client.query(`CREATE TABLE b1_forbidden (id uuid PRIMARY KEY)`);
-      record('runtime role cannot execute DDL', false, 'DDL_UNEXPECTEDLY_ALLOWED');
-    } catch {
-      record('runtime role cannot execute DDL', true);
-    } finally {
-      await client.end().catch(() => undefined);
-    }
-  }
-
-  // 5. Tenant isolation through repository layer.
+  // 6. Tenant isolation through repository layer (probe rows cleaned up).
   {
     const client = new Client({ connectionString: RUNTIME_URL });
     try {
@@ -174,7 +202,9 @@ async function main(): Promise<void> {
     }
   }
 
-  // 6. Live Worker health endpoints.
+  // 7. Live Worker health endpoints.
+  //    NOTE: /health/db proves the EXISTING production Hyperdrive path, not
+  //    the rehearsal branch. Branch proof comes from RUNTIME_DATABASE_URL.
   try {
     const res = await fetch('https://stiffin-promotor-api.moxsenna.workers.dev/health');
     record('worker GET /health returns 200', res.status === 200);
