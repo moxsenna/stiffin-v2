@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { createOrganizationRepository } from '../repositories/organization-repository';
+import { organizations, productEntitlements } from '../db/schema';
 import { DomainError } from '../core/errors';
 import { DEFAULT_ORGANIZATION_TIMEZONE, isValidIanaTimezone } from '@promotor/platform-core';
 
@@ -27,6 +28,14 @@ export function createOrganizationService(db: NodePgDatabase) {
   const repo = createOrganizationRepository(db);
 
   return {
+    /**
+     * Canonical organization creation path. Provisions the organization AND
+     * its product_entitlements row (promotor_class=false, promotor_flow=false)
+     * in ONE transaction, so a newly created org always has exactly one
+     * entitlement row. A missing row elsewhere is still interpreted as
+     * deny-all (defense in depth). B2 must preserve this invariant when
+     * Better Auth creates organizations.
+     */
     async createOrganization(command: CreateOrganizationCommand) {
       const parsed = CreateOrganizationSchema.safeParse(command);
       if (!parsed.success) {
@@ -36,8 +45,24 @@ export function createOrganizationService(db: NodePgDatabase) {
       if (!isValidIanaTimezone(timezone)) {
         throw new DomainError('VALIDATION_ERROR', `Invalid IANA timezone: "${timezone}"`);
       }
+
       try {
-        return await repo.create({ ...parsed.data, timezone });
+        return await db.transaction(async (tx) => {
+          const [org] = await tx
+            .insert(organizations)
+            .values({
+              name: parsed.data.name.trim(),
+              slug: parsed.data.slug.trim().toLowerCase(),
+              timezone,
+            })
+            .returning();
+          await tx.insert(productEntitlements).values({
+            organizationId: org.id,
+            promotorClass: false,
+            promotorFlow: false,
+          });
+          return org;
+        });
       } catch (err) {
         if (isUniqueViolation(err)) {
           throw new DomainError('CONFLICT', `Organization slug already exists: "${parsed.data.slug}"`);

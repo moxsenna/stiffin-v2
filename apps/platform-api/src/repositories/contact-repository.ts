@@ -1,4 +1,4 @@
-import { eq, and, isNull, sql } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { contacts, ContactRow, NewContactRow } from '../db/schema';
 import { isOrganizationContext } from '../core/organization-context';
@@ -7,8 +7,8 @@ import type { OrganizationContext } from '../core/organization-context';
 export interface MatchOrCreateContactInput {
   context: OrganizationContext;
   name: string;
-  /** Raw phone input — normalized via platform-core before persistence. */
-  phoneRaw?: string;
+  /** Raw phone input — REQUIRED (frozen contract Contact.phoneE164 is not optional). */
+  phoneRaw: string;
   email?: string;
 }
 
@@ -31,12 +31,19 @@ export interface ContactRepository {
  * always includes organization_id from the server-resolved context, so tenant
  * data can never leak across organizations.
  *
+ * Soft-delete semantics:
+ * - Normal application queries (findByPhone, findById, listActive,
+ *   updateIdentity) only ever see ACTIVE rows (deleted_at IS NULL).
+ * - ONLY matchOrCreate may inspect soft-deleted rows internally, so that
+ *   restore-by-phone preserves the canonical contact_id.
+ *
  * Phone normalization happens BEFORE persistence (service layer), so the DB
  * uniqueness constraint always operates on the canonical E.164 value.
  */
 export function createContactRepository(
   db: NodePgDatabase,
-  normalizePhoneFn: (raw: string) => string
+  normalizePhoneFn: (raw: string) => string,
+  normalizeEmailFn: (raw: string) => string
 ): ContactRepository {
   return {
     async matchOrCreate(input) {
@@ -45,35 +52,37 @@ export function createContactRepository(
       }
       const name = input.name.trim();
       if (!name) throw new Error('Contact name cannot be empty');
+      if (!input.phoneRaw) {
+        throw new Error('Contact phone is required (canonical Contact requires phoneE164)');
+      }
 
-      const phoneE164 = input.phoneRaw ? normalizePhoneFn(input.phoneRaw) : null;
-      const email = input.email?.trim() || null;
+      const phoneE164 = normalizePhoneFn(input.phoneRaw);
+      const email = input.email ? normalizeEmailFn(input.email) : null;
 
       return db.transaction(async (tx) => {
-        // 1. Match existing (INCLUDING soft-deleted — phone stays reserved).
-        if (phoneE164) {
-          const existing = await tx
-            .select()
-            .from(contacts)
-            .where(
-              and(eq(contacts.organizationId, input.context.organizationId), eq(contacts.phoneE164, phoneE164))
-            )
-            .limit(1);
-          if (existing[0]) {
-            // Restore soft-deleted contact, preserving canonical contact_id.
-            if (existing[0].deletedAt) {
-              const restored = await tx
-                .update(contacts)
-                .set({ deletedAt: null, updatedAt: new Date().toISOString() })
-                .where(eq(contacts.id, existing[0].id))
-                .returning();
-              return restored[0];
-            }
-            return existing[0];
+        // 1. Match existing by phone (INCLUDING soft-deleted — phone stays reserved).
+        const existing = await tx
+          .select()
+          .from(contacts)
+          .where(
+            and(eq(contacts.organizationId, input.context.organizationId), eq(contacts.phoneE164, phoneE164))
+          )
+          .limit(1);
+        if (existing[0]) {
+          // Restore soft-deleted contact, preserving canonical contact_id.
+          if (existing[0].deletedAt) {
+            const restored = await tx
+              .update(contacts)
+              .set({ deletedAt: null, updatedAt: new Date().toISOString() })
+              .where(eq(contacts.id, existing[0].id))
+              .returning();
+            return restored[0];
           }
+          return existing[0];
         }
 
-        // 2. Email fallback match (active rows only).
+        // 2. Optional normalized-email fallback (active rows only,
+        //    INTEGRATION_CONTRACT §10).
         if (email) {
           const byEmail = await tx
             .select()
@@ -97,25 +106,14 @@ export function createContactRepository(
           phoneE164,
           email,
         };
-        let inserted: ContactRow[];
-        if (phoneE164) {
-          inserted = await tx
-            .insert(contacts)
-            .values(row)
-            .onConflictDoNothing({
-              target: [contacts.organizationId, contacts.phoneE164],
-              where: sql`${contacts.phoneE164} IS NOT NULL`,
-            })
-            .returning();
-        } else {
-          inserted = await tx.insert(contacts).values(row).returning();
-        }
+        const inserted = await tx
+          .insert(contacts)
+          .values(row)
+          .onConflictDoNothing({ target: [contacts.organizationId, contacts.phoneE164] })
+          .returning();
         if (inserted[0]) return inserted[0];
 
-        // 4. Lost the race — re-select the winner (only possible when phone exists).
-        if (!phoneE164) {
-          throw new Error('Contact insert failed unexpectedly');
-        }
+        // 4. Lost the race — re-select the winner.
         const winner = await tx
           .select()
           .from(contacts)
@@ -137,7 +135,13 @@ export function createContactRepository(
       const rows = await db
         .select()
         .from(contacts)
-        .where(and(eq(contacts.organizationId, context.organizationId), eq(contacts.phoneE164, phoneE164)))
+        .where(
+          and(
+            eq(contacts.organizationId, context.organizationId),
+            eq(contacts.phoneE164, phoneE164),
+            isNull(contacts.deletedAt)
+          )
+        )
         .limit(1);
       return rows[0] ?? null;
     },
@@ -174,7 +178,13 @@ export function createContactRepository(
       await db
         .update(contacts)
         .set({ deletedAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
-        .where(and(eq(contacts.organizationId, context.organizationId), eq(contacts.id, id)));
+        .where(
+          and(
+            eq(contacts.organizationId, context.organizationId),
+            eq(contacts.id, id),
+            isNull(contacts.deletedAt)
+          )
+        );
     },
 
     async restore(context, id) {
@@ -199,11 +209,17 @@ export function createContactRepository(
         if (!name) throw new Error('Contact name cannot be empty');
         set.name = name;
       }
-      if (patch.email !== undefined) set.email = patch.email?.trim() || null;
+      if (patch.email !== undefined) set.email = patch.email ? normalizeEmailFn(patch.email) : null;
       const rows = await db
         .update(contacts)
         .set(set)
-        .where(and(eq(contacts.organizationId, context.organizationId), eq(contacts.id, id)))
+        .where(
+          and(
+            eq(contacts.organizationId, context.organizationId),
+            eq(contacts.id, id),
+            isNull(contacts.deletedAt)
+          )
+        )
         .returning();
       return rows[0] ?? null;
     },

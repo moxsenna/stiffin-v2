@@ -1,5 +1,5 @@
 {
-  "id": "d86010ce-44c9-4b60-a4f6-0170763441e0",
+  "id": "7daf65f8-b69b-49da-8ce7-09a3caefced6",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -109,7 +109,7 @@
           "name": "email",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "email_verified": {
           "name": "email_verified",
@@ -157,7 +157,6 @@
             }
           ],
           "isUnique": true,
-          "where": "\"users\".\"email\" IS NOT NULL",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -319,7 +318,7 @@
           "name": "phone_e164",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "email": {
           "name": "email",
@@ -366,7 +365,6 @@
             }
           ],
           "isUnique": true,
-          "where": "\"contacts\".\"phone_e164\" IS NOT NULL",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -441,7 +439,7 @@
         },
         "contacts_phone_e164_format": {
           "name": "contacts_phone_e164_format",
-          "value": "\"contacts\".\"phone_e164\" IS NULL OR \"contacts\".\"phone_e164\" ~ '^\\+[1-9][0-9]{1,14}$'"
+          "value": "\"contacts\".\"phone_e164\" ~ '^\\+[1-9][0-9]{1,14}$'"
         }
       },
       "isRLSEnabled": false

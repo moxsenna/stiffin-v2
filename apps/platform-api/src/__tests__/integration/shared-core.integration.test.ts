@@ -6,9 +6,18 @@ import { createOrganizationRepository } from '../../repositories/organization-re
 import { createContactRepository } from '../../repositories/contact-repository';
 import { createMembershipRepository } from '../../repositories/membership-repository';
 import { createEntitlementRepository } from '../../repositories/entitlement-repository';
-import { normalizePhone } from '@promotor/platform-core';
-import { organizations, contacts, organizationMembers, productEntitlements, users } from '../../db/schema';
-import { eq } from 'drizzle-orm';
+import { createOrganizationService } from '../../services/organization-service';
+import { createContactService } from '../../services/contact-service';
+import { normalizePhone, normalizeEmail } from '@promotor/platform-core';
+import { ContactSchema } from '@promotor/contracts';
+import {
+  organizations,
+  contacts,
+  organizationMembers,
+  productEntitlements,
+  users,
+} from '../../db/schema';
+import { eq, count } from 'drizzle-orm';
 
 const enabled = Boolean(TEST_DATABASE_URL);
 
@@ -26,12 +35,93 @@ describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_D
     });
   });
 
+  it('contact contract: DB rejects NULL phone_e164 (frozen contract requires phone)', async () => {
+    await withIntegrationDb(async (db) => {
+      const orgRepo = createOrganizationRepository(db);
+      const org = await orgRepo.create({ name: 'Null Phone Org', slug: `nullphone-${Date.now()}` });
+      await assert.rejects(
+        async () => {
+          await db.insert(contacts).values({ organizationId: org.id, name: 'No Phone', phoneE164: null as unknown as string });
+        },
+        /null value|not-null/i,
+        'phone_e164 must be NOT NULL'
+      );
+    });
+  });
+
+  it('contact contract: service rejects missing phoneRaw', async () => {
+    await withIntegrationDb(async (db) => {
+      const orgRepo = createOrganizationRepository(db);
+      const org = await orgRepo.create({ name: 'Svc Phone Org', slug: `svcphone-${Date.now()}` });
+      const service = createContactService(db);
+      await assert.rejects(
+        async () => {
+          await service.matchOrCreateContact({
+            context: { organizationId: org.id },
+            name: 'Tanpa Nomor',
+            // @ts-expect-error phoneRaw missing by design
+            phoneRaw: undefined,
+          });
+        },
+        (err: unknown) => {
+          assert.ok(err instanceof Error);
+          assert.strictEqual((err as { code?: string }).code, 'VALIDATION_ERROR');
+          return true;
+        },
+        'missing phoneRaw must raise VALIDATION_ERROR'
+      );
+    });
+  });
+
+  it('contact contract: every B1 contact satisfies frozen ContactSchema', async () => {
+    await withIntegrationDb(async (db) => {
+      const orgRepo = createOrganizationRepository(db);
+      const org = await orgRepo.create({ name: 'Schema Org', slug: `schema-${Date.now()}` });
+      const contactRepo = createContactRepository(db, normalizePhone, normalizeEmail);
+      const row = await contactRepo.matchOrCreate({
+        context: { organizationId: org.id },
+        name: 'Ayu',
+        phoneRaw: '081298887777',
+        email: 'Ayu@Example.com',
+      });
+      const parsed = ContactSchema.safeParse({
+        id: row.id,
+        organizationId: row.organizationId,
+        name: row.name,
+        phoneE164: row.phoneE164,
+        createdAt: row.createdAt,
+      });
+      assert.ok(parsed.success, 'B1 contact row must satisfy the frozen ContactSchema');
+    });
+  });
+
+  it('email fallback: case-insensitive normalized email matches same contact', async () => {
+    await withIntegrationDb(async (db) => {
+      const orgRepo = createOrganizationRepository(db);
+      const org = await orgRepo.create({ name: 'Email Org', slug: `email-${Date.now()}` });
+      const contactRepo = createContactRepository(db, normalizePhone, normalizeEmail);
+      const first = await contactRepo.matchOrCreate({
+        context: { organizationId: org.id },
+        name: 'Ayu',
+        phoneRaw: '081299990001',
+        email: 'Ayu@Example.com',
+      });
+      const second = await contactRepo.matchOrCreate({
+        context: { organizationId: org.id },
+        name: 'Ayu Lain',
+        phoneRaw: '081299990002',
+        email: 'ayu@example.com',
+      });
+      assert.strictEqual(first.id, second.id, 'normalized-email fallback must reuse canonical contact_id');
+    });
+  });
+
   it('tenant: same phone may exist in two organizations (policy: allowed)', async () => {
     await withIntegrationDb(async (db) => {
       const orgRepo = createOrganizationRepository(db);
       const a = await orgRepo.create({ name: 'Org A', slug: `org-a-${Date.now()}` });
       const b = await orgRepo.create({ name: 'Org B', slug: `org-b-${Date.now()}` });
-      const contactRepo = createContactRepository(db, normalizePhone);
+      const contactRepo = createContactRepository(db, normalizePhone, normalizeEmail);
 
       const ca = await contactRepo.matchOrCreate({ context: { organizationId: a.id }, name: 'Ayu', phoneRaw: '081212345678' });
       const cb = await contactRepo.matchOrCreate({ context: { organizationId: b.id }, name: 'Ayu', phoneRaw: '081212345678' });
@@ -44,7 +134,7 @@ describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_D
     await withIntegrationDb(async (db) => {
       const orgRepo = createOrganizationRepository(db);
       const org = await orgRepo.create({ name: 'Dup Org', slug: `dup-${Date.now()}` });
-      const contactRepo = createContactRepository(db, normalizePhone);
+      const contactRepo = createContactRepository(db, normalizePhone, normalizeEmail);
 
       const first = await contactRepo.matchOrCreate({ context: { organizationId: org.id }, name: 'Budi', phoneRaw: '628123456780' });
       const second = await contactRepo.matchOrCreate({ context: { organizationId: org.id }, name: 'Budi Renamed', phoneRaw: '+62 812-3456-780' });
@@ -52,18 +142,26 @@ describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_D
     });
   });
 
-  it('contact identity: soft-deleted phone is restored, never duplicated', async () => {
+  it('soft-delete: active queries hide deleted contact, matchOrCreate restores same contact_id', async () => {
     await withIntegrationDb(async (db) => {
       const orgRepo = createOrganizationRepository(db);
       const org = await orgRepo.create({ name: 'Restore Org', slug: `restore-${Date.now()}` });
-      const contactRepo = createContactRepository(db, normalizePhone);
+      const contactRepo = createContactRepository(db, normalizePhone, normalizeEmail);
       const ctx = { organizationId: org.id };
 
       const created = await contactRepo.matchOrCreate({ context: ctx, name: 'Citra', phoneRaw: '081234567890' });
       await contactRepo.softDelete(ctx, created.id);
-      const gone = await contactRepo.findById(ctx, created.id);
-      assert.strictEqual(gone, null, 'soft-deleted contact must be invisible to active queries');
 
+      // Active queries must not expose the deleted contact.
+      assert.strictEqual(await contactRepo.findById(ctx, created.id), null, 'findById must be active-only');
+      assert.strictEqual(await contactRepo.findByPhone(ctx, '+6281234567890'), null, 'findByPhone must be active-only');
+      assert.strictEqual(
+        await contactRepo.updateIdentity(ctx, created.id, { name: 'HACKED' }),
+        null,
+        'updateIdentity must not touch deleted contacts'
+      );
+
+      // matchOrCreate restores the canonical contact_id.
       const restored = await contactRepo.matchOrCreate({ context: ctx, name: 'Citra Baru', phoneRaw: '0812 3456 7890' });
       assert.strictEqual(restored.id, created.id, 'restore must preserve canonical contact_id');
       assert.strictEqual(restored.deletedAt, null);
@@ -92,7 +190,10 @@ describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_D
     await withIntegrationDb(async (db) => {
       const orgRepo = createOrganizationRepository(db);
       const org = await orgRepo.create({ name: 'Role Org', slug: `role-${Date.now()}` });
-      const [user] = await db.insert(users).values({ name: 'Test User' }).returning();
+      const [user] = await db
+        .insert(users)
+        .values({ name: 'Test User', email: `role-${Date.now()}@example.com` })
+        .returning();
       await assert.rejects(async () => {
         await db.insert(organizationMembers).values({ organizationId: org.id, userId: user.id, role: 'superadmin' });
       });
@@ -103,7 +204,10 @@ describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_D
     await withIntegrationDb(async (db) => {
       const orgRepo = createOrganizationRepository(db);
       const org = await orgRepo.create({ name: 'Membership Org', slug: `member-${Date.now()}` });
-      const [user] = await db.insert(users).values({ name: 'Owner User' }).returning();
+      const [user] = await db
+        .insert(users)
+        .values({ name: 'Owner User', email: `member-${Date.now()}@example.com` })
+        .returning();
       const repo = createMembershipRepository(db);
       const ctx = { organizationId: org.id };
 
@@ -114,12 +218,34 @@ describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_D
     });
   });
 
+  it('users stub: email is required and unique (B2 compatibility)', async () => {
+    await withIntegrationDb(async (db) => {
+      // NOT NULL is enforced at the DB level; bypass the type system with raw SQL.
+      await assert.rejects(
+        async () => {
+          await db.execute(sql`INSERT INTO users (name) VALUES ('No Email')`);
+        },
+        /null value|not-null/i,
+        'users.email must be NOT NULL'
+      );
+      const email = `unique-${Date.now()}@example.com`;
+      await db.insert(users).values({ name: 'First', email });
+      await assert.rejects(
+        async () => {
+          await db.insert(users).values({ name: 'Second', email });
+        },
+        /duplicate|unique/i,
+        'users.email must be unique'
+      );
+    });
+  });
+
   it('tenant isolation: org B context cannot read org A contact', async () => {
     await withIntegrationDb(async (db) => {
       const orgRepo = createOrganizationRepository(db);
       const a = await orgRepo.create({ name: 'Iso A', slug: `iso-a-${Date.now()}` });
       const b = await orgRepo.create({ name: 'Iso B', slug: `iso-b-${Date.now()}` });
-      const contactRepo = createContactRepository(db, normalizePhone);
+      const contactRepo = createContactRepository(db, normalizePhone, normalizeEmail);
 
       const ca = await contactRepo.matchOrCreate({ context: { organizationId: a.id }, name: 'Dina', phoneRaw: '081298765432' });
 
@@ -137,7 +263,7 @@ describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_D
       const orgRepo = createOrganizationRepository(db);
       const a = await orgRepo.create({ name: 'Upd A', slug: `upd-a-${Date.now()}` });
       const b = await orgRepo.create({ name: 'Upd B', slug: `upd-b-${Date.now()}` });
-      const contactRepo = createContactRepository(db, normalizePhone);
+      const contactRepo = createContactRepository(db, normalizePhone, normalizeEmail);
 
       const ca = await contactRepo.matchOrCreate({ context: { organizationId: a.id }, name: 'Eka', phoneRaw: '081299887766' });
       const crossUpdate = await contactRepo.updateIdentity({ organizationId: b.id }, ca.id, { name: 'HACKED' });
@@ -148,7 +274,19 @@ describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_D
     });
   });
 
-  it('entitlements: semantics + 1:1 with organization', async () => {
+  it('entitlements: canonical org creation provisions false/false in one transaction', async () => {
+    await withIntegrationDb(async (db) => {
+      const service = createOrganizationService(db);
+      const org = await service.createOrganization({ name: 'Provisioned Org', slug: `provisioned-${Date.now()}` });
+      const entRepo = createEntitlementRepository(db);
+      const row = await entRepo.getForOrg({ organizationId: org.id });
+      assert.ok(row, 'organization creation must provision an entitlement row');
+      assert.strictEqual(row.promotorClass, false);
+      assert.strictEqual(row.promotorFlow, false);
+    });
+  });
+
+  it('entitlements: deny-all when row missing, 1:1 unique when present', async () => {
     await withIntegrationDb(async (db) => {
       const orgRepo = createOrganizationRepository(db);
       const org = await orgRepo.create({ name: 'Ent Org', slug: `ent-${Date.now()}` });
@@ -156,7 +294,7 @@ describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_D
       const ctx = { organizationId: org.id };
 
       const none = await entRepo.getForOrg(ctx);
-      assert.strictEqual(none, null, 'no entitlements row until upserted');
+      assert.strictEqual(none, null, 'raw repository path has no row until provisioned — service layer treats missing as deny-all');
 
       const classOnly = await entRepo.upsert({ context: ctx, promotorClass: true, promotorFlow: false });
       assert.deepStrictEqual(
@@ -175,6 +313,71 @@ describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_D
         /unique|duplicate|23505/i,
         'second entitlement row per org must violate unique constraint'
       );
+    });
+  });
+
+  it('FK behavior: hard delete organization WITH contact is RESTRICTed', async () => {
+    await withIntegrationDb(async (db) => {
+      const orgRepo = createOrganizationRepository(db);
+      const org = await orgRepo.create({ name: 'FK Restrict Org', slug: `fk-restrict-${Date.now()}` });
+      const contactRepo = createContactRepository(db, normalizePhone, normalizeEmail);
+      await contactRepo.matchOrCreate({ context: { organizationId: org.id }, name: 'Kept', phoneRaw: '081211112222' });
+      await assert.rejects(
+        async () => {
+          await db.delete(organizations).where(eq(organizations.id, org.id));
+        },
+        /violates foreign key|23503/i,
+        'hard delete org with contact must be rejected (RESTRICT)'
+      );
+    });
+  });
+
+  it('FK behavior: hard delete organization WITHOUT contacts cascades memberships + entitlements', async () => {
+    await withIntegrationDb(async (db) => {
+      const orgRepo = createOrganizationRepository(db);
+      const org = await orgRepo.create({ name: 'FK Cascade Org', slug: `fk-cascade-${Date.now()}` });
+      const [user] = await db
+        .insert(users)
+        .values({ name: 'Cascade User', email: `cascade-${Date.now()}@example.com` })
+        .returning();
+      const memberRepo = createMembershipRepository(db);
+      await memberRepo.addMember({ context: { organizationId: org.id }, userId: user.id, role: 'owner' });
+      await db.insert(productEntitlements).values({ organizationId: org.id, promotorClass: true, promotorFlow: false });
+
+      await db.delete(organizations).where(eq(organizations.id, org.id));
+
+      const members = await db
+        .select({ c: count() })
+        .from(organizationMembers)
+        .where(eq(organizationMembers.organizationId, org.id));
+      assert.strictEqual(Number(members[0].c), 0, 'memberships must cascade on org hard delete');
+
+      const entitlements = await db
+        .select({ c: count() })
+        .from(productEntitlements)
+        .where(eq(productEntitlements.organizationId, org.id));
+      assert.strictEqual(Number(entitlements[0].c), 0, 'entitlements must cascade on org hard delete');
+    });
+  });
+
+  it('FK behavior: hard delete user cascades organization_members', async () => {
+    await withIntegrationDb(async (db) => {
+      const orgRepo = createOrganizationRepository(db);
+      const org = await orgRepo.create({ name: 'FK User Org', slug: `fk-user-${Date.now()}` });
+      const [user] = await db
+        .insert(users)
+        .values({ name: 'Doomed User', email: `doomed-${Date.now()}@example.com` })
+        .returning();
+      const memberRepo = createMembershipRepository(db);
+      await memberRepo.addMember({ context: { organizationId: org.id }, userId: user.id, role: 'member' });
+
+      await db.delete(users).where(eq(users.id, user.id));
+
+      const members = await db
+        .select({ c: count() })
+        .from(organizationMembers)
+        .where(eq(organizationMembers.userId, user.id));
+      assert.strictEqual(Number(members[0].c), 0, 'memberships must cascade on user hard delete');
     });
   });
 

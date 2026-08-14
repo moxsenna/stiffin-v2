@@ -18,11 +18,18 @@ export interface AddMemberInput {
 export interface MembershipRepository {
   addMember(input: AddMemberInput): Promise<OrganizationMemberRow>;
   findByUserAndOrg(context: OrganizationContext, userId: string): Promise<OrganizationMemberRow | null>;
-  listByUser(userId: string): Promise<OrganizationMemberRow[]>;
   listByOrg(context: OrganizationContext): Promise<OrganizationMemberRow[]>;
   updateRole(input: AddMemberInput): Promise<OrganizationMemberRow | null>;
   removeMember(context: OrganizationContext, userId: string): Promise<void>;
 }
+
+/**
+ * Membership repository. Tenant-scoped: every method requires
+ * OrganizationContext. There is deliberately NO cross-tenant "listByUser"
+ * method here — B2 may introduce an explicitly privileged auth/system-scoped
+ * query (e.g. listMembershipsForAuthenticatedUserSystemScope) behind the
+ * auth boundary if needed.
+ */
 
 export function createMembershipRepository(db: NodePgDatabase): MembershipRepository {
   return {
@@ -54,10 +61,6 @@ export function createMembershipRepository(db: NodePgDatabase): MembershipReposi
         )
         .limit(1);
       return rows[0] ?? null;
-    },
-
-    async listByUser(userId) {
-      return db.select().from(organizationMembers).where(eq(organizationMembers.userId, userId));
     },
 
     async listByOrg(context) {

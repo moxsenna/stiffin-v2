@@ -6,14 +6,14 @@ export const users = pgTable(
   {
     id: uuid('id').defaultRandom().primaryKey(),
     name: text('name').notNull(),
-    email: text('email'),
+    email: text('email').notNull(),
     emailVerified: boolean('email_verified').notNull().default(false),
     image: text('image'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'string' }),
   },
-  (t) => [uniqueIndex('users_email_unique').on(t.email).where(sql`${t.email} IS NOT NULL`)]
+  (t) => [uniqueIndex('users_email_unique').on(t.email)]
 );
 
 export type UserRow = typeof users.$inferSelect;

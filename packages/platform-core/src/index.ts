@@ -36,6 +36,16 @@ export function normalizePhone(rawPhone: string): PhoneE164 {
 export const DEFAULT_ORGANIZATION_TIMEZONE = 'Asia/Jakarta';
 
 /**
+ * Canonical email normalization for contact identity matching
+ * (INTEGRATION_CONTRACT §10: "optional normalized-email fallback").
+ * B1 policy: trim + lowercase. Persistence and lookup MUST use this
+ * same helper — never normalize differently across the boundary.
+ */
+export function normalizeEmail(rawEmail: string): string {
+  return rawEmail.trim().toLowerCase();
+}
+
+/**
  * Validates an IANA timezone identifier by format + existence check.
  * Accepts "Region/City" style identifiers (optional sub-regions).
  */
