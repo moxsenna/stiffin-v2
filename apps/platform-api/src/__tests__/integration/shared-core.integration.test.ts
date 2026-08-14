@@ -1,7 +1,7 @@
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert';
 import { sql } from 'drizzle-orm';
-import { applyMigrationsAsOwner, TEST_DATABASE_URL, withIntegrationDb, withRuntimeSql, withOwnerSql } from './test-env';
+import { applyMigrationsAsOwner, TEST_DATABASE_URL, withIntegrationDb, withRuntimeSql, withOwnerSql, pgErrorCode } from './test-env';
 import { createOrganizationRepository } from '../../repositories/organization-repository';
 import { createContactRepository } from '../../repositories/contact-repository';
 import { createMembershipRepository } from '../../repositories/membership-repository';
@@ -21,6 +21,18 @@ import { eq, count } from 'drizzle-orm';
 
 const enabled = Boolean(TEST_DATABASE_URL);
 
+/** Asserts a Drizzle statement rejects with a specific PostgreSQL error code. */
+async function rejectsWithCode<T>(fn: () => Promise<T>, code: string, message: string): Promise<void> {
+  await assert.rejects(
+    fn,
+    (err: unknown) => {
+      assert.strictEqual(pgErrorCode(err), code, message);
+      return true;
+    },
+    message
+  );
+}
+
 describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_DATABASE_URL not set' : false }, () => {
   before(async () => {
     await applyMigrationsAsOwner();
@@ -39,11 +51,11 @@ describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_D
     await withIntegrationDb(async (db) => {
       const orgRepo = createOrganizationRepository(db);
       const org = await orgRepo.create({ name: 'Null Phone Org', slug: `nullphone-${Date.now()}` });
-      await assert.rejects(
+      await rejectsWithCode(
         async () => {
           await db.insert(contacts).values({ organizationId: org.id, name: 'No Phone', phoneE164: null as unknown as string });
         },
-        /null value|not-null/i,
+        '23502',
         'phone_e164 must be NOT NULL'
       );
     });
@@ -221,20 +233,20 @@ describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_D
   it('users stub: email is required and unique (B2 compatibility)', async () => {
     await withIntegrationDb(async (db) => {
       // NOT NULL is enforced at the DB level; bypass the type system with raw SQL.
-      await assert.rejects(
+      await rejectsWithCode(
         async () => {
           await db.execute(sql`INSERT INTO users (name) VALUES ('No Email')`);
         },
-        /null value|not-null/i,
+        '23502',
         'users.email must be NOT NULL'
       );
       const email = `unique-${Date.now()}@example.com`;
       await db.insert(users).values({ name: 'First', email });
-      await assert.rejects(
+      await rejectsWithCode(
         async () => {
           await db.insert(users).values({ name: 'Second', email });
         },
-        /duplicate|unique/i,
+        '23505',
         'users.email must be unique'
       );
     });
@@ -306,11 +318,11 @@ describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_D
       assert.strictEqual(switched.promotorClass, false);
       assert.strictEqual(switched.promotorFlow, true);
 
-      await assert.rejects(
+      await rejectsWithCode(
         async () => {
           await db.insert(productEntitlements).values({ organizationId: org.id, promotorClass: true, promotorFlow: true });
         },
-        /unique|duplicate|23505/i,
+        '23505',
         'second entitlement row per org must violate unique constraint'
       );
     });
@@ -322,11 +334,11 @@ describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_D
       const org = await orgRepo.create({ name: 'FK Restrict Org', slug: `fk-restrict-${Date.now()}` });
       const contactRepo = createContactRepository(db, normalizePhone, normalizeEmail);
       await contactRepo.matchOrCreate({ context: { organizationId: org.id }, name: 'Kept', phoneRaw: '081211112222' });
-      await assert.rejects(
+      await rejectsWithCode(
         async () => {
           await db.delete(organizations).where(eq(organizations.id, org.id));
         },
-        /violates foreign key|23503/i,
+        '23503',
         'hard delete org with contact must be rejected (RESTRICT)'
       );
     });

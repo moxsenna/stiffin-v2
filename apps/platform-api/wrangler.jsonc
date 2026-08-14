@@ -14,5 +14,8 @@
       "binding": "HYPERDRIVE",
       "id": "1cb577ffc7524f4591a89206bb19d535"
     }
-  ]
+  ],
+  "vars": {
+    "BETTER_AUTH_URL": "https://stiffin-promotor-api.moxsenna.workers.dev"
+  }
 }
