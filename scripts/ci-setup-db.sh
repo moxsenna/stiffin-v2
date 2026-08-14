@@ -1,0 +1,18 @@
+#!/bin/sh
+# CI helper: prepare the GitHub Actions postgres service for B1 integration tests.
+# Runs as the container superuser (postgres) — equivalent of owner authority.
+set -eu
+
+DB_NAME="${1:-postgres}"
+
+psql -v ON_ERROR_STOP=1 -U postgres -d "$DB_NAME" <<'SQL'
+CREATE ROLE promotor_runtime LOGIN PASSWORD 'ci_runtime_pw';
+SQL
+
+# Apply B1 migrations (owner authority)
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/${DB_NAME}" \
+  pnpm --filter @promotor/platform-api db:migrate
+
+# Apply least-privilege runtime grants (owner_role=postgres in CI)
+sed 's/:owner_role/postgres/g' docs/sql/grants_b1.sql | \
+  psql -v ON_ERROR_STOP=1 -U postgres -d "$DB_NAME"
