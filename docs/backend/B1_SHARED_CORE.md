@@ -1,9 +1,83 @@
 # Milestone B1 — Shared Core Persistence
 
-**Status:** IMPLEMENTED (code + CI proof on real PostgreSQL; live Neon proof pending operator run)
+**Status:** FINAL ACCEPTED / FROZEN
 **Date:** 2026-08-14
 **Base:** master @ `7dd3298a003e5d4d5af05eb2e4c6511992e639c9`
-**Branch:** `feat/b1-shared-core-persistence`
+**Canonical implementation merge SHA:** `ff021e257c47f4c2450011cff57cbee2267efd08`
+**PR:** #10 (merged)
+
+---
+
+## Production Acceptance Record (FINAL)
+
+| Proof | Result |
+|---|---|
+| CI PostgreSQL 16 (migration from blank DB) | **PASS** — 14 unit + 23 integration |
+| Neon branch rehearsal (`b1-rehearsal-20260814`) | **PASS** — 8/8 |
+| Canonical migration | `0000_modern_hydra.sql` — production journal hash **MATCH** |
+| Migration journal stability | **PASS** — remained idempotent/current (1 canonical entry before and after acceptance) |
+| Five B1 tables physically verified | **PASS** |
+| Physical constraints + FK behaviors | **PASS** |
+| Runtime CRUD grants | **20/20 PASS** |
+| Runtime CREATE on public schema | **DENIED** |
+| Runtime administrative privileges | **NONE** |
+| Worker deployed from canonical SHA | **PASS** — `ff021e257c47f4c2450011cff57cbee2267efd08` |
+| Worker version ID | `e4cba677-70e6-4410-8638-492119de7b3e` |
+| Hyperdrive binding | **UNCHANGED** — `1cb577ffc7524f4591a89206bb19d535` |
+| Production `/health` | **200** |
+| Production `/health/db` | **200** |
+| Production live acceptance | **8/8 PASS** (incl. tenant isolation) |
+| Acceptance artifacts remaining | **NONE** |
+
+No credentials, hosts, or connection strings are recorded in this document.
+
+---
+
+## Production Migration Auditability (ops/process finding)
+
+B1 production migration was found **already applied** before the approved
+release execution. A bounded attribution investigation (local shell history,
+Neon control-plane operations, GitHub Actions workflow) could not attribute
+the actor.
+
+The state was accepted because:
+
+- migration journal hash matched canonical `0000_modern_hydra.sql`
+- physical schema matched canonical
+- runtime grants matched canonical (20/20)
+- no foreign public tables or schema drift detected
+- runtime least privilege remained correct
+
+Classification:
+
+```
+PRE-APPLIED CANONICAL PRODUCTION STATE
+actor: UNKNOWN
+schema drift: NONE DETECTED
+```
+
+This is a process/auditability finding, NOT a B1 defect.
+
+## Future Release Audit Rule (B2+ production migrations)
+
+Every production migration run MUST record safe metadata:
+
+- milestone
+- approved source SHA
+- operator identity / logical actor
+- UTC timestamp
+- target environment
+- migration names
+- migration hashes
+- grant script/version
+- preflight result
+- postflight result
+- deployed Worker source SHA/version where applicable
+
+NEVER record: passwords, connection strings, tokens, database hostnames,
+or any credential material.
+
+Production migration execution must have an explicit human-approved gate.
 
 ---
 
