@@ -89,10 +89,17 @@ describe('B2 — Auth schema PostgreSQL integration', { skip: !enabled ? 'TEST_D
         /null value|not-null/i,
         'auth_rate_limits.count must be NOT NULL'
       );
+      await assert.rejects(
+        async () => {
+          await db.insert(authRateLimits).values({ key: `rl3-${Date.now()}`, count: 1, lastRequest: null as unknown as number });
+        },
+        /null value|not-null/i,
+        'auth_rate_limits.last_request must be NOT NULL'
+      );
     });
   });
 
-  it('fk: sessions CASCADE on user hard delete and SET NULL on org hard delete', async () => {
+  it('fk: sessions CASCADE on user hard delete; active_organization_id is a plain hint column', async () => {
     await withIntegrationDb(async (db) => {
       const org = await db.insert(organizations).values({ name: 'Fk Org', slug: `fk-${Date.now()}` }).returning();
       const user = await db.insert(users).values({ name: 'Fk User', email: `fk-${Date.now()}@example.com` }).returning();
@@ -103,8 +110,8 @@ describe('B2 — Auth schema PostgreSQL integration', { skip: !enabled ? 'TEST_D
 
       await db.delete(organizations).where(eq(organizations.id, org[0].id));
       const afterOrgDelete = await db.select().from(sessions).where(eq(sessions.id, session[0].id));
-      assert.strictEqual(afterOrgDelete.length, 1, 'session must survive org hard delete');
-      assert.strictEqual(afterOrgDelete[0].activeOrganizationId, null, 'active_organization_id must be SET NULL');
+      assert.strictEqual(afterOrgDelete.length, 1, 'session must survive org hard delete (no FK on hint column)');
+      assert.strictEqual(afterOrgDelete[0].activeOrganizationId, org[0].id, 'hint column must not be mutated by org hard delete');
 
       await db.delete(users).where(eq(users.id, user[0].id));
       const afterUserDelete = await db.select().from(sessions).where(eq(sessions.id, session[0].id));
@@ -125,7 +132,7 @@ describe('B2 — Auth schema PostgreSQL integration', { skip: !enabled ? 'TEST_D
     });
   });
 
-  it('fk: organization_invitations CASCADE on org and user hard delete', async () => {
+  it('fk: organization_invitations CASCADE on org hard delete', async () => {
     await withIntegrationDb(async (db) => {
       const org = await db.insert(organizations).values({ name: 'Inv Org', slug: `inv-${Date.now()}` }).returning();
       const inviter = await db.insert(users).values({ name: 'Inviter', email: `inviter-${Date.now()}@example.com` }).returning();
@@ -142,6 +149,26 @@ describe('B2 — Auth schema PostgreSQL integration', { skip: !enabled ? 'TEST_D
       await db.delete(organizations).where(eq(organizations.id, org[0].id));
       const afterOrgDelete = await db.select().from(organizationInvitations).where(eq(organizationInvitations.id, invitation[0].id));
       assert.strictEqual(afterOrgDelete.length, 0, 'invitation must CASCADE on org hard delete');
+    });
+  });
+
+  it('fk: organization_invitations CASCADE on inviter user hard delete', async () => {
+    await withIntegrationDb(async (db) => {
+      const org = await db.insert(organizations).values({ name: 'Inv User Org', slug: `invuser-${Date.now()}` }).returning();
+      const inviter = await db.insert(users).values({ name: 'Inviter', email: `inviter2-${Date.now()}@example.com` }).returning();
+      const invitation = await db
+        .insert(organizationInvitations)
+        .values({
+          organizationId: org[0].id,
+          email: `invitee2-${Date.now()}@example.com`,
+          status: 'pending',
+          expiresAt: new Date(Date.now() + 3600_000),
+          inviterId: inviter[0].id,
+        })
+        .returning();
+      await db.delete(users).where(eq(users.id, inviter[0].id));
+      const afterInviterDelete = await db.select().from(organizationInvitations).where(eq(organizationInvitations.id, invitation[0].id));
+      assert.strictEqual(afterInviterDelete.length, 0, 'invitation must CASCADE on inviter user hard delete');
     });
   });
 

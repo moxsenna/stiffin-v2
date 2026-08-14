@@ -11,7 +11,7 @@ export const organizationInvitations = pgTable(
       .references(() => organizations.id, { onDelete: 'cascade' }),
     email: text('email').notNull(),
     role: text('role'),
-    status: text('status').notNull(),
+    status: text('status').notNull().default('pending'),
     expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
     inviterId: uuid('inviter_id')
       .notNull()
@@ -19,7 +19,7 @@ export const organizationInvitations = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   },
   (t) => [
-    index('organization_invitations_org_idx').on(t.organizationId),
+    index('organization_invitations_organizationId_idx').on(t.organizationId),
     index('organization_invitations_email_idx').on(t.email),
   ]
 );

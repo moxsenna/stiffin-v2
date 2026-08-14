@@ -1,5 +1,5 @@
 {
-  "id": "01ac18ef-42a9-4d58-8755-ca6f3d9545a6",
+  "id": "59d01760-15dd-42f3-bf38-4d19ad30d8e1",
   "prevId": "7daf65f8-b69b-49da-8ce7-09a3caefced6",
   "version": "7",
   "dialect": "postgresql",
@@ -575,7 +575,7 @@
         },
         "active_organization_id": {
           "name": "active_organization_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -638,19 +638,6 @@
             "id"
           ],
           "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "sessions_active_organization_id_organizations_id_fk": {
-          "name": "sessions_active_organization_id_organizations_id_fk",
-          "tableFrom": "sessions",
-          "tableTo": "organizations",
-          "columnsFrom": [
-            "active_organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -885,7 +872,8 @@
           "name": "status",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "'pending'"
         },
         "expires_at": {
           "name": "expires_at",
@@ -908,8 +896,8 @@
         }
       },
       "indexes": {
-        "organization_invitations_org_idx": {
-          "name": "organization_invitations_org_idx",
+        "organization_invitations_organizationId_idx": {
+          "name": "organization_invitations_organizationId_idx",
           "columns": [
             {
               "expression": "organization_id",

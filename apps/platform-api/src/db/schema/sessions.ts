@@ -1,6 +1,5 @@
 import { pgTable, uuid, text, timestamp, uniqueIndex, index } from 'drizzle-orm/pg-core';
 import { users } from './users';
-import { organizations } from './organizations';
 
 export const sessions = pgTable(
   'sessions',
@@ -13,9 +12,7 @@ export const sessions = pgTable(
     expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
     ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
-    activeOrganizationId: uuid('active_organization_id').references(() => organizations.id, {
-      onDelete: 'set null',
-    }),
+    activeOrganizationId: text('active_organization_id'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   },
