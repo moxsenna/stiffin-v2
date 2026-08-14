@@ -18,3 +18,7 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/${DB_NAME}" \
 # Apply least-privilege runtime grants for the five B1 tables
 psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
   -f docs/sql/grants_b1.sql
+
+# Apply least-privilege runtime grants for the five B2 auth tables
+psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
+  -f docs/sql/grants_b2.sql

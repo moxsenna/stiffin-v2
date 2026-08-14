@@ -7,6 +7,8 @@ export const organizations = pgTable(
     id: uuid('id').defaultRandom().primaryKey(),
     name: text('name').notNull(),
     slug: text('slug').notNull(),
+    logo: text('logo'),
+    metadata: text('metadata'),
     timezone: text('timezone').notNull().default('Asia/Jakarta'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),
