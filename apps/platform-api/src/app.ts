@@ -85,17 +85,20 @@ export function createApp(deps?: AppDependencies) {
   // GET /api/me — authenticated context endpoint proving the chain.
   app.use('/api/me', sessionMiddleware);
   app.get('/api/me', (c) => {
+    c.header('Cache-Control', 'no-store');
     const ctx = c.get('authContext');
     if (!ctx) {
       return c.json({ error: { code: 'UNAUTHORIZED', message: 'Authentication required' } }, 401);
     }
-    const org = ctx.organization ? { id: ctx.organization.organizationId } : null;
+    const org = ctx.organizationDetail && ctx.organization
+      ? { id: ctx.organization.organizationId, name: ctx.organizationDetail.name, slug: ctx.organizationDetail.slug }
+      : null;
     const membership = ctx.actor ? { id: ctx.actor.membershipId, role: ctx.actor.role } : null;
     const entitlements = ctx.entitlements
       ? { promotorClass: ctx.entitlements.promotorClass, promotorFlow: ctx.entitlements.promotorFlow }
       : null;
     return c.json({
-      user: { id: ctx.session.userId, name: '', email: '' },
+      user: { id: ctx.user.id, name: ctx.user.name, email: ctx.user.email },
       organization: org,
       membership,
       entitlements,

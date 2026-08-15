@@ -166,3 +166,34 @@ drizzle-kit                  = 0.30.6 (unchanged)
 - `git diff master...HEAD -- apps/platform-api/src/db/migrations` → ZERO DIFF
 - `git diff master...HEAD -- docs/sql/grants_b1.sql docs/sql/grants_b2.sql` → ZERO DIFF
 - No `db:generate`, no new migration, no grants change.
+
+---
+
+## 7. Source audit remediation (round 1)
+
+All findings from the exact source audit were addressed:
+
+| Finding | Resolution |
+|---|---|
+| **P0** soft-deleted user could sign in / create session | `createAuth` now has a `hooks.before` on `/sign-in/email` that queries the canonical `users` table via the request-scoped db and rejects with generic `INVALID_EMAIL_OR_PASSWORD` (401, no enumeration), plus a `databaseHooks.session.create.before` that returns `false` when `users.deleted_at` is set. Tests 28/29 prove sign-in fails and no session row is created. |
+| **P0** provisioning "atomically-ish" | `provisionPromotorUser` now runs the ENTIRE operation (user + credential account + org + entitlement + membership) in ONE Drizzle transaction. Organization creation reuses the canonical Shared Core primitive `createOrganizationInTx` (extracted from `createOrganizationService`). Duplicate-slug failure rolls everything back — no orphaned user/account (C0.2 test 2b). |
+| **P0** C0.2 gate didn't test the real path | C0.2 test 2+3 now calls `provisionPromotorUser` (the exact production mechanism) and asserts full state + sign-in; test 2b asserts all-or-nothing rollback. |
+| **P0** Drizzle 0.45 runtime error mapping | New runtime util `src/db/pg-errors.ts` (`getPostgresErrorCode`/`isUniqueViolation`) reads `error.code` and `error.cause.code`. `organization-service.ts` uses it; regression test 30 proves duplicate slug → `DomainError('CONFLICT')` under drizzle-orm 0.45.2. |
+| **P0** runtime rate-limit kill switch | Removed `BETTER_AUTH_RATE_LIMIT_DISABLED` env entirely. Production `createAuth` ALWAYS uses `storage: 'database'`. Test-only `options.disableRateLimit` seam is passed directly by tests and can never be activated via Worker env. |
+| **P0 config** deleteUser not set | `user.deleteUser.enabled: false` is now explicit in `create-auth.ts`; test 33 asserts it in source. |
+| **P1** `/api/me` placeholders | Resolver now carries safe canonical `user {id,name,email}` + `organizationDetail {name,slug}` server-side; `/api/me` returns real values and sets `Cache-Control: no-store`. Test 32. |
+| **P1** 401 vs 403 | `ORG_CONTEXT_INVALID`/`ORG_CONTEXT_REQUIRED` → **403**; unauthenticated → 401; soft-deleted user → 401. Test 31. |
+| **P1** env fail-closed | Missing `BETTER_AUTH_SECRET`/`BETTER_AUTH_URL` → `AuthConfigError` → sanitized 503 `AUTH_CONFIG_ERROR` (no raw config leakage). Test 34. |
+
+### Merge / release gate (chosen: option C)
+
+PR #16 remains DRAFT and is NOT merged until Phase D completes. Current master CI can deploy platform-api automatically when Cloudflare secrets are present; the fact that they're currently absent is NOT a security mechanism. **Decision: keep Phase C unmerged and stack Phase D on this head, then promote only after Phase D review.** The auth public surface (`/api/auth/*`) stays out of master until the full BA organization endpoint lockdown + security matrix lands.
+
+### Test counts (remediated head)
+
+- Unit: 15/15 (incl. `src/auth` no-`process.env` guardrail)
+- Integration: **77/77** (13 B2 schema + 3 C0.1 + 4 C0.2 + 34 Phase C + 23 B1)
+- typecheck/lint: PASS (workspace)
+- Class/Flow/API builds + wrangler dry-run: PASS
+- migrations/grants: ZERO DIFF vs base
+

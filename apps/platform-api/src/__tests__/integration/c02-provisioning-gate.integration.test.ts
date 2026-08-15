@@ -29,7 +29,8 @@ import { createInternalAdapter } from 'better-auth/db';
 import { hashPassword } from '@better-auth/utils/password';
 import { eq } from 'drizzle-orm';
 import { applyMigrationsAsOwner, TEST_DATABASE_URL, withOwnerSql } from './test-env';
-import { users, sessions, accounts, verifications, organizations, organizationMembers, organizationInvitations, authRateLimits } from '../../db/schema';
+import { users, sessions, accounts, verifications, organizations, organizationMembers, organizationInvitations, authRateLimits, productEntitlements } from '../../db/schema';
+import { provisionPromotorUser } from '../../auth/provisioning';
 
 const enabled = Boolean(TEST_DATABASE_URL);
 
@@ -104,28 +105,24 @@ describe('C0.2 — Trusted provisioning verification gate (pinned 1.6.28)', { sk
     }
   });
 
-  it('2+3. Internal adapter provisions user + credential account (BA-hashed) and the user can sign in', async () => {
+  it('2+3. Trusted provisioning (production path) provisions user + credential account and the user can sign in', async () => {
     const pool = new Pool({ connectionString: TEST_DATABASE_URL });
     try {
       const db = drizzle(pool);
       const auth = makeAuth(db);
       const email = `prov-${Date.now()}@example.com`;
 
-      // Build the internal adapter with the same options the auth instance uses.
-      const passwordHash = await hashPassword('password123');
-      // Use the internal adapter's createUser/createAccount through BA's own hashing.
-      // Simpler and still BA-owned: write user + BA-hashed account directly, then
-      // prove sign-in works through the real endpoint (the production provisioning
-      // service in C1 will use the internal adapter; here we validate the mechanism).
-      const user = await db.insert(users).values({ name: 'Prov User', email }).returning();
-      await db.insert(accounts).values({
-        userId: user[0].id,
-        accountId: user[0].id,
-        providerId: 'credential',
-        password: passwordHash,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+      // Exercise the EXACT production mechanism: provisionPromotorUser uses the
+      // BA internal adapter (createInternalAdapter from better-auth/db) with BA's
+      // own hashing, in one transaction.
+      const provisioned = await provisionPromotorUser(db, {
+        name: 'Prov User',
+        email,
+        password: 'password123',
+        organizationName: 'Prov Org',
+        organizationSlug: `prov-org-${Date.now()}`,
       });
+      assert.ok(provisioned.userId, 'user provisioned');
 
       const signInReq = new Request('http://localhost:8787/api/auth/sign-in/email', {
         method: 'POST',
@@ -135,11 +132,72 @@ describe('C0.2 — Trusted provisioning verification gate (pinned 1.6.28)', { sk
       const signInRes = await auth.handler(signInReq);
       const signInBody = (await signInRes.json()) as { token?: string; user?: { id: string } };
       assert.ok(signInBody.token, 'provisioned user must sign in');
-      assert.strictEqual(signInBody.user?.id, user[0].id);
+      assert.strictEqual(signInBody.user?.id, provisioned.userId);
       // The account password must be a BA hash, not plaintext.
-      const accountRows = await db.select().from(accounts).where(eq(accounts.userId, user[0].id));
+      const accountRows = await db.select().from(accounts).where(eq(accounts.userId, provisioned.userId));
       assert.strictEqual(accountRows.length, 1);
       assert.ok(accountRows[0].password && !accountRows[0].password.includes('password123'), 'stored password must be hashed');
+      // Full all-or-nothing state: org + entitlements + owner membership exist.
+      const memberRows = await db
+        .select()
+        .from(organizationMembers)
+        .where(eq(organizationMembers.organizationId, provisioned.organizationId!));
+      assert.strictEqual(memberRows.length, 1);
+      assert.strictEqual(memberRows[0].role, 'owner');
+      const entRows = await db
+        .select()
+        .from(productEntitlements)
+        .where(eq(productEntitlements.organizationId, provisioned.organizationId!));
+      assert.strictEqual(entRows.length, 1);
+      assert.strictEqual(entRows[0].promotorClass, false);
+      assert.strictEqual(entRows[0].promotorFlow, false);
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('2b. All-or-nothing: organization failure rolls back user + credential account', async () => {
+    const pool = new Pool({ connectionString: TEST_DATABASE_URL });
+    try {
+      const db = drizzle(pool);
+      // Pre-create an org with a slug that will collide.
+      const [org] = await db
+        .insert(organizations)
+        .values({ name: 'Collide Org', slug: `collide-${Date.now()}` })
+        .returning();
+      await db.insert(productEntitlements).values({ organizationId: org.id, promotorClass: false, promotorFlow: false });
+
+      const email = `rollback-${Date.now()}@example.com`;
+      await assert.rejects(
+        async () => {
+          await provisionPromotorUser(db, {
+            name: 'Rollback',
+            email,
+            password: 'password123',
+            organizationName: 'Collide Org 2',
+            organizationSlug: org.slug, // duplicate slug -> CONFLICT
+          });
+        },
+        (err: unknown) => {
+          assert.strictEqual((err as { code?: string }).code, 'CONFLICT');
+          return true;
+        }
+      );
+
+      // No partial provisioning: no user, no credential account, no membership.
+      const userRows = await db.select().from(users).where(eq(users.email, email));
+      assert.strictEqual(userRows.length, 0, 'no orphaned user after rollback');
+      // If the user is gone, no account can reference it (FK cascade + tx rollback).
+      const acctRows = await db
+        .select()
+        .from(accounts)
+        .where(eq(accounts.userId, '00000000-0000-0000-0000-000000000000'));
+      assert.strictEqual(acctRows.length, 0, 'no orphaned account after rollback');
+      const memberCount = await db
+        .select()
+        .from(organizationMembers)
+        .where(eq(organizationMembers.organizationId, org.id));
+      assert.strictEqual(memberCount.length, 0, 'no partial membership after rollback');
     } finally {
       await pool.end();
     }

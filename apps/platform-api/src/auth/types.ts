@@ -29,6 +29,14 @@ export interface AuthContext {
   actor: AuthenticatedActor | null;
   organization: { organizationId: string } | null;
   entitlements: AuthEntitlements | null;
+  /** Safe canonical user fields, server-resolved (never placeholder data). */
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  /** Safe canonical org display fields when an org is resolved. */
+  organizationDetail: { name: string; slug: string } | null;
   session: {
     userId: string;
     token: string;

@@ -3,6 +3,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { createOrganizationRepository } from '../repositories/organization-repository';
 import { organizations, productEntitlements } from '../db/schema';
 import { DomainError } from '../core/errors';
+import { isUniqueViolation } from '../db/pg-errors';
 import { DEFAULT_ORGANIZATION_TIMEZONE, isValidIanaTimezone } from '@promotor/platform-core';
 
 const CreateOrganizationSchema = z.object({
@@ -24,6 +25,40 @@ export interface CreateOrganizationCommand {
   timezone?: string;
 }
 
+/**
+ * Validates and creates an organization + its product_entitlements(false,false)
+ * row inside the provided transaction. Transaction-compatible form of the
+ * canonical org-creation invariant so B2 trusted provisioning can compose it
+ * atomically with user/account/membership creation.
+ */
+export async function createOrganizationInTx(
+  tx: Parameters<Parameters<NodePgDatabase['transaction']>[0]>[0],
+  command: CreateOrganizationCommand
+) {
+  const parsed = CreateOrganizationSchema.safeParse(command);
+  if (!parsed.success) {
+    throw new DomainError('VALIDATION_ERROR', parsed.error.issues[0]?.message ?? 'Invalid input');
+  }
+  const timezone = parsed.data.timezone ?? DEFAULT_ORGANIZATION_TIMEZONE;
+  if (!isValidIanaTimezone(timezone)) {
+    throw new DomainError('VALIDATION_ERROR', `Invalid IANA timezone: "${timezone}"`);
+  }
+  const [org] = await tx
+    .insert(organizations)
+    .values({
+      name: parsed.data.name.trim(),
+      slug: parsed.data.slug.trim().toLowerCase(),
+      timezone,
+    })
+    .returning();
+  await tx.insert(productEntitlements).values({
+    organizationId: org.id,
+    promotorClass: false,
+    promotorFlow: false,
+  });
+  return org;
+}
+
 export function createOrganizationService(db: NodePgDatabase) {
   const repo = createOrganizationRepository(db);
 
@@ -37,35 +72,13 @@ export function createOrganizationService(db: NodePgDatabase) {
      * Better Auth creates organizations.
      */
     async createOrganization(command: CreateOrganizationCommand) {
-      const parsed = CreateOrganizationSchema.safeParse(command);
-      if (!parsed.success) {
-        throw new DomainError('VALIDATION_ERROR', parsed.error.issues[0]?.message ?? 'Invalid input');
-      }
-      const timezone = parsed.data.timezone ?? DEFAULT_ORGANIZATION_TIMEZONE;
-      if (!isValidIanaTimezone(timezone)) {
-        throw new DomainError('VALIDATION_ERROR', `Invalid IANA timezone: "${timezone}"`);
-      }
-
       try {
         return await db.transaction(async (tx) => {
-          const [org] = await tx
-            .insert(organizations)
-            .values({
-              name: parsed.data.name.trim(),
-              slug: parsed.data.slug.trim().toLowerCase(),
-              timezone,
-            })
-            .returning();
-          await tx.insert(productEntitlements).values({
-            organizationId: org.id,
-            promotorClass: false,
-            promotorFlow: false,
-          });
-          return org;
+          return await createOrganizationInTx(tx, command);
         });
       } catch (err) {
         if (isUniqueViolation(err)) {
-          throw new DomainError('CONFLICT', `Organization slug already exists: "${parsed.data.slug}"`);
+          throw new DomainError('CONFLICT', `Organization slug already exists: "${command.slug}"`);
         }
         throw err;
       }
@@ -91,13 +104,4 @@ export function createOrganizationService(db: NodePgDatabase) {
       await repo.softDelete(id);
     },
   };
-}
-
-function isUniqueViolation(err: unknown): boolean {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    typeof (err as { code?: string }).code === 'string' &&
-    (err as { code: string }).code === '23505'
-  );
 }

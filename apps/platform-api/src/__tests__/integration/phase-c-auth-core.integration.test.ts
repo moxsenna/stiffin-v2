@@ -18,6 +18,7 @@ import { applyMigrationsAsOwner, TEST_DATABASE_URL, withIntegrationDb } from './
 import { createAuth } from '../../auth/create-auth';
 import { provisionPromotorUser } from '../../auth/provisioning';
 import { resolveAuthContext, createEntitlementsForOrg } from '../../auth/context-resolver';
+import { createOrganizationService } from '../../services/organization-service';
 import { users, organizations, organizationMembers, productEntitlements, sessions } from '../../db/schema';
 import { eq, sql } from 'drizzle-orm';
 
@@ -47,11 +48,16 @@ const TEST_ENV = {
   BETTER_AUTH_SECRET: 'phase-c-test-secret-0123456789-abcdefghij',
   BETTER_AUTH_URL: 'http://localhost:8787',
   BETTER_AUTH_TRUSTED_ORIGINS: 'http://localhost:3000',
-  // Test-only: repeated integration sign-ins must not trip the durable DB rate
-  // limiter (which uses a shared per-path bucket without a client IP). The
-  // production config keeps durable database rate limiting.
-  BETTER_AUTH_RATE_LIMIT_DISABLED: 'true',
 };
+
+/**
+ * Test-only auth builder: passes the options seam (disableRateLimit) directly
+ * — NEVER via Worker env. Production createAuth always uses durable database
+ * rate limiting.
+ */
+function testAuth(db: NodePgDatabase) {
+  return createAuth(db, TEST_ENV, { disableRateLimit: true });
+}
 
 async function provisionedUser(db: NodePgDatabase, tag: string) {
   const email = `pc-${tag}-${Date.now()}@example.com`;
@@ -91,7 +97,7 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
 
   it('4. timestamp reuse gate PASS (BA writes/reads Date timestamps on B1 tables)', async () => {
     await withIntegrationDb(async (db) => {
-      const auth = createAuth(db, TEST_ENV);
+      const auth = testAuth(db);
       const { email } = await provisionedUser(db, 'ts');
       const signInReq = new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-in/email`, {
         method: 'POST',
@@ -110,7 +116,7 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
   it('5. provisioning mechanism gate PASS (BA internal adapter, disableSignUp=true)', async () => {
     await withIntegrationDb(async (db) => {
       const { email } = await provisionedUser(db, 'prov');
-      const auth = createAuth(db, TEST_ENV);
+      const auth = testAuth(db);
       const req = new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-up/email`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -125,7 +131,7 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
 
   it('6. trusted provisioned user can sign in', async () => {
     await withIntegrationDb(async (db) => {
-      const auth = createAuth(db, TEST_ENV);
+      const auth = testAuth(db);
       const { email } = await provisionedUser(db, 'signin');
       const res = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-in/email`, {
         method: 'POST',
@@ -139,7 +145,7 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
 
   it('7. wrong password rejected', async () => {
     await withIntegrationDb(async (db) => {
-      const auth = createAuth(db, TEST_ENV);
+      const auth = testAuth(db);
       const { email } = await provisionedUser(db, 'wrongpw');
       const res = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-in/email`, {
         method: 'POST',
@@ -152,7 +158,7 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
 
   it('8. successful sign-in creates session row', async () => {
     await withIntegrationDb(async (db) => {
-      const auth = createAuth(db, TEST_ENV);
+      const auth = testAuth(db);
       const { email } = await provisionedUser(db, 'sess');
       const res = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-in/email`, {
         method: 'POST',
@@ -167,7 +173,7 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
 
   it('9. session cookie can resolve session', async () => {
     await withIntegrationDb(async (db) => {
-      const auth = createAuth(db, TEST_ENV);
+      const auth = testAuth(db);
       const { email } = await provisionedUser(db, 'cookie');
       const signIn = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-in/email`, {
         method: 'POST',
@@ -188,7 +194,7 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
 
   it('10. logout removes/revokes session', async () => {
     await withIntegrationDb(async (db) => {
-      const auth = createAuth(db, TEST_ENV);
+      const auth = testAuth(db);
       const { email } = await provisionedUser(db, 'logout');
       const signIn = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-in/email`, {
         method: 'POST',
@@ -212,7 +218,7 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
 
   it('11. self-signup through public auth endpoint is disabled', async () => {
     await withIntegrationDb(async (db) => {
-      const auth = createAuth(db, TEST_ENV);
+      const auth = testAuth(db);
       const res = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-up/email`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -431,5 +437,149 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
     assert.strictEqual(res.status, 200);
     const body = (await res.json()) as { status?: string };
     assert.strictEqual(body.status, 'ok');
+  });
+
+  it('28. soft-deleted user cannot sign in (no new session row)', async () => {
+    await withIntegrationDb(async (db) => {
+      const auth = testAuth(db);
+      const { email, userId } = await provisionedUser(db, 'sd-signin');
+      // Active user can sign in.
+      const ok = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-in/email`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password: 'password123' }),
+      }));
+      assert.ok(((await ok.json()) as { token?: string }).token, 'active user signs in');
+      const before = await db.select().from(sessions).where(eq(sessions.userId, userId));
+
+      // Soft-delete the canonical user.
+      await db.update(users).set({ deletedAt: new Date().toISOString() }).where(eq(users.id, userId));
+
+      // Sign-in must now fail with generic invalid-credentials semantics.
+      const denied = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-in/email`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password: 'password123' }),
+      }));
+      assert.strictEqual(denied.status, 401, 'soft-deleted user sign-in must be rejected');
+      const body = (await denied.json()) as { code?: string };
+      assert.strictEqual(body.code, 'INVALID_EMAIL_OR_PASSWORD', 'no user enumeration');
+      const after = await db.select().from(sessions).where(eq(sessions.userId, userId));
+      assert.strictEqual(after.length, before.length, 'no new session row created for soft-deleted user');
+    });
+  });
+
+  it('29. existing session + soft-deleted user is denied at domain auth context', async () => {
+    await withIntegrationDb(async (db) => {
+      const auth = testAuth(db);
+      const { email, userId } = await provisionedUser(db, 'sd-session');
+      const signIn = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-in/email`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password: 'password123' }),
+      }));
+      const setCookie = signIn.headers.get('set-cookie');
+      assert.ok(setCookie);
+      await db.update(users).set({ deletedAt: new Date().toISOString() }).where(eq(users.id, userId));
+
+      // Domain auth resolution must refuse the soft-deleted user.
+      await assert.rejects(
+        async () => {
+          await resolveAuthContext(db, { userId, sessionToken: 't', expiresAt: new Date() }, createEntitlementsForOrg(db));
+        },
+        (err: unknown) => {
+          assert.strictEqual((err as { code?: string }).code, 'UNAUTHORIZED');
+          return true;
+        }
+      );
+    });
+  });
+
+  it('30. org service duplicate slug -> canonical DomainError CONFLICT (drizzle 0.45 runtime)', async () => {
+    await withIntegrationDb(async (db) => {
+      const service = createOrganizationService(db);
+      const slug = `dup-${Date.now()}`;
+      await service.createOrganization({ name: 'First', slug });
+      await assert.rejects(
+        async () => {
+          await service.createOrganization({ name: 'Second', slug });
+        },
+        (err: unknown) => {
+          assert.strictEqual((err as { code?: string }).code, 'CONFLICT');
+          return true;
+        }
+      );
+    });
+  });
+
+  it('31. ORG_CONTEXT_INVALID maps to HTTP 403 (not 401)', async () => {
+    await withIntegrationDb(async (db) => {
+      const auth = testAuth(db);
+      const { email, userId } = await provisionedUser(db, 'ctx403');
+      // Manually set a stale activeOrganizationId on the session.
+      const signIn = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-in/email`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password: 'password123' }),
+      }));
+      const setCookie = signIn.headers.get('set-cookie');
+      assert.ok(setCookie);
+      const cookie = setCookie!.split(';')[0];
+      // Force the session's active org hint to a non-membership org.
+      await db
+        .update(sessions)
+        .set({ activeOrganizationId: '00000000-0000-0000-0000-000000000000' })
+        .where(eq(sessions.userId, userId));
+      const app = createApp();
+      const res = await app.request('/api/me', { headers: { cookie } }, TEST_ENV);
+      assert.strictEqual(res.status, 403, 'stale org context must be 403');
+      void email;
+    });
+  });
+
+  it('32. /api/me returns real canonical user + org fields (no placeholders) and no-store', async () => {
+    await withIntegrationDb(async (db) => {
+      const auth = testAuth(db);
+      const { email, userId, organizationId } = await provisionedUser(db, 'me');
+      const signIn = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-in/email`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password: 'password123' }),
+      }));
+      const setCookie = signIn.headers.get('set-cookie');
+      const cookie = setCookie!.split(';')[0];
+      const app = createApp();
+      const res = await app.request('/api/me', { headers: { cookie } }, TEST_ENV);
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('cache-control'), 'no-store');
+      const body = (await res.json()) as {
+        user: { id: string; name: string; email: string };
+        organization: { id: string; name: string; slug: string } | null;
+        membership: { role: string } | null;
+      };
+      assert.strictEqual(body.user.id, userId);
+      assert.ok(body.user.name.length > 0, 'name must be real, not empty');
+      assert.strictEqual(body.user.email, email);
+      assert.strictEqual(body.organization?.id, organizationId);
+      assert.ok(body.organization?.name.length > 0, 'org name must be real');
+      assert.ok(body.organization?.slug.length > 0, 'org slug must be real');
+      assert.strictEqual(body.membership?.role, 'owner');
+    });
+  });
+
+  it('33. user.deleteUser is explicitly disabled in the auth config', () => {
+    // Source-level assertion: the production auth factory sets deleteUser.enabled:false.
+    const fs = require('node:fs') as typeof import('node:fs');
+    const path = require('node:path') as typeof import('node:path');
+    const src = fs.readFileSync(path.join(process.cwd(), 'src', 'auth', 'create-auth.ts'), 'utf8');
+    assert.match(src, /deleteUser:\s*\{\s*enabled:\s*false\s*\}/, 'user.deleteUser.enabled must be explicitly false');
+  });
+
+  it('34. missing required auth env fails closed (sanitized 503, no raw config)', async () => {
+    const app = createApp();
+    const res = await app.request('/api/me', {}, { HYPERDRIVE: { connectionString: TEST_DATABASE_URL ?? '' } });
+    assert.strictEqual(res.status, 503, 'missing BETTER_AUTH_SECRET/URL must fail closed');
+    const body = (await res.json()) as { error?: { code?: string } };
+    assert.strictEqual(body.error?.code, 'AUTH_CONFIG_ERROR');
   });
 });

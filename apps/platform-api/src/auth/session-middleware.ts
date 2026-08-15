@@ -1,7 +1,7 @@
 import { createMiddleware } from 'hono/factory';
 import { Client } from 'pg';
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { createAuth, CreateAuthEnv } from './create-auth';
+import { createAuth, AuthConfigError, CreateAuthEnv } from './create-auth';
 import type { AuthInstance } from './create-auth';
 import { resolveAuthContext, createEntitlementsForOrg } from './context-resolver';
 import { AuthError } from './errors';
@@ -32,11 +32,17 @@ export const authLifecycle = createMiddleware<{ Bindings: AuthBindings; Variable
     await client.connect();
     try {
       const db = drizzle(client);
+      // Fail-closed: missing required auth config yields a sanitized 503 with
+      // no raw secret/config leakage. The test-only rate-limit seam is never
+      // read from env — production always uses durable database rate limiting.
       const auth = createAuth(db, c.env);
       c.set('db', db);
       c.set('auth', auth);
       await next();
     } catch (err) {
+      if (err instanceof AuthConfigError) {
+        return c.json({ error: { code: 'AUTH_CONFIG_ERROR', message: 'Authentication is not configured' } }, 503);
+      }
       console.error('[AUTH_LIFECYCLE]', { code: 'AUTH_LIFECYCLE_FAILED', timestamp: new Date().toISOString() });
       return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Authentication service unavailable' } }, 500);
     } finally {
@@ -45,10 +51,18 @@ export const authLifecycle = createMiddleware<{ Bindings: AuthBindings; Variable
   }
 );
 
+/** Maps an AuthError to the correct HTTP status (frozen semantics). */
+function authErrorStatus(err: AuthError): 401 | 403 | 500 {
+  const code = String(err.code);
+  if (code === 'ORG_CONTEXT_INVALID' || code === 'ORG_CONTEXT_REQUIRED') return 403;
+  if (code === 'UNAUTHORIZED') return 401;
+  return 500;
+}
+
 /**
  * Session resolution middleware: resolves the Better Auth session for the
  * request and builds the AuthContext. Sets authContext to null when
- * unauthenticated; throws AuthError on soft-deleted user / invalid org.
+ * unauthenticated; maps AuthError to 401/403 per frozen semantics.
  */
 export const sessionMiddleware = createMiddleware<{ Bindings: AuthBindings; Variables: AuthVariables }>(
   async (c, next) => {
@@ -75,7 +89,7 @@ export const sessionMiddleware = createMiddleware<{ Bindings: AuthBindings; Vari
       c.set('authContext', authContext);
     } catch (err) {
       if (err instanceof AuthError) {
-        return c.json({ error: { code: err.code, message: err.message } }, 401);
+        return c.json({ error: { code: err.code, message: err.message } }, authErrorStatus(err));
       }
       throw err;
     }
