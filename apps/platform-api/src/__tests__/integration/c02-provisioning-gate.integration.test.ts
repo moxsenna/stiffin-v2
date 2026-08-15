@@ -160,12 +160,25 @@ describe('C0.2 — Trusted provisioning verification gate (pinned 1.6.28)', { sk
     const pool = new Pool({ connectionString: TEST_DATABASE_URL });
     try {
       const db = drizzle(pool);
+      // Capture genuine state before the failing call.
+      const before = {
+        users: (await db.select().from(users)).length,
+        accounts: (await db.select().from(accounts)).length,
+        memberships: (await db.select().from(organizationMembers)).length,
+        entitlements: (await db.select().from(productEntitlements)).length,
+      };
+
       // Pre-create an org with a slug that will collide.
       const [org] = await db
         .insert(organizations)
         .values({ name: 'Collide Org', slug: `collide-${Date.now()}` })
         .returning();
       await db.insert(productEntitlements).values({ organizationId: org.id, promotorClass: false, promotorFlow: false });
+      // Capture the colliding org's entitlement row state (must be unchanged after rollback).
+      const collidingEnts = await db
+        .select()
+        .from(productEntitlements)
+        .where(eq(productEntitlements.organizationId, org.id));
 
       const email = `rollback-${Date.now()}@example.com`;
       await assert.rejects(
@@ -184,20 +197,25 @@ describe('C0.2 — Trusted provisioning verification gate (pinned 1.6.28)', { sk
         }
       );
 
-      // No partial provisioning: no user, no credential account, no membership.
+      // Genuine rollback evidence: nothing the failed call tried to create exists.
+      const after = {
+        users: (await db.select().from(users)).length,
+        accounts: (await db.select().from(accounts)).length,
+        memberships: (await db.select().from(organizationMembers)).length,
+        entitlements: (await db.select().from(productEntitlements)).length,
+      };
       const userRows = await db.select().from(users).where(eq(users.email, email));
-      assert.strictEqual(userRows.length, 0, 'no orphaned user after rollback');
-      // If the user is gone, no account can reference it (FK cascade + tx rollback).
-      const acctRows = await db
+      assert.strictEqual(userRows.length, 0, 'attempted user email does not exist');
+      assert.strictEqual(after.users, before.users, 'user count did not increase (rollback)');
+      // The pre-created org added 1 entitlement; the failed call must not add any more.
+      assert.strictEqual(after.entitlements, before.entitlements + 1, 'no new entitlement row from the failed provisioning');
+      assert.strictEqual(after.accounts, before.accounts, 'credential account count did not increase');
+      assert.strictEqual(after.memberships, before.memberships, 'membership count did not increase');
+      const collidingAfter = await db
         .select()
-        .from(accounts)
-        .where(eq(accounts.userId, '00000000-0000-0000-0000-000000000000'));
-      assert.strictEqual(acctRows.length, 0, 'no orphaned account after rollback');
-      const memberCount = await db
-        .select()
-        .from(organizationMembers)
-        .where(eq(organizationMembers.organizationId, org.id));
-      assert.strictEqual(memberCount.length, 0, 'no partial membership after rollback');
+        .from(productEntitlements)
+        .where(eq(productEntitlements.organizationId, org.id));
+      assert.deepStrictEqual(collidingAfter, collidingEnts, 'existing colliding org entitlement unchanged');
     } finally {
       await pool.end();
     }

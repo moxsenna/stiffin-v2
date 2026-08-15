@@ -19,7 +19,8 @@ import { createAuth } from '../../auth/create-auth';
 import { provisionPromotorUser } from '../../auth/provisioning';
 import { resolveAuthContext, createEntitlementsForOrg } from '../../auth/context-resolver';
 import { createOrganizationService } from '../../services/organization-service';
-import { users, organizations, organizationMembers, productEntitlements, sessions } from '../../db/schema';
+import { createPromotorUserService } from '../../services/promotor-user-service';
+import { users, organizations, organizationMembers, productEntitlements, sessions, accounts as accountsTable } from '../../db/schema';
 import { eq, sql } from 'drizzle-orm';
 
 const enabled = Boolean(TEST_DATABASE_URL);
@@ -581,5 +582,97 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
     assert.strictEqual(res.status, 503, 'missing BETTER_AUTH_SECRET/URL must fail closed');
     const body = (await res.json()) as { error?: { code?: string } };
     assert.strictEqual(body.error?.code, 'AUTH_CONFIG_ERROR');
+  });
+
+  it('35. provisioning rejects invalid input with VALIDATION_ERROR and zero rows', async () => {
+    await withIntegrationDb(async (db) => {
+      const beforeUsers = (await db.select().from(users)).length;
+      const beforeAccounts = (await db.select().from(accountsTable)).length;
+      const cases: Array<[string, Parameters<typeof provisionPromotorUser>[1]]> = [
+        ['short password', { name: 'A', email: `v-${Date.now()}@example.com`, password: 'short' }],
+        ['long password', { name: 'A', email: `v-${Date.now()}@example.com`, password: 'x'.repeat(129) }],
+        ['malformed email', { name: 'A', email: 'not-an-email', password: 'password123' }],
+        ['blank name', { name: '   ', email: `v-${Date.now()}@example.com`, password: 'password123' }],
+        ['org name without slug', { name: 'A', email: `v-${Date.now()}@example.com`, password: 'password123', organizationName: 'Org' }],
+        ['org slug without name', { name: 'A', email: `v-${Date.now()}@example.com`, password: 'password123', organizationSlug: 'org' }],
+      ];
+      for (const [label, input] of cases) {
+        await assert.rejects(
+          async () => {
+            await provisionPromotorUser(db, input);
+          },
+          (err: unknown) => {
+            assert.strictEqual((err as { code?: string }).code, 'VALIDATION_ERROR', label);
+            return true;
+          },
+          label
+        );
+      }
+      const afterUsers = (await db.select().from(users)).length;
+      const afterAccounts = (await db.select().from(accountsTable)).length;
+      assert.strictEqual(afterUsers, beforeUsers, 'no user rows created by invalid provisioning');
+      assert.strictEqual(afterAccounts, beforeAccounts, 'no account rows created by invalid provisioning');
+    });
+  });
+
+  it('36. shared password policy is explicit in auth config', () => {
+    const fs = require('node:fs') as typeof import('node:fs');
+    const path = require('node:path') as typeof import('node:path');
+    const src = fs.readFileSync(path.join(process.cwd(), 'src', 'auth', 'create-auth.ts'), 'utf8');
+    assert.match(src, /minPasswordLength:\s*EMAIL_PASSWORD_POLICY\.minPasswordLength/, 'minPasswordLength from shared policy');
+    assert.match(src, /maxPasswordLength:\s*EMAIL_PASSWORD_POLICY\.maxPasswordLength/, 'maxPasswordLength from shared policy');
+  });
+
+  it('37. canonical soft-delete revokes old sessions atomically', async () => {
+    await withIntegrationDb(async (db) => {
+      const auth = testAuth(db);
+      const userSvc = createPromotorUserService(db);
+      const { email, userId } = await provisionedUser(db, 'revoke');
+
+      // Sign in -> session cookie valid.
+      const signIn = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-in/email`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password: 'password123' }),
+      }));
+      const setCookie = signIn.headers.get('set-cookie');
+      assert.ok(setCookie, 'sign-in sets cookie');
+      const cookie = setCookie!.split(';')[0];
+
+      // Session resolves before soft-delete.
+      const before = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/get-session`, {
+        method: 'GET',
+        headers: { cookie },
+      }));
+      assert.ok(((await before.json()) as { user?: unknown }).user, 'session valid before soft-delete');
+
+      // Canonical soft-delete: atomically sets deleted_at + deletes all sessions.
+      await userSvc.softDeletePromotorUser(userId);
+      const sessionsLeft = await db.select().from(sessions).where(eq(sessions.userId, userId));
+      assert.strictEqual(sessionsLeft.length, 0, 'all sessions revoked');
+
+      // Old session cookie no longer resolves through BA get-session.
+      const after = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/get-session`, {
+        method: 'GET',
+        headers: { cookie },
+      }));
+      const afterBody = (await after.json().catch(() => null)) as { user?: unknown } | null;
+      assert.ok(!afterBody || !afterBody.user, 'old session no longer resolves');
+
+      // /api/me -> 401.
+      const app = createApp();
+      const meRes = await app.request('/api/me', { headers: { cookie } }, TEST_ENV);
+      assert.strictEqual(meRes.status, 401, 'soft-deleted user /api/me is 401');
+
+      // New sign-in -> generic 401.
+      const again = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-in/email`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password: 'password123' }),
+      }));
+      assert.strictEqual(again.status, 401, 're-sign-in rejected');
+      const againBody = (await again.json()) as { code?: string };
+      assert.strictEqual(againBody.code, 'INVALID_EMAIL_OR_PASSWORD');
+    });
   });
 });

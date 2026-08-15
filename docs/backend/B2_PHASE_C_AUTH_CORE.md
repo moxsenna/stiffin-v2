@@ -192,8 +192,56 @@ PR #16 remains DRAFT and is NOT merged until Phase D completes. Current master C
 ### Test counts (remediated head)
 
 - Unit: 15/15 (incl. `src/auth` no-`process.env` guardrail)
-- Integration: **77/77** (13 B2 schema + 3 C0.1 + 4 C0.2 + 34 Phase C + 23 B1)
+- Integration: **80/80** (13 B2 schema + 3 C0.1 + 4 C0.2 + 37 Phase C + 23 B1)
 - typecheck/lint: PASS (workspace)
 - Class/Flow/API builds + wrangler dry-run: PASS
 - migrations/grants: ZERO DIFF vs base
+
+---
+
+## 8. Final closure patch (round 2)
+
+### Shared email/password policy + trusted provisioning validation
+
+`src/auth/policy.ts` freezes the shared policy:
+
+```ts
+export const EMAIL_PASSWORD_POLICY = {
+  minPasswordLength: 8,
+  maxPasswordLength: 128,
+  maxNameLength: 200,
+} as const;
+```
+
+- `createAuth.emailAndPassword` explicitly sets `minPasswordLength`/`maxPasswordLength` from the same policy.
+- `provisionPromotorUser` validates BEFORE hashing/writing (the internal adapter bypasses `/sign-up/email` validation): trimmed non-empty name, valid lowercase email, password 8–128, and `organizationName` + `organizationSlug` both-supplied-or-both-absent.
+- Invalid input → `AuthError('VALIDATION_ERROR')` with **zero** user/account/org/member/entitlement writes.
+- Duplicate-email race: a DB unique violation after the pre-check is translated to canonical `AuthError('CONFLICT')` (never a raw `DrizzleQueryError`); the tx rolls back.
+
+### Canonical soft-delete + old-session revocation
+
+`src/services/promotor-user-service.ts` — `createPromotorUserService(db).softDeletePromotorUser(userId)`:
+
+```text
+one transaction:
+  UPDATE users SET deleted_at = now, updated_at = now WHERE id = userId
+  DELETE FROM sessions WHERE user_id = userId
+```
+
+- Does NOT hard-delete User, does NOT delete the credential Account, does NOT remove memberships.
+- Completes the frozen 4-layer soft-delete policy: (a) sign-in blocked by hook, (b) new-session creation blocked by database hook, (c) old sessions now revoked authoritatively by this operation, (d) resolver defense-in-depth.
+- Integration test 37 proves the full flow: sign-in → session cookie valid → `softDeletePromotorUser` → sessions count 0 → old cookie no longer resolves via `get-session` → `/api/me` 401 → re-sign-in generic 401.
+
+### C0.2 rollback evidence (real)
+
+Test 2b now captures genuine counts/state before the failing call and asserts after rollback: attempted user email absent, user/account/membership/entitlement counts unchanged (only the pre-created colliding org's own entitlement remains, byte-identical).
+
+### Test counts (closure head)
+
+- Integration: **80/80** (13 B2 + 3 C0.1 + 4 C0.2 + 37 Phase C + 23 B1)
+- New tests added: 35 (validation matrix), 36 (shared policy), 37 (canonical soft-delete revocation); C0.2 2b rewritten with real rollback evidence.
+
+### Merge gate (unchanged — Option C)
+
+Phase C stays unmerged. Phase D stacks on this head after Phase C FINAL ACCEPTED/FROZEN. Master receives neither C nor D until Phase D review passes.
 

@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { authSchema, MODEL_NAMES, FIELD_MAPS } from './schema';
 import { users } from '../db/schema';
+import { EMAIL_PASSWORD_POLICY } from './policy';
 import type { Env } from '../env';
 
 export interface CreateAuthEnv {
@@ -60,6 +61,9 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
     emailAndPassword: {
       enabled: true,
       disableSignUp: true, // public self-signup OFF — registration is B4
+      // Frozen shared policy — same values the trusted provisioning path enforces.
+      minPasswordLength: EMAIL_PASSWORD_POLICY.minPasswordLength,
+      maxPasswordLength: EMAIL_PASSWORD_POLICY.maxPasswordLength,
     },
     user: {
       modelName: MODEL_NAMES.user,

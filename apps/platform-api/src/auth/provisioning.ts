@@ -23,6 +23,7 @@ import { eq } from 'drizzle-orm';
 import { users, organizationMembers } from '../db/schema';
 import { authSchema } from './schema';
 import { AuthError } from './errors';
+import { EMAIL_PASSWORD_POLICY } from './policy';
 import { createOrganizationInTx } from '../services/organization-service';
 import { isUniqueViolation } from '../db/pg-errors';
 
@@ -40,6 +41,38 @@ export interface ProvisionedPromotorUser {
   membershipId?: string;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Validates trusted provisioning input against the same frozen policy the
+ * public email/password path would enforce (internal adapter bypasses the
+ * normal /sign-up/email validation).
+ */
+function validateProvisioningInput(input: ProvisionPromotorUserInput): void {
+  const name = input.name.trim();
+  if (name.length === 0) {
+    throw new AuthError('VALIDATION_ERROR', 'Name must not be empty');
+  }
+  if (name.length > EMAIL_PASSWORD_POLICY.maxNameLength) {
+    throw new AuthError('VALIDATION_ERROR', `Name must be at most ${EMAIL_PASSWORD_POLICY.maxNameLength} characters`);
+  }
+  const email = input.email.trim().toLowerCase();
+  if (!EMAIL_RE.test(email)) {
+    throw new AuthError('VALIDATION_ERROR', 'Invalid email address');
+  }
+  if (input.password.length < EMAIL_PASSWORD_POLICY.minPasswordLength) {
+    throw new AuthError('VALIDATION_ERROR', `Password must be at least ${EMAIL_PASSWORD_POLICY.minPasswordLength} characters`);
+  }
+  if (input.password.length > EMAIL_PASSWORD_POLICY.maxPasswordLength) {
+    throw new AuthError('VALIDATION_ERROR', `Password must be at most ${EMAIL_PASSWORD_POLICY.maxPasswordLength} characters`);
+  }
+  const hasOrgName = Boolean(input.organizationName?.trim());
+  const hasOrgSlug = Boolean(input.organizationSlug?.trim());
+  if (hasOrgName !== hasOrgSlug) {
+    throw new AuthError('VALIDATION_ERROR', 'organizationName and organizationSlug must both be supplied or both be absent');
+  }
+}
+
 /**
  * Provisions a Promotor User. When organizationName/slug are provided, also
  * creates the Shared Core organization + product_entitlements(false,false) +
@@ -53,6 +86,7 @@ export async function provisionPromotorUser(
   db: NodePgDatabase,
   input: ProvisionPromotorUserInput
 ): Promise<ProvisionedPromotorUser> {
+  validateProvisioningInput(input);
   const email = input.email.trim().toLowerCase();
 
   // Canonical users.email is UNIQUE; fail closed on duplicates.
@@ -85,6 +119,14 @@ export async function provisionPromotorUser(
       email,
       emailVerified: true,
       image: null,
+    }).catch((err: unknown) => {
+      // Duplicate-email race: the pre-check may pass, then a concurrent insert
+      // wins the unique index. Translate to canonical CONFLICT, never leak a
+      // raw DrizzleQueryError. The tx rolls back any partial writes.
+      if (isUniqueViolation(err)) {
+        throw new AuthError('CONFLICT', 'A user with this email already exists');
+      }
+      throw err;
     });
     await internalAdapter.createAccount({
       userId: user.id,
