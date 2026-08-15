@@ -47,6 +47,20 @@ const B2_TABLES = ['sessions', 'accounts', 'verifications', 'organization_invita
 const CRUD_PRIVILEGES = ['SELECT', 'INSERT', 'UPDATE', 'DELETE'] as const;
 const EXPECTED_JOURNAL = ['0000_modern_hydra', '0001_material_king_bedlam'] as const;
 
+/**
+ * CANONICAL SOURCE FINGERPRINTS — Git/LF content, platform-independent.
+ *
+ * Drizzle hashes the raw migration bytes it reads. Git stores canonical LF
+ * bytes (index `i/lf`); on a CRLF working tree the raw bytes differ and the
+ * SHA-256 changes (e.g. Windows CRLF hashes: 0000 06f6…, 0001 6c43… — those
+ * are NONCANONICAL diagnostics only). These constants are the LF hashes that
+ * the DB journal MUST match. See docs/backend/B2_AUTH.md §migration fingerprint.
+ */
+const CANONICAL_MIGRATION_FINGERPRINTS: Record<string, string> = {
+  '0000_modern_hydra': '86a3e3d993e3c038908e741649c2586afe2ae7ca737be641680c9af475bc7689',
+  '0001_material_king_bedlam': 'e5acd9851fe9f76920ed513ddb454dbb91ddc6bc2259a8caa591fe894c95c166',
+};
+
 const RUNTIME_URL = process.env.RUNTIME_DATABASE_URL;
 const OWNER_URL = process.env.OWNER_DATABASE_URL;
 const BETTER_AUTH_URL = process.env.BETTER_AUTH_URL;
@@ -69,7 +83,7 @@ function sha256(s: string): string {
   return createHash('sha256').update(s).digest('hex');
 }
 
-/** Local migration content fingerprints (safe release metadata). */
+/** Raw working-tree migration content fingerprints (SHA-256 of raw bytes). */
 function localMigrationFingerprints(): Record<string, string> {
   const dir = join(process.cwd(), 'src', 'db', 'migrations');
   const out: Record<string, string> = {};
@@ -78,6 +92,26 @@ function localMigrationFingerprints(): Record<string, string> {
     out[tag] = existsSync(file) ? sha256(readFileSync(file, 'utf8')) : '(missing)';
   }
   return out;
+}
+
+/**
+ * Canonical source fingerprint check.
+ *
+ * Drizzle hashes the RAW bytes it reads. The DB journal therefore records raw
+ * working-tree bytes. That must equal Git's canonical LF bytes. When the
+ * working tree is CRLF, raw != canonical — REFUSE with MIGRATION_EOL_NOT_CANONICAL
+ * rather than calling the CRLF hash canonical.
+ */
+function checkCanonicalFingerprints(rawFp: Record<string, string>): { ok: boolean; failures: string[] } {
+  const failures: string[] = [];
+  for (const tag of EXPECTED_JOURNAL) {
+    const raw = rawFp[tag];
+    const canonical = CANONICAL_MIGRATION_FINGERPRINTS[tag];
+    if (raw !== '(missing)' && raw === canonical) continue;
+    // Distinguish "file missing" from "EOL non-canonical (CRLF)".
+    failures.push(raw === '(missing)' ? `${tag}.sql missing` : `${tag}.sql EOL non-canonical (raw != canonical LF)`);
+  }
+  return { ok: failures.length === 0, failures };
 }
 
 /**
@@ -132,7 +166,11 @@ async function planMode(): Promise<void> {
   console.log('  5. (rehearsal branch only) B2_TARGET_ENV=rehearsal-branch B2_ALLOW_DISPOSABLE_MUTATIONS=YES pnpm --filter @promotor/platform-api b2:live-acceptance --rehearse-auth');
   console.log('  6. [runtime] Worker /health + /health/db checks');
   const fp = localMigrationFingerprints();
-  console.log('Local migration content fingerprints (SHA-256):');
+  console.log('Canonical source migration fingerprints (SHA-256, Git/LF):');
+  for (const tag of EXPECTED_JOURNAL) {
+    console.log(`  ${tag}.sql  ${CANONICAL_MIGRATION_FINGERPRINTS[tag]}`);
+  }
+  console.log('Raw working-tree fingerprints (diagnostic only):');
   for (const [tag, hash] of Object.entries(fp)) {
     console.log(`  ${tag}.sql  ${hash}`);
   }
@@ -203,15 +241,24 @@ async function verifyMode(): Promise<number> {
       if (!localJournalOk) failures++;
     }
 
-    // 5. LOCAL migration content hashes (canonical 0000/0001 files exist).
-    const localFp = localMigrationFingerprints();
+    // 5. CANONICAL source fingerprints (LF-normalized content = Git canonical).
+    //    Raw working-tree bytes are diagnostic only; CRLF raw bytes that differ
+    //    from canonical REFUSE with MIGRATION_EOL_NOT_CANONICAL.
+    const rawFp = localMigrationFingerprints();
+    const canonicalCheck = checkCanonicalFingerprints(rawFp);
     for (const tag of EXPECTED_JOURNAL) {
-      const ok = localFp[tag] !== '(missing)';
-      safeLog(`local migration file ${tag}.sql present`, ok);
+      const ok = canonicalCheck.failures.every((f) => !f.startsWith(`${tag}.sql`));
+      safeLog(
+        `canonical fingerprint ${tag}.sql == Git/LF (${CANONICAL_MIGRATION_FINGERPRINTS[tag]})`,
+        ok,
+        ok ? undefined : 'MIGRATION_EOL_NOT_CANONICAL',
+        ok ? rawFp[tag] : 'raw working-tree bytes != canonical LF (likely CRLF)'
+      );
       if (!ok) failures++;
     }
 
-    // 6. DB journal: exact row count/order + hashes == local content hashes.
+    // 6. DB journal: exact row count/order + hashes == CANONICAL Git/LF
+    //    fingerprints (not the raw working-tree bytes — see check 5).
     const ownerClient = await connectSanitized(OWNER_URL, 'owner connection');
     if (!ownerClient) {
       failures++;
@@ -227,9 +274,14 @@ async function verifyMode(): Promise<number> {
         for (let i = 0; i < EXPECTED_JOURNAL.length; i++) {
           const tag = EXPECTED_JOURNAL[i];
           const dbHash = dbHashes[i];
-          const localHash = localFp[tag];
-          const ok = dbHash === localHash && localHash !== '(missing)';
-          safeLog(`migration hash ${tag} matches local`, ok, undefined, ok ? dbHash : 'hash mismatch');
+          const canonicalHash = CANONICAL_MIGRATION_FINGERPRINTS[tag];
+          const ok = dbHash === canonicalHash;
+          safeLog(
+            `migration hash ${tag} == canonical Git/LF`,
+            ok,
+            ok ? undefined : 'MIGRATION_HASH_NOT_CANONICAL',
+            ok ? dbHash : 'DB journal hash != canonical LF fingerprint'
+          );
           if (!ok) failures++;
         }
       } catch {

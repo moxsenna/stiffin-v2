@@ -1,0 +1,6 @@
+# Migration SQL + journal must be canonical LF on every platform.
+# Drizzle hashes the raw migration bytes it reads; a CRLF working tree would
+# produce non-canonical journal fingerprints. These attributes force LF.
+apps/platform-api/src/db/migrations/*.sql text eol=lf
+apps/platform-api/src/db/migrations/meta/*.json text eol=lf
+docs/sql/*.sql text eol=lf
