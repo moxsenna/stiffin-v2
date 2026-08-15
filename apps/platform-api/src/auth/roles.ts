@@ -5,6 +5,16 @@
 import { ORGANIZATION_ROLES, OrganizationRole } from '../db/schema';
 import { AuthError } from './errors';
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Canonical UUID check — must pass BEFORE any value is used in a PostgreSQL
+ * UUID column predicate. Malformed values must never reach the DB.
+ */
+export function isCanonicalUuid(value: unknown): value is string {
+  return typeof value === 'string' && UUID_RE.test(value);
+}
+
 export function isCanonicalRole(value: string): value is OrganizationRole {
   return (ORGANIZATION_ROLES as readonly string[]).includes(value);
 }

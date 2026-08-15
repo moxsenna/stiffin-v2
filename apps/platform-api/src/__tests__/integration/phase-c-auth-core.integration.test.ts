@@ -20,7 +20,7 @@ import { provisionPromotorUser } from '../../auth/provisioning';
 import { resolveAuthContext, createEntitlementsForOrg } from '../../auth/context-resolver';
 import { createOrganizationService } from '../../services/organization-service';
 import { createPromotorUserService } from '../../services/promotor-user-service';
-import { users, organizations, organizationMembers, productEntitlements, sessions, accounts as accountsTable } from '../../db/schema';
+import { users, organizations, organizationMembers, productEntitlements, sessions } from '../../db/schema';
 import { eq, sql } from 'drizzle-orm';
 
 const enabled = Boolean(TEST_DATABASE_URL);
@@ -586,8 +586,7 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
 
   it('35. provisioning rejects invalid input with VALIDATION_ERROR and zero rows', async () => {
     await withIntegrationDb(async (db) => {
-      const beforeUsers = (await db.select().from(users)).length;
-      const beforeAccounts = (await db.select().from(accountsTable)).length;
+      const attemptedEmails: string[] = [];
       const cases: Array<[string, Parameters<typeof provisionPromotorUser>[1]]> = [
         ['short password', { name: 'A', email: `v-${Date.now()}@example.com`, password: 'short' }],
         ['long password', { name: 'A', email: `v-${Date.now()}@example.com`, password: 'x'.repeat(129) }],
@@ -597,6 +596,7 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
         ['org slug without name', { name: 'A', email: `v-${Date.now()}@example.com`, password: 'password123', organizationSlug: 'org' }],
       ];
       for (const [label, input] of cases) {
+        attemptedEmails.push(input.email.trim().toLowerCase());
         await assert.rejects(
           async () => {
             await provisionPromotorUser(db, input);
@@ -608,10 +608,12 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
           label
         );
       }
-      const afterUsers = (await db.select().from(users)).length;
-      const afterAccounts = (await db.select().from(accountsTable)).length;
-      assert.strictEqual(afterUsers, beforeUsers, 'no user rows created by invalid provisioning');
-      assert.strictEqual(afterAccounts, beforeAccounts, 'no account rows created by invalid provisioning');
+      // Isolation-safe: no user row exists for any attempted email (accounts are
+      // FK-cascaded from users, so absence of the user proves no orphan account).
+      for (const email of attemptedEmails) {
+        const userRows = await db.select().from(users).where(eq(users.email, email));
+        assert.strictEqual(userRows.length, 0, `no user created for attempted email ${email}`);
+      }
     });
   });
 

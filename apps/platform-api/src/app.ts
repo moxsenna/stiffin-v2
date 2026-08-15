@@ -4,7 +4,6 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Env } from './env';
 import { executeDbHealthProbe } from './db/client';
 import { authLifecycle, sessionMiddleware } from './auth/session-middleware';
-import { requireOrganization, requireEntitlement, requireRole } from './auth/authorization';
 import { AuthError, authErrorStatus } from './auth/errors';
 import type { AuthContext } from './auth/types';
 import type { AuthInstance } from './auth/create-auth';
@@ -115,28 +114,6 @@ export function createApp(deps?: AppDependencies) {
       membership,
       entitlements,
     }, 200);
-  });
-
-  // ---- Phase D: app-owned authorization/diagnostic seam ----
-  // Safe app-owned routes proving the authorization chain + entitlement/role
-  // gates. Not product APIs; used by tests and future workspace discovery.
-  app.use('/api/diag/*', sessionMiddleware);
-
-  app.get('/api/diag/organization', requireOrganization(), requireRole(['owner', 'admin', 'member']), (c) => {
-    const ctx = c.get('authContext');
-    return c.json({
-      organizationId: ctx!.organization!.organizationId,
-      role: ctx!.actor!.role,
-      membershipId: ctx!.actor!.membershipId,
-    }, 200);
-  });
-
-  app.get('/api/diag/class', requireOrganization(), requireEntitlement('promotorClass'), (c) => {
-    return c.json({ ok: true, product: 'promotorClass' }, 200);
-  });
-
-  app.get('/api/diag/flow', requireOrganization(), requireEntitlement('promotorFlow'), (c) => {
-    return c.json({ ok: true, product: 'promotorFlow' }, 200);
   });
 
   return app;

@@ -7,6 +7,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { authSchema, MODEL_NAMES, FIELD_MAPS } from './schema';
 import { users, organizations, organizationMembers } from '../db/schema';
 import { EMAIL_PASSWORD_POLICY } from './policy';
+import { isCanonicalUuid } from './roles';
 import type { Env } from '../env';
 
 export interface CreateAuthEnv {
@@ -85,7 +86,7 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
     },
     rateLimit: options?.disableRateLimit
       ? { enabled: false } // test-only — never activated through Worker env
-      : { storage: 'database', modelName: MODEL_NAMES.rateLimit },
+      : { enabled: true, storage: 'database', modelName: MODEL_NAMES.rateLimit },
     advanced: {
       database: { generateId: 'uuid' },
     },
@@ -129,21 +130,13 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
           }
         }
 
-        // ---- Phase D: BA organization mutation endpoint lockdown ----
-        // Shared Core owns organization lifecycle + membership writes. Every
-        // denied endpoint returns a deterministic 403 and mutates ZERO rows.
-        const DENIED_ORG_PATHS = new Set([
-          '/organization/update',
-          '/organization/invite-member',
-          '/organization/accept-invitation',
-          '/organization/cancel-invitation',
-          '/organization/reject-invitation',
-          '/organization/add-member',
-          '/organization/remove-member',
-          '/organization/update-member-role',
-          '/organization/leave',
-        ]);
-        if (DENIED_ORG_PATHS.has(ctx.path)) {
+        // ---- Phase D: BA organization HTTP surface lockdown (fail-closed) ----
+        // Frozen V0.1 rule: the ONLY BA organization endpoint exposed to the
+        // browser is /organization/set-active. Everything else under
+        // /organization/* is denied 403 (reads, writes, invitations, slugs).
+        // Raw BA list/full-org/member/invitation/check-slug surfaces must not
+        // become public V0.1 APIs. Config flags remain defense in depth.
+        if (ctx.path.startsWith('/organization/') && ctx.path !== '/organization/set-active') {
           return ctx.json(
             { message: 'This organization operation is not available', code: 'FORBIDDEN' },
             { status: 403 }
@@ -151,13 +144,28 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
         }
 
         // ---- Phase D: validated /organization/set-active ----
-        // The ONLY approved org mutation-like path. Server-side validation
+        // Canonical V0.1 input: organizationId: UUID | null. organizationSlug is
+        // NOT an accepted V0.1 authorization input. Server-side validation
         // proves: authenticated active user, org exists + deleted_at IS NULL,
         // fresh membership row for (user_id, organization_id). Do NOT trust
         // Better Auth's default check alone.
         if (ctx.path === '/organization/set-active') {
           const body = ctx.body as { organizationId?: string; organizationSlug?: string } | undefined;
-          const organizationId = body?.organizationId ?? null;
+          // organizationSlug is unsupported in V0.1 — reject explicitly.
+          if (body?.organizationSlug !== undefined && body?.organizationSlug !== null && body?.organizationSlug !== '') {
+            return ctx.json(
+              { message: 'organizationSlug is not supported; use organizationId', code: 'ORG_CONTEXT_INVALID' },
+              { status: 403 }
+            );
+          }
+          const rawOrgId = body?.organizationId ?? null;
+          // null clears the active org (allowed); anything else must be a UUID.
+          if (rawOrgId !== null && !isCanonicalUuid(rawOrgId)) {
+            return ctx.json(
+              { message: 'Selected organization is not valid', code: 'ORG_CONTEXT_INVALID' },
+              { status: 403 }
+            );
+          }
           // Resolve the authenticated user from the session (set-active requires
           // a session; the middleware provides it).
           const session = await getSessionFromCtx(ctx);
@@ -173,11 +181,12 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
           if (userRows.length === 0 || userRows[0].deletedAt !== null) {
             return ctx.json({ message: 'User is not active', code: 'UNAUTHORIZED' }, { status: 401 });
           }
-          if (!organizationId) {
+          if (rawOrgId === null) {
             // Unset active org: allowed — resolves to null context (no mutation
             // of memberships; hint cleared).
             return;
           }
+          const organizationId = rawOrgId; // validated UUID
           const orgRows = await db
             .select({ id: organizations.id, deletedAt: organizations.deletedAt })
             .from(organizations)

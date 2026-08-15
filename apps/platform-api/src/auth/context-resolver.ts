@@ -18,6 +18,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { users, organizations, organizationMembers, productEntitlements, OrganizationRole } from '../db/schema';
 import type { AuthContext, AuthenticatedActor, AuthEntitlements } from './types';
 import { AuthError } from './errors';
+import { isCanonicalUuid } from './roles';
 
 export interface ResolveSessionInput {
   userId: string;
@@ -50,6 +51,11 @@ export async function resolveAuthContext(
   let actor: AuthenticatedActor | null = null;
   let organizationId: string | null = null;
   let organizationDetail: { name: string; slug: string } | null = null;
+
+  // Malformed/stale session hint must fail closed BEFORE any UUID predicate.
+  if (session.activeOrganizationId !== null && session.activeOrganizationId !== undefined && !isCanonicalUuid(session.activeOrganizationId)) {
+    throw new AuthError('ORG_CONTEXT_INVALID', 'Selected organization is not valid');
+  }
 
   if (session.activeOrganizationId) {
     // Hint set: resolve ONLY if a live membership exists for a non-deleted org.
