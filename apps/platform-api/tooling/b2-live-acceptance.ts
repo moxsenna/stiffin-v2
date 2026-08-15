@@ -61,6 +61,18 @@ const CANONICAL_MIGRATION_FINGERPRINTS: Record<string, string> = {
   '0001_material_king_bedlam': 'e5acd9851fe9f76920ed513ddb454dbb91ddc6bc2259a8caa591fe894c95c166',
 };
 
+/**
+ * Entitlement-deny acceptance predicate. The SAME boolean drives both safeLog
+ * and failures++, so a 403 with the wrong error code can never count as PASS.
+ * A 403 without ENTITLEMENT_DENIED, a non-403, or any malformed body => false.
+ */
+export function isEntitlementDenied(
+  status: number,
+  body: { error?: { code?: string } } | null
+): boolean {
+  return status === 403 && body?.error?.code === 'ENTITLEMENT_DENIED';
+}
+
 const RUNTIME_URL = process.env.RUNTIME_DATABASE_URL;
 const OWNER_URL = process.env.OWNER_DATABASE_URL;
 const BETTER_AUTH_URL = process.env.BETTER_AUTH_URL;
@@ -487,11 +499,14 @@ async function rehearseAuthMode(): Promise<number> {
     await db.update(productEntitlements).set({ promotorClass: false, promotorFlow: false }).where(eq(productEntitlements.organizationId, provisioned.organizationId!));
     const classDeny = await app.request(`${baseUrl}/api/rehearse/class`, { headers: { cookie } }, env);
     const flowDeny = await app.request(`${baseUrl}/api/rehearse/flow`, { headers: { cookie } }, env);
-    safeLog('K. promotorClass=false -> ENTITLEMENT_DENIED', classDeny.status === 403 && ((await classDeny.json()) as { error?: { code?: string } }).error?.code === 'ENTITLEMENT_DENIED');
-    if (!(classDeny.status === 403)) failures++;
+    const classDenyBody = (await classDeny.json()) as { error?: { code?: string } };
+    const classDenied = isEntitlementDenied(classDeny.status, classDenyBody);
+    safeLog('K. promotorClass=false -> ENTITLEMENT_DENIED', classDenied);
+    if (!classDenied) failures++;
     const flowDenyBody = (await flowDeny.json()) as { error?: { code?: string } };
-    safeLog('L. promotorFlow=false -> ENTITLEMENT_DENIED', flowDeny.status === 403 && flowDenyBody.error?.code === 'ENTITLEMENT_DENIED');
-    if (!(flowDeny.status === 403 && flowDenyBody.error?.code === 'ENTITLEMENT_DENIED')) failures++;
+    const flowDenied = isEntitlementDenied(flowDeny.status, flowDenyBody);
+    safeLog('L. promotorFlow=false -> ENTITLEMENT_DENIED', flowDenied);
+    if (!flowDenied) failures++;
 
     // true entitlement -> passes.
     await db.update(productEntitlements).set({ promotorClass: true, promotorFlow: true }).where(eq(productEntitlements.organizationId, provisioned.organizationId!));
@@ -548,4 +563,12 @@ async function main(): Promise<void> {
   process.exitCode = 1;
 }
 
-void main();
+// Guard: only run main() when executed directly (tsx tooling/b2-live-acceptance.ts),
+// never when imported by unit tests (tests import isEntitlementDenied).
+const isDirectRun =
+  typeof process !== 'undefined' &&
+  process.argv[1] &&
+  process.argv[1].replace(/\\/g, '/').endsWith('tooling/b2-live-acceptance.ts');
+if (isDirectRun) {
+  void main();
+}
