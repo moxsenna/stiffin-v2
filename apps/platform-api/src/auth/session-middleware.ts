@@ -4,7 +4,7 @@ import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { createAuth, AuthConfigError, CreateAuthEnv } from './create-auth';
 import type { AuthInstance } from './create-auth';
 import { resolveAuthContext, createEntitlementsForOrg } from './context-resolver';
-import { AuthError } from './errors';
+import { AuthError, authErrorStatus } from './errors';
 import type { AuthContext } from './types';
 
 export type AuthVariables = {
@@ -50,14 +50,6 @@ export const authLifecycle = createMiddleware<{ Bindings: AuthBindings; Variable
     }
   }
 );
-
-/** Maps an AuthError to the correct HTTP status (frozen semantics). */
-function authErrorStatus(err: AuthError): 401 | 403 | 500 {
-  const code = String(err.code);
-  if (code === 'ORG_CONTEXT_INVALID' || code === 'ORG_CONTEXT_REQUIRED') return 403;
-  if (code === 'UNAUTHORIZED') return 401;
-  return 500;
-}
 
 /**
  * Session resolution middleware: resolves the Better Auth session for the

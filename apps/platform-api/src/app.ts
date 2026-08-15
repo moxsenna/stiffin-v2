@@ -4,6 +4,8 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Env } from './env';
 import { executeDbHealthProbe } from './db/client';
 import { authLifecycle, sessionMiddleware } from './auth/session-middleware';
+import { requireOrganization, requireEntitlement, requireRole } from './auth/authorization';
+import { AuthError, authErrorStatus } from './auth/errors';
 import type { AuthContext } from './auth/types';
 import type { AuthInstance } from './auth/create-auth';
 
@@ -19,6 +21,16 @@ export type AppEnv = {
 export function createApp(deps?: AppDependencies) {
   const app = new Hono<AppEnv>();
   const probeDb = deps?.dbHealthProbe ?? executeDbHealthProbe;
+
+  // Phase D: map AuthError -> HTTP status (401/403/500) for middleware-thrown errors.
+  app.onError((err, c) => {
+    if (err instanceof AuthError) {
+      const status = authErrorStatus(err);
+      return c.json({ error: { code: err.code, message: err.message } }, status);
+    }
+    console.error('[APP_ERROR]', { code: 'APP_ERROR', timestamp: new Date().toISOString() });
+    return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, 500);
+  });
 
   // GET /health — Light probe (Zero DB calls)
   app.get('/health', (c) => {
@@ -103,6 +115,28 @@ export function createApp(deps?: AppDependencies) {
       membership,
       entitlements,
     }, 200);
+  });
+
+  // ---- Phase D: app-owned authorization/diagnostic seam ----
+  // Safe app-owned routes proving the authorization chain + entitlement/role
+  // gates. Not product APIs; used by tests and future workspace discovery.
+  app.use('/api/diag/*', sessionMiddleware);
+
+  app.get('/api/diag/organization', requireOrganization(), requireRole(['owner', 'admin', 'member']), (c) => {
+    const ctx = c.get('authContext');
+    return c.json({
+      organizationId: ctx!.organization!.organizationId,
+      role: ctx!.actor!.role,
+      membershipId: ctx!.actor!.membershipId,
+    }, 200);
+  });
+
+  app.get('/api/diag/class', requireOrganization(), requireEntitlement('promotorClass'), (c) => {
+    return c.json({ ok: true, product: 'promotorClass' }, 200);
+  });
+
+  app.get('/api/diag/flow', requireOrganization(), requireEntitlement('promotorFlow'), (c) => {
+    return c.json({ ok: true, product: 'promotorFlow' }, 200);
   });
 
   return app;

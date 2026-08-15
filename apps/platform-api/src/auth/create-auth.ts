@@ -1,11 +1,11 @@
 import { betterAuth } from 'better-auth';
-import { createAuthMiddleware } from 'better-auth/api';
+import { createAuthMiddleware, getSessionFromCtx } from 'better-auth/api';
 import { organization } from 'better-auth/plugins';
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { authSchema, MODEL_NAMES, FIELD_MAPS } from './schema';
-import { users } from '../db/schema';
+import { users, organizations, organizationMembers } from '../db/schema';
 import { EMAIL_PASSWORD_POLICY } from './policy';
 import type { Env } from '../env';
 
@@ -111,22 +111,94 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
     },
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
-        // Frozen soft-delete policy: a soft-deleted canonical user must not
-        // sign in. Respond with generic invalid-credentials semantics (no user
-        // enumeration) by blocking before the endpoint runs.
-        if (ctx.path !== '/sign-in/email') return;
-        const email = (ctx.body as { email?: string } | undefined)?.email;
-        if (!email) return;
-        const rows = await db
-          .select({ deletedAt: users.deletedAt })
-          .from(users)
-          .where(eq(users.email, email.toLowerCase().trim()))
-          .limit(1);
-        if (rows.length > 0 && rows[0].deletedAt !== null) {
+        // ---- Frozen soft-delete policy: soft-deleted user must not sign in ----
+        if (ctx.path === '/sign-in/email') {
+          const email = (ctx.body as { email?: string } | undefined)?.email;
+          if (email) {
+            const rows = await db
+              .select({ deletedAt: users.deletedAt })
+              .from(users)
+              .where(eq(users.email, email.toLowerCase().trim()))
+              .limit(1);
+            if (rows.length > 0 && rows[0].deletedAt !== null) {
+              return ctx.json(
+                { message: 'Invalid email or password', code: 'INVALID_EMAIL_OR_PASSWORD' },
+                { status: 401 }
+              );
+            }
+          }
+        }
+
+        // ---- Phase D: BA organization mutation endpoint lockdown ----
+        // Shared Core owns organization lifecycle + membership writes. Every
+        // denied endpoint returns a deterministic 403 and mutates ZERO rows.
+        const DENIED_ORG_PATHS = new Set([
+          '/organization/update',
+          '/organization/invite-member',
+          '/organization/accept-invitation',
+          '/organization/cancel-invitation',
+          '/organization/reject-invitation',
+          '/organization/add-member',
+          '/organization/remove-member',
+          '/organization/update-member-role',
+          '/organization/leave',
+        ]);
+        if (DENIED_ORG_PATHS.has(ctx.path)) {
           return ctx.json(
-            { message: 'Invalid email or password', code: 'INVALID_EMAIL_OR_PASSWORD' },
-            { status: 401 }
+            { message: 'This organization operation is not available', code: 'FORBIDDEN' },
+            { status: 403 }
           );
+        }
+
+        // ---- Phase D: validated /organization/set-active ----
+        // The ONLY approved org mutation-like path. Server-side validation
+        // proves: authenticated active user, org exists + deleted_at IS NULL,
+        // fresh membership row for (user_id, organization_id). Do NOT trust
+        // Better Auth's default check alone.
+        if (ctx.path === '/organization/set-active') {
+          const body = ctx.body as { organizationId?: string; organizationSlug?: string } | undefined;
+          const organizationId = body?.organizationId ?? null;
+          // Resolve the authenticated user from the session (set-active requires
+          // a session; the middleware provides it).
+          const session = await getSessionFromCtx(ctx);
+          if (!session) {
+            return ctx.json({ message: 'Authentication required', code: 'UNAUTHORIZED' }, { status: 401 });
+          }
+          // User must be active.
+          const userRows = await db
+            .select({ deletedAt: users.deletedAt })
+            .from(users)
+            .where(eq(users.id, session.user.id))
+            .limit(1);
+          if (userRows.length === 0 || userRows[0].deletedAt !== null) {
+            return ctx.json({ message: 'User is not active', code: 'UNAUTHORIZED' }, { status: 401 });
+          }
+          if (!organizationId) {
+            // Unset active org: allowed — resolves to null context (no mutation
+            // of memberships; hint cleared).
+            return;
+          }
+          const orgRows = await db
+            .select({ id: organizations.id, deletedAt: organizations.deletedAt })
+            .from(organizations)
+            .where(and(eq(organizations.id, organizationId), isNull(organizations.deletedAt)))
+            .limit(1);
+          if (orgRows.length === 0) {
+            return ctx.json({ message: 'Selected organization is not valid', code: 'ORG_CONTEXT_INVALID' }, { status: 403 });
+          }
+          const memberRows = await db
+            .select({ id: organizationMembers.id })
+            .from(organizationMembers)
+            .where(
+              and(
+                eq(organizationMembers.userId, session.user.id),
+                eq(organizationMembers.organizationId, organizationId)
+              )
+            )
+            .limit(1);
+          if (memberRows.length === 0) {
+            return ctx.json({ message: 'User is not a member of this organization', code: 'FORBIDDEN' }, { status: 403 });
+          }
         }
       }),
     },
