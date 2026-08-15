@@ -7,7 +7,10 @@
  *   --plan           prints sanitized steps only; NO network, NO DB.
  *   --verify         READ-ONLY acceptance checks (safe for rehearsal AND
  *                    production). NO migrations, NO grants, NO DDL, NO
- *                    application-data mutation.
+ *                    application-data mutation. FAIL-CLOSED: requires
+ *                    RUNTIME_DATABASE_URL + OWNER_DATABASE_URL +
+ *                    BETTER_AUTH_URL (all three) or it REFUSES non-zero;
+ *                    no required check is ever silently skipped.
  *   --rehearse-auth  DISPOSABLE auth/application mutations. REQUIRES:
  *                      B2_TARGET_ENV=rehearsal-branch
  *                      B2_ALLOW_DISPOSABLE_MUTATIONS=YES
@@ -18,7 +21,8 @@
  *   RUNTIME_DATABASE_URL : promotor_runtime credentials (what Hyperdrive uses)
  *   OWNER_DATABASE_URL   : owner credentials (journal fingerprint only)
  *   BETTER_AUTH_URL      : Worker base URL (or local dev URL)
- *   BETTER_AUTH_SECRET   : Better Auth secret (in-process rehearsal harness only)
+ *   BETTER_AUTH_SECRET   : Better Auth secret — REQUIRED ONLY for
+ *                          --rehearse-auth; never read by --verify/--plan.
  *
  * REQUIRED OPERATOR SEQUENCE (this script does NOT run grants for you):
  *   1. Apply migrations as owner:  DATABASE_URL=... pnpm db:migrate
@@ -76,6 +80,48 @@ function localMigrationFingerprints(): Record<string, string> {
   return out;
 }
 
+/**
+ * Local journal verification: parse the actual meta/_journal.json and prove the
+ * local canonical sequence is exactly [0000_modern_hydra, 0001_material_king_bedlam]
+ * in that order. Do NOT rely on hard-coded filenames alone.
+ */
+function localJournalTags(): { tags: string[]; errors: string[] } {
+  const journalPath = join(process.cwd(), 'src', 'db', 'migrations', 'meta', '_journal.json');
+  const errors: string[] = [];
+  let tags: string[] = [];
+  try {
+    const parsed = JSON.parse(readFileSync(journalPath, 'utf8')) as { entries?: Array<{ tag?: string }> };
+    tags = (parsed.entries ?? []).map((e) => e.tag ?? '(untagged)');
+  } catch {
+    errors.push('local _journal.json unreadable or malformed');
+  }
+  return { tags, errors };
+}
+
+/**
+ * Connect + sanitize: wraps EVERY pg connection attempt (initial connect
+ * included) so failures emit only a fixed safe code — never the raw pg/Node
+ * error object, hostname, port, username, connection string, or TLS detail.
+ */
+async function connectSanitized(connectionString: string, code: string): Promise<Client | null> {
+  const client = new Client({ connectionString });
+  try {
+    await client.connect();
+    return client;
+  } catch {
+    safeLog(code, false, undefined, 'connection failed (safe code)');
+    await client.end().catch(() => undefined);
+    return null;
+  }
+}
+
+// Guard: any unhandled rejection must never leak raw pg/Node internals.
+process.on('unhandledRejection', (reason) => {
+  console.error(`[B2_ACCEPTANCE] fatal safe-code: B2_ACCEPTANCE_UNHANDLED (${SAFE_CODES.FAIL})`);
+  void reason; // never printed
+  process.exitCode = 1;
+});
+
 async function planMode(): Promise<void> {
   console.log('B2 live acceptance — PLAN (no DB mutation, no network)');
   console.log('Operator steps:');
@@ -94,17 +140,28 @@ async function planMode(): Promise<void> {
 }
 
 /**
- * --verify: read-only acceptance. Compares the DB journal against the exact
- * canonical sequence AND content hashes.
+ * --verify: read-only acceptance. FAIL-CLOSED — RUNTIME_DATABASE_URL,
+ * OWNER_DATABASE_URL and BETTER_AUTH_URL are ALL required; any missing one
+ * REFUSES with a sanitized fixed code and non-zero exit (never a silent SKIP).
+ * No required acceptance check may be skipped.
  */
 async function verifyMode(): Promise<number> {
-  if (!RUNTIME_URL) {
-    console.error('RUNTIME_DATABASE_URL is required for --verify');
+  if (!RUNTIME_URL || !OWNER_URL || !BETTER_AUTH_URL) {
+    const missing = [
+      !RUNTIME_URL ? 'RUNTIME_DATABASE_URL' : null,
+      !OWNER_URL ? 'OWNER_DATABASE_URL' : null,
+      !BETTER_AUTH_URL ? 'BETTER_AUTH_URL' : null,
+    ].filter(Boolean).join(', ');
+    console.error(`[B2_ACCEPTANCE] REFUSED: --verify requires all of RUNTIME_DATABASE_URL, OWNER_DATABASE_URL, BETTER_AUTH_URL (missing: ${missing}) (${SAFE_CODES.REFUSED})`);
     return 1;
   }
   let failures = 0;
-  const client = new Client({ connectionString: RUNTIME_URL });
-  await client.connect();
+  const client = await connectSanitized(RUNTIME_URL, 'runtime connection');
+  if (!client) {
+    failures++;
+    console.log(`B2 acceptance --verify complete. Failures: ${failures}`);
+    return 1;
+  }
   try {
     // 1. Tables exist (B1 + B2).
     for (const table of [...B1_TABLES, ...B2_TABLES]) {
@@ -130,17 +187,40 @@ async function verifyMode(): Promise<number> {
     safeLog('runtime CREATE denied', ddlDenied);
     if (!ddlDenied) failures++;
 
-    // 4+5. Exact canonical journal + content hash comparison (owner connection).
+    // 4. LOCAL canonical journal: parse meta/_journal.json — must contain
+    // exactly [0000_modern_hydra, 0001_material_king_bedlam] in order.
+    const localJournal = localJournalTags();
+    if (localJournal.errors.length > 0) {
+      for (const e of localJournal.errors) {
+        safeLog(`local journal: ${e}`, false);
+        failures++;
+      }
+    } else {
+      const localJournalOk =
+        localJournal.tags.length === EXPECTED_JOURNAL.length &&
+        localJournal.tags.every((tag, i) => tag === EXPECTED_JOURNAL[i]);
+      safeLog('local journal exact sequence (0000_modern_hydra, 0001_material_king_bedlam)', localJournalOk);
+      if (!localJournalOk) failures++;
+    }
+
+    // 5. LOCAL migration content hashes (canonical 0000/0001 files exist).
     const localFp = localMigrationFingerprints();
-    if (OWNER_URL) {
-      const ownerClient = new Client({ connectionString: OWNER_URL });
-      await ownerClient.connect();
+    for (const tag of EXPECTED_JOURNAL) {
+      const ok = localFp[tag] !== '(missing)';
+      safeLog(`local migration file ${tag}.sql present`, ok);
+      if (!ok) failures++;
+    }
+
+    // 6. DB journal: exact row count/order + hashes == local content hashes.
+    const ownerClient = await connectSanitized(OWNER_URL, 'owner connection');
+    if (!ownerClient) {
+      failures++;
+    } else {
       try {
         const journal = await ownerClient.query(
           `SELECT id, hash FROM drizzle.__drizzle_migrations ORDER BY id`
         );
         const dbHashes = journal.rows.map((r) => String(r.hash));
-        // Exact canonical sequence: tags in order.
         const tagMatches = journal.rows.length === EXPECTED_JOURNAL.length;
         safeLog('journal exact entry count (2)', tagMatches);
         if (!tagMatches) failures++;
@@ -158,33 +238,27 @@ async function verifyMode(): Promise<number> {
       } finally {
         await ownerClient.end();
       }
-    } else {
-      safeLog('migration journal + hashes (owner)', true, SAFE_CODES.SKIP, 'OWNER_DATABASE_URL not set');
     }
 
-    // 6+7. Health endpoints.
-    if (BETTER_AUTH_URL) {
-      try {
-        const health = await fetch(`${BETTER_AUTH_URL}/health`);
-        safeLog('worker /health', health.ok);
-        if (!health.ok) failures++;
-      } catch {
-        safeLog('worker /health reachable', false, SAFE_CODES.FAIL, 'network error (safe code)');
-        failures++;
-      }
-      try {
-        const healthDb = await fetch(`${BETTER_AUTH_URL}/health/db`);
-        safeLog('worker /health/db (deployed Worker current Hyperdrive path)', healthDb.ok);
-        if (!healthDb.ok) failures++;
-      } catch {
-        safeLog('worker /health/db reachable', false, SAFE_CODES.FAIL, 'network error (safe code)');
-        failures++;
-      }
-    } else {
-      safeLog('worker /health + /health/db', true, SAFE_CODES.SKIP, 'BETTER_AUTH_URL not set');
+    // 7+8. Health endpoints (mandatory — never skipped).
+    try {
+      const health = await fetch(`${BETTER_AUTH_URL}/health`);
+      safeLog('worker /health', health.ok);
+      if (!health.ok) failures++;
+    } catch {
+      safeLog('worker /health reachable', false, SAFE_CODES.FAIL, 'network error (safe code)');
+      failures++;
+    }
+    try {
+      const healthDb = await fetch(`${BETTER_AUTH_URL}/health/db`);
+      safeLog('worker /health/db (deployed Worker current Hyperdrive path)', healthDb.ok);
+      if (!healthDb.ok) failures++;
+    } catch {
+      safeLog('worker /health/db reachable', false, SAFE_CODES.FAIL, 'network error (safe code)');
+      failures++;
     }
 
-    // 8. Rate-limit storage queryable.
+    // 9. Rate-limit storage queryable.
     try {
       await client.query(`SELECT COUNT(*)::int AS c FROM auth_rate_limits`);
       safeLog('auth_rate_limits queryable', true);
@@ -363,8 +437,9 @@ async function rehearseAuthMode(): Promise<number> {
     const flowDeny = await app.request(`${baseUrl}/api/rehearse/flow`, { headers: { cookie } }, env);
     safeLog('K. promotorClass=false -> ENTITLEMENT_DENIED', classDeny.status === 403 && ((await classDeny.json()) as { error?: { code?: string } }).error?.code === 'ENTITLEMENT_DENIED');
     if (!(classDeny.status === 403)) failures++;
-    safeLog('L. promotorFlow=false -> ENTITLEMENT_DENIED', flowDeny.status === 403);
-    if (flowDeny.status !== 403) failures++;
+    const flowDenyBody = (await flowDeny.json()) as { error?: { code?: string } };
+    safeLog('L. promotorFlow=false -> ENTITLEMENT_DENIED', flowDeny.status === 403 && flowDenyBody.error?.code === 'ENTITLEMENT_DENIED');
+    if (!(flowDeny.status === 403 && flowDenyBody.error?.code === 'ENTITLEMENT_DENIED')) failures++;
 
     // true entitlement -> passes.
     await db.update(productEntitlements).set({ promotorClass: true, promotorFlow: true }).where(eq(productEntitlements.organizationId, provisioned.organizationId!));
