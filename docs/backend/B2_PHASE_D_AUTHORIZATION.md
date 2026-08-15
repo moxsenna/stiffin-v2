@@ -1,10 +1,11 @@
 # B2 Phase D — Authorization + Hardening
 
-**Status:** IMPLEMENTED / AWAITING REVIEW (not B2 FINAL)
+**Status:** B2 PHASE D — FINAL ACCEPTED / FROZEN
 **Date:** 2026-08-15
+**Frozen source head:** `a8995977dad10fc21ebadc83df69c5f3c525a0ed`
 **Phase C frozen base SHA:** `18dc9996c832fdbc83b8f4dc2061b50b833fbb96`
 **Branch:** `feat/b2-auth-authorization` (stacked on Phase C; NOT master)
-**Option C:** Phase C + Phase D both remain UNMERGED; controlled promotion to master happens only after Phase D review.
+**Option C:** Phase C + Phase D both remain UNMERGED; controlled promotion to master happens only after Phase E verification.
 
 ---
 
@@ -97,7 +98,7 @@ Integration suite `phase-d-authorization.integration.test.ts` (real PostgreSQL 1
 17. single-role malformed/comma/multi/unknown/empty rejected
 18. forged org body/query/header ignored (server-resolved org wins)
 19. each forbidden BA org endpoint mutates zero rows (**real deep-equal snapshots** of target org row, membership rows, `organization_invitations` rows, and totals)
-20. BA create org disabled (+ org count unchanged)
+20. BA create org disabled (non-200 response; org-count unchanged is proven by the generic fail-closed hook + deep snapshot test 19)
 21. BA delete org disabled (+ target org still present)
 22. BA user hard delete disabled
 23. public signup disabled
