@@ -98,7 +98,7 @@ Integration suite `phase-d-authorization.integration.test.ts` (real PostgreSQL 1
 17. single-role malformed/comma/multi/unknown/empty rejected
 18. forged org body/query/header ignored (server-resolved org wins)
 19. each forbidden BA org endpoint mutates zero rows (**real deep-equal snapshots** of target org row, membership rows, `organization_invitations` rows, and totals)
-20. BA create org disabled (non-200 response; org-count unchanged is proven by the generic fail-closed hook + deep snapshot test 19)
+20. BA create org disabled (non-200 response; org-count unchanged asserted via before/after count)
 21. BA delete org disabled (+ target org still present)
 22. BA user hard delete disabled
 23. public signup disabled

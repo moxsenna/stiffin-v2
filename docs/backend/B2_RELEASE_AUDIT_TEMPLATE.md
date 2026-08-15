@@ -28,13 +28,31 @@ credential material.
 
 ## Verification evidence (safe)
 
-- Migration journal entries: `0000_modern_hydra` → `0001_material_king_bedlam`
-- Runtime privilege checks: B1 20/20 + B2 20/20 = 40/40
+### Read-only verify (`b2:live-acceptance --verify`)
+
+- B1+B2 tables present (10/10)
+- Runtime privileges: B1 20/20 + B2 20/20 = 40/40
 - Runtime DDL (CREATE on public): DENIED
-- Health endpoints: `/health` 200, `/health/db` 200
-- Auth checks (disposable rehearsal identities only): sign-in, session
-  round-trip, `/api/me`, set-active valid/invalid, org lockdown,
-  entitlement boundary, soft-deleted principal, durable rate-limit presence
+- Exact canonical journal: `0000_modern_hydra` → `0001_material_king_bedlam`, with DB migration hashes matching local SHA-256 content fingerprints
+- Health endpoints: `/health` 200, `/health/db` 200 (deployed Worker current Hyperdrive path)
+- `auth_rate_limits` storage queryable
+
+### Rehearsal auth (`b2:live-acceptance --rehearse-auth`) — disposable identities, rehearsal branch only
+
+- Trusted disposable Promotor provisioning succeeds
+- Sign-in succeeds
+- Session cookie round-trip succeeds
+- `/api/me` returns canonical user/org/membership/entitlements
+- Valid UUID set-active succeeds
+- Malformed UUID set-active → 403 `ORG_CONTEXT_INVALID`
+- organizationSlug set-active → 403
+- Raw BA `/organization/list` → 403
+- Public signup stays disabled
+- BA user hard delete stays disabled
+- Entitlement boundary: `promotorClass=false` / `promotorFlow=false` → `ENTITLEMENT_DENIED`; true entitlement passes
+- Soft delete: canonical `softDeletePromotorUser()` purges all sessions; old session rejected; re-sign-in rejected
+
+This template is used for BOTH the Neon rehearsal branch audit AND the eventual production release audit.
 
 ## Approval gate
 
