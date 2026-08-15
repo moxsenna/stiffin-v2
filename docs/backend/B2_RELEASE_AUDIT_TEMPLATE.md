@@ -19,12 +19,24 @@ credential material.
 | UTC timestamp | `____________` |
 | Target environment | `rehearsal-branch | production` |
 | Migration filenames | `0000_modern_hydra.sql`, `0001_material_king_bedlam.sql` |
-| Migration hashes | `____________` (see below) |
+| Migration hashes | MUST be canonical Git/LF fingerprints (see below) |
 | Grant script/version | `docs/sql/grants_b1.sql`, `docs/sql/grants_b2.sql` |
 | Preflight result | `PASS | FAIL` |
 | Postflight result | `PASS | FAIL` |
 | Worker source SHA/version | `____________` |
 | Acceptance result | `PASS | FAIL` |
+
+## Canonical migration fingerprints (Git/LF — ACCEPTED)
+
+```text
+0000_modern_hydra.sql        86a3e3d993e3c038908e741649c2586afe2ae7ca737be641680c9af475bc7689
+0001_material_king_bedlam.sql e5acd9851fe9f76920ed513ddb454dbb91ddc6bc2259a8caa591fe894c95c166
+```
+
+The production B1 journal `0000` hash MUST equal `86a3e3d9...` (canonical).
+Windows CRLF working-tree hashes (`06f6...`/`6c43...`) are NONCANONICAL
+diagnostics and are NEVER acceptable as journal hashes. Do NOT update the
+production journal.
 
 ## Verification evidence (safe)
 

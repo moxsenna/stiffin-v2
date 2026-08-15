@@ -81,4 +81,13 @@ async function main(): Promise<void> {
   }
 }
 
-void main();
+// Guard: only run main() when executed directly (tsx tooling/migrate.ts),
+// never when imported by tests (unit tests import migrationEolViolations).
+const isDirectRun =
+  typeof process !== 'undefined' &&
+  process.argv[1] &&
+  process.argv[1].replace(/\\/g, '/').endsWith('tooling/migrate.ts');
+if (isDirectRun) {
+  void main();
+}
+
