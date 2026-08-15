@@ -9,7 +9,7 @@
 | B2 Phase B | Schema / migration / grants | ✅ FINAL ACCEPTED / FROZEN | canonical master (merged PR #13) |
 | B2 Phase C | Auth Core | ✅ FINAL ACCEPTED / FROZEN | `18dc9996c832fdbc83b8f4dc2061b50b833fbb96` |
 | B2 Phase D | Authorization + Hardening | ✅ FINAL ACCEPTED / FROZEN | `a8995977dad10fc21ebadc83df69c5f3c525a0ed` |
-| B2 Phase E | Rehearsal + release evidence | 🔄 IN PROGRESS (E-A closure) | `feat/b2-rehearsal-tooling` head |
+| B2 Phase E | Rehearsal + release evidence | ✅ E-A IMPLEMENTED / AWAITING FINAL REVIEW | `feat/b2-rehearsal-tooling` head |
 
 ## Frozen source SHAs
 
