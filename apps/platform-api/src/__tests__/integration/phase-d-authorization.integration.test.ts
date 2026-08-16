@@ -434,6 +434,15 @@ describe('B2 Phase D — Authorization + Hardening integration', { skip: !enable
         `must reject ${JSON.stringify(bad)}`
       );
     }
+    // Non-string values (e.g. arrays) must be rejected.
+    assert.throws(
+      () => assertSingleRole(['owner', 'admin'] as unknown as string, 'test'),
+      (err: unknown) => {
+        assert.strictEqual((err as { code?: string }).code, 'VALIDATION_ERROR');
+        return true;
+      },
+      'must reject array roles'
+    );
     for (const ok of ['owner', 'admin', 'member']) {
       assert.strictEqual(assertSingleRole(ok, 'test'), ok);
     }
@@ -518,19 +527,22 @@ describe('B2 Phase D — Authorization + Hardening integration', { skip: !enable
     }
   });
 
-  it('20. BA create org disabled', async () => {
+  it('20. BA create org disabled (org count unchanged)', async () => {
     const pool = new Pool({ connectionString: TEST_DATABASE_URL });
     try {
       const db = drizzle(pool);
       const auth = testAuth(db, { disableRateLimit: true });
       const { email } = await provisionedUser(db, 'createoff');
       const cookie = await signInCookie(auth, email);
+      const beforeCount = (await db.select().from(organizations)).length;
       const res = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/organization/create`, {
         method: 'POST',
         headers: { cookie, origin: TEST_ENV.BETTER_AUTH_URL, 'content-type': 'application/json' },
         body: JSON.stringify({ name: 'X', slug: `x-${Date.now()}` }),
       }));
       assert.notStrictEqual(res.status, 200, 'BA org create must be disabled (non-200)');
+      const afterCount = (await db.select().from(organizations)).length;
+      assert.strictEqual(afterCount, beforeCount, 'BA create must not add an organization row');
     } finally {
       await pool.end();
     }
