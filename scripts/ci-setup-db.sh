@@ -27,3 +27,7 @@ psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
 psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
   -f docs/sql/grants_b3.sql
 
+# Apply least-privilege runtime grants for the eight B6 Flow tables
+psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
+  -f docs/sql/grants_b6.sql
+
