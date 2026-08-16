@@ -1,21 +1,23 @@
-import { eq, and, isNull, sql } from 'drizzle-orm';
+import { eq, and, isNull, inArray, sql } from 'drizzle-orm';
 import { contactAssessments, contacts, bookings, ContactAssessmentRow } from '../db/schema';
 import { isOrganizationContext } from '../core/organization-context';
 import type { OrganizationContext } from '../core/organization-context';
 import { DomainError } from '../core/errors';
 import type { DbHandle } from '../db/client';
 
-const STATUS_PRECEDENCE: Record<string, number> = {
-  COMPLETED: 4,
-  SCHEDULED: 3,
-  CANCELLED: 2,
-  NOT_STARTED: 1,
-  UNKNOWN: 0,
+/**
+ * Precedence hierarchy (highest evidence always wins):
+ * COMPLETED > SCHEDULED > CANCELLED > NOT_STARTED
+ *
+ * For atomic SQL updates, map each incoming status to the subset of current statuses
+ * that it is allowed to overwrite.
+ */
+const ALLOWED_CURRENT_STATUSES: Record<string, string[]> = {
+  COMPLETED: ['NOT_STARTED', 'CANCELLED', 'SCHEDULED', 'COMPLETED'],
+  SCHEDULED: ['NOT_STARTED', 'CANCELLED', 'SCHEDULED'],
+  CANCELLED: ['NOT_STARTED', 'CANCELLED'],
+  NOT_STARTED: ['NOT_STARTED'],
 };
-
-function getStatusRank(status: string): number {
-  return STATUS_PRECEDENCE[status] ?? 0;
-}
 
 export interface AssessmentRepository {
   getOrCreate(ctx: OrganizationContext, contactId: string): Promise<ContactAssessmentRow | null>;
@@ -130,32 +132,6 @@ export function createAssessmentRepository(db: DbHandle): AssessmentRepository {
         }
       }
 
-      // Check existing assessment row for precedence guard
-      const existingRows = await db
-        .select()
-        .from(contactAssessments)
-        .where(
-          and(
-            eq(contactAssessments.organizationId, ctx.organizationId),
-            eq(contactAssessments.contactId, contactId)
-          )
-        )
-        .limit(1);
-
-      const existing = existingRows[0];
-      if (!existing) {
-        return null;
-      }
-
-      // Canonical precedence guard: COMPLETED > SCHEDULED > CANCELLED > NOT_STARTED
-      const currentRank = getStatusRank(existing.status);
-      const incomingRank = getStatusRank(status);
-
-      if (currentRank > incomingRank) {
-        // Lower evidence cannot overwrite higher evidence — ignore downgrade and return existing state
-        return existing;
-      }
-
       const now = new Date().toISOString();
       const patch: {
         status: string;
@@ -174,24 +150,46 @@ export function createAssessmentRepository(db: DbHandle): AssessmentRepository {
       if (assessedAt !== undefined) {
         patch.assessedAt = assessedAt;
       } else if (status === 'COMPLETED') {
-        patch.assessedAt = existing.assessedAt ?? now;
+        patch.assessedAt = now;
       }
       if (notes !== undefined) {
         patch.notes = notes;
       }
 
-      const rows = await db
+      // Atomic conditional update: guards update at SQL-level by allowed current status set
+      const allowedCurrent = ALLOWED_CURRENT_STATUSES[status] ?? [status];
+      const updatedRows = await db
         .update(contactAssessments)
         .set(patch)
         .where(
           and(
             eq(contactAssessments.organizationId, ctx.organizationId),
-            eq(contactAssessments.contactId, contactId)
+            eq(contactAssessments.contactId, contactId),
+            inArray(contactAssessments.status, allowedCurrent)
           )
         )
         .returning();
 
-      return rows[0] ?? null;
+      if (updatedRows.length > 0) {
+        return updatedRows[0];
+      }
+
+      // If 0 rows updated because higher evidence already exists, re-read and return current canonical row
+      const existing = await db
+        .select({ assessment: contactAssessments })
+        .from(contactAssessments)
+        .innerJoin(contacts, eq(contactAssessments.contactId, contacts.id))
+        .where(
+          and(
+            eq(contactAssessments.organizationId, ctx.organizationId),
+            eq(contactAssessments.contactId, contactId),
+            eq(contacts.organizationId, ctx.organizationId),
+            isNull(contacts.deletedAt)
+          )
+        )
+        .limit(1);
+
+      return existing[0]?.assessment ?? null;
     },
   };
 }

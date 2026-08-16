@@ -3,7 +3,7 @@ import { nextActions, contacts, bookings, NextActionRow, NewNextActionRow } from
 import { isOrganizationContext } from '../core/organization-context';
 import type { OrganizationContext } from '../core/organization-context';
 import { DomainError } from '../core/errors';
-import { isUniqueViolation } from '../db/pg-errors';
+import { isUniqueConstraintViolation } from '../db/pg-errors';
 import type { DbHandle } from '../db/client';
 
 export type CreateNextActionInput = Omit<NewNextActionRow, 'id' | 'organizationId' | 'createdAt' | 'updatedAt'>;
@@ -50,7 +50,7 @@ export function createNextActionRepository(db: DbHandle): NextActionRepository {
         throw new DomainError('NOT_FOUND', 'Active tenant contact is required to create a next action');
       }
 
-      // Tenant booking parent verification if bookingId is supplied
+      // Tenant booking parent verification: booking must belong to same tenant AND same contact (fail-closed)
       if (input.bookingId) {
         const [booking] = await db
           .select({ id: bookings.id })
@@ -58,13 +58,14 @@ export function createNextActionRepository(db: DbHandle): NextActionRepository {
           .where(
             and(
               eq(bookings.id, input.bookingId),
-              eq(bookings.organizationId, ctx.organizationId)
+              eq(bookings.organizationId, ctx.organizationId),
+              eq(bookings.contactId, input.contactId)
             )
           )
           .limit(1);
 
         if (!booking) {
-          throw new DomainError('NOT_FOUND', 'Tenant booking is required when bookingId is supplied');
+          throw new DomainError('NOT_FOUND', 'Tenant booking not found or does not belong to active tenant contact');
         }
       }
 
@@ -82,7 +83,7 @@ export function createNextActionRepository(db: DbHandle): NextActionRepository {
 
         return rows[0];
       } catch (err) {
-        if (isUniqueViolation(err)) {
+        if (isUniqueConstraintViolation(err, 'next_actions_org_source_idempotency_unique')) {
           throw new DomainError(
             'CONFLICT',
             'Next action with this idempotency key already exists for this source'

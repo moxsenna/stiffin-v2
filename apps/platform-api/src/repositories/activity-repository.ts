@@ -53,7 +53,7 @@ export function createActivityRepository(db: DbHandle): ActivityRepository {
         throw new DomainError('NOT_FOUND', 'Active tenant contact is required to append an activity');
       }
 
-      // Tenant booking parent verification if bookingId is supplied
+      // Tenant booking parent verification: booking must belong to same tenant AND same contact (fail-closed)
       if (input.bookingId) {
         const [booking] = await db
           .select({ id: bookings.id })
@@ -61,13 +61,14 @@ export function createActivityRepository(db: DbHandle): ActivityRepository {
           .where(
             and(
               eq(bookings.id, input.bookingId),
-              eq(bookings.organizationId, ctx.organizationId)
+              eq(bookings.organizationId, ctx.organizationId),
+              eq(bookings.contactId, input.contactId)
             )
           )
           .limit(1);
 
         if (!booking) {
-          throw new DomainError('NOT_FOUND', 'Tenant booking is required when bookingId is supplied to activity');
+          throw new DomainError('NOT_FOUND', 'Tenant booking not found or does not belong to active tenant contact');
         }
       }
 

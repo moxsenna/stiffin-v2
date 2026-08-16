@@ -38,6 +38,9 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
   let serviceAId: string;
   let serviceAInactiveId: string;
   let serviceBId: string;
+  let bookingContactAId: string;
+  let bookingContactA2Id: string;
+  let bookingOrgBId: string;
 
   const actorA: AuthenticatedActor = {
     userId: '',
@@ -138,6 +141,39 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
         })
         .returning();
       serviceBId = sB.id;
+
+      // Pre-seed test bookings
+      const bRepo = createBookingRepository(db);
+
+      const b1 = await bRepo.create({ organizationId: orgAId }, {
+        contactId: contactAId,
+        serviceId: serviceAId,
+        amount: 300000,
+        startAt: new Date().toISOString(),
+        locationType: 'ONLINE',
+        status: 'CONFIRMED',
+      });
+      bookingContactAId = b1.id;
+
+      const b2 = await bRepo.create({ organizationId: orgAId }, {
+        contactId: contactA2Id,
+        serviceId: serviceAId,
+        amount: 300000,
+        startAt: new Date().toISOString(),
+        locationType: 'ONLINE',
+        status: 'CONFIRMED',
+      });
+      bookingContactA2Id = b2.id;
+
+      const b3 = await bRepo.create({ organizationId: orgBId }, {
+        contactId: contactBId,
+        serviceId: serviceBId,
+        amount: 500000,
+        startAt: new Date().toISOString(),
+        locationType: 'ONLINE',
+        status: 'CONFIRMED',
+      });
+      bookingOrgBId = b3.id;
     });
   });
 
@@ -458,10 +494,10 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
     });
   });
 
-  describe('5. NextActionRepository', () => {
+  describe('5. NextActionRepository & Relational Consistency', () => {
     let actionAId: string;
 
-    it('creates next action, validates active tenant contact/booking parents, and maps duplicate idempotency key to DomainError CONFLICT', async () => {
+    it('creates next action, validates active tenant contact/booking parents, and enforces same-contact booking relational consistency', async () => {
       await withIntegrationDb(async (db) => {
         const repo = createNextActionRepository(db);
         const ctxA = { organizationId: orgAId };
@@ -470,8 +506,10 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
         const dueAt = new Date().toISOString();
         const idemp = `na-test-${Date.now()}`;
 
+        // 1. Valid action linked to matching Contact A booking
         const na = await repo.create(ctxA, {
           contactId: contactAId,
+          bookingId: bookingContactAId,
           actionType: 'CONTACT_LEAD',
           title: 'First call',
           dueAt,
@@ -480,15 +518,38 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
           idempotencyKey: idemp,
         });
         assert.ok(na.id);
+        assert.strictEqual(na.contactId, contactAId);
+        assert.strictEqual(na.bookingId, bookingContactAId);
         actionAId = na.id;
 
-        // Duplicate idempotency key in same org throws DomainError CONFLICT (not raw pg 23505)
+        // 2. Same-org Cross-contact Relational Poisoning rejection: Contact A + Booking Contact A2 -> NOT_FOUND
         await assert.rejects(
           async () => {
             await repo.create(ctxA, {
               contactId: contactAId,
+              bookingId: bookingContactA2Id, // Belongs to contactA2, not contactA!
               actionType: 'CONTACT_LEAD',
-              title: 'Second call',
+              title: 'Cross-contact poisoned action',
+              dueAt,
+              priority: 80,
+            });
+          },
+          (err: unknown) => {
+            assert.ok(isDomainError(err), 'Must be DomainError');
+            assert.strictEqual(err.code, 'NOT_FOUND');
+            return true;
+          },
+          'Same-org cross-contact booking reference in NextAction must fail closed with NOT_FOUND'
+        );
+
+        // 3. Exact constraint mapping: duplicate idempotency key on same org+source -> DomainError CONFLICT
+        await assert.rejects(
+          async () => {
+            await repo.create(ctxA, {
+              contactId: contactAId,
+              bookingId: bookingContactAId,
+              actionType: 'CONTACT_LEAD',
+              title: 'Duplicate idempotency action',
               dueAt,
               priority: 80,
               source: 'PROMOTORFLOW',
@@ -499,10 +560,11 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
             assert.ok(isDomainError(err), 'Must be DomainError');
             assert.strictEqual(err.code, 'CONFLICT');
             return true;
-          }
+          },
+          'next_actions_org_source_idempotency_unique must map to CONFLICT'
         );
 
-        // Tenant poisoning rejection
+        // 4. Cross-org tenant poisoning rejection
         await assert.rejects(
           async () => {
             await repo.create(ctxB, {
@@ -546,24 +608,43 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
     });
   });
 
-  describe('6. ActivityRepository (Append-Only & Trusted Actor)', () => {
-    it('appends activities using server-resolved actor, supports null actor for system events, and exposes no update/delete', async () => {
+  describe('6. ActivityRepository (Append-Only, Trusted Actor & Relational Consistency)', () => {
+    it('appends activities using server-resolved actor, enforces booking ↔ contact consistency, and exposes no update/delete', async () => {
       await withIntegrationDb(async (db) => {
         const repo = createActivityRepository(db);
         const ctxA = { organizationId: orgAId };
         const ctxB = { organizationId: orgBId };
 
-        // 1. User event with server-resolved AuthenticatedActor
+        // 1. User event with server-resolved AuthenticatedActor & matching booking
         const act1 = await repo.append(ctxA, actorA, {
           contactId: contactAId,
+          bookingId: bookingContactAId,
           eventType: 'WHATSAPP_SENT',
           metadataJson: { messageId: 'm-123' },
         });
         assert.ok(act1.id);
         assert.strictEqual(act1.actorUserId, userAId);
         assert.strictEqual(act1.eventType, 'WHATSAPP_SENT');
+        assert.strictEqual(act1.bookingId, bookingContactAId);
 
-        // 2. System event with actor = null
+        // 2. Same-org Cross-contact Relational Poisoning rejection: Contact A + Booking Contact A2 -> NOT_FOUND
+        await assert.rejects(
+          async () => {
+            await repo.append(ctxA, actorA, {
+              contactId: contactAId,
+              bookingId: bookingContactA2Id, // Belongs to Contact A2!
+              eventType: 'CALL_LOGGED',
+            });
+          },
+          (err: unknown) => {
+            assert.ok(isDomainError(err), 'Must be DomainError');
+            assert.strictEqual(err.code, 'NOT_FOUND');
+            return true;
+          },
+          'Same-org cross-contact booking in Activity must fail closed with NOT_FOUND'
+        );
+
+        // 3. System event with actor = null
         const act2 = await repo.append(ctxA, null, {
           contactId: contactAId,
           eventType: 'STAGE_CHANGED',
@@ -571,7 +652,7 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
         });
         assert.strictEqual(act2.actorUserId, null);
 
-        // 3. Tenant poisoning rejection (Org B context with Org A contact)
+        // 4. Cross-tenant poisoning rejection (Org B context with Org A contact)
         await assert.rejects(
           async () => {
             await repo.append(ctxB, actorA, {
@@ -586,7 +667,7 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
           }
         );
 
-        // 4. listByContact & listByOrg
+        // 5. listByContact & listByOrg
         const contactActs = await repo.listByContact(ctxA, contactAId);
         assert.ok(contactActs.length >= 2);
 
@@ -596,7 +677,7 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
         const crossActs = await repo.listByContact(ctxB, contactAId);
         assert.strictEqual(crossActs.length, 0);
 
-        // 5. Verify repository exposes NO update/delete methods
+        // 6. Verify repository exposes NO update/delete methods
         assert.strictEqual((repo as any).update, undefined);
         assert.strictEqual((repo as any).delete, undefined);
         assert.strictEqual((repo as any).editActivity, undefined);
@@ -604,14 +685,14 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
     });
   });
 
-  describe('7. AftercareRepository', () => {
-    it('creates aftercare record, maps duplicate booking aftercare to DomainError CONFLICT, and completes record', async () => {
+  describe('7. AftercareRepository (Relational Consistency & Exact Constraint Mapping)', () => {
+    it('creates aftercare record, enforces same-contact booking consistency, and maps duplicate booking aftercare to CONFLICT', async () => {
       await withIntegrationDb(async (db) => {
         const bRepo = createBookingRepository(db);
         const acRepo = createAftercareRepository(db);
         const ctxA = { organizationId: orgAId };
 
-        // Create booking for aftercare test
+        // Create completed booking for aftercare test on Contact A
         const bk = await bRepo.create(ctxA, {
           contactId: contactAId,
           serviceId: serviceAId,
@@ -622,7 +703,24 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
           completedAt: new Date().toISOString(),
         });
 
-        // Create aftercare record
+        // 1. Same-org Cross-contact Relational Poisoning rejection: Contact A2 + Booking Contact A -> NOT_FOUND
+        await assert.rejects(
+          async () => {
+            await acRepo.create(ctxA, {
+              bookingId: bk.id, // Belongs to Contact A!
+              contactId: contactA2Id, // Passed Contact A2!
+              scheduledFor: new Date(Date.now() + 7 * 86400_000).toISOString(),
+            });
+          },
+          (err: unknown) => {
+            assert.ok(isDomainError(err), 'Must be DomainError');
+            assert.strictEqual(err.code, 'NOT_FOUND');
+            return true;
+          },
+          'Same-org cross-contact booking in Aftercare must fail closed with NOT_FOUND'
+        );
+
+        // 2. Valid creation with matching Contact A + Booking Contact A
         const ac = await acRepo.create(ctxA, {
           bookingId: bk.id,
           contactId: contactAId,
@@ -631,8 +729,10 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
         });
         assert.ok(ac.id);
         assert.strictEqual(ac.status, 'PENDING');
+        assert.strictEqual(ac.bookingId, bk.id);
+        assert.strictEqual(ac.contactId, contactAId);
 
-        // Duplicate aftercare on same booking maps to DomainError CONFLICT (not raw pg 23505)
+        // 3. Exact constraint mapping: duplicate aftercare on same booking maps to DomainError CONFLICT
         await assert.rejects(
           async () => {
             await acRepo.create(ctxA, {
@@ -645,14 +745,15 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
             assert.ok(isDomainError(err), 'Must be DomainError');
             assert.strictEqual(err.code, 'CONFLICT');
             return true;
-          }
+          },
+          'aftercare_records_org_booking_unique must map to CONFLICT'
         );
 
-        // findByBooking
+        // 4. findByBooking
         const found = await acRepo.findByBooking(ctxA, bk.id);
         assert.strictEqual(found?.id, ac.id);
 
-        // completeRecord
+        // 5. completeRecord
         const recAt = new Date().toISOString();
         const completed = await acRepo.completeRecord(ctxA, bk.id, {
           outcome: 'INTERESTED_NEXT_SESSION',
@@ -666,47 +767,7 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
     });
   });
 
-  describe('8. AssessmentRepository (Precedence Guard & Parent Validation)', () => {
-    let bookingContactAId: string;
-    let bookingContactA2Id: string;
-    let bookingOrgBId: string;
-
-    before(async () => {
-      await withIntegrationDb(async (db) => {
-        const bRepo = createBookingRepository(db);
-
-        const b1 = await bRepo.create({ organizationId: orgAId }, {
-          contactId: contactAId,
-          serviceId: serviceAId,
-          amount: 300000,
-          startAt: new Date().toISOString(),
-          locationType: 'ONLINE',
-          status: 'CONFIRMED',
-        });
-        bookingContactAId = b1.id;
-
-        const b2 = await bRepo.create({ organizationId: orgAId }, {
-          contactId: contactA2Id,
-          serviceId: serviceAId,
-          amount: 300000,
-          startAt: new Date().toISOString(),
-          locationType: 'ONLINE',
-          status: 'CONFIRMED',
-        });
-        bookingContactA2Id = b2.id;
-
-        const b3 = await bRepo.create({ organizationId: orgBId }, {
-          contactId: contactBId,
-          serviceId: serviceBId,
-          amount: 500000,
-          startAt: new Date().toISOString(),
-          locationType: 'ONLINE',
-          status: 'CONFIRMED',
-        });
-        bookingOrgBId = b3.id;
-      });
-    });
-
+  describe('8. AssessmentRepository (Atomic Precedence & Relational Consistency)', () => {
     it('enforces sourceBooking parent validation (same tenant AND same contact)', async () => {
       await withIntegrationDb(async (db) => {
         const asRepo = createAssessmentRepository(db);
@@ -800,6 +861,47 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
         // 10. COMPLETED -> NOT_STARTED (must NOT downgrade -> stays COMPLETED)
         const step9 = await asRepo.updateStatus(ctxA, cTest.id, 'NOT_STARTED');
         assert.strictEqual(step9?.status, 'COMPLETED');
+      });
+    });
+
+    it('proves concurrent atomic precedence: simultaneous COMPLETED and SCHEDULED writes always resolve to COMPLETED', async () => {
+      await withIntegrationDb(async (db) => {
+        const asRepo = createAssessmentRepository(db);
+        const ctxA = { organizationId: orgAId };
+
+        // Run 5 separate concurrent race rounds on fresh contacts
+        for (let round = 0; round < 5; round++) {
+          const [cRace] = await db
+            .insert(contacts)
+            .values({
+              organizationId: orgAId,
+              name: `Race Contact ${round}`,
+              phoneE164: `+628120000000${round}`,
+            })
+            .returning();
+
+          await asRepo.getOrCreate(ctxA, cRace.id);
+
+          // Fire simultaneous concurrent writers: SCHEDULED, COMPLETED, CANCELLED, NOT_STARTED
+          const concurrentWrites = [
+            asRepo.updateStatus(ctxA, cRace.id, 'SCHEDULED'),
+            asRepo.updateStatus(ctxA, cRace.id, 'COMPLETED', undefined, undefined, `Completed round ${round}`),
+            asRepo.updateStatus(ctxA, cRace.id, 'CANCELLED'),
+            asRepo.updateStatus(ctxA, cRace.id, 'SCHEDULED'),
+            asRepo.updateStatus(ctxA, cRace.id, 'NOT_STARTED'),
+          ];
+
+          await Promise.all(concurrentWrites);
+
+          // Read back final state from database
+          const finalState = await asRepo.findById(ctxA, cRace.id);
+          assert.strictEqual(
+            finalState?.status,
+            'COMPLETED',
+            `Round ${round}: Concurrency race failed: expected COMPLETED but got ${finalState?.status}`
+          );
+          assert.ok(finalState?.assessedAt, `Round ${round}: assessedAt must be populated on COMPLETED`);
+        }
       });
     });
   });

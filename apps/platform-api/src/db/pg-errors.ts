@@ -15,7 +15,26 @@ export function getPostgresErrorCode(err: unknown): string | undefined {
   return typeof causeCode === 'string' ? causeCode : undefined;
 }
 
+/**
+ * Extract PostgreSQL constraint name from error or nested error.cause.
+ */
+export function getPostgresConstraintName(err: unknown): string | undefined {
+  if (typeof err !== 'object' || err === null) return undefined;
+  const constraint = (err as { constraint?: unknown }).constraint;
+  if (typeof constraint === 'string') return constraint;
+  const cause = (err as { cause?: { constraint?: unknown } }).cause;
+  const causeConstraint = cause?.constraint;
+  return typeof causeConstraint === 'string' ? causeConstraint : undefined;
+}
+
 /** True when the underlying PostgreSQL error is a unique-violation (23505). */
 export function isUniqueViolation(err: unknown): boolean {
   return getPostgresErrorCode(err) === '23505';
+}
+
+/**
+ * True when the underlying error is a unique-violation (23505) matching a specific constraint name.
+ */
+export function isUniqueConstraintViolation(err: unknown, constraintName: string): boolean {
+  return isUniqueViolation(err) && getPostgresConstraintName(err) === constraintName;
 }
