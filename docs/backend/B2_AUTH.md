@@ -20,14 +20,15 @@
 
 ## 2. Authoritative Commit SHAs & Ancestry
 
-- **Tested Runtime Source SHA:** `83f5b90e4ff4fe8180905790824baf4af769edf8`
+- **E-A/E-B Tested Runtime Source SHA:** `83f5b90e4ff4fe8180905790824baf4af769edf8`
 - **Phase C Frozen Head:** `18dc9996c832fdbc83b8f4dc2061b50b833fbb96`
 - **Phase D Frozen Head:** `a8995977dad10fc21ebadc83df69c5f3c525a0ed`
 - **Release-Control Hardening (P0):** `40124853b541b16f5e3e3365b6690869ddcfa21f` (merged PR #20)
 - **Phase C Promotion Merge Commit:** `a512708fee21148067d255c4fd3d4e96b682e483` (merged PR #16)
 - **Phase D Promotion Merge Commit:** `1145499b32ecea9474ddd584baaff76b604a6a28` (merged PR #17)
 - **Phase E Promotion Merge Commit:** `5b345b8aa65478e239d449fc1230c37792d89fd8` (merged PR #18)
-- **Final Canonical Master SHA:** `1a3121fb78498301f8916a3435a79ea65d1af4de`
+- **B2 Final Implementation / Test-Harness SHA:** `1a3121fb78498301f8916a3435a79ea65d1af4de`
+- **Current Master / Docs-Closeout Head:** `7a8c76a053195fbed3a621a2862f79e26b4f3bbb`
 
 All exact frozen SHAs (`18dc999...`, `a899597...`, `83f5b90...`) are preserved as direct ancestors of canonical `master`.
 
