@@ -62,6 +62,10 @@ export class HttpProgramRepository implements ProgramRepositoryPort {
     }
   }
 
+  async deleteProgram(programId: string): Promise<void> {
+    return this.client.deleteProgram(programId);
+  }
+
   async addModule(programId: string, title: string): Promise<Program> {
     return this.client.addModule(programId, title);
   }

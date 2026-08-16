@@ -177,6 +177,10 @@ export class PromotorClassContentApiClient {
     return res.program;
   }
 
+  async deleteProgram(id: string): Promise<void> {
+    await this.client.delete(`/api/v1/programs/${encodeURIComponent(id)}`);
+  }
+
   async publishProgram(id: string): Promise<Program> {
     const res = await this.client.post<{ program: Program }>(`/api/v1/programs/${encodeURIComponent(id)}/publish`);
     return res.program;

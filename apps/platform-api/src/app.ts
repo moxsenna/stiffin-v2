@@ -245,6 +245,14 @@ export function createApp(deps?: AppDependencies) {
     return c.json({ program: updated }, 200);
   });
 
+  app.delete('/api/v1/programs/:programId', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { service, ctx } = getServices(c);
+    const programId = c.req.param('programId');
+    await service.deleteProgram(ctx, programId);
+    return c.json({ success: true }, 200);
+  });
+
   // Program Lifecycle Transitions
   app.post('/api/v1/programs/:programId/publish', async (c) => {
     c.header('Cache-Control', 'no-store');

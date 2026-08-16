@@ -32,6 +32,7 @@ export interface ProgramRepository {
     presentationInput?: Partial<NewProgramPresentationRow>
   ): Promise<Program>;
   update(ctx: OrganizationContext, id: string, patch: Partial<ProgramRow>): Promise<Program | null>;
+  deleteProgram(ctx: OrganizationContext, programId: string): Promise<void>;
   setStatus(ctx: OrganizationContext, id: string, status: string, publishedAt?: string | null): Promise<Program | null>;
   getPresentation(ctx: OrganizationContext, programId: string): Promise<ProgramPublicPresentation | null>;
   updatePresentation(
@@ -589,6 +590,15 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
 
       const updated = await loadFullProgram(ctx, programId);
       return updated!;
+    },
+
+    async deleteProgram(ctx, programId) {
+      const prog = await loadFullProgram(ctx, programId);
+      if (!prog) throw new Error('Program not found');
+
+      await db
+        .delete(programs)
+        .where(and(eq(programs.id, programId), eq(programs.organizationId, ctx.organizationId)));
     },
   };
 }

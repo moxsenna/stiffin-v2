@@ -30,6 +30,7 @@ export interface ProgramService {
   getProgram(ctx: OrganizationContext, id: string): Promise<Program>;
   createProgram(ctx: OrganizationContext, cmd: CreateProgramRequest): Promise<Program>;
   updateProgram(ctx: OrganizationContext, id: string, patch: UpdateProgramRequest): Promise<Program>;
+  deleteProgram(ctx: OrganizationContext, id: string): Promise<void>;
   publishProgram(ctx: OrganizationContext, id: string): Promise<Program>;
   unpublishProgram(ctx: OrganizationContext, id: string): Promise<Program>;
   archiveProgram(ctx: OrganizationContext, id: string): Promise<Program>;
@@ -221,6 +222,17 @@ export function createProgramService(
 
       if (!updated) throw new DomainError('NOT_FOUND', 'Program not found');
       return updated;
+    },
+
+    async deleteProgram(ctx, id) {
+      const prog = await this.getProgram(ctx, id);
+      if (prog.status !== 'draft') {
+        throw new DomainError(
+          'CONTENT_DELETE_FORBIDDEN',
+          `Cannot delete a program with status "${prog.status}". Only draft programs can be deleted.`
+        );
+      }
+      await programRepo.deleteProgram(ctx, id);
     },
 
     async publishProgram(ctx, id) {

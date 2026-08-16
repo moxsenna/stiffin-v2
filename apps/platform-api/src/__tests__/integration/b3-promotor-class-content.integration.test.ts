@@ -391,7 +391,7 @@ describe('B3 — PromotorClass Content Implementation Suite', { skip: !enabled ?
       });
     });
 
-    it('enforces delete policy: draft allows delete, published rejects with CONTENT_DELETE_FORBIDDEN', async () => {
+    it('enforces delete policy: draft allows delete, published/archived rejects with CONTENT_DELETE_FORBIDDEN', async () => {
       await withIntegrationDb(async (db) => {
         const programRepo = createProgramRepository(db);
         const profileRepo = createWorkspaceProfileRepository(db);
@@ -415,7 +415,7 @@ describe('B3 — PromotorClass Content Implementation Suite', { skip: !enabled ?
         // Publish the program
         await service.publishProgram({ organizationId: orgAId }, prog.id);
 
-        // Published: deleting module or lesson must be rejected
+        // Published: deleting module, lesson, or program must be rejected
         await assert.rejects(
           async () => {
             await service.deleteModule({ organizationId: orgAId }, prog.id, prog.modules[0].id);
@@ -433,6 +433,41 @@ describe('B3 — PromotorClass Content Implementation Suite', { skip: !enabled ?
             );
           },
           (err: any) => err.code === 'CONTENT_DELETE_FORBIDDEN'
+        );
+
+        await assert.rejects(
+          async () => {
+            await service.deleteProgram({ organizationId: orgAId }, prog.id);
+          },
+          (err: any) => err.code === 'CONTENT_DELETE_FORBIDDEN'
+        );
+
+        // Archive the program: deleting program must still be rejected
+        await service.archiveProgram({ organizationId: orgAId }, prog.id);
+        await assert.rejects(
+          async () => {
+            await service.deleteProgram({ organizationId: orgAId }, prog.id);
+          },
+          (err: any) => err.code === 'CONTENT_DELETE_FORBIDDEN'
+        );
+
+        // Create another draft program specifically to test successful program deletion
+        const draftToDelete = await service.createProgram(
+          { organizationId: orgAId },
+          {
+            title: 'Draft To Be Deleted',
+            programType: 'paid',
+            priceAmount: 50000,
+          }
+        );
+        await service.deleteProgram({ organizationId: orgAId }, draftToDelete.id);
+
+        // Verifying it is gone (throws NOT_FOUND)
+        await assert.rejects(
+          async () => {
+            await service.getProgram({ organizationId: orgAId }, draftToDelete.id);
+          },
+          (err: any) => err.code === 'NOT_FOUND'
         );
       });
     });
@@ -717,6 +752,46 @@ describe('B3 — PromotorClass Content Implementation Suite', { skip: !enabled ?
       }, TEST_ENV as any);
 
       assert.strictEqual(res.status, 404);
+    });
+
+    it('admin DELETE /api/v1/programs/:programId allows deleting draft and rejects published', async () => {
+      // 1. Create draft program via API
+      const createRes = await app.request('/api/v1/programs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          cookie: cookieA,
+        },
+        body: JSON.stringify({
+          title: 'Draft To Delete Via HTTP',
+          programType: 'lead_magnet',
+        }),
+      }, TEST_ENV as any);
+
+      assert.strictEqual(createRes.status, 201);
+      const createJson = (await createRes.json()) as any;
+      const draftId = createJson.program.id;
+
+      // 2. DELETE draft program -> 200 OK
+      const delRes = await app.request(`/api/v1/programs/${draftId}`, {
+        method: 'DELETE',
+        headers: {
+          cookie: cookieA,
+        },
+      }, TEST_ENV as any);
+
+      assert.strictEqual(delRes.status, 200);
+      const delJson = (await delRes.json()) as any;
+      assert.strictEqual(delJson.success, true);
+
+      // 3. Verify it is 404 now
+      const getRes = await app.request(`/api/v1/programs/${draftId}`, {
+        method: 'GET',
+        headers: {
+          cookie: cookieA,
+        },
+      }, TEST_ENV as any);
+      assert.strictEqual(getRes.status, 404);
     });
   });
 });
