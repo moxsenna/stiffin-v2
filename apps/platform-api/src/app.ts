@@ -168,7 +168,8 @@ export function createApp(deps?: AppDependencies) {
     return c.json({ profile }, 200);
   });
 
-  app.get('/api/v1/public/workspaces/:workspaceSlug/programs', async (c) => {
+  // Public Catalog (canonical: /programs, alias: /catalog for UI route parity)
+  const handlePublicCatalog = async (c: any) => {
     c.header('Cache-Control', 'public, max-age=60, s-maxage=300');
     const db = c.get('db');
     const publicRepo = createPublicContentRepository(db);
@@ -176,7 +177,10 @@ export function createApp(deps?: AppDependencies) {
     const workspaceSlug = c.req.param('workspaceSlug');
     const catalog = await publicService.getPublicProgramCatalog(workspaceSlug);
     return c.json({ catalog }, 200);
-  });
+  };
+
+  app.get('/api/v1/public/workspaces/:workspaceSlug/programs', handlePublicCatalog);
+  app.get('/api/v1/public/workspaces/:workspaceSlug/catalog', handlePublicCatalog);
 
   app.get('/api/v1/public/workspaces/:workspaceSlug/programs/:programSlug', async (c) => {
     c.header('Cache-Control', 'public, max-age=60, s-maxage=300');
