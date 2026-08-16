@@ -480,13 +480,119 @@ describe('B3 — PromotorClass Content Implementation Suite', { skip: !enabled ?
         const catalog = await publicService.getPublicProgramCatalog(orgASlug);
         assert.ok(catalog.length >= 1);
         // Ensure secret draft is not in public catalog
-        assert.ok(catalog.every((item) => item.program.status === 'published'));
         assert.ok(catalog.some((item) => item.program.programSlug === publishedProgSlug));
+        assert.ok(!catalog.some((item) => item.program.programSlug === 'secret-draft-program'));
 
         const detail = await publicService.getPublicProgramDetail(orgASlug, publishedProgSlug);
         assert.ok(detail);
         assert.strictEqual(detail.program.programSlug, publishedProgSlug);
         assert.strictEqual(detail.isRegistrationAllowed, true);
+        assert.ok(typeof detail.program.totalLessonsCount === 'number');
+        assert.ok(typeof detail.program.totalModulesCount === 'number');
+      });
+    });
+
+    it('SECURITY GUARD: public program detail strictly hides lesson body, textContent, video URLs, reflection details, attachments, and CTA configs', async () => {
+      let paidProgSlug: string;
+
+      await withIntegrationDb(async (db) => {
+        const programRepo = createProgramRepository(db);
+        const profileRepo = createWorkspaceProfileRepository(db);
+        const service = createProgramService(programRepo, profileRepo);
+
+        const prog = await service.createProgram(
+          { organizationId: orgAId },
+          {
+            title: 'Paid Masterclass Secret Content',
+            programType: 'paid',
+            priceAmount: 499000,
+          }
+        );
+        paidProgSlug = prog.programSlug;
+
+        const moduleId = prog.modules[0].id;
+        const lessonId = prog.modules[0].lessons[0].id;
+
+        // Save confidential lesson content
+        await service.saveLesson(
+          { organizationId: orgAId },
+          prog.id,
+          moduleId,
+          lessonId,
+          {
+            title: 'Rahasia Sukses Parenting STIFIn',
+            textContent: 'TOP_SECRET_PAID_LESSON_BODY_TEXT_CONTENT_NEVER_LEAK',
+            videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            reflectionType: 'single_select',
+            reflectionPrompt: 'TOP_SECRET_REFLECTION_PROMPT_QUESTION',
+            reflectionOptions: [
+              { id: 'opt_1', label: 'SECRET_OPTION_A' },
+              { id: 'opt_2', label: 'SECRET_OPTION_B' },
+            ],
+            ctaType: 'WHATSAPP',
+            ctaLabel: 'Hubungi Promotor',
+            ctaConfig: { message: 'SECRET_INTERNAL_PROMOTER_PHONE_ROUTING' },
+            attachments: [
+              {
+                name: 'Modul_Rahasia.pdf',
+                url: 'https://cdn.example.com/secret/modul.pdf',
+                kind: 'download',
+              },
+            ],
+          }
+        );
+
+        await service.publishProgram({ organizationId: orgAId }, prog.id);
+      });
+
+      // Now query public read model via zero-auth service
+      await withIntegrationDb(async (db) => {
+        const publicRepo = createPublicContentRepository(db);
+        const publicService = createPublicContentService(publicRepo);
+
+        const detail = await publicService.getPublicProgramDetail(orgASlug, paidProgSlug);
+        assert.ok(detail);
+        assert.strictEqual(detail.isRegistrationAllowed, false);
+        assert.strictEqual(detail.registrationStatusNotice, 'Pendaftaran berbayar melalui promotor.');
+
+        // Verify summary fields
+        assert.strictEqual(detail.program.priceAmount, 499000);
+        assert.strictEqual(detail.program.totalLessonsCount, 1);
+        assert.strictEqual(detail.program.totalModulesCount, 1);
+
+        // Verify modules and lessons are previews ONLY
+        assert.strictEqual(detail.program.modules.length, 1);
+        const previewMod = detail.program.modules[0];
+        assert.strictEqual(previewMod.title, 'Modul 1: Pengenalan');
+        assert.strictEqual(previewMod.lessons.length, 1);
+
+        const previewLes = previewMod.lessons[0] as any;
+        assert.strictEqual(previewLes.title, 'Rahasia Sukses Parenting STIFIn');
+        assert.strictEqual(previewLes.order, 1);
+        assert.strictEqual(previewLes.hasVideo, true);
+        assert.strictEqual(previewLes.hasReflection, true);
+
+        // STRICT SECURITY ASSERTIONS: ensure confidential fields are NEVER present
+        assert.strictEqual(previewLes.textContent, undefined);
+        assert.strictEqual(previewLes.videoUrl, undefined);
+        assert.strictEqual(previewLes.videoYoutubeUrl, undefined);
+        assert.strictEqual(previewLes.videoExternalId, undefined);
+        assert.strictEqual(previewLes.reflectionPrompt, undefined);
+        assert.strictEqual(previewLes.reflectionOptions, undefined);
+        assert.strictEqual(previewLes.ctaType, undefined);
+        assert.strictEqual(previewLes.ctaLabel, undefined);
+        assert.strictEqual(previewLes.ctaTargetProgramId, undefined);
+        assert.strictEqual(previewLes.ctaConfig, undefined);
+        assert.strictEqual(previewLes.attachments, undefined);
+
+        // JSON payload inspection: confidential strings MUST NOT exist anywhere in payload
+        const jsonStr = JSON.stringify(detail);
+        assert.ok(!jsonStr.includes('TOP_SECRET_PAID_LESSON_BODY_TEXT_CONTENT_NEVER_LEAK'));
+        assert.ok(!jsonStr.includes('TOP_SECRET_REFLECTION_PROMPT_QUESTION'));
+        assert.ok(!jsonStr.includes('SECRET_OPTION_A'));
+        assert.ok(!jsonStr.includes('SECRET_INTERNAL_PROMOTER_PHONE_ROUTING'));
+        assert.ok(!jsonStr.includes('https://cdn.example.com/secret/modul.pdf'));
+        assert.ok(!jsonStr.includes('dQw4w9WgXcQ'));
       });
     });
 

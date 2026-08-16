@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Module } from '@promotor/contracts';
+import { PublicModulePreview } from '@promotor/contracts';
 
 interface CurriculumPreviewProps {
-  modules: Module[];
+  modules: PublicModulePreview[];
 }
 
 export function CurriculumPreview({ modules }: CurriculumPreviewProps) {
@@ -61,9 +61,14 @@ export function CurriculumPreview({ modules }: CurriculumPreviewProps) {
 
               <div style={{ marginTop: '14px', display: 'grid', gap: '8px' }}>
                 {mod.lessons.map(les => {
-                  let formatLabel = 'Video';
-                  if (les.hasReflection) formatLabel = 'Video + Refleksi';
-                  if (!les.videoYoutubeUrl && !les.videoExternalId) formatLabel = 'Bacaan';
+                  let formatLabel = 'Bacaan';
+                  if (les.hasVideo && les.hasReflection) {
+                    formatLabel = 'Video + Refleksi';
+                  } else if (les.hasVideo) {
+                    formatLabel = 'Video';
+                  } else if (les.hasReflection) {
+                    formatLabel = 'Refleksi';
+                  }
 
                   return (
                     <div

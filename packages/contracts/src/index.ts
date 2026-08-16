@@ -156,8 +156,42 @@ export const PublicWorkspaceProfileSchema = z.object({
 });
 export type PublicWorkspaceProfile = z.infer<typeof PublicWorkspaceProfileSchema>;
 
+export const PublicLessonPreviewSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  order: z.number(),
+  hasVideo: z.boolean(),
+  hasReflection: z.boolean(),
+});
+export type PublicLessonPreview = z.infer<typeof PublicLessonPreviewSchema>;
+
+export const PublicModulePreviewSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  order: z.number(),
+  lessons: z.array(PublicLessonPreviewSchema),
+});
+export type PublicModulePreview = z.infer<typeof PublicModulePreviewSchema>;
+
+export const PublicProgramSummarySchema = z.object({
+  id: z.string(),
+  workspaceSlug: z.string(),
+  programSlug: z.string(),
+  title: z.string(),
+  subtitle: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  programType: ProgramTypeSchema,
+  accessType: AccessTypeSchema,
+  pricing: ProgramPricingSchema,
+  priceAmount: z.number(),
+  publishedAt: z.string().optional().nullable(),
+  totalLessonsCount: z.number(),
+  totalModulesCount: z.number(),
+});
+export type PublicProgramSummary = z.infer<typeof PublicProgramSummarySchema>;
+
 export const PublicProgramCatalogItemSchema = z.object({
-  program: ProgramSchema,
+  program: PublicProgramSummarySchema,
   presentation: ProgramPublicPresentationSchema,
   isRegistrationAllowed: z.boolean(),
   registrationStatusNotice: z.string().optional(),
@@ -165,7 +199,9 @@ export const PublicProgramCatalogItemSchema = z.object({
 export type PublicProgramCatalogItem = z.infer<typeof PublicProgramCatalogItemSchema>;
 
 export const PublicProgramDetailSchema = z.object({
-  program: ProgramSchema,
+  program: PublicProgramSummarySchema.extend({
+    modules: z.array(PublicModulePreviewSchema),
+  }),
   presentation: ProgramPublicPresentationSchema,
   promoter: PublicWorkspaceProfileSchema,
   isRegistrationAllowed: z.boolean(),

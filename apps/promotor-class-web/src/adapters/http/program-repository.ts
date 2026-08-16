@@ -18,8 +18,8 @@ export class HttpProgramRepository implements ProgramRepositoryPort {
   }
 
   async getProgramBySlugs(workspaceSlug: string, programSlug: string): Promise<Program | undefined> {
-    const detail = await this.client.getPublicProgramDetail(workspaceSlug, programSlug);
-    return detail?.program;
+    const list = await this.client.getPrograms();
+    return list.find(p => p.workspaceSlug === workspaceSlug && p.programSlug === programSlug);
   }
 
   async createProgram(

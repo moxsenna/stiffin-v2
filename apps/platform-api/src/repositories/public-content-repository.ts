@@ -5,20 +5,16 @@ import {
   programs,
   modules,
   lessons,
-  lessonAttachments,
   programPresentations,
   workspaceProfiles,
-  LessonRow,
-  LessonAttachmentRow,
 } from '../db/schema';
 import type {
   PublicWorkspaceProfile,
   PublicProgramCatalogItem,
   PublicProgramDetail,
-  Program,
-  Module,
-  Lesson,
-  LessonAttachment,
+  PublicProgramSummary,
+  PublicModulePreview,
+  PublicLessonPreview,
   ProgramPublicPresentation,
 } from '@promotor/contracts';
 
@@ -57,86 +53,28 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
     return { isAllowed: false, notice: 'Pendaftaran langsung tidak tersedia.' };
   }
 
-  async function loadFullProgramData(orgId: string, orgSlug: string, progRow: any): Promise<Program> {
+  async function loadPublicProgramSummary(orgSlug: string, progRow: any): Promise<PublicProgramSummary> {
     const programId = progRow.id;
+
+    // Get module IDs and count
     const moduleRows = await db
-      .select()
+      .select({ id: modules.id })
       .from(modules)
-      .where(eq(modules.programId, programId))
-      .orderBy(asc(modules.order));
+      .where(eq(modules.programId, programId));
 
     const moduleIds = moduleRows.map((m) => m.id);
-    let lessonRows: LessonRow[] = [];
-    let attachmentRows: LessonAttachmentRow[] = [];
+    let totalLessonsCount = 0;
 
     if (moduleIds.length > 0) {
-      lessonRows = await db
-        .select()
+      const [lessonCountRes] = await db
+        .select({ count: sql<number>`count(*)::int` })
         .from(lessons)
-        .where(inArray(lessons.moduleId, moduleIds))
-        .orderBy(asc(lessons.order));
-
-      const lessonIds = lessonRows.map((l) => l.id);
-      if (lessonIds.length > 0) {
-        attachmentRows = await db
-          .select()
-          .from(lessonAttachments)
-          .where(inArray(lessonAttachments.lessonId, lessonIds))
-          .orderBy(asc(lessonAttachments.order));
-      }
+        .where(inArray(lessons.moduleId, moduleIds));
+      totalLessonsCount = lessonCountRes?.count ?? 0;
     }
-
-    const attachmentsByLesson = new Map<string, LessonAttachment[]>();
-    for (const att of attachmentRows) {
-      const list = attachmentsByLesson.get(att.lessonId) ?? [];
-      list.push({
-        id: att.id,
-        name: att.name,
-        url: att.url,
-        sizeFormatted: att.sizeFormatted ?? undefined,
-        kind: att.kind as 'image' | 'download',
-        order: att.order,
-      });
-      attachmentsByLesson.set(att.lessonId, list);
-    }
-
-    const lessonsByModule = new Map<string, Lesson[]>();
-    for (const les of lessonRows) {
-      const list = lessonsByModule.get(les.moduleId) ?? [];
-      list.push({
-        id: les.id,
-        moduleId: les.moduleId,
-        title: les.title,
-        order: les.order,
-        textContent: les.textContent ?? undefined,
-        videoProvider: les.videoProvider as 'youtube' | undefined,
-        videoYoutubeUrl: les.videoUrl ?? undefined,
-        videoExternalId: les.videoExternalId ?? undefined,
-        attachments: attachmentsByLesson.get(les.id) ?? [],
-        hasReflection: !!(les.reflectionType && les.reflectionPrompt),
-        reflectionType: les.reflectionType as any,
-        reflectionPrompt: les.reflectionPrompt ?? undefined,
-        reflectionOptions: les.reflectionOptions ?? undefined,
-        hasCta: !!(les.ctaType && les.ctaLabel),
-        ctaType: les.ctaType as any,
-        ctaLabel: les.ctaLabel ?? undefined,
-        ctaTargetProgramId: les.ctaTargetProgramId ?? undefined,
-        ctaConfig: les.ctaConfig ?? undefined,
-      });
-      lessonsByModule.set(les.moduleId, list);
-    }
-
-    const fullModules: Module[] = moduleRows.map((m) => ({
-      id: m.id,
-      programId: m.programId,
-      title: m.title,
-      order: m.order,
-      lessons: lessonsByModule.get(m.id) ?? [],
-    }));
 
     return {
       id: progRow.id,
-      organizationId: orgId,
       workspaceSlug: orgSlug,
       programSlug: progRow.slug,
       title: progRow.title,
@@ -144,13 +82,86 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
       description: progRow.description ?? undefined,
       programType: progRow.programType as any,
       accessType: progRow.accessType as any,
-      status: progRow.status as any,
       pricing: progRow.pricing as any,
       priceAmount: progRow.priceAmount,
       publishedAt: progRow.publishedAt ?? undefined,
-      modules: fullModules,
-      createdAt: progRow.createdAt,
-      updatedAt: progRow.updatedAt,
+      totalModulesCount: moduleRows.length,
+      totalLessonsCount,
+    };
+  }
+
+  async function loadPublicProgramDetailData(orgSlug: string, progRow: any): Promise<PublicProgramSummary & { modules: PublicModulePreview[] }> {
+    const programId = progRow.id;
+
+    // Only select preview metadata: id, title, order
+    const moduleRows = await db
+      .select({
+        id: modules.id,
+        title: modules.title,
+        order: modules.order,
+      })
+      .from(modules)
+      .where(eq(modules.programId, programId))
+      .orderBy(asc(modules.order));
+
+    const moduleIds = moduleRows.map((m) => m.id);
+    const lessonsByModule = new Map<string, PublicLessonPreview[]>();
+
+    let totalLessonsCount = 0;
+
+    if (moduleIds.length > 0) {
+      // Secure projection: strictly select preview fields and boolean indicators only.
+      // NEVER leak text_content, video_url, video_external_id, reflection_prompt, reflection_options, cta_config, or attachments!
+      const lessonRows = await db
+        .select({
+          id: lessons.id,
+          moduleId: lessons.moduleId,
+          title: lessons.title,
+          order: lessons.order,
+          hasVideo: sql<boolean>`(${lessons.videoUrl} IS NOT NULL OR ${lessons.videoExternalId} IS NOT NULL)`,
+          hasReflection: sql<boolean>`(${lessons.reflectionType} IS NOT NULL AND ${lessons.reflectionPrompt} IS NOT NULL)`,
+        })
+        .from(lessons)
+        .where(inArray(lessons.moduleId, moduleIds))
+        .orderBy(asc(lessons.order));
+
+      totalLessonsCount = lessonRows.length;
+
+      for (const les of lessonRows) {
+        const list = lessonsByModule.get(les.moduleId) ?? [];
+        list.push({
+          id: les.id,
+          title: les.title,
+          order: les.order,
+          hasVideo: les.hasVideo,
+          hasReflection: les.hasReflection,
+        });
+        lessonsByModule.set(les.moduleId, list);
+      }
+    }
+
+    const previewModules: PublicModulePreview[] = moduleRows.map((m) => ({
+      id: m.id,
+      title: m.title,
+      order: m.order,
+      lessons: lessonsByModule.get(m.id) ?? [],
+    }));
+
+    return {
+      id: progRow.id,
+      workspaceSlug: orgSlug,
+      programSlug: progRow.slug,
+      title: progRow.title,
+      subtitle: progRow.subtitle ?? undefined,
+      description: progRow.description ?? undefined,
+      programType: progRow.programType as any,
+      accessType: progRow.accessType as any,
+      pricing: progRow.pricing as any,
+      priceAmount: progRow.priceAmount,
+      publishedAt: progRow.publishedAt ?? undefined,
+      totalModulesCount: moduleRows.length,
+      totalLessonsCount,
+      modules: previewModules,
     };
   }
 
@@ -243,7 +254,7 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
 
       const catalog: PublicProgramCatalogItem[] = [];
       for (const r of rows) {
-        const fullProg = await loadFullProgramData(org.id, org.slug, r.program);
+        const progSummary = await loadPublicProgramSummary(org.slug, r.program);
         const pres = r.presentation;
         const presentationMapped: ProgramPublicPresentation = {
           coverVariant: (pres?.coverVariant as any) ?? 'cover-a',
@@ -257,7 +268,7 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
         const reg = computeRegistrationNotice(r.program);
 
         catalog.push({
-          program: fullProg,
+          program: progSummary,
           presentation: presentationMapped,
           isRegistrationAllowed: reg.isAllowed,
           registrationStatusNotice: reg.notice,
@@ -290,7 +301,7 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
 
       if (!row) return null;
 
-      const fullProg = await loadFullProgramData(org.id, org.slug, row.program);
+      const progDetail = await loadPublicProgramDetailData(org.slug, row.program);
       const pres = row.presentation;
       const presentationMapped: ProgramPublicPresentation = {
         coverVariant: (pres?.coverVariant as any) ?? 'cover-a',
@@ -306,7 +317,7 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
       const reg = computeRegistrationNotice(row.program);
 
       return {
-        program: fullProg,
+        program: progDetail,
         presentation: presentationMapped,
         promoter: promoterProfile,
         isRegistrationAllowed: reg.isAllowed,
