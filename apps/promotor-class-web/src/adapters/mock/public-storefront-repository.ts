@@ -85,7 +85,7 @@ export const MOCK_PRESENTATION_MAP: Record<string, ProgramPublicPresentation> = 
 };
 
 export class MockPublicStorefrontRepository implements PublicStorefrontRepositoryPort {
-  private getPresentation(programId: string, program: { description?: string; subtitle?: string; pricing?: string }): ProgramPublicPresentation {
+  private getPresentation(programId: string, program: { description?: string | null; subtitle?: string | null; pricing?: string | null }): ProgramPublicPresentation {
     const storePresentations = MockStateStore.getState().programPresentations;
     if (storePresentations && storePresentations[programId]) {
       return storePresentations[programId];

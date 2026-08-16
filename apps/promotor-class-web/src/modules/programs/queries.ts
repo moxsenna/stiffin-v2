@@ -1,13 +1,13 @@
-import { programRepository } from '@/adapters/mock/program-repository';
+import { getProgramRepository } from '@/adapters';
 
 export async function getProgramsQuery() {
-  return programRepository.getPrograms();
+  return getProgramRepository().getPrograms();
 }
 
 export async function getProgramByIdQuery(id: string) {
-  return programRepository.getProgramById(id);
+  return getProgramRepository().getProgramById(id);
 }
 
 export async function getProgramBySlugsQuery(workspaceSlug: string, programSlug: string) {
-  return programRepository.getProgramBySlugs(workspaceSlug, programSlug);
+  return getProgramRepository().getProgramBySlugs(workspaceSlug, programSlug);
 }

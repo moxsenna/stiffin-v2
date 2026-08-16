@@ -281,7 +281,7 @@ export class MockProgramRepository implements ProgramRepositoryPort {
           const lessons = m.lessons.map(les => {
             if (les.id !== updatedLesson.id) return les;
 
-            const videoExternalId = extractYoutubeId(updatedLesson.videoYoutubeUrl) || les.videoExternalId;
+            const videoExternalId = extractYoutubeId(updatedLesson.videoYoutubeUrl ?? undefined) || les.videoExternalId;
 
             return {
               ...les,

@@ -5,15 +5,15 @@ import Link from 'next/link';
 
 interface PublicHeaderProps {
   workspaceSlug: string;
-  displayName: string;
-  tagline: string;
+  displayName?: string | null;
+  tagline?: string | null;
   onPrimaryClick?: () => void;
 }
 
 export function PublicHeader({
   workspaceSlug,
-  displayName,
-  tagline,
+  displayName = '',
+  tagline = '',
   onPrimaryClick,
 }: PublicHeaderProps) {
   const avatarLetter = displayName ? displayName.charAt(0).toUpperCase() : 'R';

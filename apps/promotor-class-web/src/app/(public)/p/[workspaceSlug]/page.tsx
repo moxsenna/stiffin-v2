@@ -3,9 +3,7 @@ import { notFound } from 'next/navigation';
 import { getPublicWorkspaceQuery, listPublicProgramsQuery } from '@/modules/public-storefront/queries';
 import { StorefrontClient } from './StorefrontClient';
 
-export function generateStaticParams() {
-  return [{ workspaceSlug: 'rina' }];
-}
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: { workspaceSlug: string };
