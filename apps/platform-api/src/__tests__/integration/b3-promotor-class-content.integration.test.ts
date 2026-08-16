@@ -138,7 +138,7 @@ describe('B3 — PromotorClass Content Implementation Suite', { skip: !enabled ?
 
     it('migration journal contains entries 0, 1, and 2', async () => {
       await withOwnerSql(async (client) => {
-        const res = await client.query('SELECT id, hash, created_at FROM "__drizzle_migrations" ORDER BY id');
+        const res = await client.query('SELECT id, hash, created_at FROM drizzle.__drizzle_migrations ORDER BY id');
         assert.ok(res.rows.length >= 3, `Must have at least 3 migration entries, got ${res.rows.length}`);
       });
     });

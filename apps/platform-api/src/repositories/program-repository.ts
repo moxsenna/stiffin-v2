@@ -272,12 +272,15 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
           })
           .returning();
 
-        await tx.insert(lessons).values({
-          moduleId: starterMod.id,
-          title: 'Pelajaran 1: Selamat Datang',
-          order: 1,
-          textContent: 'Selamat datang di program ini. Silakan ikuti materi dengan seksama.',
-        });
+        const [starterLesson] = await tx
+          .insert(lessons)
+          .values({
+            moduleId: starterMod.id,
+            title: 'Pelajaran 1: Selamat Datang',
+            order: 1,
+            textContent: 'Selamat datang di program ini. Silakan ikuti materi dengan seksama.',
+          })
+          .returning();
 
         const [org] = await tx.select().from(organizations).where(eq(organizations.id, ctx.organizationId));
 
@@ -312,7 +315,7 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
               order: starterMod.order,
               lessons: [
                 {
-                  id: 'dummy',
+                  id: starterLesson.id,
                   moduleId: starterMod.id,
                   title: 'Pelajaran 1: Selamat Datang',
                   order: 1,
