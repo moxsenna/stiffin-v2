@@ -1,10 +1,23 @@
 # Milestone B6 — PromotorFlow Domain Plan
 
-**Status:** PLAN ACCEPTED / FROZEN — REVISION R2.4 (final product-scope reconciliation: canonical `interest` restored to `contact_flow_states` & Flow contact capture, public booking & weekly availability assigned to explicit milestone `B6.1 — PromotorFlow Public Booking & Availability (V0.1)` required before V0.1 release, normative history guard added, MessagingService wording clarified; all core domain invariants, 8 tables, 0003 migration, activities append-only, and 94 runtime capabilities preserved). **Awaiting human review and explicit B6 implementation GO**. B6 is NOT implemented.
+**Status:** PLAN ACCEPTED / FROZEN — REVISION R2.4.1 (final pre-implementation closure: contracts DoD contradiction resolved to allow additive backward-compatible Flow transport DTOs in `@promotor/contracts`, optional `deposit_amount` configuration value restored to `services`, B6.1 migration serialization guard added, §15 & §17 wording cleaned; all 8 core tables, 0003 migration numbering, activities append-only least privilege, and 94 runtime capabilities strictly preserved). **Awaiting human review and explicit B6 implementation GO**. B6 is NOT implemented.
 **Date:** 2026-08-16
 **Base:** canonical master @ `57d26b737636055d6d9a3551e84ba7267ed89e80` (B0 Platform Foundation, B1 Shared Core, B2 Auth & Authorization, and B3 PromotorClass Content are all FINAL ACCEPTED / FROZEN; canonical migrations `0000`, `0001`, `0002` present on master)
 **Scope:** Plan + domain design ONLY. No code, no migration, no grants, no routes, nothing deployed.
 **Dependencies (semantic):** B0, B1, B2, and B3 milestones are ALL canonical/frozen on master. Migration numbering for B6 is serialized as `0003` (following canonical `0000_fluffy_prowler`, `0001_shocking_black_widow`, `0002_heavy_scarlet_witch`). Privilege arithmetic: B1 (20) + B2 (20) + B3 (24) + B6 (30) = **94** runtime capabilities (with `activities` append-only: `UPDATE`/`DELETE` denied, and `CREATE` denied on schema `public`). B6 implementation remains gated solely on an explicit human `B6 IMPLEMENTATION GO`.
+
+**Revision R2.4.1 — Final pre-implementation closure (review verdict: HOLD, targeted editorial/contract closure):**
+
+| # | Finding | Resolution |
+|---|---|---|
+| R2.4.1-1 | Contracts DoD contradiction in §19 | **Resolved**: Replaced stale "zero changes to @promotor/contracts" with: zero breaking changes to existing frozen contracts; additive backward-compatible Flow HTTP DTO/Zod additions in `@promotor/contracts` explicitly permitted; contract hash re-baselined (§19) |
+| R2.4.1-2 | `deposit_amount` omitted from `services` | **Restored**: `deposit_amount INTEGER NULL CHECK (deposit_amount IS NULL OR deposit_amount >= 0)` added to `services` schema as an optional configuration value (no payment gateway/ledger in V0.1; payment status remains `UNPAID\|PAID\|WAIVED`) (§2.1, §4, §12, §13, §14.1, §14.2, §18 D13, §19) |
+| R2.4.1-3 | Stale revision reference in §17 PR 1 | **Updated**: Set to Revision R2.4.1 final plan (§17) |
+| R2.4.1-4 | Availability grouping in §15 | **Clarified**: `availability_rules` is deferred from B6 Core Domain to `B6.1` (REQUIRED for V0.1 release), not grouped under open product decisions; only `tags` remains open product decision post-V0.1 (§15) |
+| R2.4.1-5 | B6.1 migration serialization rule | **Added guard**: B6 owns `0003`; B6.1 must NOT preclaim `0004` and must rebase onto master at implementation time to take the next sequential migration index (§16) |
+
+> [!IMPORTANT]
+> **NORMATIVE RULE**: Only the current consolidated sections (§0–§19) and the latest R2.3/R2.4/R2.4.1 resolutions are implementation-authoritative. Older R1/R2/R2.1/R2.2 entries below are historical audit records only and MUST NOT be interpreted as current implementation requirements where superseded.
 
 **Revision R2.4 — Final product-scope reconciliation (review verdict: HOLD, plan scope reconciliation):**
 
@@ -209,15 +222,14 @@ name              text NOT NULL CHECK (char_length > 0)
 description       text NULL
 category          text NOT NULL CHECK IN ('ASSESSMENT','SESSION','PROGRAM','OTHER')
 price_amount      integer NOT NULL DEFAULT 0 CHECK (price_amount >= 0)   -- IDR, integer (R2-9)
+deposit_amount    integer NULL CHECK (deposit_amount IS NULL OR deposit_amount >= 0)  -- IDR, nullable configuration value (R2.4.1-2)
 duration_minutes  integer NOT NULL CHECK (> 0)
 is_active         boolean NOT NULL DEFAULT true
 created_at, updated_at
 INDEX (organization_id, is_active)
 ```
 
-No `deposit_amount` (deferred — not in V0.1). No soft delete
-(V0.1 manages active state via `is_active`). Category supports the assessment sync
-(§2.6) without storing biometric data.
+`deposit_amount` is an optional configuration value stored on the service (e.g. Service price: Rp600.000, DP: Rp200.000, useful for template/reminder messaging). **No payment gateway, no automatic collection, no payment ledger/invoicing in V0.1**; V0.1 payment status remains `UNPAID | PAID | WAIVED`. No soft delete (V0.1 manages active state via `is_active`). Category supports the assessment sync (§2.6) without storing biometric data.
 
 ### 2.2 `bookings` — **amount snapshot restored (P0-1)**
 
@@ -531,7 +543,7 @@ the operation returns `null` / fails closed with `DomainError('NOT_FOUND')`.
 
 **ServiceRepository** (`createServiceRepository(db)`)
 - `listActive(ctx)` / `listByIds(ctx, ids)` / `findById(ctx, id)`
-- `create(ctx, input)` / `update(ctx, id, patch)` — name/description/category/price/duration/isActive
+- `create(ctx, input)` / `update(ctx, id, patch)` — name/description/category/price/depositAmount/duration/isActive
 
 **ContactFlowRepository** (`createContactFlowRepository(db)`)
 - `getOrCreate(ctx, contactId)` — conditional INSERT from active tenant `contacts` ON CONFLICT (contact_id) DO NOTHING, then select; lazy lifecycle row (classification default `PROSPECT`, `interest` default NULL applied here); returns `null` if contact missing/deleted/other-org
@@ -1068,8 +1080,8 @@ POST   /api/v1/flow/next-actions/:id/cancel                       → cancelActi
 POST   /api/v1/flow/next-actions/:id/reschedule                   → rescheduleAction
 POST   /api/v1/flow/next-actions/:id/aftercare-complete           → completeAftercare {outcome, notes?}
 GET    /api/v1/flow/services                                      → active services
-POST   /api/v1/flow/services                                      → createService
-PATCH  /api/v1/flow/services/:id                                  → updateService
+POST   /api/v1/flow/services                                      → createService {name, description?, category, priceAmount, depositAmount?, durationMinutes, isActive?}
+PATCH  /api/v1/flow/services/:id                                  → updateService {name?, description?, category?, priceAmount?, depositAmount?, durationMinutes?, isActive?}
 GET    /api/v1/flow/message-templates?category=                   → list templates
 POST   /api/v1/flow/message-templates                             → createTemplate
 PATCH  /api/v1/flow/message-templates/:id                         → updateTemplate
@@ -1107,7 +1119,7 @@ No UI refactor required. Mapping:
 | `FlowContact.sourceChannel/notes/lostReason` | `contact_flow_states` columns |
 | `FlowContact.tags[]` | deferred (OPEN PRODUCT DECISION) → adapter omits until available |
 | `FlowService.title` | `services.name` |
-| `FlowService.priceAmount/durationMinutes/category/isActive` | `services.price_amount/duration_minutes/category/is_active` |
+| `FlowService.priceAmount/depositAmount/durationMinutes/category/isActive` | `services.price_amount/deposit_amount/duration_minutes/category/is_active` |
 | `FlowBooking.amount` | **`bookings.amount` — server-canonical snapshot `= services.price_amount` (P0-1, R2-5), NOT joined, never client-supplied** |
 | `FlowBooking.serviceTitle` | join `services.name` (display only) |
 | `FlowBooking.locationAddress` | `location_text`; `locationType` 1:1 |
@@ -1155,6 +1167,7 @@ client change (server is operator-directed, any stage selectable).
   `DATABASE_URL`); `@promotor/contracts` ownership preserved (B6 MUST NOT break frozen Shared Core or Class contracts; B6 MAY make additive backward-compatible Flow HTTP DTO additions; contract baseline hash guardrail is deliberately re-baselined).
 - **Idempotency key builders**: `aftercare:booking:{id}:d7`; partial-unique semantics.
 - **Interest validation (R2.4-1)**: `createFlowContact` validates non-empty `interest` (missing/empty → `DomainError('VALIDATION', 'INTEREST_REQUIRED')`); valid `interest` string accepted and persisted; `updateProfile` updates `interest`; cross-product lazy state defaults `interest` to `NULL`.
+- **Service configuration validation (R2.4.1-2)**: `price_amount >= 0`; `deposit_amount` validated as nullable non-negative integer (`deposit_amount < 0` rejected by DB CHECK and validation schema); category validated against catalog.
 
 ### 14.2 Integration (real PostgreSQL, CI `postgres:16`, runtime role)
 
@@ -1190,7 +1203,7 @@ client change (server is operator-directed, any stage selectable).
 | 28 | aftercare temporal guard (R2-7) | D+6 `completeAftercare` → `AFTERCARE_NOT_DUE` rejected; D+7 → accepted; repeat completion → idempotent no-op (no duplicate follow-ons) |
 | 29 | classification sticky (R2-8) | new contact → PROSPECT; booking completion → CLIENT; operator `COMPLETED→FOLLOW_UP` later → **stays CLIENT** (never auto-demoted); direct stage writes never mutate classification |
 | 30 | amount immutable (R2-5) | client-supplied `amount` rejected/ignored (server resolves from `serviceId`); later `services.price_amount` edit → existing `bookings.amount` unchanged |
-| 31 | next_actions/activities constraints (R2-1) | both tables: CHECKs (status⇔completed_at bijection; action_type/event_type catalogs; priority range), partial unique `(org, source, idempotency_key)`, FK behavior incl. `actor_user_id` SET NULL policy; activities append-only (no update/delete surface) |
+| 31 | next_actions/activities/services constraints (R2-1, R2.4.1-2) | CHECKs (status⇔completed_at bijection; action_type/event_type catalogs; priority range; services.price_amount >= 0; services.deposit_amount IS NULL OR >= 0), partial unique `(org, source, idempotency_key)`, FK behavior incl. `actor_user_id` SET NULL policy; activities append-only (no update/delete surface) |
 | 32 | description/subtitle projection (R2-1) | `description` persisted verbatim; `subtitle` = `description ?? context-derived` fallback; absent description never silently dropped |
 | 33 | lifecycle COMPLETED promotes CLIENT (R2.1-1) | operator `transitionStage(ctx, contactId, 'COMPLETED')` → classification `CLIENT` atomically (same tx); `STAGE_CHANGED` recorded; no separate classification write needed |
 | 34 | completion uses lifecycle authority (R2.1-1) | `completeBooking` → contact reaches `COMPLETED` via tx-scoped `ContactLifecycleService` (classification → `CLIENT`, `STAGE_CHANGED` present); the service path never issues a direct `UPDATE contact_flow_states` |
@@ -1236,7 +1249,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.message_templates TO promot
 - `scripts/ci-setup-db.sh` appends `-f docs/sql/grants_b6.sql` (executed at B6 implementation time).
 - Still NO `ALTER DEFAULT PRIVILEGES`, no DDL, no ownership.
 - **Runtime least privilege checks: B1 (5×4 = 20) + B2 (5×4 = 20) + B3 (6×4 = 24) + B6 (7×4 + 1×2 = 30) = total 94 capabilities (with UPDATE/DELETE on activities denied, and CREATE in public schema denied).**
-- `availability_rules`/`tags` are NOT counted (deferred, OPEN PRODUCT DECISION).
+- `availability_rules` is NOT counted in B6 capabilities (deferred from B6 Core Domain to `B6.1 — PromotorFlow Public Booking & Availability`, REQUIRED for V0.1 release, R2.4.1-4). `tags` is NOT counted (open product decision / post-V0.1).
 
 ---
 
@@ -1244,6 +1257,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.message_templates TO promot
 
 - ONE Drizzle history; canonical B1 (`0000_fluffy_prowler.sql`), B2 (`0001_shocking_black_widow.sql`), and B3 (`0002_heavy_scarlet_witch.sql`) exist on master.
 - B6: 8 schema files (§3), `pnpm --filter @promotor/platform-api db:generate` → `0003_...` B6 migration entry + journal entry + snapshot. **Final numbering is serialized as 0003 against canonical master** — B6 never renumbers or rewrites predecessor files (migration discipline, B1 §3).
+- **B6.1 migration serialization guard (R2.4.1-5)**: B6 owns migration index `0003`. Milestone `B6.1 — PromotorFlow Public Booking & Availability (V0.1)` MUST NOT preclaim `0004` in this document. At B6.1 implementation time, it must rebase onto canonical master and take the next sequentially available migration index following any predecessor work (e.g. B4/B5) that may have landed.
 - Apply as owner (`DATABASE_URL` = owner, tooling-only; runtime never reads it —
   source-guardrail test covers `src/db/`), then `grants_b6.sql` as owner, fail-fast.
 - Seeds (default services / templates) stay out of migrations — separate seed tooling or
@@ -1261,7 +1275,7 @@ Predecessor milestone gates (B0, B1, B2, B3) are satisfied and FINAL ACCEPTED / 
 Before the implementation gate: no schema files, no migration, no grants, no
 repositories, no services, no routes, no frontend changes — this document is the plan.
 
-**PR 1 — Recon/plan:** this document (Revision R2.3). Review gate. No code.
+**PR 1 — Recon/plan:** this document (Revision R2.4.1 final plan). Review gate. No code.
 
 **PR 2 — `feat/b6-flow-schema-grants` (GATED: explicit B6 GO):**
 1. `src/db/schema/{services,bookings,next-actions,activities,contact-flow-states,aftercare-records,contact-assessments,message-templates}.ts` (+ `index.ts` append after B3's)
@@ -1327,19 +1341,19 @@ repositories, no services, no routes, no frontend changes — this document is t
 | D10 | Migration numbering (P1-5, R2-3, R2.2) | Explicitly serialized as `0003` against canonical master post-B3 merge |
 | D11 | Phone required vs PRD "optional" | Frozen B1 contract wins; flagged to product for a later decision |
 | D12 | `SKIPPED` status beyond PRD's 3 statuses | Kept: fixtures + canonical test require "skip with next step"; DB CHECK + documented deviation |
-| D13 | Contact fields scope (P1-2, R2.4-1) | `interest` restored to `contact_flow_states` per canonical PRD/architecture source of truth (required on Flow contact capture, nullable in DB for cross-product contacts); `result_type` and `deposit_amount` deferred (not in V0.1) |
+| D13 | Product fields scope (P1-2, R2.4-1, R2.4.1-2) | `interest` restored to `contact_flow_states` (required on Flow contact capture, nullable in DB for cross-product contacts); `deposit_amount` restored to `services` as optional configuration value; `result_type` deferred (not in V0.1) |
 | D14 | Concurrent completion (P0-8) | `SELECT … FOR UPDATE` + unique partials; true concurrent test (#13) |
 | D15 | `CLASS_SIGNAL` activity type | Seam-only, no consumer in B6; supports contract §12 `appendLearningActivity` |
-| D16 | Transport contracts ownership (R2.3-5) | `@promotor/contracts` owns cross-boundary DTOs & schemas; B6 adds backward-compatible Flow DTOs without breaking Shared Core/Class contracts; baseline hash re-baselined intentionally |
+| D16 | Transport contracts ownership (R2.3-5, R2.4.1-1) | `@promotor/contracts` owns cross-boundary DTOs & schemas; B6 adds backward-compatible Flow DTOs without breaking Shared Core/Class contracts; baseline hash re-baselined intentionally |
 | D17 | Activities append-only least privilege (R2.3-3) | `activities` table gets `GRANT SELECT, INSERT` only (UPDATE/DELETE denied); total runtime privilege checks = 94 capabilities |
 
 ---
 
 ## 19. Definition of done (B6, when authorized to implement)
 
-- **8 Flow tables** in the single Drizzle history (`services, bookings, next_actions,
-  activities, contact_flow_states, aftercare_records, contact_assessments,
-  message_templates`); final numbering `0003_...` serialized; journal stable across all 4 entries.
+- **8 Flow tables** in the single Drizzle history (`services` [incl. optional `deposit_amount`], `bookings`, `next_actions`,
+  `activities`, `contact_flow_states` [incl. `interest`], `aftercare_records`, `contact_assessments`,
+  `message_templates`); final numbering `0003_...` serialized; journal stable across all 4 entries.
 - `grants_b6.sql` (8 tables) + CI wiring; **runtime privilege checks pass — 20 B1 + 20 B2 + 24 B3 + 30 B6 = 94 / 94 capabilities**; runtime UPDATE/DELETE on activities denied; runtime CREATE in public still denied.
 - Repositories org-scoped with no escape hatches; tx-scoped composition (§5.0);
   trusted-actor rule for `actor_user_id` (§4); active tenant contact validation on `getOrCreate` and parent seams (§4, §10).
@@ -1360,6 +1374,7 @@ repositories, no services, no routes, no frontend changes — this document is t
   fallback defined (§8.6).
 - Flow API route layer implemented **inside B6** once an explicit B6 implementation GO is issued (§12/§17 PR 7).
 - Rehearsed on Neon branch; production acceptance record per B1 audit rule.
-- Zero changes to: B1/B2/B3 migration/grant files, `@promotor/contracts`, Shared Core tables.
+- Zero changes to: B1/B2/B3 migration/grant files, or Shared Core tables.
+- Zero breaking changes to existing frozen `@promotor/contracts` semantics; additive backward-compatible Flow HTTP DTO / Zod additions in `@promotor/contracts` are explicitly permitted in B6 with deliberate contract hash re-baseline (R2.3-5, R2.4.1-1).
 - No WhatsApp auto-send, no payment gateway, no temporary auth; availability rules and public booking assigned to milestone `B6.1 — PromotorFlow Public Booking & Availability (V0.1)`.
 
