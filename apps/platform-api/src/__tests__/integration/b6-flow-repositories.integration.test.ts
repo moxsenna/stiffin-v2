@@ -865,13 +865,13 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
     });
 
     it('proves concurrent atomic precedence: simultaneous COMPLETED and SCHEDULED writes always resolve to COMPLETED', async () => {
-      await withIntegrationDb(async (db) => {
-        const asRepo = createAssessmentRepository(db);
-        const ctxA = { organizationId: orgAId };
+      const ctxA = { organizationId: orgAId };
 
-        // Run 5 separate concurrent race rounds on fresh contacts
-        for (let round = 0; round < 5; round++) {
-          const [cRace] = await db
+      // Run 5 separate concurrent race rounds on fresh contacts
+      for (let round = 0; round < 5; round++) {
+        let raceContactId = '';
+        await withIntegrationDb(async (setupDb) => {
+          const [cRace] = await setupDb
             .insert(contacts)
             .values({
               organizationId: orgAId,
@@ -879,30 +879,49 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
               phoneE164: `+628120000000${round}`,
             })
             .returning();
+          raceContactId = cRace.id;
+          await createAssessmentRepository(setupDb).getOrCreate(ctxA, cRace.id);
+        });
 
-          await asRepo.getOrCreate(ctxA, cRace.id);
+        // Fire simultaneous concurrent writers with INDEPENDENT pg.Client connections
+        const concurrentWrites = [
+          withIntegrationDb(async (writerDb) =>
+            createAssessmentRepository(writerDb).updateStatus(ctxA, raceContactId, 'SCHEDULED')
+          ),
+          withIntegrationDb(async (writerDb) =>
+            createAssessmentRepository(writerDb).updateStatus(
+              ctxA,
+              raceContactId,
+              'COMPLETED',
+              undefined,
+              undefined,
+              `Completed round ${round}`
+            )
+          ),
+          withIntegrationDb(async (writerDb) =>
+            createAssessmentRepository(writerDb).updateStatus(ctxA, raceContactId, 'CANCELLED')
+          ),
+          withIntegrationDb(async (writerDb) =>
+            createAssessmentRepository(writerDb).updateStatus(ctxA, raceContactId, 'SCHEDULED')
+          ),
+          withIntegrationDb(async (writerDb) =>
+            createAssessmentRepository(writerDb).updateStatus(ctxA, raceContactId, 'NOT_STARTED')
+          ),
+        ];
 
-          // Fire simultaneous concurrent writers: SCHEDULED, COMPLETED, CANCELLED, NOT_STARTED
-          const concurrentWrites = [
-            asRepo.updateStatus(ctxA, cRace.id, 'SCHEDULED'),
-            asRepo.updateStatus(ctxA, cRace.id, 'COMPLETED', undefined, undefined, `Completed round ${round}`),
-            asRepo.updateStatus(ctxA, cRace.id, 'CANCELLED'),
-            asRepo.updateStatus(ctxA, cRace.id, 'SCHEDULED'),
-            asRepo.updateStatus(ctxA, cRace.id, 'NOT_STARTED'),
-          ];
+        await Promise.all(concurrentWrites);
 
-          await Promise.all(concurrentWrites);
-
-          // Read back final state from database
-          const finalState = await asRepo.findById(ctxA, cRace.id);
+        // Read back final state from database using independent connection
+        await withIntegrationDb(async (readDb) => {
+          const finalState = await createAssessmentRepository(readDb).findById(ctxA, raceContactId);
           assert.strictEqual(
             finalState?.status,
             'COMPLETED',
             `Round ${round}: Concurrency race failed: expected COMPLETED but got ${finalState?.status}`
           );
           assert.ok(finalState?.assessedAt, `Round ${round}: assessedAt must be populated on COMPLETED`);
-        }
-      });
+        });
+      }
     });
   });
 
