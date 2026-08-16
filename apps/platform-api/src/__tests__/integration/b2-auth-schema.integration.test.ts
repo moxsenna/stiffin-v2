@@ -1,7 +1,7 @@
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert';
 import { sql } from 'drizzle-orm';
-import { applyMigrationsAsOwner, TEST_DATABASE_URL, withIntegrationDb, withRuntimeSql, withOwnerSql } from './test-env';
+import { applyMigrationsAsOwner, TEST_DATABASE_URL, withIntegrationDb, withRuntimeSql, withOwnerSql, pgErrorCode } from './test-env';
 import {
   organizations,
   users,
@@ -17,6 +17,23 @@ import { eq } from 'drizzle-orm';
 const enabled = Boolean(TEST_DATABASE_URL);
 
 const B2_TABLES = ['sessions', 'accounts', 'verifications', 'organization_invitations', 'auth_rate_limits'];
+
+/** Asserts a Drizzle insert rejects with a specific PostgreSQL error code. */
+async function rejectsWithCode(
+  db: ReturnType<typeof withIntegrationDb> extends Promise<infer T> ? T : never,
+  fn: () => Promise<unknown>,
+  code: string,
+  message: string
+): Promise<void> {
+  await assert.rejects(
+    fn,
+    (err: unknown) => {
+      assert.strictEqual(pgErrorCode(err), code, message);
+      return true;
+    },
+    message
+  );
+}
 
 describe('B2 — Auth schema PostgreSQL integration', { skip: !enabled ? 'TEST_DATABASE_URL not set' : false }, () => {
   before(async () => {
@@ -54,18 +71,20 @@ describe('B2 — Auth schema PostgreSQL integration', { skip: !enabled ? 'TEST_D
       const token = `tok-${Date.now()}`;
       const future = new Date(Date.now() + 3600_000);
       await db.insert(sessions).values({ token, userId: user[0].id, expiresAt: future, activeOrganizationId: org[0].id });
-      await assert.rejects(
+      await rejectsWithCode(
+        db,
         async () => {
           await db.insert(sessions).values({ token, userId: user[0].id, expiresAt: future });
         },
-        /duplicate|unique/i,
+        '23505',
         'sessions.token must be unique'
       );
-      await assert.rejects(
+      await rejectsWithCode(
+        db,
         async () => {
           await db.insert(sessions).values({ token: `tok2-${Date.now()}`, userId: user[0].id, expiresAt: null as unknown as Date });
         },
-        /null value|not-null/i,
+        '23502',
         'sessions.expires_at must be NOT NULL'
       );
     });
@@ -75,25 +94,28 @@ describe('B2 — Auth schema PostgreSQL integration', { skip: !enabled ? 'TEST_D
     await withIntegrationDb(async (db) => {
       const key = `rl-${Date.now()}`;
       await db.insert(authRateLimits).values({ key, count: 1, lastRequest: Date.now() });
-      await assert.rejects(
+      await rejectsWithCode(
+        db,
         async () => {
           await db.insert(authRateLimits).values({ key, count: 2, lastRequest: Date.now() });
         },
-        /duplicate|unique/i,
+        '23505',
         'auth_rate_limits.key must be unique'
       );
-      await assert.rejects(
+      await rejectsWithCode(
+        db,
         async () => {
           await db.insert(authRateLimits).values({ key: `rl2-${Date.now()}`, count: null as unknown as number, lastRequest: Date.now() });
         },
-        /null value|not-null/i,
+        '23502',
         'auth_rate_limits.count must be NOT NULL'
       );
-      await assert.rejects(
+      await rejectsWithCode(
+        db,
         async () => {
           await db.insert(authRateLimits).values({ key: `rl3-${Date.now()}`, count: 1, lastRequest: null as unknown as number });
         },
-        /null value|not-null/i,
+        '23502',
         'auth_rate_limits.last_request must be NOT NULL'
       );
     });

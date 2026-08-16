@@ -7,6 +7,20 @@ export const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL;
 export const OWNER_DATABASE_URL = process.env.OWNER_DATABASE_URL;
 
 /**
+ * Extracts the PostgreSQL error code from a thrown Drizzle error.
+ * drizzle-orm >=0.41 wraps the original pg error in DrizzleQueryError, so the
+ * pg error code (23505, 23503, 23502, ...) lives at error.cause.code instead
+ * of error.code. Read both levels so assertions stay version-tolerant.
+ */
+export function pgErrorCode(err: unknown): string | undefined {
+  const code = (err as { code?: unknown })?.code;
+  if (typeof code === 'string') return code;
+  const cause = (err as { cause?: { code?: unknown } })?.cause;
+  const causeCode = cause?.code;
+  return typeof causeCode === 'string' ? causeCode : undefined;
+}
+
+/**
  * Applies B1 migrations as the OWNER role when OWNER_DATABASE_URL is provided
  * (CI flow: owner=postgres applies DDL, then tests run as promotor_runtime).
  * No-op when absent — then TEST_DATABASE_URL must point at an already-migrated DB.

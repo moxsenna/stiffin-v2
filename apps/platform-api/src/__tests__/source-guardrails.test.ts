@@ -36,6 +36,27 @@ describe('B1 — source guardrails', () => {
     assert.deepStrictEqual(offending, [], `DATABASE_URL must not appear in runtime source: ${offending.join(', ')}`);
   });
 
+  it('runtime src/auth/ code never references process.env at all (Workers has no process.env)', () => {
+    const authRoot = join(process.cwd(), 'src', 'auth');
+    assert.ok(existsSync(authRoot), 'src/auth must exist');
+    const offending: string[] = [];
+
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir)) {
+        const full = join(dir, entry);
+        if (statSync(full).isDirectory()) {
+          walk(full);
+        } else if (entry.endsWith('.ts')) {
+          const content = readFileSync(full, 'utf8');
+          if (content.includes('process.env')) offending.push(full);
+        }
+      }
+    };
+    walk(authRoot);
+
+    assert.deepStrictEqual(offending, [], `src/auth must never reference process.env: ${offending.join(', ')}`);
+  });
+
   it('packages/contracts is unchanged (frozen Shared Contracts V1)', () => {
     const contractsIndex = join(process.cwd(), '..', '..', 'packages', 'contracts', 'src', 'index.ts');
     assert.ok(existsSync(contractsIndex), 'contracts source must exist');
