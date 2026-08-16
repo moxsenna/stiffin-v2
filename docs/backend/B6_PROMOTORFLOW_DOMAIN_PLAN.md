@@ -1,10 +1,23 @@
 # Milestone B6 — PromotorFlow Domain Plan
 
-**Status:** PLAN ACCEPTED / FROZEN — REVISION R2.2 (synchronized with canonical master post-B3 merge: B1 Shared Core, B2 Auth & Authorization, and B3 PromotorClass Content are all FINAL ACCEPTED / FROZEN on master; migration sequence 0000, 0001, 0002 are canonical on master; next migration for B6 is serialized as 0003). **Awaiting human review and explicit B6 implementation GO**. B6 is NOT implemented.
+**Status:** PLAN ACCEPTED / FROZEN — REVISION R2.3 (final consistency closure: master SHA corrected, all predecessor milestones B0/B1/B2/B3 confirmed FINAL ACCEPTED / FROZEN, migration sequence serialized as 0003, activities append-only least privilege locked at SELECT+INSERT yielding 94 total capabilities, API versioned at `/api/v1/flow/*`, additive Flow transport DTOs in `@promotor/contracts` permitted with baseline re-hash, active tenant contact verification enforced on all getOrCreate/parent seams, aftercare outcome decoupled from WhatsApp send). **Awaiting human review and explicit B6 implementation GO**. B6 is NOT implemented.
 **Date:** 2026-08-16
-**Base:** canonical master (B1 Shared Core FINAL ACCEPTED / FROZEN; B2 Auth & Authorization FINAL ACCEPTED / FROZEN; B3 PromotorClass Content FINAL ACCEPTED / FROZEN; canonical migrations `0000`, `0001`, `0002` present on master)
+**Base:** canonical master @ `57d26b737636055d6d9a3551e84ba7267ed89e80` (B0 Platform Foundation, B1 Shared Core, B2 Auth & Authorization, and B3 PromotorClass Content are all FINAL ACCEPTED / FROZEN; canonical migrations `0000`, `0001`, `0002` present on master)
 **Scope:** Plan + domain design ONLY. No code, no migration, no grants, no routes, nothing deployed.
-**Dependencies (semantic):** B1, B2, and B3 milestones are ALL canonical/frozen on master. Migration numbering for B6 is serialized as `0003` (following canonical `0000_fluffy_prowler`, `0001_shocking_black_widow`, `0002_heavy_scarlet_witch`). Privilege arithmetic: B1 (20) + B2 (20) + B3 (24) + B6 (32) = **96** runtime CRUD capabilities (with `CREATE` denied). B6 implementation remains gated until human review and an explicit B6 implementation GO is issued.
+**Dependencies (semantic):** B0, B1, B2, and B3 milestones are ALL canonical/frozen on master. Migration numbering for B6 is serialized as `0003` (following canonical `0000_fluffy_prowler`, `0001_shocking_black_widow`, `0002_heavy_scarlet_witch`). Privilege arithmetic: B1 (20) + B2 (20) + B3 (24) + B6 (30) = **94** runtime capabilities (with `activities` append-only: `UPDATE`/`DELETE` denied, and `CREATE` denied on schema `public`). B6 implementation remains gated solely on an explicit human `B6 IMPLEMENTATION GO`.
+
+**Revision R2.3 — Final consistency closure (review verdict: HOLD, plan closure only):**
+
+| # | Finding | Resolution |
+|---|---|---|
+| R2.3-1 | Canonical master SHA typo in report | **Corrected**: Exact canonical master SHA is `57d26b737636055d6d9a3551e84ba7267ed89e80` |
+| R2.3-2 | Stale predecessor dependency wording | **Removed**: All mentions of pending B2/B3 dependencies replaced with B0/B1/B2/B3 FINAL ACCEPTED / FROZEN; only remaining gate = explicit human B6 IMPLEMENTATION GO (§0, §1.1, §12, §17) |
+| R2.3-3 | Activities append-only vs DB grants mismatch | **Enforced Option A**: `activities` table gets `GRANT SELECT, INSERT` only (true database-level append-only least privilege; `UPDATE`/`DELETE` denied); B6 contributes 7×4 + 1×2 = 30 capabilities; total runtime checks = 20 + 20 + 24 + 30 = **94 / 94** (§14.2 #22, §14.3, §15, §17, §19) |
+| R2.3-4 | Migration reproduction test omitted B3 | **Updated**: Full canonical chain tested: blank → `0000` (B1) → `0001` (B2) → `0002` (B3) → `0003` (B6); `0003` also tested over seeded canonical B1+B2+B3 data (§14.2 #23, §16) |
+| R2.3-5 | Contracts package ownership contradiction | **Resolved**: B6 MUST NOT mutate/break existing frozen Shared Core/Class contracts; B6 MAY add additive, backward-compatible Flow HTTP transport DTOs/Zod schemas to `@promotor/contracts`; contracts baseline hash guardrail is deliberately re-baselined (§1.1, §14.1, §17, §19) |
+| R2.3-6 | Flow API routes unversioned | **Frozen namespace**: All Flow endpoints moved to `/api/v1/flow/*` (e.g. `/api/v1/flow/today`, `/api/v1/flow/contacts`, `/api/v1/flow/next-actions`, `/api/v1/flow/bookings`, etc.) to prevent semantic collisions with Shared Core contacts (§12, §17) |
+| R2.3-7 | Cross-tenant parent validation seam implicit | **Locked fail-closed**: `getOrCreate` in `ContactFlowRepository` and `AssessmentRepository` and all parent-linking operations MUST verify active tenant contact ownership (`contacts.id = $id AND contacts.organization_id = $orgId AND contacts.deleted_at IS NULL`) before mutation; invalid/mismatched org fails closed with `NOT_FOUND` (§4, §5.1, §10, §14.2 #42) |
+| R2.3-8 | Aftercare outcome vs WhatsApp send ambiguity | **Clarified**: Recording an aftercare outcome NEVER fabricates `WHATSAPP_SENT`; WhatsApp send remains an explicit human-confirmed step (`WHATSAPP_OPENED` → operator confirmation → `WHATSAPP_SENT`); outcome completion records `AFTERCARE_COMPLETED` (§5.5, §8.5, §9, §18 D3) |
 
 **Revision R2.2 — Post-B3 master synchronization:**
 
@@ -12,7 +25,7 @@
 |---|---|---|
 | R2.2-1 | Predecessor milestones B2 and B3 merged to master | **Updated**: Dependency state updated to B1, B2, B3 FINAL ACCEPTED / FROZEN on master (§0, §1.1) |
 | R2.2-2 | Canonical migration history now owns 0000, 0001, 0002 | **Serialized**: B6 migration entry explicitly serialized as `0003` (§16, §17) |
-| R2.2-3 | Grant arithmetic updated for post-B3 master | **Updated**: B1 (20) + B2 (20) + B3 (24) + B6 (32) = **96 / 96** runtime CRUD capabilities (§15, §19) |
+| R2.2-3 | Grant arithmetic updated for post-B3 master | **Updated**: B1 (20) + B2 (20) + B3 (24) + B6 (32) = **96 / 96** runtime CRUD capabilities (superseded by R2.3-3 append-only 94) |
 
 **Revision R1 — HOLD resolutions (review verdict):**
 
@@ -77,18 +90,18 @@ NOT own a second canonical action table (`INTEGRATION_CONTRACT.md` §23).
 
 **B6 parallelization posture (locked):**
 - **B6 owns the Flow API.** The route layer is part of B6's scope and is implemented
-  inside B6 once B2 is FINAL ACCEPTED / FROZEN (dependency, not deferral to a later
-  milestone). The endpoint contract is bound in §12 now.
-- **B6 is PLAN/DESIGN ONLY until B2 is FINAL ACCEPTED / FROZEN and an explicit B6
-  implementation GO is issued.** Before that gate: no schema files, no migration, no
+  inside B6 once the human gate is released (§12). The endpoint contract is bound in §12 now.
+- **B6 is PLAN/DESIGN ONLY until an explicit B6 implementation GO is issued.**
+  Predecessor milestone gates (B0, B1, B2, B3) are satisfied and FINAL ACCEPTED / FROZEN
+  on master. Before the implementation gate: no schema files, no migration, no
   grants, no repositories, no domain rules, no services, no adapters, no routes, no
   frontend changes. After the gate, implementation proceeds in order: schema →
   migration → grants → repositories → domain rules → services → adapters → routes →
   frontend HTTP migration (PR 2–8, §17).
 - B6 depends only on the abstract server-resolved `OrganizationContext`
-  (`{ organizationId: string }`, frozen in B1) and, once B2 lands, the server-resolved
-  `AuthenticatedActor`. B6 invents no temporary auth; actor ids never come from
-  browser-controlled payloads.
+  (`{ organizationId: string }`, frozen in B1) and the server-resolved
+  `AuthenticatedActor` (from B2 Better Auth middleware). B6 invents no temporary auth;
+  actor ids never come from browser-controlled payloads.
 - **Operator-directed lifecycle** (not a strict funnel): see §6.
 - **B7 owns cross-app integration wiring/hardening**; B6 keeps only the prepared seam (§11).
 
@@ -108,7 +121,7 @@ NOT own a second canonical action table (`INTEGRATION_CONTRACT.md` §23).
 | Core | `OrganizationContext { organizationId }` (frozen/minimal), `DomainError`, safe error envelope |
 | Repos/Services | Org-scoped factories: `createContactRepository(db, normalizePhone, normalizeEmail)`, `createContactService(db)`; every query WHERE includes `organization_id` |
 | Tests | node:test + tsx; unit (no DB) + integration (real PG via `TEST_DATABASE_URL`/`OWNER_DATABASE_URL`, CI `postgres:16` service); `tooling/b1-live-acceptance.ts` operator-run |
-| Utils | `@promotor/platform-core`: `normalizePhone`, `normalizeEmail`, `DEFAULT_ORGANIZATION_TIMEZONE`. `@promotor/contracts` frozen (hash guardrail) |
+| Utils & Contracts | `@promotor/platform-core`: `normalizePhone`, `normalizeEmail`, `DEFAULT_ORGANIZATION_TIMEZONE`. `@promotor/contracts` owned transport/Zod layer: B6 MUST NOT mutate/break frozen Shared Core or Class contracts, but MAY add additive, backward-compatible Flow HTTP transport DTOs/schemas; contract baseline hash guardrail is deliberately re-baselined when Flow DTOs are added |
 
 **No Flow persistence exists anywhere.**
 
@@ -266,7 +279,7 @@ organization_id   uuid NOT NULL FK organizations RESTRICT
 contact_id        uuid NOT NULL FK contacts RESTRICT
 booking_id        uuid NULL FK bookings RESTRICT                -- nullable (arch §16)
 event_type        text NOT NULL CHECK IN ('CONTACT_CREATED','CONTACT_UPDATED','STAGE_CHANGED','WHATSAPP_OPENED','WHATSAPP_SENT','ACTION_CREATED','ACTION_COMPLETED','ACTION_RESCHEDULED','ACTION_SKIPPED','ACTION_CANCELLED','BOOKING_CREATED','BOOKING_CONFIRMED','BOOKING_RESCHEDULED','BOOKING_CANCELLED','BOOKING_NO_SHOW','BOOKING_COMPLETED','PAYMENT_MARKED','AFTERCARE_CREATED','AFTERCARE_COMPLETED','ASSESSMENT_STATUS_CHANGED','CLASS_SIGNAL')
-actor_user_id     uuid NULL FK users(id) ON DELETE SET NULL     -- server-resolved B2 AuthenticatedActor ONLY (P1-7); NULL until B2 freezes
+actor_user_id     uuid NULL FK users(id) ON DELETE SET NULL     -- server-resolved B2 AuthenticatedActor ONLY (P1-7); NULL for system/internal events
 metadata_json     jsonb NOT NULL DEFAULT '{}'
 occurred_at       timestamptz NOT NULL DEFAULT now()
 INDEX (organization_id, contact_id, occurred_at)                -- contact timeline
@@ -468,9 +481,26 @@ bound to different handles. See §5.0 for the pattern.
 ONLY from the server-resolved B2 `AuthenticatedActor` (session-derived). The actor write
 seam is explicit: `ActivityRepository.append(ctx, actor?, input)` — `actor` is the
 resolved `AuthenticatedActor` (or `null` for system/internal events) and is NEVER
-accepted from browser-controlled payloads; no service input carries `actorUserId`. Until
-B2 freezes, `actor_user_id` is always `NULL` (no route surface). `OrganizationContext`
-stays `{ organizationId }`.
+accepted from browser-controlled payloads; no service input carries `actorUserId`.
+`OrganizationContext` stays `{ organizationId }`.
+
+**Active tenant parent verification (locked, R2.3-7):** single-column foreign keys ensure
+parent existence, but cross-tenant isolation and soft-delete safety require fail-closed
+parent verification. `ContactFlowRepository.getOrCreate`, `AssessmentRepository.getOrCreate`,
+and all parent-linking operations (bookings, next actions, activities) MUST verify that
+`contactId` belongs to an active contact within the tenant:
+`contacts.id = contactId AND contacts.organization_id = ctx.organizationId AND contacts.deleted_at IS NULL`.
+For atomic get-or-create, repositories execute conditional insertion from the active
+`contacts` table:
+```sql
+INSERT INTO contact_flow_states (id, organization_id, contact_id, stage, classification, created_at, updated_at)
+SELECT gen_random_uuid(), c.organization_id, c.id, 'NEW', 'PROSPECT', now(), now()
+FROM contacts c
+WHERE c.id = $contactId AND c.organization_id = $organizationId AND c.deleted_at IS NULL
+ON CONFLICT (contact_id) DO NOTHING;
+```
+If the contact is not found, belongs to another tenant, or has `deleted_at IS NOT NULL`,
+the operation returns `null` / fails closed with `DomainError('NOT_FOUND')`.
 
 `src/repositories/`:
 
@@ -479,7 +509,7 @@ stays `{ organizationId }`.
 - `create(ctx, input)` / `update(ctx, id, patch)` — name/description/category/price/duration/isActive
 
 **ContactFlowRepository** (`createContactFlowRepository(db)`)
-- `getOrCreate(ctx, contactId)` — INSERT ON CONFLICT (contact_id) DO NOTHING, then select; lazy lifecycle row (classification default `PROSPECT` applied here only)
+- `getOrCreate(ctx, contactId)` — conditional INSERT from active tenant `contacts` ON CONFLICT (contact_id) DO NOTHING, then select; lazy lifecycle row (classification default `PROSPECT` applied here only); returns `null` if contact missing/deleted/other-org
 - `updateLifecycleState(ctx, contactId, {stage, lostReason?, promoteToClient?})` — ONE
   UPDATE setting stage (+`lost_reason` per the CHECK bijection) and, when
   `promoteToClient: true`, `classification = 'CLIENT'` in the same statement; **`classification`
@@ -489,7 +519,7 @@ stays `{ organizationId }`.
 - Internal only: `findById(ctx, contactId)` (active join semantics: contact must exist and `deleted_at IS NULL`)
 
 **BookingRepository** (`createBookingRepository(db)`)
-- `create(ctx, input {amount, …}, idempotencyKey?)` — returns row; caller handles unique-violation mapping
+- `create(ctx, input {amount, …}, idempotencyKey?)` — returns row; caller handles unique-violation mapping; requires active org contact and service
 - `findById(ctx, id)` / `listByOrg(ctx, opts {status?, from?, to?, includeCompleted?})` / `listByContact(ctx, contactId)`
 - `lockById(ctx, id)` — `SELECT … FOR UPDATE` (completion protocol §7)
 - `updateStatus(ctx, id, status)` / `updatePayment(ctx, id, paymentStatus)` / `reschedule(ctx, id, startAt, endAt)` / `markCompleted(ctx, id, completedAt)`
@@ -497,7 +527,7 @@ stays `{ organizationId }`.
 
 **NextActionRepository** (`createNextActionRepository(db)`)
 - `create(ctx, input)` (incl. integration fields; maps pg unique-violation on
-  `(organization_id, source, idempotency_key)` to `CONFLICT`)
+  `(organization_id, source, idempotency_key)` to `CONFLICT`); requires active org contact
 - `findById(ctx, id)` / `listByContact(ctx, contactId, status?)`
 - **Today feed seams (R2.1-7)**: `listPendingDueBy(ctx, upTo)` — overdue+today
   (`status='PENDING' AND due_at <= upTo`, org-scoped, asc); `listPendingUpcoming(ctx, from, limit)` —
@@ -510,7 +540,8 @@ stays `{ organizationId }`.
 - `append(ctx, actor?, input {eventType, contactId, bookingId?, metadataJson})` —
   append-only insert (no update/delete methods at all); `event_type` validated against the
   §2.9 catalog; `actor` = server-resolved B2 `AuthenticatedActor`, `null` for
-  system/internal events — **never from request JSON (R2.1-6)**
+  system/internal events — **never from request JSON (R2.1-6)**; `promotor_runtime` has
+  `SELECT, INSERT` only (R2.3-3)
 - `listByContact(ctx, contactId, limit?)` — `occurred_at DESC`
 - `listByOrg(ctx, opts)` — org timeline (future analytics/audit)
 
@@ -520,7 +551,7 @@ stays `{ organizationId }`.
 - `completeRecord(ctx, bookingId, {outcome, outcomeNotes, recordedAt})` — sets status/outcome/outcome_notes/recorded_at
 
 **AssessmentRepository** (`createAssessmentRepository(db)`)
-- `getOrCreate(ctx, contactId)` — INSERT ON CONFLICT (contact_id) DO NOTHING, then select
+- `getOrCreate(ctx, contactId)` — conditional INSERT from active tenant `contacts` ON CONFLICT (contact_id) DO NOTHING, then select; returns `null` if contact missing/deleted/other-org
 - `updateStatus(ctx, contactId, status, sourceBookingId?)` — with precedence guard (§2.6)
 
 **TemplateRepository** (`createTemplateRepository(db)`)
@@ -706,6 +737,10 @@ The engine (`implementation-plan.md` §10). Explicit rule functions (no giant sw
      - `CONTACT_LATER` → **MANUAL** next action, due D+30 (PRD §35: "create manual next action")
      - `INTERESTED_NEXT_SESSION` → `FOLLOW_UP` offering next session, due D+3 (client parity)
      - `NO_NEED` / `HAS_QUESTION` → no follow-on (HAS_QUESTION satisfied by the promoter reply).
+  **WhatsApp send decoupling (R2.3-8)**: recording an aftercare outcome must NEVER
+  fabricate `WHATSAPP_SENT`. If aftercare is executed via WhatsApp, message sending is
+  explicitly human-confirmed first (`WHATSAPP_OPENED` → operator confirmation → `WHATSAPP_SENT`);
+  the outcome recording operation records `AFTERCARE_COMPLETED` only.
   Outcome only ever recorded at the D+7 completion — never at booking completion.
 
 ### 5.6 `AssessmentService` — `createAssessmentService(db, { assessments: createAssessmentRepository, bookings: createBookingRepository, activities: createActivityRepository })` — emits `ASSESSMENT_STATUS_CHANGED` through the declared tx-scoped `activities` dependency (R2.1-4)
@@ -920,6 +955,12 @@ satisfy the frozen request contract.
   (PRD §35; client labels map via adapter §13).
 - Follow-ons: `CONTACT_LATER → MANUAL D+30`, `INTERESTED_NEXT_SESSION → FOLLOW_UP D+3`,
   others → none.
+- **WhatsApp send decoupling (R2.3-8)**: Aftercare outcome recording NEVER implies or
+  fabricates a `WHATSAPP_SENT` event. If aftercare communication occurs via WhatsApp,
+  the workflow remains explicitly human-in-the-loop: `WHATSAPP_OPENED` → operator
+  confirms "Pesan sudah dikirim?" → `WHATSAPP_SENT` recorded → then outcome may be
+  recorded. The outcome recording operation records `AFTERCARE_COMPLETED` and the
+  aftercare record, never synthesizing automated message events.
 - **Analytics without JSON mining**: pending count, completed count, outcome
   distribution, bookings missing aftercare — direct queries on `aftercare_records`.
 
@@ -972,46 +1013,57 @@ satisfy the frozen request contract.
 
 ---
 
-## 12. API endpoints — B6 owns the Flow API (P1-3)
+## 12. API endpoints — B6 owns the Flow API (P1-3, R2.3-6)
 
-B1 rule: no org-scoped HTTP surface before auth. **B2 is not yet FINAL ACCEPTED → B6
-ships zero routes today. The route layer is part of B6's deliverable and lands inside
-B6 once B2 is FINAL ACCEPTED / FROZEN **and an explicit B6 implementation GO is
-issued (R2-2)** (serialized dependency, not deferral to B7).
-Contract below binds the B6 route PR (and is stable regardless):
+B0, B1, B2, and B3 dependency gates are already satisfied. B6 ships zero implementation
+until the remaining human gate is explicitly released: **B6 IMPLEMENTATION GO**.
+The route layer is part of B6's deliverable and lands inside B6 (PR 7).
+All endpoints are strictly versioned under the `/api/v1/flow/*` namespace to prevent
+semantic collision with Shared Core contacts. All routes are protected by Better Auth
+`sessionMiddleware` + `requireOrganization()` + `requireEntitlement('promotorFlow')` + `requireRole(['owner', 'admin'])`.
+Contract below binds the B6 route PR:
 
 ```text
-GET    /api/today                                          → Today read model (§8.4)
-GET    /api/contacts                                      → list (search name/phone, PROSPECT/CLIENT filter)
-POST   /api/contacts                                      → createFlowContact (§5.1)
-GET    /api/contacts/:id                                  → FlowContactContext (§5.1)
-PATCH  /api/contacts/:id                                  → profile fields (sourceChannel/notes)
-POST   /api/contacts/:id/stage                            → transitionStage (§5.2) {stage, lostReason?}
-GET    /api/contacts/:id/activities                       → timeline
-GET    /api/contacts/:id/primary-next-action              → primary (§8.3)
-GET    /api/contacts/:id/assessment-status                → contact_assessments (§5.6)
-GET    /api/next-actions?contactId=&status=               → list
-POST   /api/next-actions                                  → createFollowUp / createManualAction
-POST   /api/next-actions/:id/complete                     → completeAction {confirmedWhatsAppSent?} (§8.5)
-POST   /api/next-actions/:id/skip                         → skipAction {nextStep:{type,dueAt?,title?,description?}} (REQUIRED, §5.4)
-POST   /api/next-actions/:id/cancel | /reschedule
-POST   /api/next-actions/:id/aftercare-complete           → completeAftercare {outcome, notes?}
-GET    /api/services                                      → active services
-POST   /api/services | PATCH /api/services/:id            → service CRUD (V0.1 config surface)
-GET    /api/message-templates?category=                   → template CRUD (V0.1 config surface)
-POST   /api/message-templates | PATCH /api/message-templates/:id
-GET    /api/aftercare?status=                             → aftercare_records list (analytics)
-GET    /api/bookings?from=&to=                            → agenda
-POST   /api/bookings                                      → createBooking {serviceId, …, idempotencyKey?} — **no `amount` (server-canonical snapshot, R2-5)**
-GET    /api/bookings/:id                                  → booking detail
-POST   /api/bookings/:id/confirm | /mark-paid | /reschedule | /complete | /cancel | /no-show
-POST   /api/messaging/whatsapp-opened                     → records WHATSAPP_OPENED (wa.me open ≠ sent)
-POST   /api/messaging/confirm-sent                        → completeAction with confirmation (alias of complete)
-GET    /p/:slug  GET /api/public/:slug/slots  POST /api/public/:slug/bookings   → OPEN PRODUCT DECISION / post-V0.1
+GET    /api/v1/flow/today                                          → Today read model (§8.4)
+GET    /api/v1/flow/contacts                                      → list (search name/phone, PROSPECT/CLIENT filter)
+POST   /api/v1/flow/contacts                                      → createFlowContact (§5.1)
+GET    /api/v1/flow/contacts/:id                                  → FlowContactContext (§5.1)
+PATCH  /api/v1/flow/contacts/:id                                  → profile fields (sourceChannel/notes)
+POST   /api/v1/flow/contacts/:id/stage                            → transitionStage (§5.2) {stage, lostReason?}
+GET    /api/v1/flow/contacts/:id/activities                       → timeline
+GET    /api/v1/flow/contacts/:id/primary-next-action              → primary (§8.3)
+GET    /api/v1/flow/contacts/:id/assessment-status                → contact_assessments (§5.6)
+GET    /api/v1/flow/next-actions?contactId=&status=               → list
+POST   /api/v1/flow/next-actions                                  → createFollowUp / createManualAction
+POST   /api/v1/flow/next-actions/:id/complete                     → completeAction {confirmedWhatsAppSent?} (§8.5)
+POST   /api/v1/flow/next-actions/:id/skip                         → skipAction {nextStep:{type,dueAt?,title?,description?}} (REQUIRED, §5.4)
+POST   /api/v1/flow/next-actions/:id/cancel                       → cancelAction
+POST   /api/v1/flow/next-actions/:id/reschedule                   → rescheduleAction
+POST   /api/v1/flow/next-actions/:id/aftercare-complete           → completeAftercare {outcome, notes?}
+GET    /api/v1/flow/services                                      → active services
+POST   /api/v1/flow/services                                      → createService
+PATCH  /api/v1/flow/services/:id                                  → updateService
+GET    /api/v1/flow/message-templates?category=                   → list templates
+POST   /api/v1/flow/message-templates                             → createTemplate
+PATCH  /api/v1/flow/message-templates/:id                         → updateTemplate
+GET    /api/v1/flow/aftercare?status=                             → aftercare_records list (analytics)
+GET    /api/v1/flow/bookings?from=&to=                            → agenda
+POST   /api/v1/flow/bookings                                      → createBooking {serviceId, …, idempotencyKey?} — **no `amount` (server-canonical snapshot, R2-5)**
+GET    /api/v1/flow/bookings/:id                                  → booking detail
+POST   /api/v1/flow/bookings/:id/confirm                          → confirmBooking
+POST   /api/v1/flow/bookings/:id/mark-paid                        → markPaid
+POST   /api/v1/flow/bookings/:id/reschedule                       → rescheduleBooking
+POST   /api/v1/flow/bookings/:id/complete                         → completeBooking
+POST   /api/v1/flow/bookings/:id/cancel                           → cancelBooking
+POST   /api/v1/flow/bookings/:id/no-show                          → markNoShow
+POST   /api/v1/flow/messaging/whatsapp-opened                     → records WHATSAPP_OPENED (wa.me open ≠ sent)
+POST   /api/v1/flow/messaging/confirm-sent                        → completeAction with confirmation (alias of complete)
+GET    /p/:slug  GET /api/v1/public/:slug/slots  POST /api/v1/public/:slug/bookings   → OPEN PRODUCT DECISION / post-V0.1
 ```
 
 Path stability is secondary; the **service signatures are the contract** (arch §50).
-Routes are thin: parse → validate → `OrganizationContext` from B2 session → service.
+Cross-boundary transport DTOs and Zod validation schemas are placed in `@promotor/contracts` (R2.3-5).
+Routes are thin: parse/validate request → `OrganizationContext` + `AuthenticatedActor` from B2 middleware → service.
 
 ---
 
@@ -1038,10 +1090,10 @@ No UI refactor required. Mapping:
 | `FlowActivity.type` | `event_type` — **mapping table §2.9** (`WA_SENT→WHATSAPP_SENT`, `FOLLOWUP_CREATED→ACTION_CREATED`(metadata), `BOOKING_*→BOOKING_*`, `CLASS_SIGNAL→CLASS_SIGNAL`, …); `title/detail` → rendered from `event_type + metadata_json` (server read model) |
 | Aftercare outcome | `NO_FURTHER_NEED→NO_NEED`, `HAS_QUESTION→HAS_QUESTION`, `NEEDS_FOLLOW_ON_SESSION→INTERESTED_NEXT_SESSION`, `CONTACT_LATER→CONTACT_LATER` |
 | `NextActionStatus.SKIPPED` | kept (canonical §8.1); **skip UX unchanged — still requires a next step (P0-6)** |
-| Today queue | server `GET /api/today` replaces client-side `getTodayQueue`; `DevControlsOverlay`/mock adapters remain for prototype mode behind an explicit env gate; `org_rina_stifin` hard-coding replaced by session-resolved org (B2+) |
+| Today queue | server `GET /api/v1/flow/today` replaces client-side `getTodayQueue`; `DevControlsOverlay`/mock adapters remain for prototype mode behind an explicit env gate; `org_rina_stifin` hard-coding replaced by session-resolved org |
 
-Sequence: (1) B2 auth lands → (2) B6 route PR exposes the API (§12) → (3) implement
-`Http*` repos with fetch + credentials → (4) container swap behind feature flag →
+Sequence: (1) Auth foundation active on master → (2) B6 route PR exposes the API under `/api/v1/flow/*` (§12) → (3) implement
+`Http*` repos with fetch + credentials using DTOs from `@promotor/contracts` → (4) container swap behind feature flag →
 (5) mock adapters preserved for demo/dev only. Client-side rule logic (booking/lifecycle/
 aftercare commands) gets **deleted in favor of server calls** — rules move server-side
 (PRD §77, arch §75.2), never duplicated in the client. Lifecycle stage picker needs no
@@ -1061,10 +1113,7 @@ client change (server is operator-directed, any stage selectable).
   cases incl. UTC-vs-local day rollover.
 - **Rule due computations**: NA-005 `min(now+2h, start−1d)`; NA-006 H-1 and <24h short-cut;
   NA-003 next-day-10:00 local; NA-009 +7d; **Class no-dueAt fallback = next local day
-  10:00 (§8.6)**.
-- **wa.me rule**: `completeAction` without confirmation flag denies; with flag completes.
-- **Skip semantics**: `skipAction` without `nextStep` → `NEXT_STEP_REQUIRED`; with
-  `nextStep` → SKIPPED + new pending action created (same call).
+  10:00 local (P1-6)**.
 - **Aftercare outcome follow-ons**: CONTACT_LATER→MANUAL D+30; INTERESTED_NEXT_SESSION→FOLLOW_UP D+3; others none.
 - **Assessment precedence**: pure function `COMPLETED > SCHEDULED > CANCELLED > NOT_STARTED`
   (A CANCELLED / B COMPLETED / C PENDING → COMPLETED).
@@ -1074,8 +1123,8 @@ client change (server is operator-directed, any stage selectable).
   the lifecycle seam has no demotion path (classification is never an input).
 - **Taxonomy completeness**: catalog §2.9 emit-set ⊆ CHECK-set; every type has a UI
   projection key (single source of truth module `src/domain/activity-catalog.ts`).
-- **Schema guardrails**: source-guardrail extension (runtime `src/` still never touches
-  `DATABASE_URL`); contracts hash unchanged (B6 adds NO contracts changes).
+- **Schema guardrails & contracts compatibility**: source-guardrail extension (runtime `src/` still never touches
+  `DATABASE_URL`); `@promotor/contracts` ownership preserved (B6 MUST NOT break frozen Shared Core or Class contracts; B6 MAY make additive backward-compatible Flow HTTP DTO additions; contract baseline hash guardrail is deliberately re-baselined).
 - **Idempotency key builders**: `aftercare:booking:{id}:d7`; partial-unique semantics.
 
 ### 14.2 Integration (real PostgreSQL, CI `postgres:16`, runtime role)
@@ -1095,7 +1144,7 @@ client change (server is operator-directed, any stage selectable).
 | 11 | booking completion | booking COMPLETED + completed_at; contact COMPLETED; stale actions cancelled; **aftercare record + AFTERCARE action created**; BOOKING_COMPLETED + AFTERCARE_CREATED |
 | 12 | D+7 aftercare exactly once (sequential) | `completeBooking` called twice → single record + single action; second call idempotent no-op |
 | 13 | **concurrent completion** | **two concurrent DB clients (`Promise.all`)**: one completed booking, one BOOKING_COMPLETED, one aftercare record, one AFTERCARE action, one AFTERCARE_CREATED (P0-8) |
-| 14 | aftercare outcome at D+7 | `completeAftercare` updates record (status/outcome/outcome_notes/recorded_at) + completes action + activity metadata; follow-ons per outcome; no outcome prompt at completion |
+| 14 | aftercare outcome at D+7 | `completeAftercare` updates record (status/outcome/outcome_notes/recorded_at) + completes action + activity metadata; follow-ons per outcome; no outcome prompt at completion; NO fabricated WHATSAPP_SENT (R2.3-8) |
 | 15 | aftercare analytics | pending/completed counts, outcome distribution, bookings-without-aftercare via UNIQUE(org, booking) |
 | 16 | assessment sync | assessment booking create/complete/cancel/no-show → contact_assessments updated (precedence: A CANCELLED + B COMPLETED + C PENDING → COMPLETED); UNIQUE(org, contact); ASSESSMENT_STATUS_CHANGED |
 | 17 | templates CRUD | org-scoped; category CHECK; is_active filter; no cross-org read |
@@ -1103,8 +1152,8 @@ client change (server is operator-directed, any stage selectable).
 | 19 | cross-org access denial | service calls with org B context on org A ids → NOT_FOUND (never data leak) |
 | 20 | FK behavior | booking/action/activity/aftercare/assessment for missing contact impossible; org hard-delete with flow data → RESTRICT; flow-state / assessment UNIQUE(contact_id); aftercare UNIQUE(org, booking) |
 | 21 | idempotency fields | partial unique `(org, source, idempotency_key)` rejects dupes, allows null keys, allows same key across orgs; booking idempotency_key |
-| 22 | runtime grants | after `grants_b6.sql`: **8 tables × 4 CRUD = 32 new checks**; B1 20 + B2 20 still pass → **72 total IF canonical B2 remains 5 runtime tables — final count recomputed from canonical master at implementation time (R2-3)**; runtime CREATE in public still DENIED |
-| 23 | migration reproducibility | apply canonical history from blank (B1 → B2 → B6 — final numbering per canonical master); apply the B6 entry over migrated B1+B2 with seeded data; journal hash stable; schema matches canonical |
+| 22 | runtime grants | after `grants_b6.sql`: 7 tables × 4 CRUD (28) + activities (SELECT, INSERT = 2) = **30 new capabilities**; B1 20 + B2 20 + B3 24 still pass → **94 total runtime privilege checks**; runtime UPDATE/DELETE on activities DENIED; runtime CREATE in public DENIED (R2.3-3) |
+| 23 | migration reproducibility | apply canonical history from blank (0000 B1 → 0001 B2 → 0002 B3 → 0003 B6); apply B6 entry (0003) over migrated B1+B2+B3 with seeded predecessor data; journal hash stable across all 4 entries; schema matches canonical (R2.3-4) |
 | 24 | **taxonomy completeness** | parametrized: run every service operation → assert each emitted `event_type` accepted by CHECK + has deterministic projection (P0-9) |
 | 25 | Class adapter | `createNextAction` with dueAt → as given; without dueAt → next local day 10:00; `promotorclass:` keys idempotent (duplicate → CONFLICT → reused); appendLearningActivity → CLASS_SIGNAL; getContactContext/getAssessmentStatus |
 | 26 | two-phase onboarding | Phase 2 failure (simulated) → retry succeeds; contact without flow state remains valid |
@@ -1123,12 +1172,12 @@ client change (server is operator-directed, any stage selectable).
 | 39 | messaging org-scoped phone resolution (R2.1-4) | `buildWaDeepLink` resolves `phone_e164` only from an ACTIVE (`deleted_at IS NULL`) contact in the same org; other-org / soft-deleted / missing contact → `NOT_FOUND` |
 | 40 | actor write seam (R2.1-6) | `append(ctx, actor?, …)`: `actor_user_id` set only from server-resolved B2 `AuthenticatedActor`; system/internal events → NULL; browser-supplied actor values rejected/never accepted (no service input carries `actorUserId`) |
 | 41 | Today count vs bounded upcoming (R2.1-7) | with upcoming list limited, `totalActiveCount = countPending(ctx)` stays the FULL pending count (own query, not derived from the limited result); server-side grouping, no N+1 |
-| 42 | cross-org parent poisoning (R2.1-5) | org B creating/updating a row with org A `contact_id`/`service_id`/`booking_id` parent → `NOT_FOUND` fails closed (repo resolves by `organization_id + id`); DB-level single-column FKs alone never admit cross-org rows through supported paths |
+| 42 | cross-org parent poisoning (R2.1-5, R2.3-7) | org B creating/updating a row with org A `contact_id`/`service_id`/`booking_id` parent → `NOT_FOUND` fails closed (repo resolves by `organization_id + id` AND `deleted_at IS NULL`); getOrCreate seams conditionally insert from active contacts table; DB-level single-column FKs alone never admit cross-org rows through supported paths |
 
 ### 14.3 Live acceptance (operator-run, post-implementation)
 `tooling/b6-live-acceptance.ts` on a Neon rehearsal branch, mirroring B1's sequence:
 migrate as owner → `grants_b6.sql` as owner (fail-fast) → runtime CRUD + isolation +
-**expected 72 privilege checks (conditional, R2-3)** → Worker health. Production = human-approved gate + audit record
+**expected 94 privilege checks (20 B1 + 20 B2 + 24 B3 + 30 B6; UPDATE/DELETE on activities denied, CREATE in public denied, R2.3-3)** → Worker health. Production = human-approved gate + audit record
 (B1 rule).
 
 ---
@@ -1145,17 +1194,19 @@ GRANT USAGE ON SCHEMA public TO promotor_runtime;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.services TO promotor_runtime;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.bookings TO promotor_runtime;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.next_actions TO promotor_runtime;
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.activities TO promotor_runtime;
+GRANT SELECT, INSERT ON TABLE public.activities TO promotor_runtime; -- True append-only least privilege (UPDATE/DELETE denied, R2.3-3)
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.contact_flow_states TO promotor_runtime;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.aftercare_records TO promotor_runtime;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.contact_assessments TO promotor_runtime;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.message_templates TO promotor_runtime;
 ```
 
-- `grants_b1.sql` (20), `grants_b2.sql` (20), and `grants_b3.sql` (24) are the canonical/frozen predecessors on master. B6 contributes its own `grants_b6.sql`: 8 tables × 4 CRUD = 32. Total runtime privilege capabilities: B1 (20) + B2 (20) + B3 (24) + B6 (32) = **96 / 96**.
+- `grants_b1.sql` (20), `grants_b2.sql` (20), and `grants_b3.sql` (24) are the canonical/frozen predecessors on master.
+- B6 contributes its own `grants_b6.sql`: 7 tables × 4 CRUD (28) + 1 table (`activities`) × 2 (`SELECT, INSERT`) = **30 capabilities**.
+- Total runtime privilege capabilities: B1 (20) + B2 (20) + B3 (24) + B6 (30) = **94 / 94**.
 - `scripts/ci-setup-db.sh` appends `-f docs/sql/grants_b6.sql` (executed at B6 implementation time).
 - Still NO `ALTER DEFAULT PRIVILEGES`, no DDL, no ownership.
-- **Runtime least privilege checks: B1 (5×4 = 20) + B2 (5×4 = 20) + B3 (6×4 = 24) + B6 (8×4 = 32) = total 96 capabilities.**
+- **Runtime least privilege checks: B1 (5×4 = 20) + B2 (5×4 = 20) + B3 (6×4 = 24) + B6 (7×4 + 1×2 = 30) = total 94 capabilities (with UPDATE/DELETE on activities denied, and CREATE in public schema denied).**
 - `availability_rules`/`tags` are NOT counted (deferred, OPEN PRODUCT DECISION).
 
 ---
@@ -1168,7 +1219,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.message_templates TO promot
   source-guardrail test covers `src/db/`), then `grants_b6.sql` as owner, fail-fast.
 - Seeds (default services / templates) stay out of migrations — separate seed tooling or
   none in B6 (PRD suggests defaults; does not require seeding).
-- Rehearse on a Neon branch; production run human-approved with the B1 audit record
+- Rehearse on a Neon branch; reproduction test validates applying `0003` over clean blank DB and over migrated B1+B2+B3 database with seeded predecessor data; production run human-approved with the B1 audit record
   (milestone, approved SHA, actor, UTC, environment, migration names + hashes, grant
   version, preflight/postflight, deployed Worker version; no credentials).
 
@@ -1176,25 +1227,27 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.message_templates TO promot
 
 ## 17. Detailed implementation tasks — ALL GATED (deferred until authorized, R2-2)
 
-**Every PR below (2–8) is gated on B2/B3 FINAL ACCEPTED / FROZEN AND an explicit B6
-implementation GO.** Before the gate: no schema files, no migration, no grants, no
+**Every PR below (2–8) is gated solely on an explicit human B6 implementation GO.**
+Predecessor milestone gates (B0, B1, B2, B3) are satisfied and FINAL ACCEPTED / FROZEN on master.
+Before the implementation gate: no schema files, no migration, no grants, no
 repositories, no services, no routes, no frontend changes — this document is the plan.
 
-**PR 1 — Recon/plan:** this document (Revision R2.2). Review gate. No code.
+**PR 1 — Recon/plan:** this document (Revision R2.3). Review gate. No code.
 
 **PR 2 — `feat/b6-flow-schema-grants` (GATED: explicit B6 GO):**
 1. `src/db/schema/{services,bookings,next-actions,activities,contact-flow-states,aftercare-records,contact-assessments,message-templates}.ts` (+ `index.ts` append after B3's)
 2. `db:generate` → `0003_...` B6 migration entry + journal + snapshot
-3. `docs/sql/grants_b6.sql` (8 tables)
+3. `docs/sql/grants_b6.sql` (8 tables, activities SELECT+INSERT only)
 4. `scripts/ci-setup-db.sh` append grants_b6
 5. Integration tests: tables exist; CHECK constraints reject bad values (stage/lost_reason
    pair, status/completed_at pair, action_type/event_type catalogs, amount < 0, enums,
    priorities, aftercare/assessment/template CHECKs), partial uniques, FKs,
-   migration-from-canonical/blank, journal hash, **runtime privilege checks (96/96)**
+   migration-from-canonical/blank (0000→0001→0002→0003), seeded B1+B2+B3 migration test,
+   journal hash across all 4 entries, **runtime privilege checks (94/94)**
 
 **PR 3 — `feat/b6-flow-repositories` (GATED: explicit B6 GO):**
 6. `src/repositories/{service,booking,next-action,activity,contact-flow,aftercare,assessment,template}-repository.ts`
-   (org-scoped, `isOrganizationContext` guard, unique-violation mapping, `lockById` FOR UPDATE)
+   (org-scoped, `isOrganizationContext` guard, active tenant parent verification on `getOrCreate` / mutations, unique-violation mapping, `lockById` FOR UPDATE)
 7. Unit tests for repository-adjacent pure logic (key builders, guards)
 
 **PR 4 — `feat/b6-flow-domain-rules` (GATED: explicit B6 GO):**
@@ -1209,7 +1262,7 @@ repositories, no services, no routes, no frontend changes — this document is t
 14. `src/services/booking-service.ts` (create/confirm/mark-paid/reschedule/complete/cancel/no-show; one-tx orchestration; FOR UPDATE completion)
 15. `src/services/next-action-service.ts` (engine + wa.me rule + skip-requires-next-step + Today read model)
 16. `src/services/aftercare-service.ts`, `assessment-service.ts`, `template-service.ts`, `messaging-service.ts`
-17. Integration test matrix §14.2 (full — 42 cases, incl. concurrent completion, R2-5/6/7/8 and R2.1 #33–#42)
+17. Integration test matrix §14.2 (full — 42 cases, incl. concurrent completion, R2-5/6/7/8, R2.1 #33–#42, R2.3 #42 parent fail-closed)
 
 **PR 6 — `feat/b6-class-seam` (GATED: explicit B6 GO):**
 18. `src/adapters/local-promotor-flow-adapter.ts` (contract §12 surface, validated; optional dueAt → fallback)
@@ -1217,13 +1270,14 @@ repositories, no services, no routes, no frontend changes — this document is t
     no-dueAt fallback, appendLearningActivity → CLASS_SIGNAL, getContactContext/getAssessmentStatus
 
 **PR 7 — `feat/b6-flow-api` (GATED: explicit B6 GO):**
-20. Hono route layer per §12 (thin; session → `OrganizationContext` + `AuthenticatedActor` from B2 middleware)
-21. Route integration tests (happy path + auth-denied paths)
+20. Additive Flow transport DTOs and Zod validation schemas added to `@promotor/contracts` (contracts hash re-baselined)
+21. Hono route layer per §12 under `/api/v1/flow/*` (thin; session → `OrganizationContext` + `AuthenticatedActor` from B2 middleware)
+22. Route integration tests (happy path + auth-denied paths)
 
 **PR 8 — `feat/b6-rehearsal-docs` (GATED: explicit B6 GO):**
-22. `tooling/b6-live-acceptance.ts` + Neon rehearsal record
-23. `docs/backend/B6_PROMOTORFLOW.md` milestone doc (acceptance record per B1 rule)
-24. Frontend adapter migration (§13) — sequenced after the B6 route PR (B2 frozen); mock
+23. `tooling/b6-live-acceptance.ts` + Neon rehearsal record
+24. `docs/backend/B6_PROMOTORFLOW.md` milestone doc (acceptance record per B1 rule)
+25. Frontend adapter migration (§13) — sequenced after the B6 route PR; mock
     adapters preserved behind env gate
 
 ---
@@ -1234,19 +1288,21 @@ repositories, no services, no routes, no frontend changes — this document is t
 |---|---|---|
 | D1 | **Classification stored/sticky — RESOLVED (R2-8)** | `contact_flow_states.classification` (`PROSPECT` default; `CLIENT` on booking completion or operator transition → COMPLETED; **never auto-demoted** — later stage movement keeps `CLIENT`). Architecture §15 derivation superseded by explicit storage; derived `src/domain/classification.ts` removed. Manual reclassification = future product op |
 | D2 | Booking `amount` snapshot (P0-1, R2-5) | Stored on `bookings` at creation — **server-canonical `= services.price_amount` (client never supplies `amount`)**; historical correctness over join simplicity; serviceTitle stays display-join; `amountOverride` = future explicit permissioned feature |
-| D3 | Aftercare record (P0-2) | `aftercare_records` + AFTERCARE action duality, exactly-once per booking; analytics without JSON mining |
+| D3 | Aftercare record & WhatsApp decoupling (P0-2, R2.3-8) | `aftercare_records` + AFTERCARE action duality, exactly-once per booking; analytics without JSON mining. Recording aftercare outcome NEVER fabricates `WHATSAPP_SENT` (human-in-the-loop send confirmation required) |
 | D4 | Assessment record (P0-3) | `contact_assessments` canonical current record, precedence `COMPLETED > SCHEDULED > CANCELLED > NOT_STARTED`; derived-only rejected (multi-booking projection ambiguous) |
 | D5 | Message templates in B6 (P0-4) | Storage only — no WhatsApp automation; categories mirror non-manual action types |
 | D6 | Operator-directed lifecycle (P0-5) | Any→any selectable; LOST rules enforced; booking side effects; no strict funnel (would be a separate product change) |
 | D7 | Skip requires next step (P0-6) | `skipAction(actionId, nextStep)` atomic; preserved from canonical client behavior |
 | D8 | Availability / tags (P1-4) | **OPEN PRODUCT DECISION — post-V0.1**, no canonical milestone; excluded from grants arithmetic |
-| D9 | Routes owned by B6 (P1-3) | Route layer inside B6, serialized behind B2 FINAL ACCEPTED; contract bound in §12 |
+| D9 | Routes owned by B6 & versioned (P1-3, R2.3-6) | Route layer inside B6 under `/api/v1/flow/*`; prevents semantic collision with Shared Core contacts |
 | D10 | Migration numbering (P1-5, R2-3, R2.2) | Explicitly serialized as `0003` against canonical master post-B3 merge |
 | D11 | Phone required vs PRD "optional" | Frozen B1 contract wins; flagged to product for a later decision |
 | D12 | `SKIPPED` status beyond PRD's 3 statuses | Kept: fixtures + canonical test require "skip with next step"; DB CHECK + documented deviation |
 | D13 | `interest`, `result_type`, `deposit_amount` (P1-2) | Removed — no current-source evidence; re-add only with a fixture/product source |
 | D14 | Concurrent completion (P0-8) | `SELECT … FOR UPDATE` + unique partials; true concurrent test (#13) |
 | D15 | `CLASS_SIGNAL` activity type | Seam-only, no consumer in B6; supports contract §12 `appendLearningActivity` |
+| D16 | Transport contracts ownership (R2.3-5) | `@promotor/contracts` owns cross-boundary DTOs & schemas; B6 adds backward-compatible Flow DTOs without breaking Shared Core/Class contracts; baseline hash re-baselined intentionally |
+| D17 | Activities append-only least privilege (R2.3-3) | `activities` table gets `GRANT SELECT, INSERT` only (UPDATE/DELETE denied); total runtime privilege checks = 94 capabilities |
 
 ---
 
@@ -1254,14 +1310,14 @@ repositories, no services, no routes, no frontend changes — this document is t
 
 - **8 Flow tables** in the single Drizzle history (`services, bookings, next_actions,
   activities, contact_flow_states, aftercare_records, contact_assessments,
-  message_templates`); final numbering `0003_...` serialized; journal stable.
-- `grants_b6.sql` (8 tables) + CI wiring; **runtime privilege checks pass — 20 B1 + 20 B2 + 24 B3 + 32 B6 = 96 / 96**; runtime CREATE in public still denied.
+  message_templates`); final numbering `0003_...` serialized; journal stable across all 4 entries.
+- `grants_b6.sql` (8 tables) + CI wiring; **runtime privilege checks pass — 20 B1 + 20 B2 + 24 B3 + 30 B6 = 94 / 94 capabilities**; runtime UPDATE/DELETE on activities denied; runtime CREATE in public still denied.
 - Repositories org-scoped with no escape hatches; tx-scoped composition (§5.0);
-  trusted-actor rule for `actor_user_id` (§4).
+  trusted-actor rule for `actor_user_id` (§4); active tenant contact validation on `getOrCreate` and parent seams (§4, §10).
 - Services own ALL business rules (operator-directed lifecycle via the SINGLE
   `ContactLifecycleService` writer with atomic `CLIENT` promotion (R2.1-1),
   NA-001…NA-009, wa.me confirmation, skip-requires-next-step, aftercare record+action
-  exactly-once, aftercare execution order (R2.1-2), booking terminal-state guards
+  exactly-once, aftercare execution order (R2.1-2), aftercare WhatsApp send decoupling (R2.3-8), booking terminal-state guards
   (R2.1-3), aftercare temporal guard `AFTERCARE_NOT_DUE` (R2-7), assessment sync
   precedence, server-canonical amount (R2-5), stored/sticky classification (R2-8),
   markPaid → CONFIRM_BOOKING (R2-6), explicit factory dependencies + actor seam
