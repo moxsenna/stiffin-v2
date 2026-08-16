@@ -31,7 +31,7 @@ export const ASSESSMENT_STATUS_RANKS: Record<AssessmentRankedStatus, number> = {
 };
 
 export function isAssessmentRankedStatus(val: unknown): val is AssessmentRankedStatus {
-  return typeof val === 'string' && val in ASSESSMENT_STATUS_RANKS;
+  return typeof val === 'string' && (ASSESSMENT_RANKED_STATUSES as readonly string[]).includes(val);
 }
 
 /**

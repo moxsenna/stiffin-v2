@@ -559,18 +559,18 @@ describe('B6 PR 4 — Pure Domain Rules Test Suite', () => {
       const now = new Date('2026-08-17T12:00:00.000Z');
 
       // Rule 1: Highest effective priority wins even if due later
-      const highPri = { id: 'high', priority: 90, dueAt: '2026-08-18T10:00:00.000Z' }; // eff = 90
-      const lowPri = { id: 'low', priority: 50, dueAt: '2026-08-16T10:00:00.000Z' }; // eff = 60
+      const highPri = { id: 'high', priority: 90, dueAt: '2026-08-18T10:00:00.000Z', createdAt: '2026-08-15T10:00:00.000Z' }; // eff = 90
+      const lowPri = { id: 'low', priority: 50, dueAt: '2026-08-16T10:00:00.000Z', createdAt: '2026-08-15T10:00:00.000Z' }; // eff = 60
       assert.ok(comparePrimaryCandidate(highPri, lowPri, now) < 0, 'High priority must precede low priority');
 
       // Rule 2: Overdue boost can surpass a higher base priority
-      const base70Overdue4d = { id: 'overdue', priority: 70, dueAt: '2026-08-13T10:00:00.000Z' }; // eff = 70 + 30 = 100
-      const base90Fresh = { id: 'fresh', priority: 90, dueAt: '2026-08-17T10:00:00.000Z' }; // eff = 90
+      const base70Overdue4d = { id: 'overdue', priority: 70, dueAt: '2026-08-13T10:00:00.000Z', createdAt: '2026-08-15T10:00:00.000Z' }; // eff = 70 + 30 = 100
+      const base90Fresh = { id: 'fresh', priority: 90, dueAt: '2026-08-17T10:00:00.000Z', createdAt: '2026-08-15T10:00:00.000Z' }; // eff = 90
       assert.ok(comparePrimaryCandidate(base70Overdue4d, base90Fresh, now) < 0, 'Overdue boosted must precede');
 
       // Rule 3: Equal effective priority -> earliest dueAt wins
-      const dueEarlier = { id: 'earlier', priority: 70, dueAt: '2026-08-17T09:00:00.000Z' };
-      const dueLater = { id: 'later', priority: 70, dueAt: '2026-08-17T15:00:00.000Z' };
+      const dueEarlier = { id: 'earlier', priority: 70, dueAt: '2026-08-17T09:00:00.000Z', createdAt: '2026-08-15T10:00:00.000Z' };
+      const dueLater = { id: 'later', priority: 70, dueAt: '2026-08-17T15:00:00.000Z', createdAt: '2026-08-15T10:00:00.000Z' };
       assert.ok(comparePrimaryCandidate(dueEarlier, dueLater, now) < 0, 'Earlier dueAt must precede later dueAt');
 
       // Rule 4: Equal effective priority & equal dueAt -> oldest createdAt wins
@@ -721,13 +721,20 @@ describe('B6 PR 4 — Pure Domain Rules Test Suite', () => {
       assert.strictEqual(selectHighestAssessmentEvidence(), 'NOT_STARTED');
     });
 
-    it('provides accurate assessment status guard and excludes UNKNOWN from pure ranking', () => {
+    it('provides accurate assessment status guard and excludes UNKNOWN and prototype keys from pure ranking', () => {
       assert.strictEqual(isAssessmentRankedStatus('NOT_STARTED'), true);
       assert.strictEqual(isAssessmentRankedStatus('CANCELLED'), true);
       assert.strictEqual(isAssessmentRankedStatus('SCHEDULED'), true);
       assert.strictEqual(isAssessmentRankedStatus('COMPLETED'), true);
+
       assert.strictEqual(isAssessmentRankedStatus('UNKNOWN'), false, 'UNKNOWN must be excluded from pure ranking');
+      assert.strictEqual(isAssessmentRankedStatus('toString'), false, 'toString prototype key must be rejected');
+      assert.strictEqual(isAssessmentRankedStatus('constructor'), false, 'constructor prototype key must be rejected');
+      assert.strictEqual(isAssessmentRankedStatus('__proto__'), false, '__proto__ prototype key must be rejected');
+      assert.strictEqual(isAssessmentRankedStatus('random'), false, 'random string must be rejected');
+      assert.strictEqual(isAssessmentRankedStatus(''), false, 'empty string must be rejected');
       assert.strictEqual(isAssessmentRankedStatus(null), false);
+      assert.strictEqual(isAssessmentRankedStatus(undefined), false);
     });
   });
 

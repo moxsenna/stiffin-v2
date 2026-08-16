@@ -8,7 +8,7 @@
 export interface PrimaryCandidate {
   priority: number; // base priority (1-100)
   dueAt: string | Date;
-  createdAt?: string | Date | null;
+  createdAt: string | Date;
   [key: string]: unknown;
 }
 
@@ -66,8 +66,8 @@ export function comparePrimaryCandidate(
     return dueA - dueB; // Ascending: earliest dueAt comes first
   }
 
-  const createdA = a.createdAt ? (typeof a.createdAt === 'string' ? new Date(a.createdAt) : a.createdAt).getTime() : 0;
-  const createdB = b.createdAt ? (typeof b.createdAt === 'string' ? new Date(b.createdAt) : b.createdAt).getTime() : 0;
+  const createdA = (typeof a.createdAt === 'string' ? new Date(a.createdAt) : a.createdAt).getTime();
+  const createdB = (typeof b.createdAt === 'string' ? new Date(b.createdAt) : b.createdAt).getTime();
 
   if (createdA !== createdB) {
     return createdA - createdB; // Ascending: oldest createdAt comes first
