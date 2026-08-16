@@ -4,6 +4,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Env } from './env';
 import { executeDbHealthProbe } from './db/client';
 import { authLifecycle, sessionMiddleware } from './auth/session-middleware';
+import { AuthError, authErrorStatus } from './auth/errors';
 import type { AuthContext } from './auth/types';
 import type { AuthInstance } from './auth/create-auth';
 
@@ -19,6 +20,16 @@ export type AppEnv = {
 export function createApp(deps?: AppDependencies) {
   const app = new Hono<AppEnv>();
   const probeDb = deps?.dbHealthProbe ?? executeDbHealthProbe;
+
+  // Phase D: map AuthError -> HTTP status (401/403/500) for middleware-thrown errors.
+  app.onError((err, c) => {
+    if (err instanceof AuthError) {
+      const status = authErrorStatus(err);
+      return c.json({ error: { code: err.code, message: err.message } }, status);
+    }
+    console.error('[APP_ERROR]', { code: 'APP_ERROR', timestamp: new Date().toISOString() });
+    return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, 500);
+  });
 
   // GET /health — Light probe (Zero DB calls)
   app.get('/health', (c) => {

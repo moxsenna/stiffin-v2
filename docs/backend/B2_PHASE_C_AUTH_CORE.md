@@ -1,10 +1,12 @@
 # B2 Phase C — Auth Core
 
-**Status:** IMPLEMENTED / AWAITING REVIEW (not B2 FINAL)
-**Date:** 2026-08-14
+**Status:** B2 PHASE C AUTH CORE — FINAL ACCEPTED / FROZEN
+**Date:** 2026-08-15
+**Frozen source head:** `18dc9996c832fdbc83b8f4dc2061b50b833fbb96`
 **Base:** master @ `b1ddb6f4c0f58f172ea2a6f402ad3dc7b17f0bb8`
 **Branch:** `feat/b2-auth-core`
 **Recon basis:** `docs/backend/B2_RECONNAISSANCE.md` (PLAN ACCEPTED / FROZEN)
+**Option C (unchanged):** Phase C remains UNMERGED; Phase D stacks on the frozen Phase C head. Master receives neither C nor D until Phase D review passes.
 
 ---
 
@@ -132,7 +134,7 @@ No module-global connected pg client, no Pool, no DB-bound auth instance.
 ## 3. Tests
 
 - Unit: **15/15** (incl. new `src/auth` no-`process.env` guardrail)
-- Integration (real PostgreSQL 16): **69/69**
+- Integration (real PostgreSQL 16): **80/80**
   - B2 schema regression: 13
   - C0.1 timestamp gate: 3
   - C0.2 provisioning gate: 3
