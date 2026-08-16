@@ -394,13 +394,15 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
         // reschedule
         const newStart = new Date(Date.now() + 7200_000).toISOString();
         const resch = await repo.reschedule(ctxA, bookingAId, newStart);
-        assert.strictEqual(resch?.startAt, newStart);
+        assert.ok(resch?.startAt);
+        assert.strictEqual(new Date(resch.startAt).getTime(), new Date(newStart).getTime());
 
         // markCompleted
         const compAt = new Date().toISOString();
         const comp = await repo.markCompleted(ctxA, bookingAId, compAt);
         assert.strictEqual(comp?.status, 'COMPLETED');
-        assert.strictEqual(comp?.completedAt, compAt);
+        assert.ok(comp?.completedAt);
+        assert.strictEqual(new Date(comp.completedAt).getTime(), new Date(compAt).getTime());
       });
     });
   });
