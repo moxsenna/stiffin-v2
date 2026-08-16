@@ -1,6 +1,6 @@
 # B2 — Auth on Promotor Platform (Milestone)
 
-**Status:** IN PROGRESS — Phase E-A (tooling + verification). NOT B2 FINAL.
+**Status:** IN PROGRESS — Phase E-C (evidence publication + controlled promotion). NOT B2 FINAL.
 
 ## Frozen milestone phases
 
@@ -9,7 +9,9 @@
 | B2 Phase B | Schema / migration / grants | ✅ FINAL ACCEPTED / FROZEN | canonical master (merged PR #13) |
 | B2 Phase C | Auth Core | ✅ FINAL ACCEPTED / FROZEN | `18dc9996c832fdbc83b8f4dc2061b50b833fbb96` |
 | B2 Phase D | Authorization + Hardening | ✅ FINAL ACCEPTED / FROZEN | `a8995977dad10fc21ebadc83df69c5f3c525a0ed` |
-| B2 Phase E | Rehearsal + release evidence | ✅ E-A IMPLEMENTED / AWAITING FINAL REVIEW | `feat/b2-rehearsal-tooling` head |
+| B2 Phase E-A | Rehearsal tooling + release audit | ✅ FINAL ACCEPTED / FROZEN | `83f5b90e4ff4fe8180905790824baf4af769edf8` |
+| B2 Phase E-B | Neon branch rehearsal | ✅ FINAL ACCEPTED / FROZEN | `83f5b90e4ff4fe8180905790824baf4af769edf8` |
+| B2 Phase E-C | Evidence publication + controlled promotion | 🟡 IN PROGRESS | `feat/b2-rehearsal-tooling` |
 
 ## Frozen source SHAs
 
