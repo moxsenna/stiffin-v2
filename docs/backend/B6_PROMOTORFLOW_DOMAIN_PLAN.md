@@ -409,7 +409,7 @@ INDEX (organization_id, stage)
   However, **`ContactFlowService.createFlowContact` for Flow-created contacts MUST require
   a non-empty `interest` string** (`DomainError('VALIDATION', 'INTEREST_REQUIRED')`).
   `updateProfile` may update `interest`, and `getContactContext` exposes it.
-- **`result_type` and `deposit_amount` removed/deferred** (not in V0.1).
+- **`result_type` is deferred / not in V0.1**. `deposit_amount` is not a `contact_flow_states` field; it is owned by `services` per §2.1 and included in B6 V0.1.
 - **Classification is STORED and STICKY (R2-8, D1 resolved)** —
   `contact_flow_states.classification` column: new contact → `PROSPECT` (default);
   **`CLIENT` promotion happens ONLY through `ContactLifecycleService.transitionStage`
@@ -908,8 +908,7 @@ If a strict funnel is ever wanted, that is a separate product change — not B6.
   duplicates.
 - Completed booking requires `completed_at` (PRD §70; DB CHECK backstop).
 - **Concurrency note (architecture §68):** low expected concurrency, but completion is
-  now provably safe via `FOR UPDATE`; slot-conflict handling belongs to public booking
-  (deferred, OPEN PRODUCT DECISION), not B6.
+  now provably safe via `FOR UPDATE`; slot-conflict handling belongs to `B6.1 — PromotorFlow Public Booking & Availability (V0.1)`, required before V0.1 release, not B6 Core Domain.
 
 ---
 
