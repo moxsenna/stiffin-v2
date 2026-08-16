@@ -109,7 +109,7 @@ export function LessonReaderClient() {
     await recordCtaClickCommand(enrollmentId, lessonId, ctaUrl);
   };
 
-  const embedVideoUrl = getYoutubeEmbedUrl(lesson.videoYoutubeUrl);
+  const embedVideoUrl = getYoutubeEmbedUrl(lesson.videoYoutubeUrl ?? undefined);
 
   return (
     <LearnerShell>

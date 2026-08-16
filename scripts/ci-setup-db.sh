@@ -22,3 +22,8 @@ psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
 # Apply least-privilege runtime grants for the five B2 auth tables
 psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
   -f docs/sql/grants_b2.sql
+
+# Apply least-privilege runtime grants for the six B3 content tables
+psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
+  -f docs/sql/grants_b3.sql
+

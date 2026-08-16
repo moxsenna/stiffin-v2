@@ -281,7 +281,7 @@ export class MockProgramRepository implements ProgramRepositoryPort {
           const lessons = m.lessons.map(les => {
             if (les.id !== updatedLesson.id) return les;
 
-            const videoExternalId = extractYoutubeId(updatedLesson.videoYoutubeUrl) || les.videoExternalId;
+            const videoExternalId = extractYoutubeId(updatedLesson.videoYoutubeUrl ?? undefined) || les.videoExternalId;
 
             return {
               ...les,
@@ -301,6 +301,18 @@ export class MockProgramRepository implements ProgramRepositoryPort {
     const updated = await this.getProgramById(programId);
     if (!updated) throw new Error('Program not found after lesson update');
     return updated;
+  }
+
+  async deleteProgram(programId: string): Promise<void> {
+    const prog = await this.getProgramById(programId);
+    if (!prog) throw new Error('Program not found');
+    if (prog.status !== 'draft') {
+      throw new Error(`Cannot delete a program with status "${prog.status}". Only draft programs can be deleted.`);
+    }
+    MockStateStore.updateState(curr => ({
+      ...curr,
+      programs: curr.programs.filter(p => p.id !== programId),
+    }));
   }
 }
 

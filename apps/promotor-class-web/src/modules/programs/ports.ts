@@ -19,6 +19,7 @@ export interface ProgramRepositoryPort {
   getProgramBySlugs(workspaceSlug: string, programSlug: string): Promise<Program | undefined>;
   createProgram(title: string, subtitle: string, description: string, priceType: 'free' | 'paid'): Promise<Program>;
   createProgramDetailed(input: CreateProgramDetailedInput): Promise<Program>;
+  deleteProgram(programId: string): Promise<void>;
   toggleProgramStatus(programId: string): Promise<Program>;
   addModule(programId: string, title: string): Promise<Program>;
   deleteModule(programId: string, moduleId: string): Promise<Program>;

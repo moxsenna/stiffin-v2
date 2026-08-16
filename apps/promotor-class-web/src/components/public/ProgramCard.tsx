@@ -21,8 +21,8 @@ export function ProgramCard({ item, workspaceSlug }: ProgramCardProps) {
     priceMeta = `Rp${program.priceAmount.toLocaleString('id-ID')}`;
   }
 
-  const moduleCount = program.modules?.length || 0;
-  const lessonCount = program.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0;
+  const moduleCount = program.totalModulesCount || 0;
+  const lessonCount = program.totalLessonsCount || 0;
   const lessonMeta = lessonCount > 0 ? `${lessonCount} materi` : `${moduleCount} modul`;
 
   return (

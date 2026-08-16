@@ -85,7 +85,7 @@ export const MOCK_PRESENTATION_MAP: Record<string, ProgramPublicPresentation> = 
 };
 
 export class MockPublicStorefrontRepository implements PublicStorefrontRepositoryPort {
-  private getPresentation(programId: string, program: { description?: string; subtitle?: string; pricing?: string }): ProgramPublicPresentation {
+  private getPresentation(programId: string, program: { description?: string | null; subtitle?: string | null; pricing?: string | null }): ProgramPublicPresentation {
     const storePresentations = MockStateStore.getState().programPresentations;
     if (storePresentations && storePresentations[programId]) {
       return storePresentations[programId];
@@ -141,8 +141,24 @@ export class MockPublicStorefrontRepository implements PublicStorefrontRepositor
         registrationStatusNotice = 'Program Berbayar — Hubungi Promotor / Tersedia via Konsultasi.';
       }
 
+      const totalLessonsCount = program.modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
+
       return {
-        program,
+        program: {
+          id: program.id,
+          workspaceSlug: program.workspaceSlug,
+          programSlug: program.programSlug,
+          title: program.title,
+          subtitle: program.subtitle,
+          description: program.description,
+          programType: program.programType,
+          accessType: program.accessType,
+          pricing: program.pricing,
+          priceAmount: program.priceAmount,
+          publishedAt: program.publishedAt,
+          totalModulesCount: program.modules.length,
+          totalLessonsCount,
+        },
         presentation,
         isRegistrationAllowed,
         registrationStatusNotice,
@@ -178,10 +194,40 @@ export class MockPublicStorefrontRepository implements PublicStorefrontRepositor
       registrationStatusNotice = 'Program Berbayar — Hubungi Promotor / Tersedia via Konsultasi.';
     }
 
-    const promoter = await this.getPublicWorkspaceProfile(workspaceSlug) || MOCK_RINA_PROFILE;
+    const promoter = (await this.getPublicWorkspaceProfile(workspaceSlug)) || MOCK_RINA_PROFILE;
+
+    const previewModules = program.modules.map(mod => ({
+      id: mod.id,
+      title: mod.title,
+      order: mod.order,
+      lessons: (mod.lessons || []).map(les => ({
+        id: les.id,
+        title: les.title,
+        order: les.order,
+        hasVideo: !!(les.videoYoutubeUrl || les.videoExternalId),
+        hasReflection: !!les.hasReflection,
+      })),
+    }));
+
+    const totalLessonsCount = program.modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
 
     return {
-      program,
+      program: {
+        id: program.id,
+        workspaceSlug: program.workspaceSlug,
+        programSlug: program.programSlug,
+        title: program.title,
+        subtitle: program.subtitle,
+        description: program.description,
+        programType: program.programType,
+        accessType: program.accessType,
+        pricing: program.pricing,
+        priceAmount: program.priceAmount,
+        publishedAt: program.publishedAt,
+        totalModulesCount: program.modules.length,
+        totalLessonsCount,
+        modules: previewModules,
+      },
       presentation,
       promoter,
       isRegistrationAllowed,

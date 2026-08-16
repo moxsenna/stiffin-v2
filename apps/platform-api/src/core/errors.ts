@@ -8,6 +8,9 @@ export type DomainErrorCode =
   | 'CONFLICT'
   | 'UNAUTHORIZED'
   | 'FORBIDDEN'
+  | 'INVALID_YOUTUBE_URL'
+  | 'PROGRAM_NOT_PUBLISHED'
+  | 'CONTENT_DELETE_FORBIDDEN'
   | 'INTERNAL_ERROR';
 
 export class DomainError extends Error {

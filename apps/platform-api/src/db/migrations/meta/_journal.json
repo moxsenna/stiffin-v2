@@ -15,6 +15,13 @@
       "when": 1786741067979,
       "tag": "0001_material_king_bedlam",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786865262678,
+      "tag": "0002_heavy_scarlet_witch",
+      "breakpoints": true
     }
   ]
 }

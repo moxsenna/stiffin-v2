@@ -3,6 +3,7 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import { MockStateStore, INITIAL_RINA_PROFILE } from '../adapters/mock/mock-state-store';
+import { getProgramRepository, resetAdapterInstances } from '../adapters';
 
 describe('Domain Guardrails & Architecture Integrity Tests', () => {
   it('1. Class State MUST NOT contain nextActions collection', () => {
@@ -135,5 +136,66 @@ describe('Domain Guardrails & Architecture Integrity Tests', () => {
       false,
       "session.ts MUST NOT contain workspaceSlug: 'rina'"
     );
+  });
+
+  it('7. modules/programs/** and modules/public-storefront/** files MUST NOT directly import from /adapters/mock/ or /adapters/http/ (factory only)', () => {
+    const targetDirs = [
+      path.join(__dirname, '../modules/programs'),
+      path.join(__dirname, '../modules/public-storefront'),
+    ];
+    const files: string[] = [];
+
+    function scan(dir: string) {
+      if (!fs.existsSync(dir)) return;
+      for (const f of fs.readdirSync(dir)) {
+        const full = path.join(dir, f);
+        if (fs.statSync(full).isDirectory()) {
+          scan(full);
+        } else if (f.endsWith('.ts') || f.endsWith('.tsx')) {
+          files.push(full);
+        }
+      }
+    }
+    for (const d of targetDirs) {
+      scan(d);
+    }
+
+    assert.ok(files.length > 0, 'Target module files must be found');
+
+    for (const file of files) {
+      const content = fs.readFileSync(file, 'utf-8');
+      const rel = path.relative(path.join(__dirname, '..'), file);
+      assert.strictEqual(
+        content.includes('/adapters/mock/'),
+        false,
+        `modules file ${rel} MUST NOT import from /adapters/mock/`
+      );
+      assert.strictEqual(
+        content.includes('/adapters/http/'),
+        false,
+        `modules file ${rel} MUST NOT import from /adapters/http/`
+      );
+    }
+  });
+
+  it('8. Adapter Factory fails closed in production when mode is not http', () => {
+    const origEnv = process.env.NODE_ENV;
+    const origMode = process.env.NEXT_PUBLIC_API_MODE;
+    try {
+      (process.env as any).NODE_ENV = 'production';
+      delete process.env.NEXT_PUBLIC_API_MODE;
+      resetAdapterInstances();
+
+      assert.throws(
+        () => {
+          getProgramRepository();
+        },
+        /Production environment requires NEXT_PUBLIC_API_MODE="http"/
+      );
+    } finally {
+      (process.env as any).NODE_ENV = origEnv;
+      process.env.NEXT_PUBLIC_API_MODE = origMode;
+      resetAdapterInstances();
+    }
   });
 });

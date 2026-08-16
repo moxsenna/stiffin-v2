@@ -349,7 +349,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
               <input
                 type="text"
                 required
-                value={profile.tagline}
+                value={profile.tagline || ''}
                 onChange={e => setProfile({ ...profile, tagline: e.target.value })}
                 placeholder="Contoh: Ruang belajar untuk orang tua pendamping anak"
                 style={{

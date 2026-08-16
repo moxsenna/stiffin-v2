@@ -5,15 +5,15 @@ import React from 'react';
 
 interface ProgramCoverProps {
   title: string;
-  publicLabel: string;
+  publicLabel?: string | null;
   variant?: 'cover-a' | 'cover-b' | 'cover-c';
-  imageUrl?: string;
+  imageUrl?: string | null;
   aspectRatio?: string;
 }
 
 export function ProgramCover({
   title,
-  publicLabel,
+  publicLabel = '',
   variant = 'cover-a',
   imageUrl,
   aspectRatio = '16 / 10',

@@ -21,26 +21,28 @@ import { migrationEolViolations } from '../../tooling/migrate';
 const CANONICAL = {
   '0000_modern_hydra': '86a3e3d993e3c038908e741649c2586afe2ae7ca737be641680c9af475bc7689',
   '0001_material_king_bedlam': 'e5acd9851fe9f76920ed513ddb454dbb91ddc6bc2259a8caa591fe894c95c166',
+  '0002_heavy_scarlet_witch': '9c408e9d74259546da420502c96d689bd8c82c92ee880a7e459019250f686b6b',
 } as const;
 
 // Known Windows CRLF working-tree hashes — noncanonical diagnostics.
 const CRLF_KNOWN = {
   '0000_modern_hydra': '06f67712f2024e8b605d73da5530b855e2648e87361367a18626a47cd459ae56',
   '0001_material_king_bedlam': '6c433d8e3f20f57d1ab1c4a86a92cb99952bd8d051a666e6ca1e800149683d66',
+  '0002_heavy_scarlet_witch': '7905b55bd229b57efbe7b2d7c077d7c830c279b3b6779d5258d6811e11be7812',
 } as const;
 
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
 
 function migrationBytes(): { name: string; lf: string }[] {
   const dir = join(process.cwd(), 'src', 'db', 'migrations');
-  return ['0000_modern_hydra', '0001_material_king_bedlam'].map((tag) => {
+  return ['0000_modern_hydra', '0001_material_king_bedlam', '0002_heavy_scarlet_witch'].map((tag) => {
     // .gitattributes eol=lf guarantees the working-tree bytes are canonical LF.
     const lf = readFileSync(join(dir, `${tag}.sql`), 'utf8').replace(/\r\n/g, '\n');
     return { name: tag, lf };
   });
 }
 
-describe('B2 — cross-platform migration fingerprint (canonical LF)', () => {
+describe('B2/B3 — cross-platform migration fingerprint (canonical LF)', () => {
   it('canonical LF 0000 -> 86a3e3d9... (Git/LF fingerprint)', () => {
     const [m0] = migrationBytes();
     assert.strictEqual(m0.name, '0000_modern_hydra');
@@ -53,15 +55,24 @@ describe('B2 — cross-platform migration fingerprint (canonical LF)', () => {
     assert.strictEqual(sha256(m1.lf), CANONICAL['0001_material_king_bedlam']);
   });
 
+  it('canonical LF 0002 -> 9c408e9d... (Git/LF fingerprint)', () => {
+    const [, , m2] = migrationBytes();
+    assert.strictEqual(m2.name, '0002_heavy_scarlet_witch');
+    assert.strictEqual(sha256(m2.lf), CANONICAL['0002_heavy_scarlet_witch']);
+  });
+
   it('same content as CRLF -> known non-canonical Windows hashes (diagnostic only)', () => {
-    const [m0, m1] = migrationBytes();
+    const [m0, m1, m2] = migrationBytes();
     const crlf0 = m0.lf.replace(/\n/g, '\r\n');
     const crlf1 = m1.lf.replace(/\n/g, '\r\n');
+    const crlf2 = m2.lf.replace(/\n/g, '\r\n');
     assert.strictEqual(sha256(crlf0), CRLF_KNOWN['0000_modern_hydra'], 'CRLF 0000 must hash to the known Windows diagnostic hash');
     assert.strictEqual(sha256(crlf1), CRLF_KNOWN['0001_material_king_bedlam'], 'CRLF 0001 must hash to the known Windows diagnostic hash');
+    assert.strictEqual(sha256(crlf2), CRLF_KNOWN['0002_heavy_scarlet_witch'], 'CRLF 0002 must hash to the known Windows diagnostic hash');
     // They are DIFFERENT from canonical — never interchangeable.
     assert.notStrictEqual(CRLF_KNOWN['0000_modern_hydra'], CANONICAL['0000_modern_hydra']);
     assert.notStrictEqual(CRLF_KNOWN['0001_material_king_bedlam'], CANONICAL['0001_material_king_bedlam']);
+    assert.notStrictEqual(CRLF_KNOWN['0002_heavy_scarlet_witch'], CANONICAL['0002_heavy_scarlet_witch']);
   });
 
   it('migration SQL working-tree files contain no CR bytes (eol=lf in effect)', () => {
