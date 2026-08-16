@@ -1,8 +1,10 @@
 import { eq, and, isNull, asc } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { aftercareRecords, bookings, contacts, AftercareRecordRow, NewAftercareRecordRow } from '../db/schema';
 import { isOrganizationContext } from '../core/organization-context';
 import type { OrganizationContext } from '../core/organization-context';
+import { DomainError } from '../core/errors';
+import { isUniqueViolation } from '../db/pg-errors';
+import type { DbHandle } from '../db/client';
 
 export type CreateAftercareInput = Omit<NewAftercareRecordRow, 'id' | 'organizationId' | 'createdAt' | 'updatedAt'>;
 
@@ -29,11 +31,11 @@ export interface AftercareRepository {
   ): Promise<AftercareRecordRow | null>;
 }
 
-export function createAftercareRepository(db: NodePgDatabase<any> | any): AftercareRepository {
+export function createAftercareRepository(db: DbHandle): AftercareRepository {
   return {
     async create(ctx, input) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
 
       // Tenant booking parent verification (fail-closed)
@@ -49,7 +51,7 @@ export function createAftercareRepository(db: NodePgDatabase<any> | any): Afterc
         .limit(1);
 
       if (!booking) {
-        throw new Error('Tenant booking is required to create an aftercare record');
+        throw new DomainError('NOT_FOUND', 'Tenant booking is required to create an aftercare record');
       }
 
       // Tenant contact parent verification (fail-closed)
@@ -66,26 +68,36 @@ export function createAftercareRepository(db: NodePgDatabase<any> | any): Afterc
         .limit(1);
 
       if (!contact) {
-        throw new Error('Active tenant contact is required to create an aftercare record');
+        throw new DomainError('NOT_FOUND', 'Active tenant contact is required to create an aftercare record');
       }
 
       const now = new Date().toISOString();
-      const rows = await db
-        .insert(aftercareRecords)
-        .values({
-          ...input,
-          organizationId: ctx.organizationId,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
+      try {
+        const rows = await db
+          .insert(aftercareRecords)
+          .values({
+            ...input,
+            organizationId: ctx.organizationId,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
 
-      return rows[0];
+        return rows[0];
+      } catch (err) {
+        if (isUniqueViolation(err)) {
+          throw new DomainError(
+            'CONFLICT',
+            'Aftercare record already exists for this booking'
+          );
+        }
+        throw err;
+      }
     },
 
     async findByBooking(ctx, bookingId) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .select()
@@ -102,7 +114,7 @@ export function createAftercareRepository(db: NodePgDatabase<any> | any): Afterc
 
     async findById(ctx, id) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .select()
@@ -119,7 +131,7 @@ export function createAftercareRepository(db: NodePgDatabase<any> | any): Afterc
 
     async listByOrg(ctx, opts = {}) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const conditions = [eq(aftercareRecords.organizationId, ctx.organizationId)];
       if (opts.status) {
@@ -135,7 +147,7 @@ export function createAftercareRepository(db: NodePgDatabase<any> | any): Afterc
 
     async completeRecord(ctx, bookingId, patch) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .update(aftercareRecords)

@@ -1,8 +1,10 @@
 import { eq, and, isNull, lte, gt, asc, desc, count } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { nextActions, contacts, bookings, NextActionRow, NewNextActionRow } from '../db/schema';
 import { isOrganizationContext } from '../core/organization-context';
 import type { OrganizationContext } from '../core/organization-context';
+import { DomainError } from '../core/errors';
+import { isUniqueViolation } from '../db/pg-errors';
+import type { DbHandle } from '../db/client';
 
 export type CreateNextActionInput = Omit<NewNextActionRow, 'id' | 'organizationId' | 'createdAt' | 'updatedAt'>;
 
@@ -24,11 +26,11 @@ export interface NextActionRepository {
   reschedule(ctx: OrganizationContext, id: string, dueAt: string): Promise<NextActionRow | null>;
 }
 
-export function createNextActionRepository(db: NodePgDatabase<any> | any): NextActionRepository {
+export function createNextActionRepository(db: DbHandle): NextActionRepository {
   return {
     async create(ctx, input) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
 
       // Tenant contact parent verification (fail-closed)
@@ -45,7 +47,7 @@ export function createNextActionRepository(db: NodePgDatabase<any> | any): NextA
         .limit(1);
 
       if (!contact) {
-        throw new Error('Active tenant contact is required to create a next action');
+        throw new DomainError('NOT_FOUND', 'Active tenant contact is required to create a next action');
       }
 
       // Tenant booking parent verification if bookingId is supplied
@@ -62,27 +64,37 @@ export function createNextActionRepository(db: NodePgDatabase<any> | any): NextA
           .limit(1);
 
         if (!booking) {
-          throw new Error('Tenant booking is required when bookingId is supplied');
+          throw new DomainError('NOT_FOUND', 'Tenant booking is required when bookingId is supplied');
         }
       }
 
       const now = new Date().toISOString();
-      const rows = await db
-        .insert(nextActions)
-        .values({
-          ...input,
-          organizationId: ctx.organizationId,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
+      try {
+        const rows = await db
+          .insert(nextActions)
+          .values({
+            ...input,
+            organizationId: ctx.organizationId,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
 
-      return rows[0];
+        return rows[0];
+      } catch (err) {
+        if (isUniqueViolation(err)) {
+          throw new DomainError(
+            'CONFLICT',
+            'Next action with this idempotency key already exists for this source'
+          );
+        }
+        throw err;
+      }
     },
 
     async findById(ctx, id) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .select()
@@ -99,7 +111,7 @@ export function createNextActionRepository(db: NodePgDatabase<any> | any): NextA
 
     async listByContact(ctx, contactId, status) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const conditions = [
         eq(nextActions.organizationId, ctx.organizationId),
@@ -117,7 +129,7 @@ export function createNextActionRepository(db: NodePgDatabase<any> | any): NextA
 
     async listPendingDueBy(ctx, upTo) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       return db
         .select()
@@ -134,7 +146,7 @@ export function createNextActionRepository(db: NodePgDatabase<any> | any): NextA
 
     async listPendingUpcoming(ctx, from, limit) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       return db
         .select()
@@ -152,7 +164,7 @@ export function createNextActionRepository(db: NodePgDatabase<any> | any): NextA
 
     async countPending(ctx) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const res = await db
         .select({ c: count() })
@@ -168,7 +180,7 @@ export function createNextActionRepository(db: NodePgDatabase<any> | any): NextA
 
     async findByIdempotency(ctx, source, idempotencyKey) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .select()
@@ -186,7 +198,7 @@ export function createNextActionRepository(db: NodePgDatabase<any> | any): NextA
 
     async findActiveByBookingType(ctx, bookingId, actionType) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       return db
         .select()
@@ -204,7 +216,7 @@ export function createNextActionRepository(db: NodePgDatabase<any> | any): NextA
 
     async complete(ctx, id, completedAt) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .update(nextActions)
@@ -225,7 +237,7 @@ export function createNextActionRepository(db: NodePgDatabase<any> | any): NextA
 
     async resolve(ctx, id, status) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .update(nextActions)
@@ -246,7 +258,7 @@ export function createNextActionRepository(db: NodePgDatabase<any> | any): NextA
 
     async reschedule(ctx, id, dueAt) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .update(nextActions)

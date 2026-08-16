@@ -1,8 +1,9 @@
 import { eq, and, isNull, gte, lte, asc, desc, sql } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { bookings, contacts, services, BookingRow, NewBookingRow } from '../db/schema';
 import { isOrganizationContext } from '../core/organization-context';
 import type { OrganizationContext } from '../core/organization-context';
+import { DomainError } from '../core/errors';
+import type { DbHandle } from '../db/client';
 
 export type CreateBookingInput = Omit<NewBookingRow, 'id' | 'organizationId' | 'createdAt' | 'updatedAt'>;
 
@@ -19,25 +20,20 @@ export interface BookingRepository {
   listByOrg(ctx: OrganizationContext, opts?: ListBookingsOrgOptions): Promise<BookingRow[]>;
   listByContact(ctx: OrganizationContext, contactId: string): Promise<BookingRow[]>;
   lockById(ctx: OrganizationContext, id: string): Promise<BookingRow | null>;
-  updateStatus(
-    ctx: OrganizationContext,
-    id: string,
-    status: string,
-    cancellationReason?: string | null
-  ): Promise<BookingRow | null>;
+  updateStatus(ctx: OrganizationContext, id: string, status: string): Promise<BookingRow | null>;
   updatePayment(ctx: OrganizationContext, id: string, paymentStatus: string): Promise<BookingRow | null>;
   reschedule(ctx: OrganizationContext, id: string, startAt: string, endAt?: string | null): Promise<BookingRow | null>;
   markCompleted(ctx: OrganizationContext, id: string, completedAt: string): Promise<BookingRow | null>;
 }
 
-export function createBookingRepository(db: NodePgDatabase<any> | any): BookingRepository {
+export function createBookingRepository(db: DbHandle): BookingRepository {
   return {
     async create(ctx, input, idempotencyKey) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
 
-      // Tenant parent verification (fail-closed)
+      // Tenant parent verification (fail-closed): Contact must be active in tenant
       const [contact] = await db
         .select({ id: contacts.id })
         .from(contacts)
@@ -51,22 +47,24 @@ export function createBookingRepository(db: NodePgDatabase<any> | any): BookingR
         .limit(1);
 
       if (!contact) {
-        throw new Error('Active tenant contact is required to create a booking');
+        throw new DomainError('NOT_FOUND', 'Active tenant contact is required to create a booking');
       }
 
+      // Tenant parent verification (fail-closed): Service must be active in tenant
       const [service] = await db
         .select({ id: services.id })
         .from(services)
         .where(
           and(
             eq(services.id, input.serviceId),
-            eq(services.organizationId, ctx.organizationId)
+            eq(services.organizationId, ctx.organizationId),
+            eq(services.isActive, true)
           )
         )
         .limit(1);
 
       if (!service) {
-        throw new Error('Tenant service is required to create a booking');
+        throw new DomainError('NOT_FOUND', 'Active tenant service is required to create a booking');
       }
 
       const now = new Date().toISOString();
@@ -88,7 +86,7 @@ export function createBookingRepository(db: NodePgDatabase<any> | any): BookingR
 
     async findById(ctx, id) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .select()
@@ -105,7 +103,7 @@ export function createBookingRepository(db: NodePgDatabase<any> | any): BookingR
 
     async listByOrg(ctx, opts = {}) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const conditions = [eq(bookings.organizationId, ctx.organizationId)];
 
@@ -131,7 +129,7 @@ export function createBookingRepository(db: NodePgDatabase<any> | any): BookingR
 
     async listByContact(ctx, contactId) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       return db
         .select()
@@ -147,7 +145,7 @@ export function createBookingRepository(db: NodePgDatabase<any> | any): BookingR
 
     async lockById(ctx, id) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
 
       const res = await db.execute(sql`
@@ -183,20 +181,16 @@ export function createBookingRepository(db: NodePgDatabase<any> | any): BookingR
       } as BookingRow;
     },
 
-    async updateStatus(ctx, id, status, cancellationReason) {
+    async updateStatus(ctx, id, status) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
-      }
-      const patch: Record<string, unknown> = {
-        status,
-        updatedAt: new Date().toISOString(),
-      };
-      if (cancellationReason !== undefined) {
-        patch.cancellationReason = cancellationReason;
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .update(bookings)
-        .set(patch)
+        .set({
+          status,
+          updatedAt: new Date().toISOString(),
+        })
         .where(
           and(
             eq(bookings.organizationId, ctx.organizationId),
@@ -209,7 +203,7 @@ export function createBookingRepository(db: NodePgDatabase<any> | any): BookingR
 
     async updatePayment(ctx, id, paymentStatus) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .update(bookings)
@@ -229,7 +223,7 @@ export function createBookingRepository(db: NodePgDatabase<any> | any): BookingR
 
     async reschedule(ctx, id, startAt, endAt) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .update(bookings)
@@ -250,7 +244,7 @@ export function createBookingRepository(db: NodePgDatabase<any> | any): BookingR
 
     async markCompleted(ctx, id, completedAt) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .update(bookings)

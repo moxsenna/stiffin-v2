@@ -1,8 +1,9 @@
 import { eq, and, inArray, asc } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { services, ServiceRow, NewServiceRow } from '../db/schema';
 import { isOrganizationContext } from '../core/organization-context';
 import type { OrganizationContext } from '../core/organization-context';
+import { DomainError } from '../core/errors';
+import type { DbHandle } from '../db/client';
 
 export type CreateServiceInput = Omit<NewServiceRow, 'id' | 'organizationId' | 'createdAt' | 'updatedAt'>;
 export type UpdateServicePatch = Partial<Omit<NewServiceRow, 'id' | 'organizationId' | 'createdAt' | 'updatedAt'>>;
@@ -15,11 +16,11 @@ export interface ServiceRepository {
   update(ctx: OrganizationContext, id: string, patch: UpdateServicePatch): Promise<ServiceRow | null>;
 }
 
-export function createServiceRepository(db: NodePgDatabase<any> | any): ServiceRepository {
+export function createServiceRepository(db: DbHandle): ServiceRepository {
   return {
     async listActive(ctx) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       return db
         .select()
@@ -35,7 +36,7 @@ export function createServiceRepository(db: NodePgDatabase<any> | any): ServiceR
 
     async listByIds(ctx, ids) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       if (ids.length === 0) return [];
       return db
@@ -52,7 +53,7 @@ export function createServiceRepository(db: NodePgDatabase<any> | any): ServiceR
 
     async findById(ctx, id) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .select()
@@ -69,7 +70,7 @@ export function createServiceRepository(db: NodePgDatabase<any> | any): ServiceR
 
     async create(ctx, input) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const now = new Date().toISOString();
       const rows = await db
@@ -86,7 +87,7 @@ export function createServiceRepository(db: NodePgDatabase<any> | any): ServiceR
 
     async update(ctx, id, patch) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .update(services)

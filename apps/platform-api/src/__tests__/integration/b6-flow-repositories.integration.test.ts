@@ -1,11 +1,9 @@
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert';
-import { eq } from 'drizzle-orm';
 import {
   applyMigrationsAsOwner,
   TEST_DATABASE_URL,
   withIntegrationDb,
-  pgErrorCode,
 } from './test-env';
 import {
   organizations,
@@ -13,12 +11,6 @@ import {
   contacts,
   services,
   bookings,
-  nextActions,
-  activities,
-  contactFlowStates,
-  aftercareRecords,
-  contactAssessments,
-  messageTemplates,
 } from '../../db/schema';
 import {
   createServiceRepository,
@@ -31,6 +23,7 @@ import {
   createTemplateRepository,
 } from '../../repositories';
 import type { AuthenticatedActor } from '../../auth/types';
+import { DomainError, isDomainError } from '../../core/errors';
 
 const enabled = Boolean(TEST_DATABASE_URL);
 
@@ -40,8 +33,10 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
   let userAId: string;
   let userBId: string;
   let contactAId: string;
+  let contactA2Id: string;
   let contactBId: string;
   let serviceAId: string;
+  let serviceAInactiveId: string;
   let serviceBId: string;
 
   const actorA: AuthenticatedActor = {
@@ -85,9 +80,15 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
       // Create Contacts
       const [cA] = await db
         .insert(contacts)
-        .values({ organizationId: orgAId, name: 'Contact Org A', phoneE164: '+6281111111111' })
+        .values({ organizationId: orgAId, name: 'Contact Org A 1', phoneE164: '+6281111111111' })
         .returning();
       contactAId = cA.id;
+
+      const [cA2] = await db
+        .insert(contacts)
+        .values({ organizationId: orgAId, name: 'Contact Org A 2', phoneE164: '+6281111111112' })
+        .returning();
+      contactA2Id = cA2.id;
 
       const [cB] = await db
         .insert(contacts)
@@ -95,28 +96,45 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
         .returning();
       contactBId = cB.id;
 
-      // Create Services
+      // Create Active Service in Org A
       const [sA] = await db
         .insert(services)
         .values({
           organizationId: orgAId,
-          name: 'Service A',
+          name: 'Active Service A',
           category: 'SESSION',
           priceAmount: 300000,
           depositAmount: 100000,
           durationMinutes: 45,
+          isActive: true,
         })
         .returning();
       serviceAId = sA.id;
 
+      // Create Inactive Service in Org A
+      const [sAInact] = await db
+        .insert(services)
+        .values({
+          organizationId: orgAId,
+          name: 'Inactive Service A',
+          category: 'SESSION',
+          priceAmount: 200000,
+          durationMinutes: 30,
+          isActive: false,
+        })
+        .returning();
+      serviceAInactiveId = sAInact.id;
+
+      // Create Service in Org B
       const [sB] = await db
         .insert(services)
         .values({
           organizationId: orgBId,
-          name: 'Service B',
+          name: 'Active Service B',
           category: 'ASSESSMENT',
           priceAmount: 500000,
           durationMinutes: 60,
+          isActive: true,
         })
         .returning();
       serviceBId = sB.id;
@@ -307,7 +325,7 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
         const startAt = new Date().toISOString();
         const endAt = new Date(Date.now() + 3600_000).toISOString();
 
-        // Valid creation in Tenant A
+        // 1. Valid creation in Tenant A against ACTIVE service
         const b = await repo.create(
           ctxA,
           {
@@ -325,7 +343,26 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
         assert.strictEqual(b.amount, 300000);
         bookingAId = b.id;
 
-        // Tenant Poisoning: Org B attempting to create booking with Org A contact FAILS
+        // 2. Booking against INACTIVE service fails closed (DomainError NOT_FOUND)
+        await assert.rejects(
+          async () => {
+            await repo.create(ctxA, {
+              contactId: contactAId,
+              serviceId: serviceAInactiveId, // Inactive service!
+              amount: 200000,
+              startAt,
+              locationType: 'ON_SITE',
+            });
+          },
+          (err: unknown) => {
+            assert.ok(isDomainError(err));
+            assert.strictEqual(err.code, 'NOT_FOUND');
+            return true;
+          },
+          'New booking against inactive service must fail closed'
+        );
+
+        // 3. Tenant Poisoning: Org B attempting to create booking with Org A contact FAILS
         await assert.rejects(
           async () => {
             await repo.create(ctxB, {
@@ -336,11 +373,15 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
               locationType: 'ONLINE',
             });
           },
-          /Active tenant contact is required/,
+          (err: unknown) => {
+            assert.ok(isDomainError(err));
+            assert.strictEqual(err.code, 'NOT_FOUND');
+            return true;
+          },
           'Tenant poisoning on contact must fail closed'
         );
 
-        // Tenant Poisoning: Org A attempting to create booking with Org B service FAILS
+        // 4. Tenant Poisoning: Org A attempting to create booking with Org B service FAILS
         await assert.rejects(
           async () => {
             await repo.create(ctxA, {
@@ -351,11 +392,15 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
               locationType: 'ONLINE',
             });
           },
-          /Tenant service is required/,
+          (err: unknown) => {
+            assert.ok(isDomainError(err));
+            assert.strictEqual(err.code, 'NOT_FOUND');
+            return true;
+          },
           'Tenant poisoning on service must fail closed'
         );
 
-        // findById
+        // 5. findById
         const found = await repo.findById(ctxA, bookingAId);
         assert.strictEqual(found?.id, bookingAId);
         const crossFound = await repo.findById(ctxB, bookingAId);
@@ -385,6 +430,12 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
         const ctxA = { organizationId: orgAId };
         const ctxB = { organizationId: orgBId };
 
+        // updateStatus (exact signature: ctx, id, status — no phantom cancellationReason)
+        const s = await repo.updateStatus(ctxA, bookingAId, 'CONFIRMED');
+        assert.strictEqual(s?.status, 'CONFIRMED');
+        const crossS = await repo.updateStatus(ctxB, bookingAId, 'CONFIRMED');
+        assert.strictEqual(crossS, null);
+
         // updatePayment
         const p = await repo.updatePayment(ctxA, bookingAId, 'PAID');
         assert.strictEqual(p?.paymentStatus, 'PAID');
@@ -410,7 +461,7 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
   describe('5. NextActionRepository', () => {
     let actionAId: string;
 
-    it('creates next action, validates active tenant contact/booking parents, and maps duplicate idempotency key', async () => {
+    it('creates next action, validates active tenant contact/booking parents, and maps duplicate idempotency key to DomainError CONFLICT', async () => {
       await withIntegrationDb(async (db) => {
         const repo = createNextActionRepository(db);
         const ctxA = { organizationId: orgAId };
@@ -431,7 +482,7 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
         assert.ok(na.id);
         actionAId = na.id;
 
-        // Duplicate idempotency key in same org throws 23505
+        // Duplicate idempotency key in same org throws DomainError CONFLICT (not raw pg 23505)
         await assert.rejects(
           async () => {
             await repo.create(ctxA, {
@@ -445,21 +496,29 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
             });
           },
           (err: unknown) => {
-            assert.strictEqual(pgErrorCode(err), '23505');
+            assert.ok(isDomainError(err), 'Must be DomainError');
+            assert.strictEqual(err.code, 'CONFLICT');
             return true;
           }
         );
 
         // Tenant poisoning rejection
-        await assert.rejects(async () => {
-          await repo.create(ctxB, {
-            contactId: contactAId, // Org A contact
-            actionType: 'FOLLOW_UP',
-            title: 'Poisoned action',
-            dueAt,
-            priority: 50,
-          });
-        });
+        await assert.rejects(
+          async () => {
+            await repo.create(ctxB, {
+              contactId: contactAId, // Org A contact
+              actionType: 'FOLLOW_UP',
+              title: 'Poisoned action',
+              dueAt,
+              priority: 50,
+            });
+          },
+          (err: unknown) => {
+            assert.ok(isDomainError(err));
+            assert.strictEqual(err.code, 'NOT_FOUND');
+            return true;
+          }
+        );
       });
     });
 
@@ -513,12 +572,19 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
         assert.strictEqual(act2.actorUserId, null);
 
         // 3. Tenant poisoning rejection (Org B context with Org A contact)
-        await assert.rejects(async () => {
-          await repo.append(ctxB, actorA, {
-            contactId: contactAId,
-            eventType: 'CONTACT_UPDATED',
-          });
-        });
+        await assert.rejects(
+          async () => {
+            await repo.append(ctxB, actorA, {
+              contactId: contactAId,
+              eventType: 'CONTACT_UPDATED',
+            });
+          },
+          (err: unknown) => {
+            assert.ok(isDomainError(err));
+            assert.strictEqual(err.code, 'NOT_FOUND');
+            return true;
+          }
+        );
 
         // 4. listByContact & listByOrg
         const contactActs = await repo.listByContact(ctxA, contactAId);
@@ -539,7 +605,7 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
   });
 
   describe('7. AftercareRepository', () => {
-    it('creates aftercare record, prevents duplicate booking aftercare, and completes record', async () => {
+    it('creates aftercare record, maps duplicate booking aftercare to DomainError CONFLICT, and completes record', async () => {
       await withIntegrationDb(async (db) => {
         const bRepo = createBookingRepository(db);
         const acRepo = createAftercareRepository(db);
@@ -566,14 +632,21 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
         assert.ok(ac.id);
         assert.strictEqual(ac.status, 'PENDING');
 
-        // Duplicate aftercare on same booking rejected by UNIQUE(org, booking)
-        await assert.rejects(async () => {
-          await acRepo.create(ctxA, {
-            bookingId: bk.id,
-            contactId: contactAId,
-            scheduledFor: new Date().toISOString(),
-          });
-        });
+        // Duplicate aftercare on same booking maps to DomainError CONFLICT (not raw pg 23505)
+        await assert.rejects(
+          async () => {
+            await acRepo.create(ctxA, {
+              bookingId: bk.id,
+              contactId: contactAId,
+              scheduledFor: new Date().toISOString(),
+            });
+          },
+          (err: unknown) => {
+            assert.ok(isDomainError(err), 'Must be DomainError');
+            assert.strictEqual(err.code, 'CONFLICT');
+            return true;
+          }
+        );
 
         // findByBooking
         const found = await acRepo.findByBooking(ctxA, bk.id);
@@ -593,31 +666,140 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
     });
   });
 
-  describe('8. AssessmentRepository', () => {
-    it('getOrCreate is idempotent and updateStatus records assessment state', async () => {
+  describe('8. AssessmentRepository (Precedence Guard & Parent Validation)', () => {
+    let bookingContactAId: string;
+    let bookingContactA2Id: string;
+    let bookingOrgBId: string;
+
+    before(async () => {
+      await withIntegrationDb(async (db) => {
+        const bRepo = createBookingRepository(db);
+
+        const b1 = await bRepo.create({ organizationId: orgAId }, {
+          contactId: contactAId,
+          serviceId: serviceAId,
+          amount: 300000,
+          startAt: new Date().toISOString(),
+          locationType: 'ONLINE',
+          status: 'CONFIRMED',
+        });
+        bookingContactAId = b1.id;
+
+        const b2 = await bRepo.create({ organizationId: orgAId }, {
+          contactId: contactA2Id,
+          serviceId: serviceAId,
+          amount: 300000,
+          startAt: new Date().toISOString(),
+          locationType: 'ONLINE',
+          status: 'CONFIRMED',
+        });
+        bookingContactA2Id = b2.id;
+
+        const b3 = await bRepo.create({ organizationId: orgBId }, {
+          contactId: contactBId,
+          serviceId: serviceBId,
+          amount: 500000,
+          startAt: new Date().toISOString(),
+          locationType: 'ONLINE',
+          status: 'CONFIRMED',
+        });
+        bookingOrgBId = b3.id;
+      });
+    });
+
+    it('enforces sourceBooking parent validation (same tenant AND same contact)', async () => {
       await withIntegrationDb(async (db) => {
         const asRepo = createAssessmentRepository(db);
         const ctxA = { organizationId: orgAId };
-        const ctxB = { organizationId: orgBId };
 
-        // 1. getOrCreate
-        const as1 = await asRepo.getOrCreate(ctxA, contactAId);
-        assert.ok(as1);
-        assert.strictEqual(as1.status, 'NOT_STARTED');
+        await asRepo.getOrCreate(ctxA, contactAId);
 
-        // 2. Idempotent
-        const as2 = await asRepo.getOrCreate(ctxA, contactAId);
-        assert.strictEqual(as2?.id, as1.id);
+        // 1. Cross-org booking rejected
+        await assert.rejects(
+          async () => {
+            await asRepo.updateStatus(ctxA, contactAId, 'SCHEDULED', bookingOrgBId);
+          },
+          (err: unknown) => {
+            assert.ok(isDomainError(err));
+            assert.strictEqual(err.code, 'NOT_FOUND');
+            return true;
+          },
+          'Cross-org source booking must fail closed'
+        );
 
-        // 3. Cross-org contact returns null
-        const cross = await asRepo.getOrCreate(ctxB, contactAId);
-        assert.strictEqual(cross, null);
+        // 2. Same org but mismatched contact booking rejected
+        await assert.rejects(
+          async () => {
+            await asRepo.updateStatus(ctxA, contactAId, 'SCHEDULED', bookingContactA2Id);
+          },
+          (err: unknown) => {
+            assert.ok(isDomainError(err));
+            assert.strictEqual(err.code, 'NOT_FOUND');
+            return true;
+          },
+          'Mismatched contact source booking must fail closed'
+        );
 
-        // 4. updateStatus
-        const updated = await asRepo.updateStatus(ctxA, contactAId, 'COMPLETED', undefined, undefined, 'Goal met');
-        assert.strictEqual(updated?.status, 'COMPLETED');
-        assert.strictEqual(updated?.notes, 'Goal met');
-        assert.ok(updated?.assessedAt);
+        // 3. Same org + matching contact booking accepted
+        const valid = await asRepo.updateStatus(ctxA, contactAId, 'SCHEDULED', bookingContactAId);
+        assert.ok(valid);
+        assert.strictEqual(valid.status, 'SCHEDULED');
+        assert.strictEqual(valid.sourceBookingId, bookingContactAId);
+      });
+    });
+
+    it('enforces canonical assessment precedence matrix (COMPLETED > SCHEDULED > CANCELLED > NOT_STARTED)', async () => {
+      await withIntegrationDb(async (db) => {
+        const asRepo = createAssessmentRepository(db);
+        const ctxA = { organizationId: orgAId };
+
+        // Fresh contact for full precedence lifecycle
+        const [cTest] = await db
+          .insert(contacts)
+          .values({ organizationId: orgAId, name: 'Precedence Contact', phoneE164: '+6281199998888' })
+          .returning();
+
+        // 1. Initial state -> NOT_STARTED
+        const initial = await asRepo.getOrCreate(ctxA, cTest.id);
+        assert.strictEqual(initial?.status, 'NOT_STARTED');
+
+        // 2. NOT_STARTED -> CANCELLED (allowed)
+        const step1 = await asRepo.updateStatus(ctxA, cTest.id, 'CANCELLED');
+        assert.strictEqual(step1?.status, 'CANCELLED');
+
+        // 3. CANCELLED -> NOT_STARTED (must NOT downgrade -> stays CANCELLED)
+        const step2 = await asRepo.updateStatus(ctxA, cTest.id, 'NOT_STARTED');
+        assert.strictEqual(step2?.status, 'CANCELLED');
+
+        // 4. CANCELLED -> SCHEDULED (allowed)
+        const step3 = await asRepo.updateStatus(ctxA, cTest.id, 'SCHEDULED');
+        assert.strictEqual(step3?.status, 'SCHEDULED');
+
+        // 5. SCHEDULED -> CANCELLED (must NOT downgrade -> stays SCHEDULED)
+        const step4 = await asRepo.updateStatus(ctxA, cTest.id, 'CANCELLED');
+        assert.strictEqual(step4?.status, 'SCHEDULED');
+
+        // 6. SCHEDULED -> NOT_STARTED (must NOT downgrade -> stays SCHEDULED)
+        const step5 = await asRepo.updateStatus(ctxA, cTest.id, 'NOT_STARTED');
+        assert.strictEqual(step5?.status, 'SCHEDULED');
+
+        // 7. SCHEDULED -> COMPLETED (allowed)
+        const step6 = await asRepo.updateStatus(ctxA, cTest.id, 'COMPLETED', undefined, undefined, 'Passed assessment');
+        assert.strictEqual(step6?.status, 'COMPLETED');
+        assert.strictEqual(step6?.notes, 'Passed assessment');
+        assert.ok(step6?.assessedAt);
+
+        // 8. COMPLETED -> SCHEDULED (must NOT downgrade -> stays COMPLETED)
+        const step7 = await asRepo.updateStatus(ctxA, cTest.id, 'SCHEDULED');
+        assert.strictEqual(step7?.status, 'COMPLETED');
+
+        // 9. COMPLETED -> CANCELLED (must NOT downgrade -> stays COMPLETED)
+        const step8 = await asRepo.updateStatus(ctxA, cTest.id, 'CANCELLED');
+        assert.strictEqual(step8?.status, 'COMPLETED');
+
+        // 10. COMPLETED -> NOT_STARTED (must NOT downgrade -> stays COMPLETED)
+        const step9 = await asRepo.updateStatus(ctxA, cTest.id, 'NOT_STARTED');
+        assert.strictEqual(step9?.status, 'COMPLETED');
       });
     });
   });
@@ -659,7 +841,6 @@ describe('B6 — Flow Repositories PostgreSQL Integration Suite', { skip: !enabl
           const flowRepo = createContactFlowRepository(tx);
           const actionRepo = createNextActionRepository(tx);
           const activityRepo = createActivityRepository(tx);
-          const aftercareRepo = createAftercareRepository(tx);
 
           // 1. Create booking in tx
           const bk = await bookingRepo.create(ctxA, {

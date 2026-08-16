@@ -1,8 +1,12 @@
 import { eq, and, isNull, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type { PgTransaction } from 'drizzle-orm/pg-core';
 import { contactFlowStates, contacts, ContactFlowStateRow } from '../db/schema';
 import { isOrganizationContext } from '../core/organization-context';
 import type { OrganizationContext } from '../core/organization-context';
+import { DomainError } from '../core/errors';
+
+export type DbHandle = NodePgDatabase<any> | PgTransaction<any, any, any>;
 
 export interface UpdateLifecycleStateInput {
   stage: string;
@@ -31,11 +35,11 @@ export interface ContactFlowRepository {
   findById(ctx: OrganizationContext, contactId: string): Promise<ContactFlowStateRow | null>;
 }
 
-export function createContactFlowRepository(db: NodePgDatabase<any> | any): ContactFlowRepository {
+export function createContactFlowRepository(db: DbHandle): ContactFlowRepository {
   return {
     async getOrCreate(ctx, contactId) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
 
       // Atomic conditional insert: only inserts if contact belongs to current tenant and is active (deleted_at IS NULL)
@@ -67,7 +71,7 @@ export function createContactFlowRepository(db: NodePgDatabase<any> | any): Cont
 
     async updateLifecycleState(ctx, contactId, input) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
 
       // Verify contact is active and belongs to tenant
@@ -87,7 +91,12 @@ export function createContactFlowRepository(db: NodePgDatabase<any> | any): Cont
         return null;
       }
 
-      const patch: Record<string, unknown> = {
+      const patch: {
+        stage: string;
+        lostReason: string | null;
+        updatedAt: string;
+        classification?: string;
+      } = {
         stage: input.stage,
         lostReason: input.stage === 'LOST' ? (input.lostReason ?? null) : null,
         updatedAt: new Date().toISOString(),
@@ -114,7 +123,7 @@ export function createContactFlowRepository(db: NodePgDatabase<any> | any): Cont
 
     async updateProfile(ctx, contactId, patch) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
 
       // Verify contact is active and belongs to tenant
@@ -134,7 +143,12 @@ export function createContactFlowRepository(db: NodePgDatabase<any> | any): Cont
         return null;
       }
 
-      const updateData: Record<string, unknown> = {
+      const updateData: {
+        updatedAt: string;
+        sourceChannel?: string | null;
+        notes?: string | null;
+        interest?: string | null;
+      } = {
         updatedAt: new Date().toISOString(),
       };
       if (patch.sourceChannel !== undefined) updateData.sourceChannel = patch.sourceChannel;
@@ -157,7 +171,7 @@ export function createContactFlowRepository(db: NodePgDatabase<any> | any): Cont
 
     async findById(ctx, contactId) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
 
       const rows = await db

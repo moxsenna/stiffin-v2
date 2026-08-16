@@ -1,9 +1,10 @@
 import { eq, and, isNull, desc, lte } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { activities, contacts, bookings, ActivityRow } from '../db/schema';
 import { isOrganizationContext } from '../core/organization-context';
 import type { OrganizationContext } from '../core/organization-context';
 import type { AuthenticatedActor } from '../auth/types';
+import { DomainError } from '../core/errors';
+import type { DbHandle } from '../db/client';
 
 export interface AppendActivityInput {
   contactId: string;
@@ -28,11 +29,11 @@ export interface ActivityRepository {
   listByOrg(ctx: OrganizationContext, opts?: ListActivitiesOrgOptions): Promise<ActivityRow[]>;
 }
 
-export function createActivityRepository(db: NodePgDatabase<any> | any): ActivityRepository {
+export function createActivityRepository(db: DbHandle): ActivityRepository {
   return {
     async append(ctx, actor, input) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
 
       // Tenant contact parent verification (fail-closed)
@@ -49,7 +50,7 @@ export function createActivityRepository(db: NodePgDatabase<any> | any): Activit
         .limit(1);
 
       if (!contact) {
-        throw new Error('Active tenant contact is required to append an activity');
+        throw new DomainError('NOT_FOUND', 'Active tenant contact is required to append an activity');
       }
 
       // Tenant booking parent verification if bookingId is supplied
@@ -66,7 +67,7 @@ export function createActivityRepository(db: NodePgDatabase<any> | any): Activit
           .limit(1);
 
         if (!booking) {
-          throw new Error('Tenant booking is required when bookingId is supplied to activity');
+          throw new DomainError('NOT_FOUND', 'Tenant booking is required when bookingId is supplied to activity');
         }
       }
 
@@ -91,7 +92,7 @@ export function createActivityRepository(db: NodePgDatabase<any> | any): Activit
 
     async listByContact(ctx, contactId, limit = 100) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       return db
         .select()
@@ -108,7 +109,7 @@ export function createActivityRepository(db: NodePgDatabase<any> | any): Activit
 
     async listByOrg(ctx, opts = {}) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const conditions = [eq(activities.organizationId, ctx.organizationId)];
       if (opts.before) {

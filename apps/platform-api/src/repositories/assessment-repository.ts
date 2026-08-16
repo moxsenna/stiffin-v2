@@ -1,8 +1,21 @@
 import { eq, and, isNull, sql } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { contactAssessments, contacts, ContactAssessmentRow } from '../db/schema';
+import { contactAssessments, contacts, bookings, ContactAssessmentRow } from '../db/schema';
 import { isOrganizationContext } from '../core/organization-context';
 import type { OrganizationContext } from '../core/organization-context';
+import { DomainError } from '../core/errors';
+import type { DbHandle } from '../db/client';
+
+const STATUS_PRECEDENCE: Record<string, number> = {
+  COMPLETED: 4,
+  SCHEDULED: 3,
+  CANCELLED: 2,
+  NOT_STARTED: 1,
+  UNKNOWN: 0,
+};
+
+function getStatusRank(status: string): number {
+  return STATUS_PRECEDENCE[status] ?? 0;
+}
 
 export interface AssessmentRepository {
   getOrCreate(ctx: OrganizationContext, contactId: string): Promise<ContactAssessmentRow | null>;
@@ -17,11 +30,11 @@ export interface AssessmentRepository {
   ): Promise<ContactAssessmentRow | null>;
 }
 
-export function createAssessmentRepository(db: NodePgDatabase<any> | any): AssessmentRepository {
+export function createAssessmentRepository(db: DbHandle): AssessmentRepository {
   return {
     async getOrCreate(ctx, contactId) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
 
       // Atomic conditional insert: only inserts if contact belongs to current tenant and is active (deleted_at IS NULL)
@@ -53,7 +66,7 @@ export function createAssessmentRepository(db: NodePgDatabase<any> | any): Asses
 
     async findById(ctx, contactId) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
 
       const rows = await db
@@ -75,11 +88,11 @@ export function createAssessmentRepository(db: NodePgDatabase<any> | any): Asses
 
     async updateStatus(ctx, contactId, status, sourceBookingId, assessedAt, notes) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
 
-      // Verify active contact belongs to tenant
-      const activeContact = await db
+      // Verify active contact belongs to tenant (fail-closed)
+      const [activeContact] = await db
         .select({ id: contacts.id })
         .from(contacts)
         .where(
@@ -91,21 +104,81 @@ export function createAssessmentRepository(db: NodePgDatabase<any> | any): Asses
         )
         .limit(1);
 
-      if (!activeContact[0]) {
+      if (!activeContact) {
         return null;
       }
 
-      const patch: Record<string, unknown> = {
+      // If sourceBookingId is supplied, verify it belongs to current tenant AND same contact (fail-closed)
+      if (sourceBookingId) {
+        const [sourceBooking] = await db
+          .select({ id: bookings.id })
+          .from(bookings)
+          .where(
+            and(
+              eq(bookings.id, sourceBookingId),
+              eq(bookings.organizationId, ctx.organizationId),
+              eq(bookings.contactId, contactId)
+            )
+          )
+          .limit(1);
+
+        if (!sourceBooking) {
+          throw new DomainError(
+            'NOT_FOUND',
+            'Source booking not found or does not belong to active tenant contact'
+          );
+        }
+      }
+
+      // Check existing assessment row for precedence guard
+      const existingRows = await db
+        .select()
+        .from(contactAssessments)
+        .where(
+          and(
+            eq(contactAssessments.organizationId, ctx.organizationId),
+            eq(contactAssessments.contactId, contactId)
+          )
+        )
+        .limit(1);
+
+      const existing = existingRows[0];
+      if (!existing) {
+        return null;
+      }
+
+      // Canonical precedence guard: COMPLETED > SCHEDULED > CANCELLED > NOT_STARTED
+      const currentRank = getStatusRank(existing.status);
+      const incomingRank = getStatusRank(status);
+
+      if (currentRank > incomingRank) {
+        // Lower evidence cannot overwrite higher evidence — ignore downgrade and return existing state
+        return existing;
+      }
+
+      const now = new Date().toISOString();
+      const patch: {
+        status: string;
+        updatedAt: string;
+        sourceBookingId?: string | null;
+        assessedAt?: string | null;
+        notes?: string | null;
+      } = {
         status,
-        updatedAt: new Date().toISOString(),
+        updatedAt: now,
       };
-      if (sourceBookingId !== undefined) patch.sourceBookingId = sourceBookingId;
+
+      if (sourceBookingId !== undefined) {
+        patch.sourceBookingId = sourceBookingId;
+      }
       if (assessedAt !== undefined) {
         patch.assessedAt = assessedAt;
       } else if (status === 'COMPLETED') {
-        patch.assessedAt = new Date().toISOString();
+        patch.assessedAt = existing.assessedAt ?? now;
       }
-      if (notes !== undefined) patch.notes = notes;
+      if (notes !== undefined) {
+        patch.notes = notes;
+      }
 
       const rows = await db
         .update(contactAssessments)

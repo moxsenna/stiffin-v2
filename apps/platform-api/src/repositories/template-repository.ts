@@ -1,8 +1,9 @@
 import { eq, and, asc } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { messageTemplates, MessageTemplateRow, NewMessageTemplateRow } from '../db/schema';
 import { isOrganizationContext } from '../core/organization-context';
 import type { OrganizationContext } from '../core/organization-context';
+import { DomainError } from '../core/errors';
+import type { DbHandle } from '../db/client';
 
 export type CreateMessageTemplateInput = Omit<NewMessageTemplateRow, 'id' | 'organizationId' | 'createdAt' | 'updatedAt'>;
 export type UpdateMessageTemplatePatch = Partial<Omit<NewMessageTemplateRow, 'id' | 'organizationId' | 'createdAt' | 'updatedAt'>>;
@@ -14,11 +15,11 @@ export interface TemplateRepository {
   update(ctx: OrganizationContext, id: string, patch: UpdateMessageTemplatePatch): Promise<MessageTemplateRow | null>;
 }
 
-export function createTemplateRepository(db: NodePgDatabase<any> | any): TemplateRepository {
+export function createTemplateRepository(db: DbHandle): TemplateRepository {
   return {
     async listActive(ctx, category) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const conditions = [
         eq(messageTemplates.organizationId, ctx.organizationId),
@@ -36,7 +37,7 @@ export function createTemplateRepository(db: NodePgDatabase<any> | any): Templat
 
     async findById(ctx, id) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .select()
@@ -53,7 +54,7 @@ export function createTemplateRepository(db: NodePgDatabase<any> | any): Templat
 
     async create(ctx, input) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const now = new Date().toISOString();
       const rows = await db
@@ -70,7 +71,7 @@ export function createTemplateRepository(db: NodePgDatabase<any> | any): Templat
 
     async update(ctx, id, patch) {
       if (!isOrganizationContext(ctx)) {
-        throw new Error('Tenant context is required');
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
         .update(messageTemplates)
