@@ -1,10 +1,22 @@
 # Milestone B6 — PromotorFlow Domain Plan
 
-**Status:** PLAN ACCEPTED / FROZEN — REVISION R2.3 (final consistency closure: master SHA corrected, all predecessor milestones B0/B1/B2/B3 confirmed FINAL ACCEPTED / FROZEN, migration sequence serialized as 0003, activities append-only least privilege locked at SELECT+INSERT yielding 94 total capabilities, API versioned at `/api/v1/flow/*`, additive Flow transport DTOs in `@promotor/contracts` permitted with baseline re-hash, active tenant contact verification enforced on all getOrCreate/parent seams, aftercare outcome decoupled from WhatsApp send). **Awaiting human review and explicit B6 implementation GO**. B6 is NOT implemented.
+**Status:** PLAN ACCEPTED / FROZEN — REVISION R2.4 (final product-scope reconciliation: canonical `interest` restored to `contact_flow_states` & Flow contact capture, public booking & weekly availability assigned to explicit milestone `B6.1 — PromotorFlow Public Booking & Availability (V0.1)` required before V0.1 release, normative history guard added, MessagingService wording clarified; all core domain invariants, 8 tables, 0003 migration, activities append-only, and 94 runtime capabilities preserved). **Awaiting human review and explicit B6 implementation GO**. B6 is NOT implemented.
 **Date:** 2026-08-16
 **Base:** canonical master @ `57d26b737636055d6d9a3551e84ba7267ed89e80` (B0 Platform Foundation, B1 Shared Core, B2 Auth & Authorization, and B3 PromotorClass Content are all FINAL ACCEPTED / FROZEN; canonical migrations `0000`, `0001`, `0002` present on master)
 **Scope:** Plan + domain design ONLY. No code, no migration, no grants, no routes, nothing deployed.
 **Dependencies (semantic):** B0, B1, B2, and B3 milestones are ALL canonical/frozen on master. Migration numbering for B6 is serialized as `0003` (following canonical `0000_fluffy_prowler`, `0001_shocking_black_widow`, `0002_heavy_scarlet_witch`). Privilege arithmetic: B1 (20) + B2 (20) + B3 (24) + B6 (30) = **94** runtime capabilities (with `activities` append-only: `UPDATE`/`DELETE` denied, and `CREATE` denied on schema `public`). B6 implementation remains gated solely on an explicit human `B6 IMPLEMENTATION GO`.
+
+**Revision R2.4 — Final product-scope reconciliation (review verdict: HOLD, plan scope reconciliation):**
+
+| # | Finding | Resolution |
+|---|---|---|
+| R2.4-1 | `interest` omitted from Flow contact domain | **Restored**: `contact_flow_states.interest TEXT NULL` restored to Flow-owned persistence (nullable in DB for cross-product contacts); `createFlowContact` for Flow-created contacts MUST require non-empty `interest`; `updateProfile` and `getContactContext` expose `interest` (§2.8, §4, §5.1, §13, §14.2) |
+| R2.4-2 | Public booking & availability scope ambiguity | **Reconciled**: Public booking and weekly availability are canonical V0.1 requirements (PRD). Deferred from B6 Core Domain to dedicated serialized milestone: **`B6.1 — PromotorFlow Public Booking & Availability (V0.1)`**; required before PromotorFlow V0.1 product release (§0, §2.11, §18 D8, §19) |
+| R2.4-3 | Historical changelog wording ambiguity | **Added**: Explicit normative rule stating only consolidated sections (§0–§19) and latest R2.3/R2.4 resolutions are implementation-authoritative |
+| R2.4-4 | MessagingService HTTP wording ambiguous | **Clarified**: `MessagingService` contains no HTTP concerns; the B6 `/api/v1/flow/messaging/*` route layer invokes this service (§5.8) |
+
+> [!IMPORTANT]
+> **NORMATIVE RULE**: Only the current consolidated sections (§0–§19) and the latest R2.3/R2.4 resolutions are implementation-authoritative. Older R1/R2/R2.1/R2.2 entries below are historical audit records only and MUST NOT be interpreted as current implementation requirements where superseded.
 
 **Revision R2.3 — Final consistency closure (review verdict: HOLD, plan closure only):**
 
@@ -104,6 +116,12 @@ NOT own a second canonical action table (`INTEGRATION_CONTRACT.md` §23).
   actor ids never come from browser-controlled payloads.
 - **Operator-directed lifecycle** (not a strict funnel): see §6.
 - **B7 owns cross-app integration wiring/hardening**; B6 keeps only the prepared seam (§11).
+- **Public Booking & Availability serialization (R2.4-2)**: Public booking and weekly
+  availability are canonical V0.1 requirements (PRD / implementation plan). Because they
+  form a distinct anonymous, rate-limited public surface with separate slot generation and
+  contact match/create flows, they are deferred from B6 Core Domain to a dedicated
+  serialized milestone: **`B6.1 — PromotorFlow Public Booking & Availability (V0.1)`**;
+  milestone B6.1 is required before PromotorFlow V0.1 product release.
 
 ---
 
@@ -197,7 +215,7 @@ created_at, updated_at
 INDEX (organization_id, is_active)
 ```
 
-No `deposit_amount` (no current-source evidence — removed per P1-2). No soft delete
+No `deposit_amount` (deferred — not in V0.1). No soft delete
 (V0.1 manages active state via `is_active`). Category supports the assessment sync
 (§2.6) without storing biometric data.
 
@@ -363,6 +381,7 @@ organization_id   uuid NOT NULL FK organizations RESTRICT     -- redundant with 
 contact_id        uuid NOT NULL FK contacts RESTRICT, UNIQUE  -- ONE PERSON = ONE CONTACT = ONE row
 stage             text NOT NULL DEFAULT 'NEW' CHECK IN ('NEW','CONTACTED','INTERESTED','FOLLOW_UP','BOOKED','COMPLETED','LOST')
 classification    text NOT NULL DEFAULT 'PROSPECT' CHECK IN ('PROSPECT','CLIENT')  -- stored/sticky (R2-8)
+interest          text NULL                                   -- canonical PRD requirement (R2.4-1); nullable in DB for cross-product contacts
 lost_reason       text NULL
 source_channel    text NULL
 notes             text NULL
@@ -371,8 +390,14 @@ CHECK ( (stage = 'LOST' AND lost_reason IS NOT NULL) OR (stage <> 'LOST' AND los
 INDEX (organization_id, stage)
 ```
 
-- **`interest` and `result_type` removed** (no current-source evidence — P1-2). Only
-  `source_channel` and `notes` (fixture-backed) plus `lost_reason`.
+- **`interest` is a canonical PRD requirement (R2.4-1)**: PRD explicitly requires `interest`
+  during Flow contact capture and displays it on Contact Detail. In the database,
+  `interest` is nullable so cross-product contacts (e.g. created by B4 registration or
+  PromotorClass) can receive a lazy Flow lifecycle row before Flow profile completion.
+  However, **`ContactFlowService.createFlowContact` for Flow-created contacts MUST require
+  a non-empty `interest` string** (`DomainError('VALIDATION', 'INTEREST_REQUIRED')`).
+  `updateProfile` may update `interest`, and `getContactContext` exposes it.
+- **`result_type` and `deposit_amount` removed/deferred** (not in V0.1).
 - **Classification is STORED and STICKY (R2-8, D1 resolved)** —
   `contact_flow_states.classification` column: new contact → `PROSPECT` (default);
   **`CLIENT` promotion happens ONLY through `ContactLifecycleService.transitionStage`
@@ -400,7 +425,7 @@ that the CHECK cannot accept.** Test §14.2 #24 verifies emit-set ⊆ CHECK-set.
 | event_type | Emitted by (service operation) | Key metadata |
 |---|---|---|
 | `CONTACT_CREATED` | ContactFlowService.createFlowContact (Phase 2) | — |
-| `CONTACT_UPDATED` | ContactFlowService.updateProfile (incl. notes/sourceChannel) | `{field}` |
+| `CONTACT_UPDATED` | ContactFlowService.updateProfile (incl. notes/sourceChannel/interest) | `{field}` |
 | `STAGE_CHANGED` | ContactLifecycleService.transitionStage | `{from, to, lostReason?}` |
 | `WHATSAPP_OPENED` | MessagingService.buildWaDeepLink | `{contactId}` |
 | `WHATSAPP_SENT` | NextActionService.completeAction(confirmed) | `{actionId}` |
@@ -433,12 +458,12 @@ Client adapter mapping (old fixture names → canonical): `WA_SENT→WHATSAPP_SE
 `ACTIVITY_EVENT_TYPE` (full §2.9 catalog), `AFTERCARE_STATUS`, `AFTERCARE_OUTCOME`,
 `ASSESSMENT_STATUS`, `TEMPLATE_CATEGORY`.
 
-### 2.11 Explicitly deferred tables — **OPEN PRODUCT DECISION / post-V0.1**
+### 2.11 Milestone scope reconciliation & deferred tables (R2.4-2)
 
-| Table | Reason to defer | Canonical milestone |
+| Table | Scope reconciliation | Canonical milestone |
 |---|---|---|
-| `availability_rules` | Only consumed by public booking + slot generation — public booking is a separate surface with its own auth/rate-limit needs | **OPEN PRODUCT DECISION — post-V0.1** (no canonical milestone assigned yet; counted in no grant arithmetic) |
-| `tags` / `contact_tags` | Frontend-only today; not consumed by any B6 rule | **OPEN PRODUCT DECISION — post-V0.1** (adapter omits `tags[]` until available) |
+| `availability_rules` | Required for public booking & slot generation in canonical PRD V0.1. Deferred from B6 Core Domain to separate the anonymous, rate-limited public booking surface | **`B6.1 — PromotorFlow Public Booking & Availability (V0.1)`** (required before PromotorFlow V0.1 release; owns `availability_rules`, slot engine, `/p/:slug` public routes, anonymous booking rate-limiting) |
+| `tags` / `contact_tags` | Frontend-only today; not consumed by any B6 or V0.1 backend rule | **OPEN PRODUCT DECISION / post-V0.1** (adapter omits `tags[]` until available) |
 
 ---
 
@@ -509,13 +534,13 @@ the operation returns `null` / fails closed with `DomainError('NOT_FOUND')`.
 - `create(ctx, input)` / `update(ctx, id, patch)` — name/description/category/price/duration/isActive
 
 **ContactFlowRepository** (`createContactFlowRepository(db)`)
-- `getOrCreate(ctx, contactId)` — conditional INSERT from active tenant `contacts` ON CONFLICT (contact_id) DO NOTHING, then select; lazy lifecycle row (classification default `PROSPECT` applied here only); returns `null` if contact missing/deleted/other-org
+- `getOrCreate(ctx, contactId)` — conditional INSERT from active tenant `contacts` ON CONFLICT (contact_id) DO NOTHING, then select; lazy lifecycle row (classification default `PROSPECT`, `interest` default NULL applied here); returns `null` if contact missing/deleted/other-org
 - `updateLifecycleState(ctx, contactId, {stage, lostReason?, promoteToClient?})` — ONE
   UPDATE setting stage (+`lost_reason` per the CHECK bijection) and, when
   `promoteToClient: true`, `classification = 'CLIENT'` in the same statement; **`classification`
   is never an input and never demoted** (no method accepts a `PROSPECT` write post-creation;
   R2.1-1)
-- `updateProfile(ctx, contactId, patch)` — sourceChannel/notes
+- `updateProfile(ctx, contactId, patch: {sourceChannel?, notes?, interest?})` — sourceChannel/notes/interest
 - Internal only: `findById(ctx, contactId)` (active join semantics: contact must exist and `deleted_at IS NULL`)
 
 **BookingRepository** (`createBookingRepository(db)`)
@@ -595,19 +620,21 @@ service emits through an undeclared dependency, and no service hides raw DB look
 
 - **Phase 1:** Shared Core `matchOrCreateContact` runs its own internal transaction
   (B1 behavior — **unchanged, not refactored**) → durable canonical Contact.
-- **Phase 2:** idempotent Flow onboarding transaction: flow-state get-or-create
-  (`ON CONFLICT (contact_id) DO NOTHING`), NA-001 `CONTACT_LEAD` (guarded by its own
-  idempotency key), `CONTACT_CREATED` activity. If Phase 2 fails → safe retry. A contact
-  without a Flow state remains valid (Contact is shared across products, e.g. B4
-  registration).
+- **Phase 2:** idempotent Flow onboarding transaction:
+  - validates `interest` is a non-empty string for Flow-created contacts (`DomainError('VALIDATION', 'INTEREST_REQUIRED')`, R2.4-1);
+  - flow-state get-or-create (`ON CONFLICT (contact_id) DO NOTHING`) with `interest, source_channel, notes`;
+  - NA-001 `CONTACT_LEAD` (guarded by its own idempotency key, due = now + 2h, priority 75);
+  - `CONTACT_CREATED` activity.
+  If Phase 2 fails → safe retry. A contact without a Flow state remains valid (Contact is shared across products, e.g. B4 registration).
 
 ### 5.1 `ContactFlowService` — `createContactFlowService(db, { contactService, lifecycle: createContactLifecycleService, nextActions: createNextActionService, activities: createActivityRepository })`
-- `createFlowContact(ctx, {name, phoneRaw, email?, sourceChannel?, notes?})`
-  → Phase 1 Shared Core match-or-create (unchanged B1) + Phase 2 onboarding tx per §5.0:
-  flow-state get-or-create + **NA-001** `CONTACT_LEAD` (due = now + 2h, priority 75) +
+- `createFlowContact(ctx, {name, phoneRaw, interest, email?, sourceChannel?, notes?})`
+  → validates non-empty `interest` (required for Flow-created contacts, R2.4-1) + Phase 1 Shared Core match-or-create (unchanged B1) + Phase 2 onboarding tx per §5.0:
+  flow-state get-or-create (with `interest`) + **NA-001** `CONTACT_LEAD` (due = now + 2h, priority 75) +
   `CONTACT_CREATED` activity. Required phone (frozen contract §1.5).
+- `updateProfile(ctx, contactId, {sourceChannel?, notes?, interest?})` → updates Flow profile fields in `contact_flow_states` + emits `CONTACT_UPDATED`.
 - `getContactContext(ctx, contactId)` → `FlowContactContext` per `INTEGRATION_CONTRACT.md`
-  §14: identity + `stage` + stored `classification` (R2-8) + `primaryNextAction` + `activeBooking`.
+  §14: identity + `stage` + stored `classification` (R2-8) + `interest` (R2.4-1) + `primaryNextAction` + `activeBooking`.
 - `getAssessmentStatus(ctx, contactId)` → **read of `contact_assessments`** (get-or-create)
   — canonical record, no derivation ambiguity (§2.6).
 - `getContactTimeline(ctx, contactId)` → activities (for contact detail).
@@ -760,9 +787,9 @@ The engine (`implementation-plan.md` §10). Explicit rule functions (no giant sw
   declared Shared Core `contacts` dependency: org-scoped lookup of an ACTIVE contact
   (`deleted_at IS NULL`)**; contact missing/inactive/other org → `NOT_FOUND` (fails
   closed); no hidden raw DB lookups (R2.1-4) → builds
-  `https://wa.me/{phone_e164}?text={encoded}` + records `WHATSAPP_OPENED` (call site:
-  the future HTTP route fired when the user taps "Open WhatsApp" — B6 ships the pure
-  builder + activity writer, no HTTP).
+  `https://wa.me/{phone_e164}?text={encoded}` + records `WHATSAPP_OPENED`.
+  **MessagingService contains no HTTP concerns (R2.4-4)**; the B6 `/api/v1/flow/messaging/*`
+  route layer invokes this service.
 - `confirmSent` semantics live in `NextActionService.completeAction` (§5.4) — single source of truth.
 
 ---
@@ -1026,9 +1053,9 @@ Contract below binds the B6 route PR:
 ```text
 GET    /api/v1/flow/today                                          → Today read model (§8.4)
 GET    /api/v1/flow/contacts                                      → list (search name/phone, PROSPECT/CLIENT filter)
-POST   /api/v1/flow/contacts                                      → createFlowContact (§5.1)
+POST   /api/v1/flow/contacts                                      → createFlowContact {name, phoneRaw, interest, email?, sourceChannel?, notes?} (§5.1, R2.4-1)
 GET    /api/v1/flow/contacts/:id                                  → FlowContactContext (§5.1)
-PATCH  /api/v1/flow/contacts/:id                                  → profile fields (sourceChannel/notes)
+PATCH  /api/v1/flow/contacts/:id                                  → profile fields (sourceChannel/notes/interest)
 POST   /api/v1/flow/contacts/:id/stage                            → transitionStage (§5.2) {stage, lostReason?}
 GET    /api/v1/flow/contacts/:id/activities                       → timeline
 GET    /api/v1/flow/contacts/:id/primary-next-action              → primary (§8.3)
@@ -1058,7 +1085,7 @@ POST   /api/v1/flow/bookings/:id/cancel                           → cancelBook
 POST   /api/v1/flow/bookings/:id/no-show                          → markNoShow
 POST   /api/v1/flow/messaging/whatsapp-opened                     → records WHATSAPP_OPENED (wa.me open ≠ sent)
 POST   /api/v1/flow/messaging/confirm-sent                        → completeAction with confirmation (alias of complete)
-GET    /p/:slug  GET /api/v1/public/:slug/slots  POST /api/v1/public/:slug/bookings   → OPEN PRODUCT DECISION / post-V0.1
+GET    /p/:slug  GET /api/v1/public/:slug/slots  POST /api/v1/public/:slug/bookings   → Milestone B6.1 — PromotorFlow Public Booking & Availability (V0.1)
 ```
 
 Path stability is secondary; the **service signatures are the contract** (arch §50).
@@ -1076,6 +1103,7 @@ No UI refactor required. Mapping:
 | Client fixture field | Server source |
 |---|---|
 | `FlowContact.stage/classification` | `contact_flow_states.stage` + stored `classification` (§2.8, D1 resolved — sticky, R2-8) |
+| `FlowContact.interest` | `contact_flow_states.interest` — canonical PRD requirement (R2.4-1); required on Flow contact create, editable via `updateProfile` |
 | `FlowContact.sourceChannel/notes/lostReason` | `contact_flow_states` columns |
 | `FlowContact.tags[]` | deferred (OPEN PRODUCT DECISION) → adapter omits until available |
 | `FlowService.title` | `services.name` |
@@ -1126,6 +1154,7 @@ client change (server is operator-directed, any stage selectable).
 - **Schema guardrails & contracts compatibility**: source-guardrail extension (runtime `src/` still never touches
   `DATABASE_URL`); `@promotor/contracts` ownership preserved (B6 MUST NOT break frozen Shared Core or Class contracts; B6 MAY make additive backward-compatible Flow HTTP DTO additions; contract baseline hash guardrail is deliberately re-baselined).
 - **Idempotency key builders**: `aftercare:booking:{id}:d7`; partial-unique semantics.
+- **Interest validation (R2.4-1)**: `createFlowContact` validates non-empty `interest` (missing/empty → `DomainError('VALIDATION', 'INTEREST_REQUIRED')`); valid `interest` string accepted and persisted; `updateProfile` updates `interest`; cross-product lazy state defaults `interest` to `NULL`.
 
 ### 14.2 Integration (real PostgreSQL, CI `postgres:16`, runtime role)
 
@@ -1134,7 +1163,7 @@ client change (server is operator-directed, any stage selectable).
 | 1 | lifecycle happy path | operator-directed NEW→…→COMPLETED via 5.2; flow-state row + STAGE_CHANGED activities |
 | 2 | any→any allowed | e.g. `NEW→INTERESTED`, `NEW→COMPLETED` direct — accepted (no transition matrix) |
 | 3 | LOST rules | LOST without reason → VALIDATION error + DB CHECK rejects; with reason → stage LOST + pending actions cancelled; leaving LOST → lost_reason NULL |
-| 4 | contact created → NA-001 | two-phase onboarding (Phase 1 contact durable; Phase 2 retry-safe); CONTACT_LEAD due≈now+2h, priority 75, CONTACT_CREATED activity |
+| 4 | contact created → NA-001 (R2.4-1) | two-phase onboarding (Phase 1 contact durable; Phase 2 retry-safe); `createFlowContact` without `interest` → VALIDATION error (`INTEREST_REQUIRED`); valid `interest` persists in `contact_flow_states.interest`; CONTACT_LEAD due≈now+2h, priority 75, CONTACT_CREATED activity |
 | 5 | action create/complete/reschedule/skip | statuses; completed_at set iff COMPLETED; due_at updates; **skip without nextStep rejected; skip with nextStep → SKIPPED + new FOLLOW_UP atomic**; events ACTION_CREATED/COMPLETED/RESCHEDULED/SKIPPED/CANCELLED |
 | 6 | due grouping | seeded due_at set → getToday correct overdue/today/upcoming counts |
 | 7 | wa.me does not complete | completeAction without `confirmedWhatsAppSent` → action stays PENDING |
@@ -1156,7 +1185,7 @@ client change (server is operator-directed, any stage selectable).
 | 23 | migration reproducibility | apply canonical history from blank (0000 B1 → 0001 B2 → 0002 B3 → 0003 B6); apply B6 entry (0003) over migrated B1+B2+B3 with seeded predecessor data; journal hash stable across all 4 entries; schema matches canonical (R2.3-4) |
 | 24 | **taxonomy completeness** | parametrized: run every service operation → assert each emitted `event_type` accepted by CHECK + has deterministic projection (P0-9) |
 | 25 | Class adapter | `createNextAction` with dueAt → as given; without dueAt → next local day 10:00; `promotorclass:` keys idempotent (duplicate → CONFLICT → reused); appendLearningActivity → CLASS_SIGNAL; getContactContext/getAssessmentStatus |
-| 26 | two-phase onboarding | Phase 2 failure (simulated) → retry succeeds; contact without flow state remains valid |
+| 26 | two-phase onboarding & lazy Flow state (R2.4-1) | Phase 2 failure (simulated) → retry succeeds; cross-product contact receiving lazy Flow state receives default `interest = NULL`; contact without flow state remains valid |
 | 27 | markPaid on PENDING (R2-6) | UNPAID→PAID on a still-PENDING booking → exactly ONE `CONFIRM_BOOKING` created; repeat `markPaid` → no duplicates (idempotent); `REMIND_PAYMENT` completed; PAYMENT_MARKED |
 | 28 | aftercare temporal guard (R2-7) | D+6 `completeAftercare` → `AFTERCARE_NOT_DUE` rejected; D+7 → accepted; repeat completion → idempotent no-op (no duplicate follow-ons) |
 | 29 | classification sticky (R2-8) | new contact → PROSPECT; booking completion → CLIENT; operator `COMPLETED→FOLLOW_UP` later → **stays CLIENT** (never auto-demoted); direct stage writes never mutate classification |
@@ -1293,12 +1322,12 @@ repositories, no services, no routes, no frontend changes — this document is t
 | D5 | Message templates in B6 (P0-4) | Storage only — no WhatsApp automation; categories mirror non-manual action types |
 | D6 | Operator-directed lifecycle (P0-5) | Any→any selectable; LOST rules enforced; booking side effects; no strict funnel (would be a separate product change) |
 | D7 | Skip requires next step (P0-6) | `skipAction(actionId, nextStep)` atomic; preserved from canonical client behavior |
-| D8 | Availability / tags (P1-4) | **OPEN PRODUCT DECISION — post-V0.1**, no canonical milestone; excluded from grants arithmetic |
+| D8 | Public Booking & Availability serialization (P1-4, R2.4-2) | Deferred from B6 Core Domain to dedicated serialized milestone: **`B6.1 — PromotorFlow Public Booking & Availability (V0.1)`**; required before PromotorFlow V0.1 release; owns `availability_rules`, slot generation, `/p/:slug` routes, anonymous booking rate limiting; `tags` remains post-V0.1 open product decision |
 | D9 | Routes owned by B6 & versioned (P1-3, R2.3-6) | Route layer inside B6 under `/api/v1/flow/*`; prevents semantic collision with Shared Core contacts |
 | D10 | Migration numbering (P1-5, R2-3, R2.2) | Explicitly serialized as `0003` against canonical master post-B3 merge |
 | D11 | Phone required vs PRD "optional" | Frozen B1 contract wins; flagged to product for a later decision |
 | D12 | `SKIPPED` status beyond PRD's 3 statuses | Kept: fixtures + canonical test require "skip with next step"; DB CHECK + documented deviation |
-| D13 | `interest`, `result_type`, `deposit_amount` (P1-2) | Removed — no current-source evidence; re-add only with a fixture/product source |
+| D13 | Contact fields scope (P1-2, R2.4-1) | `interest` restored to `contact_flow_states` per canonical PRD/architecture source of truth (required on Flow contact capture, nullable in DB for cross-product contacts); `result_type` and `deposit_amount` deferred (not in V0.1) |
 | D14 | Concurrent completion (P0-8) | `SELECT … FOR UPDATE` + unique partials; true concurrent test (#13) |
 | D15 | `CLASS_SIGNAL` activity type | Seam-only, no consumer in B6; supports contract §12 `appendLearningActivity` |
 | D16 | Transport contracts ownership (R2.3-5) | `@promotor/contracts` owns cross-boundary DTOs & schemas; B6 adds backward-compatible Flow DTOs without breaking Shared Core/Class contracts; baseline hash re-baselined intentionally |
@@ -1332,4 +1361,5 @@ repositories, no services, no routes, no frontend changes — this document is t
 - Flow API route layer implemented **inside B6** once an explicit B6 implementation GO is issued (§12/§17 PR 7).
 - Rehearsed on Neon branch; production acceptance record per B1 audit rule.
 - Zero changes to: B1/B2/B3 migration/grant files, `@promotor/contracts`, Shared Core tables.
-- No WhatsApp auto-send, no payment gateway, no availability/tags tables, no temporary auth.
+- No WhatsApp auto-send, no payment gateway, no temporary auth; availability rules and public booking assigned to milestone `B6.1 — PromotorFlow Public Booking & Availability (V0.1)`.
+
