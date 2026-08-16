@@ -1,9 +1,11 @@
 import { Client } from 'pg';
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type { PgTransaction } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { Env } from '../env';
 
 export type DrizzleDb = NodePgDatabase;
+export type DbHandle = NodePgDatabase<any> | PgTransaction<any, any, any>;
 
 /**
  * Execute a database operation using a request-scoped pg Client connection.
