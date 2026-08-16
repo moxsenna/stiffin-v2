@@ -3,7 +3,7 @@
 **Target environment:** Disposable Neon rehearsal branch (`b2-auth-rehearsal`) cloned from `production`.  
 **Execution Date/Time:** 2026-08-16T04:35:00Z  
 **Source Under Test:** `83f5b90e4ff4fe8180905790824baf4af769edf8`  
-**Overall Rehearsal Verdict:** 🟢 PASS (Awaiting Human/Reviewer Audit)
+**Overall Rehearsal Verdict:** 🟢 FINAL ACCEPTED / FROZEN
 
 ---
 
@@ -149,5 +149,5 @@
 - [x] Read-only acceptance `--verify` PASS (0 failures)
 - [x] Disposable auth rehearsal `--rehearse-auth` (A–P) PASS (16/16, 0 failures)
 - [x] Post-auth read-only acceptance `--verify` PASS (0 failures)
-- [ ] **Human / Reviewer E-B Audit & Sign-off** (`B2 PHASE E-B — FINAL ACCEPTED / FROZEN`)
-- [ ] Phase E-C authorization
+- [x] **Human / Reviewer E-B Audit & Sign-off** (`B2 PHASE E-B — FINAL ACCEPTED / FROZEN`)
+- [x] **Phase E-C authorization** (`IN PROGRESS` — publication sync & controlled promotion)
