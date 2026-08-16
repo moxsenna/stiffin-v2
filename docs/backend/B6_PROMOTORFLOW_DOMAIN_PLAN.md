@@ -1,10 +1,18 @@
 # Milestone B6 — PromotorFlow Domain Plan
 
-**Status:** PLAN ACCEPTED / FROZEN — REVISION R2.1 (final source review: domain architecture ACCEPTED / FROZEN — no architecture changes permitted from this point; final publication/chronology sync applied — B2 Phase B schema/migration/grants are now canonical on master). **IMPLEMENTATION BLOCKED** until the B2 milestone is FINAL ACCEPTED / FROZEN **and an explicit B6 implementation GO is issued**. B6 is NOT implemented.
-**Date:** 2026-08-15
-**Base:** canonical master (B1 FINAL ACCEPTED / FROZEN; B2 Phase B auth schema/migration/grants canonical/frozen — B2 milestone overall NOT yet FINAL ACCEPTED / FROZEN; B3 content plan ACCEPTED / FROZEN, docs only)
+**Status:** PLAN ACCEPTED / FROZEN — REVISION R2.2 (synchronized with canonical master post-B3 merge: B1 Shared Core, B2 Auth & Authorization, and B3 PromotorClass Content are all FINAL ACCEPTED / FROZEN on master; migration sequence 0000, 0001, 0002 are canonical on master; next migration for B6 is serialized as 0003). **Awaiting human review and explicit B6 implementation GO**. B6 is NOT implemented.
+**Date:** 2026-08-16
+**Base:** canonical master (B1 Shared Core FINAL ACCEPTED / FROZEN; B2 Auth & Authorization FINAL ACCEPTED / FROZEN; B3 PromotorClass Content FINAL ACCEPTED / FROZEN; canonical migrations `0000`, `0001`, `0002` present on master)
 **Scope:** Plan + domain design ONLY. No code, no migration, no grants, no routes, nothing deployed.
-**Dependencies (semantic):** B2 Phase B (auth schema, canonical Drizzle migration, grants) is canonical/frozen on master. The B2 milestone overall is NOT yet FINAL ACCEPTED / FROZEN (Auth Core / authorization / rehearsal remain) — so B6 implementation remains BLOCKED until the B2 milestone is FINAL ACCEPTED / FROZEN **and an explicit B6 implementation GO is issued**; until then B6 is PLAN/DESIGN ONLY (§0). Migration numbering is assigned by the Migration Integrator against canonical master at B6 implementation time (no predecessor filenames/numbers are canonical input). This document carries no workstation chronology (no branch names, no B2 migration filenames, no commit hashes).
+**Dependencies (semantic):** B1, B2, and B3 milestones are ALL canonical/frozen on master. Migration numbering for B6 is serialized as `0003` (following canonical `0000_fluffy_prowler`, `0001_shocking_black_widow`, `0002_heavy_scarlet_witch`). Privilege arithmetic: B1 (20) + B2 (20) + B3 (24) + B6 (32) = **96** runtime CRUD capabilities (with `CREATE` denied). B6 implementation remains gated until human review and an explicit B6 implementation GO is issued.
+
+**Revision R2.2 — Post-B3 master synchronization:**
+
+| # | Finding | Resolution |
+|---|---|---|
+| R2.2-1 | Predecessor milestones B2 and B3 merged to master | **Updated**: Dependency state updated to B1, B2, B3 FINAL ACCEPTED / FROZEN on master (§0, §1.1) |
+| R2.2-2 | Canonical migration history now owns 0000, 0001, 0002 | **Serialized**: B6 migration entry explicitly serialized as `0003` (§16, §17) |
+| R2.2-3 | Grant arithmetic updated for post-B3 master | **Updated**: B1 (20) + B2 (20) + B3 (24) + B6 (32) = **96 / 96** runtime CRUD capabilities (§15, §19) |
 
 **Revision R1 — HOLD resolutions (review verdict):**
 
@@ -92,12 +100,12 @@ NOT own a second canonical action table (`INTEGRATION_CONTRACT.md` §23).
 
 | Area | State |
 |---|---|
-| Worker | Hono app, only `/health` + `/health/db`. Request-scoped `pg.Client` via `withDb()` ([client.ts](../apps/platform-api/src/db/client.ts)) — frozen B1 discipline |
-| Schema | Shared Core tables in `src/db/schema/` (organizations, users, organization_members, contacts, product_entitlements) + canonical B2 Phase B auth tables (sessions, accounts, verifications, organization_invitations, auth_rate_limits); uuid PKs, timestamptz mode `'string'`, CHECK constraints, no triggers |
+| Worker | Hono app with health endpoints (`/health`, `/health/db`), auth endpoints (`/api/auth/*`), and PromotorClass endpoints (`/api/v1/programs/*`, `/api/v1/public/workspaces/*`). Request-scoped `pg.Client` via `withDb()` ([client.ts](../apps/platform-api/src/db/client.ts)) — frozen B1 discipline |
+| Schema | Canonical master tables in `src/db/schema/`: **B1 Shared Core** (5 tables: organizations, users, organization_members, contacts, product_entitlements); **B2 Auth** (5 tables: sessions, accounts, verifications, organization_invitations, auth_rate_limits); **B3 PromotorClass Content** (6 tables: programs, modules, lessons, lesson_attachments, program_presentations, workspace_profiles); uuid PKs, timestamptz mode `'string'`, CHECK constraints, no triggers |
 | Contacts | Canonical identity ONLY: `id, organization_id, name, phone_e164 (NOT NULL, UNIQUE org+phone), email, created_at, updated_at, deleted_at`. **No lifecycle fields** — stage/interest/notes/lost_reason do NOT exist anywhere in the backend |
-| Migrations | ONE Drizzle history; canonical B1 + B2 Phase B history exists on master. At B6 implementation time the Migration Integrator reads the canonical journal and assigns the next sequential B6 migration — B6 never rewrites predecessor migrations (no B2 migration filename/number is canonical input, R2-3) |
-| Grants | `docs/sql/grants_b1.sql` (20 CRUD checks) + `docs/sql/grants_b2.sql` (canonical/frozen Phase B: 5 tables × 4 CRUD = 20 privilege capabilities); `scripts/ci-setup-db.sh` runs both. No ALTER DEFAULT PRIVILEGES |
-| Core | `OrganizationContext { organizationId }` (frozen/minimal), `DomainError` (6 codes), safe error envelope |
+| Migrations | ONE Drizzle history; canonical B1 (`0000_fluffy_prowler.sql`), B2 (`0001_shocking_black_widow.sql`), and B3 (`0002_heavy_scarlet_witch.sql`) exist on master. Next sequential migration for B6 is explicitly `0003` |
+| Grants | `docs/sql/grants_b1.sql` (20 CRUD checks) + `docs/sql/grants_b2.sql` (20 CRUD checks) + `docs/sql/grants_b3.sql` (24 CRUD checks); `scripts/ci-setup-db.sh` runs all three. No ALTER DEFAULT PRIVILEGES |
+| Core | `OrganizationContext { organizationId }` (frozen/minimal), `DomainError`, safe error envelope |
 | Repos/Services | Org-scoped factories: `createContactRepository(db, normalizePhone, normalizeEmail)`, `createContactService(db)`; every query WHERE includes `organization_id` |
 | Tests | node:test + tsx; unit (no DB) + integration (real PG via `TEST_DATABASE_URL`/`OWNER_DATABASE_URL`, CI `postgres:16` service); `tooling/b1-live-acceptance.ts` operator-run |
 | Utils | `@promotor/platform-core`: `normalizePhone`, `normalizeEmail`, `DEFAULT_ORGANIZATION_TIMEZONE`. `@promotor/contracts` frozen (hash guardrail) |
@@ -1144,25 +1152,18 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.contact_assessments TO prom
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.message_templates TO promotor_runtime;
 ```
 
-- `grants_b1.sql` (20) and `grants_b2.sql` (20) are the canonical/frozen predecessors (B1 + B2 Phase B: 5 tables × 4 CRUD each). B6 contributes its own `grants_b6.sql`: 8 × 4 = 32. Current expected predecessor arithmetic: B1 20 + B2 Phase B 20 = 40.
-- `scripts/ci-setup-db.sh` appends `-f docs/sql/grants_b6.sql` (edited at B6
-  implementation time; coordinated with the B2 milestone).
+- `grants_b1.sql` (20), `grants_b2.sql` (20), and `grants_b3.sql` (24) are the canonical/frozen predecessors on master. B6 contributes its own `grants_b6.sql`: 8 tables × 4 CRUD = 32. Total runtime privilege capabilities: B1 (20) + B2 (20) + B3 (24) + B6 (32) = **96 / 96**.
+- `scripts/ci-setup-db.sh` appends `-f docs/sql/grants_b6.sql` (executed at B6 implementation time).
 - Still NO `ALTER DEFAULT PRIVILEGES`, no DDL, no ownership.
-- **Runtime least privilege checks: B1 5×4 = 20 + B2 Phase B 5×4 = 20 + B6 8×4 = 32 = expected total 72. Safety rule (retained): the final privilege count is recomputed from canonical master at B6 implementation time, in case later B2 phases legitimately add runtime tables (R2-3).**
+- **Runtime least privilege checks: B1 (5×4 = 20) + B2 (5×4 = 20) + B3 (6×4 = 24) + B6 (8×4 = 32) = total 96 capabilities.**
 - `availability_rules`/`tags` are NOT counted (deferred, OPEN PRODUCT DECISION).
 
 ---
 
 ## 16. Migration plan
 
-- ONE Drizzle history; canonical B1 + B2 Phase B history exists on master. At B6
-  implementation time the Migration Integrator reads the canonical journal and generates
-  the next sequential B6 entry — **no B2 migration filename/number is canonical input
-  (R2-3)**; workstation chronology is not baked into the architecture.
-- B6: 8 schema files (§3), `pnpm --filter @promotor/platform-api db:generate` →
-  B6 entry + journal entry + snapshot. **Final numbering/history is serialized by the
-  Migration Integrator against canonical master at implementation time** — B6 never
-  renumbers or rewrites another milestone's files (migration discipline, B1 §3).
+- ONE Drizzle history; canonical B1 (`0000_fluffy_prowler.sql`), B2 (`0001_shocking_black_widow.sql`), and B3 (`0002_heavy_scarlet_witch.sql`) exist on master.
+- B6: 8 schema files (§3), `pnpm --filter @promotor/platform-api db:generate` → `0003_...` B6 migration entry + journal entry + snapshot. **Final numbering is serialized as 0003 against canonical master** — B6 never renumbers or rewrites predecessor files (migration discipline, B1 §3).
 - Apply as owner (`DATABASE_URL` = owner, tooling-only; runtime never reads it —
   source-guardrail test covers `src/db/`), then `grants_b6.sql` as owner, fail-fast.
 - Seeds (default services / templates) stay out of migrations — separate seed tooling or
@@ -1175,52 +1176,51 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.message_templates TO promot
 
 ## 17. Detailed implementation tasks — ALL GATED (deferred until authorized, R2-2)
 
-**Every PR below (2–8) is gated on B2 FINAL ACCEPTED / FROZEN AND an explicit B6
+**Every PR below (2–8) is gated on B2/B3 FINAL ACCEPTED / FROZEN AND an explicit B6
 implementation GO.** Before the gate: no schema files, no migration, no grants, no
 repositories, no services, no routes, no frontend changes — this document is the plan.
 
-**PR 1 — Recon/plan:** this document (Revision R2). Review gate. No code.
+**PR 1 — Recon/plan:** this document (Revision R2.2). Review gate. No code.
 
-**PR 2 — `feat/b6-flow-schema-grants` (GATED: B2 FINAL ACCEPTED / FROZEN + B6 GO):**
-1. `src/db/schema/{services,bookings,next-actions,activities,contact-flow-states,aftercare-records,contact-assessments,message-templates}.ts` (+ `index.ts` append after B2's)
-2. `db:generate` → B6 migration entry (final numbering assigned by the Migration Integrator from canonical master) + journal + snapshot
+**PR 2 — `feat/b6-flow-schema-grants` (GATED: explicit B6 GO):**
+1. `src/db/schema/{services,bookings,next-actions,activities,contact-flow-states,aftercare-records,contact-assessments,message-templates}.ts` (+ `index.ts` append after B3's)
+2. `db:generate` → `0003_...` B6 migration entry + journal + snapshot
 3. `docs/sql/grants_b6.sql` (8 tables)
 4. `scripts/ci-setup-db.sh` append grants_b6
 5. Integration tests: tables exist; CHECK constraints reject bad values (stage/lost_reason
    pair, status/completed_at pair, action_type/event_type catalogs, amount < 0, enums,
    priorities, aftercare/assessment/template CHECKs), partial uniques, FKs,
-   migration-from-canonical/blank, journal hash, **runtime privilege checks (count from
-   canonical master)**
+   migration-from-canonical/blank, journal hash, **runtime privilege checks (96/96)**
 
-**PR 3 — `feat/b6-flow-repositories` (GATED: B2 FINAL ACCEPTED / FROZEN + B6 GO):**
+**PR 3 — `feat/b6-flow-repositories` (GATED: explicit B6 GO):**
 6. `src/repositories/{service,booking,next-action,activity,contact-flow,aftercare,assessment,template}-repository.ts`
    (org-scoped, `isOrganizationContext` guard, unique-violation mapping, `lockById` FOR UPDATE)
 7. Unit tests for repository-adjacent pure logic (key builders, guards)
 
-**PR 4 — `feat/b6-flow-domain-rules` (GATED: B2 FINAL ACCEPTED / FROZEN + B6 GO):**
+**PR 4 — `feat/b6-flow-domain-rules` (GATED: explicit B6 GO):**
 8. `src/domain/contact-lifecycle.ts` (pure operator-directed semantics — any→any, LOST rules, NA-002/NA-003 triggers)
 9. `src/domain/next-action-rules.ts` (NA-001…NA-009 + skip-next-step due/priority functions)
 10. `src/domain/priority.ts` (effective priority + primary selection) + `src/domain/today-grouping.ts` (timezone-aware)
 11. `src/domain/assessment.ts` (precedence) + `src/domain/activity-catalog.ts` (taxonomy source of truth) — **no `classification.ts` derived formula (classification stored/sticky, D1 resolved R2-8)**
 12. Unit tests for each (§14.1)
 
-**PR 5 — `feat/b6-flow-services` (GATED: B2 FINAL ACCEPTED / FROZEN + B6 GO):**
+**PR 5 — `feat/b6-flow-services` (GATED: explicit B6 GO):**
 13. `src/services/contact-flow-service.ts` (two-phase onboarding), `contact-lifecycle-service.ts`
 14. `src/services/booking-service.ts` (create/confirm/mark-paid/reschedule/complete/cancel/no-show; one-tx orchestration; FOR UPDATE completion)
 15. `src/services/next-action-service.ts` (engine + wa.me rule + skip-requires-next-step + Today read model)
 16. `src/services/aftercare-service.ts`, `assessment-service.ts`, `template-service.ts`, `messaging-service.ts`
 17. Integration test matrix §14.2 (full — 42 cases, incl. concurrent completion, R2-5/6/7/8 and R2.1 #33–#42)
 
-**PR 6 — `feat/b6-class-seam` (GATED: B2 FINAL ACCEPTED / FROZEN + B6 GO):**
+**PR 6 — `feat/b6-class-seam` (GATED: explicit B6 GO):**
 18. `src/adapters/local-promotor-flow-adapter.ts` (contract §12 surface, validated; optional dueAt → fallback)
 19. Tests: createNextAction idempotency with `promotorclass:` keys, duplicate rejection,
     no-dueAt fallback, appendLearningActivity → CLASS_SIGNAL, getContactContext/getAssessmentStatus
 
-**PR 7 — `feat/b6-flow-api` (GATED: B2 FINAL ACCEPTED / FROZEN + B6 GO):**
+**PR 7 — `feat/b6-flow-api` (GATED: explicit B6 GO):**
 20. Hono route layer per §12 (thin; session → `OrganizationContext` + `AuthenticatedActor` from B2 middleware)
 21. Route integration tests (happy path + auth-denied paths)
 
-**PR 8 — `feat/b6-rehearsal-docs` (GATED: B2 FINAL ACCEPTED / FROZEN + B6 GO):**
+**PR 8 — `feat/b6-rehearsal-docs` (GATED: explicit B6 GO):**
 22. `tooling/b6-live-acceptance.ts` + Neon rehearsal record
 23. `docs/backend/B6_PROMOTORFLOW.md` milestone doc (acceptance record per B1 rule)
 24. Frontend adapter migration (§13) — sequenced after the B6 route PR (B2 frozen); mock
@@ -1241,7 +1241,7 @@ repositories, no services, no routes, no frontend changes — this document is t
 | D7 | Skip requires next step (P0-6) | `skipAction(actionId, nextStep)` atomic; preserved from canonical client behavior |
 | D8 | Availability / tags (P1-4) | **OPEN PRODUCT DECISION — post-V0.1**, no canonical milestone; excluded from grants arithmetic |
 | D9 | Routes owned by B6 (P1-3) | Route layer inside B6, serialized behind B2 FINAL ACCEPTED; contract bound in §12 |
-| D10 | Migration numbering (P1-5, R2-3) | No expected number/name — final numbering serialized by the Migration Integrator against canonical master at implementation time |
+| D10 | Migration numbering (P1-5, R2-3, R2.2) | Explicitly serialized as `0003` against canonical master post-B3 merge |
 | D11 | Phone required vs PRD "optional" | Frozen B1 contract wins; flagged to product for a later decision |
 | D12 | `SKIPPED` status beyond PRD's 3 statuses | Kept: fixtures + canonical test require "skip with next step"; DB CHECK + documented deviation |
 | D13 | `interest`, `result_type`, `deposit_amount` (P1-2) | Removed — no current-source evidence; re-add only with a fixture/product source |
@@ -1254,11 +1254,8 @@ repositories, no services, no routes, no frontend changes — this document is t
 
 - **8 Flow tables** in the single Drizzle history (`services, bookings, next_actions,
   activities, contact_flow_states, aftercare_records, contact_assessments,
-  message_templates`); final numbering serialized; journal stable.
-- `grants_b6.sql` (8 tables) + CI wiring; **runtime privilege checks pass — expected
-  20 B1 + 20 B2 + 32 B6 = 72 IF canonical B2 remains 5 runtime tables (final count
-  recomputed from canonical master at implementation time, R2-3)**; runtime CREATE in
-  public still denied.
+  message_templates`); final numbering `0003_...` serialized; journal stable.
+- `grants_b6.sql` (8 tables) + CI wiring; **runtime privilege checks pass — 20 B1 + 20 B2 + 24 B3 + 32 B6 = 96 / 96**; runtime CREATE in public still denied.
 - Repositories org-scoped with no escape hatches; tx-scoped composition (§5.0);
   trusted-actor rule for `actor_user_id` (§4).
 - Services own ALL business rules (operator-directed lifecycle via the SINGLE
@@ -1276,9 +1273,7 @@ repositories, no services, no routes, no frontend changes — this document is t
   with deterministic UI projection (test #24).
 - LocalPromotorFlowAdapter seam ready (tested), zero Class consumption; Class no-dueAt
   fallback defined (§8.6).
-- Flow API route layer implemented **inside B6** once B2 is FINAL ACCEPTED / FROZEN
-  **and an explicit B6 implementation GO is issued (R2-2)** (gated dependency,
-  §12/§17 PR 7).
+- Flow API route layer implemented **inside B6** once an explicit B6 implementation GO is issued (§12/§17 PR 7).
 - Rehearsed on Neon branch; production acceptance record per B1 audit rule.
-- Zero changes to: B1/B2 migration/grant files, `@promotor/contracts`, Shared Core tables.
+- Zero changes to: B1/B2/B3 migration/grant files, `@promotor/contracts`, Shared Core tables.
 - No WhatsApp auto-send, no payment gateway, no availability/tags tables, no temporary auth.
