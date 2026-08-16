@@ -882,10 +882,10 @@ describe('B6 — Flow Schema, Migration & Grants Integration Suite', { skip: !en
       await withOwnerSql(async (client) => {
         const res = await client.query(`SELECT id, hash FROM drizzle.__drizzle_migrations ORDER BY id`);
         assert.strictEqual(res.rows.length, 4, 'all 4 migrations must be recorded in journal');
-        assert.strictEqual(res.rows[0].id, 0);
-        assert.strictEqual(res.rows[1].id, 1);
-        assert.strictEqual(res.rows[2].id, 2);
-        assert.strictEqual(res.rows[3].id, 3);
+        assert.strictEqual(res.rows[0].id, 1);
+        assert.strictEqual(res.rows[1].id, 2);
+        assert.strictEqual(res.rows[2].id, 3);
+        assert.strictEqual(res.rows[3].id, 4);
       });
     });
 
