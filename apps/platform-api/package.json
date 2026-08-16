@@ -8,7 +8,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "test": "tsx --test src/__tests__/*.test.ts",
-    "test:integration": "tsx --test src/__tests__/integration/*.test.ts",
+    "test:integration": "tsx --test --test-concurrency=1 src/__tests__/integration/*.test.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx tooling/migrate.ts",
     "b1:live-acceptance": "tsx tooling/b1-live-acceptance.ts",
