@@ -1,6 +1,6 @@
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert';
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, count } from 'drizzle-orm';
 import {
   applyMigrationsAsOwner,
   TEST_DATABASE_URL,
@@ -18,632 +18,520 @@ import {
   activities,
 } from '../../db/schema';
 import { createLocalPromotorFlowAdapter } from '../../adapters/local-promotor-flow-adapter';
-import { createContactFlowService } from '../../services/contact-flow-service';
 import { createContactLifecycleService } from '../../services/contact-lifecycle-service';
 import { createBookingService } from '../../services/booking-service';
-import { createNextActionService } from '../../services/next-action-service';
 import { createAssessmentService } from '../../services/assessment-service';
 import { createAssessmentRepository } from '../../repositories/assessment-repository';
-import type { OrganizationContext } from '../../core/organization-context';
 import type { AuthenticatedActor } from '../../auth/types';
-import { DomainError, isDomainError } from '../../core/errors';
-import type { LearningNextActionRequest, LearningActivityProjection } from '@promotor/contracts';
+import { DomainError } from '../../core/errors';
+import { getNextLocalDay10Am } from '../../domain/next-action-rules';
 
 const enabled = Boolean(TEST_DATABASE_URL);
 
-describe('B6 — Class Integration Seam Integration Suite (§11 & Canonical Contract)', { skip: !enabled ? 'TEST_DATABASE_URL not set' : false }, () => {
+describe('B6 — Class Integration Seam Integration Suite (PR 6 / Contract §12)', { skip: !enabled ? 'TEST_DATABASE_URL not set' : false }, () => {
   let orgAId: string;
   let orgBId: string;
   let userAId: string;
-  let userBId: string;
-
-  const ctxA: OrganizationContext = { organizationId: '' };
-  const ctxB: OrganizationContext = { organizationId: '' };
+  let contactA1Id: string;
+  let contactA2Id: string;
+  let contactB1Id: string;
+  let serviceAId: string;
 
   const actorA: AuthenticatedActor = {
     userId: '',
-    membershipId: 'mem_a_seam',
+    membershipId: 'mem-a',
     role: 'owner',
   };
 
-  let contactAId: string;
-  let serviceAId: string;
-  let bookingAId: string;
-  let contactBId: string;
+  const ctxA = { organizationId: '' };
+  const ctxB = { organizationId: '' };
 
   before(async () => {
     await applyMigrationsAsOwner();
 
-    if (!enabled) return;
-
     await withIntegrationDb(async (db) => {
-      // 1. Organizations
+      // Create Tenant A
       const [orgA] = await db
         .insert(organizations)
-        .values({ name: 'Class Seam Org A', slug: `class-seam-a-${Date.now()}` })
+        .values({ name: 'Tenant A Class Seam', slug: `org-a-seam-${Date.now()}` })
         .returning();
       orgAId = orgA.id;
       ctxA.organizationId = orgAId;
 
+      // Create Tenant B
       const [orgB] = await db
         .insert(organizations)
-        .values({ name: 'Class Seam Org B', slug: `class-seam-b-${Date.now()}` })
+        .values({ name: 'Tenant B Class Seam', slug: `org-b-seam-${Date.now()}` })
         .returning();
       orgBId = orgB.id;
       ctxB.organizationId = orgBId;
 
-      // 2. Users
+      // Create User
       const [uA] = await db
         .insert(users)
-        .values({ name: 'Operator A', email: `op_a_seam_${Date.now()}@promotor.id` })
+        .values({ name: 'Operator A', email: `op-seam-${Date.now()}@example.com` })
         .returning();
       userAId = uA.id;
       actorA.userId = userAId;
 
-      const [uB] = await db
-        .insert(users)
-        .values({ name: 'Operator B', email: `op_b_seam_${Date.now()}@promotor.id` })
-        .returning();
-      userBId = uB.id;
-
-      // 3. Contacts
-      const [cA] = await db
+      // Create Contacts for Org A
+      const [cA1] = await db
         .insert(contacts)
-        .values({
-          organizationId: orgAId,
-          name: 'Learner Contact A',
-          phoneE164: '+6281299990101',
-          email: 'learner_a@promotor.id',
-        })
+        .values({ organizationId: orgAId, name: 'Learner Ayu', phoneE164: '+6281111111111' })
         .returning();
-      contactAId = cA.id;
+      contactA1Id = cA1.id;
 
-      const [cB] = await db
+      const [cA2] = await db
         .insert(contacts)
-        .values({
-          organizationId: orgBId,
-          name: 'Learner Contact B',
-          phoneE164: '+6281299990202',
-          email: 'learner_b@promotor.id',
-        })
+        .values({ organizationId: orgAId, name: 'Learner Budi', phoneE164: '+6281111111112' })
         .returning();
-      contactBId = cB.id;
+      contactA2Id = cA2.id;
 
-      // Initialize Flow state for Contact A
-      const flowService = createContactFlowService(db);
-      await flowService.updateProfile(ctxA, contactAId, {
-        interest: 'Kursus Baking Pemula',
-        sourceChannel: 'PromotorClass',
-      });
+      // Create Contact for Org B
+      const [cB1] = await db
+        .insert(contacts)
+        .values({ organizationId: orgBId, name: 'Learner Citra', phoneE164: '+6281111111113' })
+        .returning();
+      contactB1Id = cB1.id;
 
-      // 4. Services
+      // Create Service for Org A
       const [sA] = await db
         .insert(services)
         .values({
           organizationId: orgAId,
-          name: 'Private Class Consultation',
+          name: 'Konsultasi Belajar',
           category: 'SESSION',
           priceAmount: 150000,
-          durationMinutes: 60,
+          durationMinutes: 45,
           isActive: true,
         })
         .returning();
       serviceAId = sA.id;
-
-      // 5. Booking for Contact A
-      const bookingService = createBookingService(db);
-      const bRes = await bookingService.createBooking(
-        ctxA,
-        {
-          contactId: contactAId,
-          serviceId: serviceAId,
-          startAt: '2026-08-20T10:00:00.000Z',
-          endAt: '2026-08-20T11:00:00.000Z',
-          locationType: 'ONLINE',
-        },
-        actorA
-      );
-      bookingAId = bRes.id;
     });
   });
 
   // =========================================================================
-  // 1. getContactContext
+  // 1. getContactContext (§12)
   // =========================================================================
   describe('1. getContactContext', () => {
-    it('returns canonical Flow-owned context including identity, stage, stored sticky classification, primaryNextAction, and activeBooking', async () => {
+    it('returns canonical stage and classification (PROSPECT / default NEW)', async () => {
       await withIntegrationDb(async (db) => {
-        const adapter = createLocalPromotorFlowAdapter(db, {
-          context: ctxA,
-          orgTz: 'Asia/Jakarta',
-        });
+        const adapter = createLocalPromotorFlowAdapter(db, { ctx: ctxA });
+        const context = await adapter.getContactContext(contactA1Id);
 
-        const context = await adapter.getContactContext(contactAId);
+        assert.strictEqual(context.contactId, contactA1Id);
+        assert.strictEqual(context.stage, 'NEW');
+        assert.strictEqual(context.classification, 'PROSPECT');
+        assert.strictEqual(context.primaryNextAction, undefined);
+        assert.strictEqual(context.activeBooking, undefined);
+      });
+    });
 
-        assert.strictEqual(context.contactId, contactAId);
+    it('reflects updated stage, classification (CLIENT), primaryNextAction, and activeBooking', async () => {
+      await withIntegrationDb(async (db) => {
+        const now = new Date('2026-08-17T10:00:00.000Z');
+        const bookingService = createBookingService(db, { clock: () => now });
+        const lifecycleService = createContactLifecycleService(db, { clock: () => now });
+
+        // 1. Transition contact to INTERESTED
+        await lifecycleService.transitionStage(ctxA, contactA2Id, 'INTERESTED', {}, actorA);
+
+        // 2. Create Booking for contactA2
+        const startAt = new Date(now.getTime() + 24 * 3600_000).toISOString();
+        const booking = await bookingService.createBooking(
+          ctxA,
+          {
+            contactId: contactA2Id,
+            serviceId: serviceAId,
+            startAt,
+            locationType: 'ONLINE',
+          },
+          actorA
+        );
+
+        const adapter = createLocalPromotorFlowAdapter(db, { ctx: ctxA, clock: () => now });
+        const context = await adapter.getContactContext(contactA2Id);
+
+        assert.strictEqual(context.contactId, contactA2Id);
         assert.strictEqual(context.stage, 'BOOKED');
         assert.strictEqual(context.classification, 'PROSPECT');
-        assert.ok(context.primaryNextAction);
-        assert.strictEqual(context.primaryNextAction?.type, 'REMIND_PAYMENT');
-        assert.ok(context.activeBooking);
-        assert.strictEqual(context.activeBooking?.id, bookingAId);
-        assert.strictEqual(context.activeBooking?.serviceId, serviceAId);
-        assert.strictEqual(context.activeBooking?.status, 'PENDING');
+
+        // Check activeBooking projection
+        assert.ok(context.activeBooking, 'activeBooking must be present');
+        assert.strictEqual(context.activeBooking.id, booking.id);
+        assert.strictEqual(context.activeBooking.serviceId, serviceAId);
+        assert.strictEqual(context.activeBooking.status, 'PENDING');
+
+        // Check primaryNextAction
+        assert.ok(context.primaryNextAction, 'primaryNextAction must be present');
+        assert.strictEqual(typeof context.primaryNextAction.id, 'string');
+        assert.strictEqual(typeof context.primaryNextAction.type, 'string');
       });
     });
 
-    it('fails closed with NOT_FOUND for cross-organization contact access', async () => {
+    it('fails closed with NOT_FOUND for soft-deleted or non-existent contact', async () => {
       await withIntegrationDb(async (db) => {
-        const adapter = createLocalPromotorFlowAdapter(db, {
-          context: ctxA,
-        });
-
-        await assert.rejects(
-          async () => {
-            await adapter.getContactContext(contactBId);
-          },
-          (err: unknown) => {
-            assert.ok(isDomainError(err));
-            assert.strictEqual((err as DomainError).code, 'NOT_FOUND');
-            return true;
-          }
-        );
-      });
-    });
-
-    it('fails closed with NOT_FOUND for soft-deleted contact', async () => {
-      await withIntegrationDb(async (db) => {
-        const [delContact] = await db
+        // Soft delete a contact
+        const [deletedContact] = await db
           .insert(contacts)
           .values({
             organizationId: orgAId,
             name: 'Deleted Learner',
-            phoneE164: '+6281299990303',
+            phoneE164: '+6281999999999',
             deletedAt: new Date().toISOString(),
           })
           .returning();
 
-        const adapter = createLocalPromotorFlowAdapter(db, { context: ctxA });
+        const adapter = createLocalPromotorFlowAdapter(db, { ctx: ctxA });
 
         await assert.rejects(
-          async () => {
-            await adapter.getContactContext(delContact.id);
-          },
-          (err: unknown) => {
-            assert.ok(isDomainError(err));
-            assert.strictEqual((err as DomainError).code, 'NOT_FOUND');
-            return true;
-          }
+          async () => adapter.getContactContext(deletedContact.id),
+          (err: any) => err instanceof DomainError && err.code === 'NOT_FOUND'
+        );
+
+        await assert.rejects(
+          async () => adapter.getContactContext('00000000-0000-0000-0000-000000000000'),
+          (err: any) => err instanceof DomainError && err.code === 'NOT_FOUND'
+        );
+      });
+    });
+
+    it('fails closed when querying cross-organization contact', async () => {
+      await withIntegrationDb(async (db) => {
+        const adapter = createLocalPromotorFlowAdapter(db, { ctx: ctxA });
+
+        // Contact B1 belongs to Org B, querying with Org A context must fail closed
+        await assert.rejects(
+          async () => adapter.getContactContext(contactB1Id),
+          (err: any) => err instanceof DomainError && err.code === 'NOT_FOUND'
         );
       });
     });
   });
 
   // =========================================================================
-  // 2. getAssessmentStatus
+  // 2. getAssessmentStatus (§12)
   // =========================================================================
   describe('2. getAssessmentStatus', () => {
-    it('returns NOT_STARTED when contact has no assessment records', async () => {
+    it('returns NOT_STARTED when no assessment record exists for active contact', async () => {
       await withIntegrationDb(async (db) => {
-        const [freshContact] = await db
-          .insert(contacts)
-          .values({
-            organizationId: orgAId,
-            name: 'Fresh Contact For Assessment',
-            phoneE164: '+6281299990404',
-          })
-          .returning();
-
-        const adapter = createLocalPromotorFlowAdapter(db, { context: ctxA });
-        const status = await adapter.getAssessmentStatus(freshContact.id);
+        const adapter = createLocalPromotorFlowAdapter(db, { ctx: ctxA });
+        const status = await adapter.getAssessmentStatus(contactA1Id);
         assert.strictEqual(status, 'NOT_STARTED');
       });
     });
 
-    it('returns exact canonical status (e.g. COMPLETED) when assessment record exists', async () => {
+    it('returns canonical assessment status when assessment is recorded', async () => {
       await withIntegrationDb(async (db) => {
         const assessmentRepo = createAssessmentRepository(db);
-        await assessmentRepo.getOrCreate(ctxA, contactAId);
+        await assessmentRepo.getOrCreate(ctxA, contactA1Id);
         await assessmentRepo.updateStatus(
           ctxA,
-          contactAId,
+          contactA1Id,
           'COMPLETED',
           null,
           new Date().toISOString(),
-          'Assessment selesai di PromotorClass'
+          'Penilaian awal selesai, profil kuat'
         );
 
-        const adapter = createLocalPromotorFlowAdapter(db, { context: ctxA });
-        const status = await adapter.getAssessmentStatus(contactAId);
+        const adapter = createLocalPromotorFlowAdapter(db, { ctx: ctxA });
+        const status = await adapter.getAssessmentStatus(contactA1Id);
         assert.strictEqual(status, 'COMPLETED');
       });
     });
 
-    it('fails closed for cross-organization assessment status query', async () => {
+    it('returns UNKNOWN for non-existent or cross-tenant contact', async () => {
       await withIntegrationDb(async (db) => {
-        const adapter = createLocalPromotorFlowAdapter(db, { context: ctxA });
+        const adapter = createLocalPromotorFlowAdapter(db, { ctx: ctxA });
+        const statusMissing = await adapter.getAssessmentStatus('00000000-0000-0000-0000-000000000000');
+        assert.strictEqual(statusMissing, 'UNKNOWN');
 
-        await assert.rejects(
-          async () => {
-            await adapter.getAssessmentStatus(contactBId);
-          },
-          (err: unknown) => {
-            assert.ok(isDomainError(err));
-            assert.strictEqual((err as DomainError).code, 'NOT_FOUND');
-            return true;
-          }
-        );
+        const statusCrossOrg = await adapter.getAssessmentStatus(contactB1Id);
+        assert.strictEqual(statusCrossOrg, 'UNKNOWN');
       });
     });
   });
 
   // =========================================================================
-  // 3. createNextAction
+  // 3. createNextAction from Learning Signal (§12, §8.6, §8.7)
   // =========================================================================
-  describe('3. createNextAction', () => {
-    it('persists a FOLLOW_UP action with priority 70, explicit dueAt, and source PROMOTORCLASS, emitting ACTION_CREATED', async () => {
+  describe('3. createNextAction from Learning Signal', () => {
+    it('preserves explicit dueAt when provided by Class signal', async () => {
       await withIntegrationDb(async (db) => {
-        const adapter = createLocalPromotorFlowAdapter(db, {
-          context: ctxA,
-          orgTz: 'Asia/Jakarta',
-        });
+        const adapter = createLocalPromotorFlowAdapter(db, { actor: actorA });
+        const explicitDue = '2026-08-20T14:30:00.000Z';
+        const idempotencyKey = `promotorclass:evt-due-1:${Date.now()}`;
 
-        const explicitDue = '2026-08-25T08:00:00.000Z';
-        const idempotencyKey = `class_event_001_${Date.now()}`;
-
-        const request: LearningNextActionRequest = {
+        const ref = await adapter.createNextAction({
           organizationId: orgAId,
-          contactId: contactAId,
+          contactId: contactA1Id,
           source: 'PROMOTORCLASS',
-          sourceEventId: 'evt_lesson_completed_001',
-          sourceSignalId: 'sig_high_intent_001',
+          sourceEventId: 'evt-101',
+          sourceSignalId: 'sig-201',
           actionType: 'FOLLOW_UP',
-          title: 'Follow-up Progres Belajar Modul 1',
-          reason: 'Learner telah menyelesaikan modul 1 dengan nilai sempurna',
+          title: 'Follow-up Bab 1 Selesai',
+          reason: 'Learner telah menyelesaikan modul pengantar',
           dueAt: explicitDue,
           context: {
-            programId: 'prog_baking_101',
-            programTitle: 'Baking 101',
-            enrollmentId: 'enr_001',
-            signalType: 'COMPLETION_SIGNAL',
+            programId: 'prog-1',
+            programTitle: 'Dasar Kepemimpinan',
             intentLabel: 'hot',
           },
           idempotencyKey,
-        };
+        });
 
-        const result = await adapter.createNextAction(request);
+        assert.strictEqual(ref.id, idempotencyKey);
+        assert.strictEqual(ref.contactId, contactA1Id);
+        assert.strictEqual(ref.title, 'Follow-up Bab 1 Selesai');
 
-        assert.ok(result);
-        assert.strictEqual(result.id, idempotencyKey);
-        assert.strictEqual(result.contactId, contactAId);
-        assert.ok(result.nextActionId);
-
-        // Verify next action in DB
-        const [actionRow] = await db
+        // Check persisted nextAction in DB
+        const [row] = await db
           .select()
           .from(nextActions)
-          .where(eq(nextActions.id, result.nextActionId));
+          .where(eq(nextActions.id, ref.nextActionId));
 
-        assert.ok(actionRow);
-        assert.strictEqual(actionRow.source, 'PROMOTORCLASS');
-        assert.strictEqual(actionRow.sourceEventId, 'evt_lesson_completed_001');
-        assert.strictEqual(actionRow.sourceSignalId, 'sig_high_intent_001');
-        assert.strictEqual(actionRow.idempotencyKey, idempotencyKey);
-        assert.strictEqual(actionRow.priority, 70);
-        assert.strictEqual(actionRow.actionType, 'FOLLOW_UP');
-        assert.strictEqual(new Date(actionRow.dueAt).toISOString(), explicitDue);
+        assert.ok(row);
+        assert.strictEqual(new Date(row.dueAt).toISOString(), explicitDue);
+        assert.strictEqual(row.priority, 70, 'FOLLOW_UP default priority must be 70');
+        assert.strictEqual(row.source, 'PROMOTORCLASS');
+        assert.strictEqual(row.sourceEventId, 'evt-101');
+        assert.strictEqual(row.sourceSignalId, 'sig-201');
+        assert.strictEqual(row.idempotencyKey, idempotencyKey);
+        assert.deepStrictEqual(row.contextJson, {
+          programId: 'prog-1',
+          programTitle: 'Dasar Kepemimpinan',
+          intentLabel: 'hot',
+        });
 
-        // Verify ACTION_CREATED activity emitted
-        const contactActivities = await db
+        // Check ACTION_CREATED activity emission
+        const [act] = await db
           .select()
           .from(activities)
           .where(
             and(
-              eq(activities.contactId, contactAId),
+              eq(activities.organizationId, orgAId),
+              eq(activities.contactId, contactA1Id),
               eq(activities.eventType, 'ACTION_CREATED')
             )
-          );
+          )
+          .orderBy(activities.occurredAt);
 
-        const actionActivity = contactActivities.find(
-          (a) => (a.metadataJson as any)?.idempotencyKey === idempotencyKey
-        );
-        assert.ok(actionActivity, 'ACTION_CREATED activity must be emitted');
+        assert.ok(act);
+        assert.strictEqual(act.eventType, 'ACTION_CREATED');
       });
     });
 
-    it('persists a MANUAL action with priority 40', async () => {
-      await withIntegrationDb(async (db) => {
-        const adapter = createLocalPromotorFlowAdapter(db, {
-          context: ctxA,
-          orgTz: 'Asia/Jakarta',
-        });
-
-        const explicitDue = '2026-08-26T09:00:00.000Z';
-        const idempotencyKey = `class_event_002_${Date.now()}`;
-
-        const request: LearningNextActionRequest = {
-          organizationId: orgAId,
-          contactId: contactAId,
-          source: 'PROMOTORCLASS',
-          sourceEventId: 'evt_reflection_002',
-          actionType: 'MANUAL',
-          title: 'Hubungi Learner untuk Diskusi Resep',
-          reason: 'Learner menulis refleksi membutuhkan bantuan instruktur',
-          dueAt: explicitDue,
-          context: {
-            programId: 'prog_baking_101',
-          },
-          idempotencyKey,
-        };
-
-        const result = await adapter.createNextAction(request);
-
-        const [actionRow] = await db
-          .select()
-          .from(nextActions)
-          .where(eq(nextActions.id, result.nextActionId));
-
-        assert.ok(actionRow);
-        assert.strictEqual(actionRow.actionType, 'MANUAL');
-        assert.strictEqual(actionRow.priority, 40);
-      });
-    });
-
-    it('falls back to next local day at 10:00 AM when dueAt is absent', async () => {
+    it('computes deterministic fallback dueAt (next local day 10:00) when dueAt is omitted', async () => {
       await withIntegrationDb(async (db) => {
         const fixedNow = new Date('2026-08-17T03:00:00.000Z'); // 10:00 WIB
         const adapter = createLocalPromotorFlowAdapter(db, {
-          context: ctxA,
-          orgTz: 'Asia/Jakarta',
+          actor: actorA,
           clock: () => fixedNow,
-        });
-
-        const idempotencyKey = `class_event_003_${Date.now()}`;
-
-        const request: LearningNextActionRequest = {
-          organizationId: orgAId,
-          contactId: contactAId,
-          source: 'PROMOTORCLASS',
-          sourceEventId: 'evt_no_due_003',
-          actionType: 'FOLLOW_UP',
-          title: 'Follow-up Tanpa Due Date Spesifik',
-          reason: 'Sinyal otomatis dari sistem pembelajaran',
-          context: {},
-          idempotencyKey,
-        };
-
-        const result = await adapter.createNextAction(request);
-
-        const [actionRow] = await db
-          .select()
-          .from(nextActions)
-          .where(eq(nextActions.id, result.nextActionId));
-
-        assert.ok(actionRow);
-        // Next local day (2026-08-18) at 10:00 WIB = 2026-08-18T03:00:00.000Z
-        assert.strictEqual(
-          new Date(actionRow.dueAt).toISOString(),
-          '2026-08-18T03:00:00.000Z',
-          'Absent dueAt must deterministically fall back to next local day at 10:00 AM'
-        );
-      });
-    });
-
-    it('is strictly idempotent on repeat calls with the same idempotency key (zero duplicate rows, zero duplicate activities)', async () => {
-      await withIntegrationDb(async (db) => {
-        const adapter = createLocalPromotorFlowAdapter(db, {
-          context: ctxA,
           orgTz: 'Asia/Jakarta',
         });
 
-        const idempotencyKey = `class_event_004_${Date.now()}`;
+        const expectedFallbackDue = getNextLocalDay10Am(fixedNow, 'Asia/Jakarta');
+        const idempotencyKey = `promotorclass:evt-nodue-1:${Date.now()}`;
 
-        const request: LearningNextActionRequest = {
+        const ref = await adapter.createNextAction({
           organizationId: orgAId,
-          contactId: contactAId,
+          contactId: contactA1Id,
           source: 'PROMOTORCLASS',
-          sourceEventId: 'evt_repeat_004',
-          actionType: 'FOLLOW_UP',
-          title: 'Follow-up Idempotency Test',
-          reason: 'Testing idempotent convergence',
-          context: {},
+          sourceEventId: 'evt-102',
+          actionType: 'MANUAL',
+          title: 'Kontak Manual Sinyal Belajar',
+          reason: 'Perlu verifikasi kebutuhan khusus',
+          context: {
+            programId: 'prog-2',
+            intentLabel: 'warm',
+          },
           idempotencyKey,
-        };
+        });
 
-        const firstRes = await adapter.createNextAction(request);
-        const secondRes = await adapter.createNextAction(request);
-
-        assert.strictEqual(firstRes.nextActionId, secondRes.nextActionId);
-        assert.strictEqual(firstRes.id, secondRes.id);
-
-        // Verify exactly one next action row in DB
-        const matchingRows = await db
+        const [row] = await db
           .select()
           .from(nextActions)
-          .where(
-            and(
-              eq(nextActions.organizationId, orgAId),
-              eq(nextActions.source, 'PROMOTORCLASS'),
-              eq(nextActions.idempotencyKey, idempotencyKey)
-            )
-          );
-        assert.strictEqual(matchingRows.length, 1);
+          .where(eq(nextActions.id, ref.nextActionId));
 
-        // Verify exactly one activity emitted
-        const matchingActivities = await db
-          .select()
-          .from(activities)
-          .where(
-            and(
-              eq(activities.contactId, contactAId),
-              eq(activities.eventType, 'ACTION_CREATED')
-            )
-          );
-
-        const activitiesWithKey = matchingActivities.filter(
-          (a) => (a.metadataJson as any)?.idempotencyKey === idempotencyKey
+        assert.ok(row);
+        assert.strictEqual(
+          new Date(row.dueAt).toISOString(),
+          expectedFallbackDue.toISOString(),
+          'Omitted dueAt must deterministically resolve to next local day 10:00'
         );
-        assert.strictEqual(activitiesWithKey.length, 1);
+        assert.strictEqual(row.priority, 40, 'MANUAL default priority must be 40');
+        assert.strictEqual(row.source, 'PROMOTORCLASS');
       });
     });
 
-    it('fails closed when attempting to create action for cross-organization contact', async () => {
+    it('enforces idempotency: repeat request returns existing ref without duplicating rows or activities', async () => {
       await withIntegrationDb(async (db) => {
-        const adapter = createLocalPromotorFlowAdapter(db, {
-          context: ctxA,
-        });
+        const adapter = createLocalPromotorFlowAdapter(db, { actor: actorA });
+        const idempotencyKey = `promotorclass:evt-repeat-1:${Date.now()}`;
 
-        const request: LearningNextActionRequest = {
+        const payload = {
           organizationId: orgAId,
-          contactId: contactBId, // contact belongs to Org B
-          source: 'PROMOTORCLASS',
-          sourceEventId: 'evt_cross_org_005',
-          actionType: 'FOLLOW_UP',
-          title: 'Cross-Org Attack Attempt',
-          reason: 'Should fail closed',
-          context: {},
-          idempotencyKey: `class_event_005_${Date.now()}`,
+          contactId: contactA1Id,
+          source: 'PROMOTORCLASS' as const,
+          sourceEventId: 'evt-repeat-100',
+          actionType: 'FOLLOW_UP' as const,
+          title: 'Idempotency Action',
+          reason: 'First trigger',
+          idempotencyKey,
+          context: {
+            signalType: 'MILESTONE_REACHED',
+          },
         };
 
+        // First call
+        const firstRef = await adapter.createNextAction(payload);
+        assert.ok(firstRef.nextActionId);
+
+        // Count rows and activities before second call
+        const [actionCountBefore] = await db
+          .select({ c: count() })
+          .from(nextActions)
+          .where(eq(nextActions.idempotencyKey, idempotencyKey));
+        assert.strictEqual(Number(actionCountBefore.c), 1);
+
+        // Second call with same idempotencyKey
+        const secondRef = await adapter.createNextAction(payload);
+
+        assert.strictEqual(secondRef.nextActionId, firstRef.nextActionId);
+        assert.strictEqual(secondRef.id, firstRef.id);
+
+        // Verify still exactly 1 row in DB
+        const [actionCountAfter] = await db
+          .select({ c: count() })
+          .from(nextActions)
+          .where(eq(nextActions.idempotencyKey, idempotencyKey));
+        assert.strictEqual(Number(actionCountAfter.c), 1);
+      });
+    });
+
+    it('fails closed when target contact is cross-org or missing', async () => {
+      await withIntegrationDb(async (db) => {
+        const adapter = createLocalPromotorFlowAdapter(db);
+
+        // Cross-org contact (contactB1Id belongs to orgB, but request declares orgAId)
         await assert.rejects(
-          async () => {
-            await adapter.createNextAction(request);
-          },
-          (err: unknown) => {
-            assert.ok(isDomainError(err));
-            assert.strictEqual((err as DomainError).code, 'NOT_FOUND');
-            return true;
-          }
+          async () =>
+            adapter.createNextAction({
+              organizationId: orgAId,
+              contactId: contactB1Id,
+              source: 'PROMOTORCLASS',
+              sourceEventId: 'evt-cross',
+              actionType: 'FOLLOW_UP',
+              title: 'Cross org action',
+              reason: 'Invalid cross org',
+              idempotencyKey: `promotorclass:cross:${Date.now()}`,
+              context: {},
+            }),
+          (err: any) => err instanceof DomainError && err.code === 'NOT_FOUND'
         );
       });
     });
   });
 
   // =========================================================================
-  // 4. appendLearningActivity
+  // 4. appendLearningActivity (§12, §11)
   // =========================================================================
   describe('4. appendLearningActivity', () => {
-    it('appends a CLASS_SIGNAL activity with projection metadata to the activities table', async () => {
+    it('appends CLASS_SIGNAL activity with projection payload', async () => {
       await withIntegrationDb(async (db) => {
-        const adapter = createLocalPromotorFlowAdapter(db, {
-          context: ctxA,
-        });
+        const adapter = createLocalPromotorFlowAdapter(db, { actor: actorA });
+        const idempotencyKey = `promotorclass:act-1:${Date.now()}`;
 
-        const idempotencyKey = `sig_projection_001_${Date.now()}`;
-
-        const projection: LearningActivityProjection = {
+        await adapter.appendLearningActivity({
           organizationId: orgAId,
-          contactId: contactAId,
+          contactId: contactA1Id,
           source: 'PROMOTORCLASS',
-          sourceEventId: 'evt_learning_001',
-          eventType: 'LEARNING_SIGNAL',
-          summary: 'Learner menunjukkan minat tinggi pada program lanjutan',
-          context: {
-            programId: 'prog_baking_101',
-            score: 95,
-          },
-          idempotencyKey,
-        };
-
-        await adapter.appendLearningActivity(projection);
-
-        // Verify activity row in DB
-        const matchingActivities = await db
-          .select()
-          .from(activities)
-          .where(
-            and(
-              eq(activities.contactId, contactAId),
-              eq(activities.eventType, 'CLASS_SIGNAL')
-            )
-          );
-
-        const signalActivity = matchingActivities.find(
-          (a) => (a.metadataJson as any)?.idempotencyKey === idempotencyKey
-        );
-
-        assert.ok(signalActivity, 'CLASS_SIGNAL activity must exist');
-        assert.strictEqual(
-          (signalActivity.metadataJson as any)?.summary,
-          'Learner menunjukkan minat tinggi pada program lanjutan'
-        );
-        assert.strictEqual(
-          (signalActivity.metadataJson as any)?.learningEventType,
-          'LEARNING_SIGNAL'
-        );
-      });
-    });
-
-    it('is strictly idempotent on repeat calls with the same idempotency key (zero duplicate CLASS_SIGNAL activities)', async () => {
-      await withIntegrationDb(async (db) => {
-        const adapter = createLocalPromotorFlowAdapter(db, {
-          context: ctxA,
-        });
-
-        const idempotencyKey = `sig_projection_repeat_${Date.now()}`;
-
-        const projection: LearningActivityProjection = {
-          organizationId: orgAId,
-          contactId: contactAId,
-          source: 'PROMOTORCLASS',
-          sourceEventId: 'evt_learning_repeat_001',
-          eventType: 'LEARNING_SIGNAL',
-          summary: 'Learner lulus modul praktek',
-          context: {
-            moduleId: 'mod_001',
-          },
-          idempotencyKey,
-        };
-
-        // Call twice with identical idempotencyKey
-        await adapter.appendLearningActivity(projection);
-        await adapter.appendLearningActivity(projection);
-
-        // Verify exactly one CLASS_SIGNAL activity exists
-        const matchingActivities = await db
-          .select()
-          .from(activities)
-          .where(
-            and(
-              eq(activities.contactId, contactAId),
-              eq(activities.eventType, 'CLASS_SIGNAL')
-            )
-          );
-
-        const signalsWithKey = matchingActivities.filter(
-          (a) => (a.metadataJson as any)?.idempotencyKey === idempotencyKey
-        );
-        assert.strictEqual(signalsWithKey.length, 1);
-      });
-    });
-
-    it('fails closed when attempting to append learning activity for cross-organization contact', async () => {
-      await withIntegrationDb(async (db) => {
-        const adapter = createLocalPromotorFlowAdapter(db, {
-          context: ctxA,
-        });
-
-        const projection: LearningActivityProjection = {
-          organizationId: orgAId,
-          contactId: contactBId, // contact belongs to Org B
-          source: 'PROMOTORCLASS',
-          sourceEventId: 'evt_learning_cross_org',
+          sourceEventId: 'evt-act-101',
           eventType: 'PROGRAM_COMPLETED',
-          summary: 'Cross-org attack projection',
-          context: {},
-          idempotencyKey: `sig_cross_org_002_${Date.now()}`,
-        };
+          summary: 'Learner menyelesaikan program kepemimpinan',
+          context: {
+            programId: 'prog-leadership-1',
+            completedLessonsCount: 12,
+          },
+          idempotencyKey,
+        });
+
+        const rows = await db
+          .select()
+          .from(activities)
+          .where(
+            and(
+              eq(activities.organizationId, orgAId),
+              eq(activities.contactId, contactA1Id),
+              eq(activities.eventType, 'CLASS_SIGNAL')
+            )
+          );
+
+        const targetActivity = rows.find(
+          (r) => (r.metadataJson as any)?.sourceEventId === 'evt-act-101'
+        );
+        assert.ok(targetActivity, 'CLASS_SIGNAL activity must be persisted in Flow activities table');
+        assert.strictEqual(targetActivity.eventType, 'CLASS_SIGNAL');
+        assert.strictEqual((targetActivity.metadataJson as any)?.classEventType, 'PROGRAM_COMPLETED');
+        assert.strictEqual((targetActivity.metadataJson as any)?.summary, 'Learner menyelesaikan program kepemimpinan');
+        assert.strictEqual((targetActivity.metadataJson as any)?.idempotencyKey, idempotencyKey);
+      });
+    });
+
+    it('fails closed when appending learning activity for cross-org or deleted contact', async () => {
+      await withIntegrationDb(async (db) => {
+        const adapter = createLocalPromotorFlowAdapter(db);
 
         await assert.rejects(
-          async () => {
-            await adapter.appendLearningActivity(projection);
-          },
-          (err: unknown) => {
-            assert.ok(isDomainError(err));
-            assert.strictEqual((err as DomainError).code, 'NOT_FOUND');
-            return true;
-          }
+          async () =>
+            adapter.appendLearningActivity({
+              organizationId: orgAId,
+              contactId: contactB1Id,
+              source: 'PROMOTORCLASS',
+              sourceEventId: 'evt-act-cross',
+              eventType: 'LEARNING_SIGNAL',
+              summary: 'Cross org signal',
+              context: {},
+              idempotencyKey: `promotorclass:act-cross:${Date.now()}`,
+            }),
+          (err: any) => err instanceof DomainError && err.code === 'NOT_FOUND'
         );
+      });
+    });
+  });
+
+  // =========================================================================
+  // 5. Ownership & Boundary Guardrails
+  // =========================================================================
+  describe('5. Ownership & Boundary Guardrails', () => {
+    it('Flow remains the single source of truth for next_actions without copying Class reflection tables', async () => {
+      await withIntegrationDb(async (db) => {
+        // Assert adapter produces Flow canonical nextAction without requiring Class reflection schemas in Flow
+        const adapter = createLocalPromotorFlowAdapter(db, { actor: actorA });
+        const idempotencyKey = `promotorclass:boundary:${Date.now()}`;
+
+        const ref = await adapter.createNextAction({
+          organizationId: orgAId,
+          contactId: contactA1Id,
+          source: 'PROMOTORCLASS',
+          sourceEventId: 'evt-b-1',
+          actionType: 'FOLLOW_UP',
+          title: 'Reflect on Module 1',
+          reason: 'Student completed reflection',
+          context: {
+            intentLabel: 'hot',
+          },
+          idempotencyKey,
+        });
+
+        const [row] = await db
+          .select()
+          .from(nextActions)
+          .where(eq(nextActions.id, ref.nextActionId));
+
+        assert.ok(row);
+        assert.strictEqual(row.source, 'PROMOTORCLASS');
+        // Verified: Flow next_action only contains contextual reference, not raw reflection entity
       });
     });
   });

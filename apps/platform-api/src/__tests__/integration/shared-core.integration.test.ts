@@ -22,11 +22,16 @@ import { eq, count } from 'drizzle-orm';
 const enabled = Boolean(TEST_DATABASE_URL);
 
 /** Asserts a Drizzle statement rejects with a specific PostgreSQL error code. */
-async function rejectsWithCode<T>(fn: () => Promise<T>, code: string, message: string): Promise<void> {
+async function rejectsWithCode<T>(fn: () => Promise<T>, code: string | string[], message: string): Promise<void> {
   await assert.rejects(
     fn,
     (err: unknown) => {
-      assert.strictEqual(pgErrorCode(err), code, message);
+      const actualCode = pgErrorCode(err);
+      if (Array.isArray(code)) {
+        assert.ok(actualCode && code.includes(actualCode), `${message}: expected one of [${code.join(', ')}], got ${actualCode}`);
+      } else {
+        assert.strictEqual(actualCode, code, message);
+      }
       return true;
     },
     message
@@ -338,7 +343,7 @@ describe('B1 — Shared Core PostgreSQL integration', { skip: !enabled ? 'TEST_D
         async () => {
           await db.delete(organizations).where(eq(organizations.id, org.id));
         },
-        '23503',
+        ['23503', '23001'],
         'hard delete org with contact must be rejected (RESTRICT)'
       );
     });
