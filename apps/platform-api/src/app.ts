@@ -14,6 +14,7 @@ import { createWorkspaceProfileRepository } from './repositories/workspace-profi
 import { createPublicContentRepository } from './repositories/public-content-repository';
 import { createProgramService } from './services/program-service';
 import { createPublicContentService } from './services/public-content-service';
+import { registerFlowRoutes } from './routes/flow-routes';
 
 export interface AppDependencies {
   dbHealthProbe?: (env: Env) => Promise<{ serverTime: string }>;
@@ -399,6 +400,26 @@ export function createApp(deps?: AppDependencies) {
     const profile = await service.updateWorkspaceProfile(ctx, body);
     return c.json({ profile }, 200);
   });
+
+  // ==========================================
+  // B6 PromotorFlow Admin API (Auth + Entitlement Gated)
+  // ==========================================
+  app.use(
+    '/api/v1/flow',
+    sessionMiddleware,
+    requireOrganization(),
+    requireEntitlement('promotorFlow'),
+    requireRole(['owner', 'admin'])
+  );
+  app.use(
+    '/api/v1/flow/*',
+    sessionMiddleware,
+    requireOrganization(),
+    requireEntitlement('promotorFlow'),
+    requireRole(['owner', 'admin'])
+  );
+
+  registerFlowRoutes(app);
 
   return app;
 }

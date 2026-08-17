@@ -615,3 +615,252 @@ export const ReorderLessonsRequestSchema = z.object({
   orderedLessonIds: z.array(z.string().uuid()),
 });
 export type ReorderLessonsRequest = z.infer<typeof ReorderLessonsRequestSchema>;
+
+// ==========================================
+// 8. Flow HTTP Transport Contracts (§12)
+// ==========================================
+
+// --- Contacts ---
+export const ContactLifecycleStageSchema = z.enum([
+  'NEW',
+  'CONTACTED',
+  'INTERESTED',
+  'FOLLOW_UP',
+  'BOOKED',
+  'COMPLETED',
+  'LOST',
+]);
+export type ContactLifecycleStage = z.infer<typeof ContactLifecycleStageSchema>;
+
+export const ContactClassificationSchema = z.enum(['PROSPECT', 'CLIENT']);
+export type ContactClassification = z.infer<typeof ContactClassificationSchema>;
+
+export const CreateFlowContactRequestSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  phoneRaw: z.string().min(1, 'Phone is required'),
+  interest: z.string().min(1, 'Interest is required on Flow contact creation'),
+  email: z.string().email().optional().nullable(),
+  sourceChannel: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+});
+export type CreateFlowContactRequest = z.infer<typeof CreateFlowContactRequestSchema>;
+
+export const UpdateFlowContactProfileRequestSchema = z.object({
+  interest: z.string().optional().nullable(),
+  sourceChannel: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+});
+export type UpdateFlowContactProfileRequest = z.infer<typeof UpdateFlowContactProfileRequestSchema>;
+
+export const TransitionFlowContactStageRequestSchema = z.object({
+  stage: ContactLifecycleStageSchema,
+  lostReason: z.string().optional().nullable(),
+});
+export type TransitionFlowContactStageRequest = z.infer<typeof TransitionFlowContactStageRequestSchema>;
+
+export const ListFlowContactsQuerySchema = z.object({
+  search: z.string().optional(),
+  classification: ContactClassificationSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+export type ListFlowContactsQuery = z.infer<typeof ListFlowContactsQuerySchema>;
+
+// --- Next Actions & Today ---
+export const FlowNextActionTypeSchema = z.enum([
+  'FOLLOW_UP',
+  'MANUAL',
+  'WHATSAPP_FOLLOW_UP',
+  'AFTERCARE',
+]);
+export type FlowNextActionType = z.infer<typeof FlowNextActionTypeSchema>;
+
+export const FlowNextActionStatusSchema = z.enum([
+  'PENDING',
+  'COMPLETED',
+  'CANCELLED',
+  'SKIPPED',
+]);
+export type FlowNextActionStatus = z.infer<typeof FlowNextActionStatusSchema>;
+
+export const ListNextActionsQuerySchema = z.object({
+  contactId: z.string().uuid().optional(),
+  status: FlowNextActionStatusSchema.optional(),
+});
+export type ListNextActionsQuery = z.infer<typeof ListNextActionsQuerySchema>;
+
+export const CreateNextActionRequestSchema = z.object({
+  contactId: z.string().uuid('Valid contactId is required'),
+  actionType: FlowNextActionTypeSchema,
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional().nullable(),
+  dueAt: z.string().optional().nullable(),
+  priority: z.number().int().min(0).max(100).optional(),
+});
+export type CreateNextActionRequest = z.infer<typeof CreateNextActionRequestSchema>;
+
+export const CompleteNextActionRequestSchema = z.object({
+  confirmedWhatsAppSent: z.boolean().optional(),
+});
+export type CompleteNextActionRequest = z.infer<typeof CompleteNextActionRequestSchema>;
+
+export const SkipNextActionRequestSchema = z.object({
+  nextStep: z.object({
+    type: FlowNextActionTypeSchema,
+    dueAt: z.string().optional().nullable(),
+    title: z.string().optional().nullable(),
+    description: z.string().optional().nullable(),
+  }),
+});
+export type SkipNextActionRequest = z.infer<typeof SkipNextActionRequestSchema>;
+
+export const RescheduleNextActionRequestSchema = z.object({
+  dueAt: z.string().min(1, 'dueAt is required'),
+});
+export type RescheduleNextActionRequest = z.infer<typeof RescheduleNextActionRequestSchema>;
+
+export const AftercareOutcomeSchema = z.enum([
+  'NO_NEED',
+  'HAS_QUESTION',
+  'INTERESTED_NEXT_SESSION',
+  'CONTACT_LATER',
+]);
+export type AftercareOutcome = z.infer<typeof AftercareOutcomeSchema>;
+
+export const CompleteAftercareActionRequestSchema = z.object({
+  outcome: AftercareOutcomeSchema,
+  notes: z.string().optional().nullable(),
+});
+export type CompleteAftercareActionRequest = z.infer<typeof CompleteAftercareActionRequestSchema>;
+
+// --- Services ---
+export const FlowServiceCategorySchema = z.enum([
+  'ASSESSMENT',
+  'SESSION',
+  'PROGRAM',
+  'OTHER',
+]);
+export type FlowServiceCategory = z.infer<typeof FlowServiceCategorySchema>;
+
+export const CreateFlowServiceRequestSchema = z.object({
+  name: z.string().min(1, 'Service name is required'),
+  description: z.string().optional().nullable(),
+  category: FlowServiceCategorySchema,
+  priceAmount: z.number().int().min(0, 'priceAmount must be non-negative'),
+  depositAmount: z.number().int().min(0, 'depositAmount must be non-negative').optional().nullable(),
+  durationMinutes: z.number().int().min(1, 'durationMinutes must be at least 1 minute'),
+  isActive: z.boolean().optional(),
+});
+export type CreateFlowServiceRequest = z.infer<typeof CreateFlowServiceRequestSchema>;
+
+export const UpdateFlowServiceRequestSchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().optional().nullable(),
+  category: FlowServiceCategorySchema.optional(),
+  priceAmount: z.number().int().min(0).optional(),
+  depositAmount: z.number().int().min(0).optional().nullable(),
+  durationMinutes: z.number().int().min(1).optional(),
+  isActive: z.boolean().optional(),
+});
+export type UpdateFlowServiceRequest = z.infer<typeof UpdateFlowServiceRequestSchema>;
+
+// --- Message Templates ---
+export const MessageTemplateCategorySchema = z.enum([
+  'CONTACT_LEAD',
+  'FOLLOW_UP',
+  'CONFIRM_BOOKING',
+  'REMIND_PAYMENT',
+  'REMIND_BOOKING',
+  'AFTERCARE',
+]);
+export type MessageTemplateCategory = z.infer<typeof MessageTemplateCategorySchema>;
+
+export const ListMessageTemplatesQuerySchema = z.object({
+  category: MessageTemplateCategorySchema.optional(),
+});
+export type ListMessageTemplatesQuery = z.infer<typeof ListMessageTemplatesQuerySchema>;
+
+export const CreateMessageTemplateRequestSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  category: MessageTemplateCategorySchema,
+  bodyText: z.string().min(1, 'bodyText is required'),
+  isActive: z.boolean().optional(),
+});
+export type CreateMessageTemplateRequest = z.infer<typeof CreateMessageTemplateRequestSchema>;
+
+export const UpdateMessageTemplateRequestSchema = z.object({
+  title: z.string().min(1).optional(),
+  category: MessageTemplateCategorySchema.optional(),
+  bodyText: z.string().min(1).optional(),
+  isActive: z.boolean().optional(),
+});
+export type UpdateMessageTemplateRequest = z.infer<typeof UpdateMessageTemplateRequestSchema>;
+
+// --- Aftercare ---
+export const AftercareRecordStatusSchema = z.enum(['PENDING', 'COMPLETED']);
+export type AftercareRecordStatus = z.infer<typeof AftercareRecordStatusSchema>;
+
+export const ListAftercareQuerySchema = z.object({
+  status: AftercareRecordStatusSchema.optional(),
+});
+export type ListAftercareQuery = z.infer<typeof ListAftercareQuerySchema>;
+
+// --- Bookings ---
+export const FlowBookingLocationTypeSchema = z.enum(['ONLINE', 'ON_SITE', 'HOME_VISIT']);
+export type FlowBookingLocationType = z.infer<typeof FlowBookingLocationTypeSchema>;
+
+export const FlowBookingStatusSchema = z.enum([
+  'PENDING',
+  'CONFIRMED',
+  'COMPLETED',
+  'CANCELLED',
+  'NO_SHOW',
+]);
+export type FlowBookingStatus = z.infer<typeof FlowBookingStatusSchema>;
+
+export const FlowPaymentStatusSchema = z.enum(['UNPAID', 'PAID', 'WAIVED']);
+export type FlowPaymentStatus = z.infer<typeof FlowPaymentStatusSchema>;
+
+export const ListBookingsQuerySchema = z.object({
+  from: z.string().optional(),
+  to: z.string().optional(),
+  contactId: z.string().uuid().optional(),
+  status: FlowBookingStatusSchema.optional(),
+});
+export type ListBookingsQuery = z.infer<typeof ListBookingsQuerySchema>;
+
+export const CreateBookingRequestSchema = z.object({
+  contactId: z.string().uuid('Valid contactId is required'),
+  serviceId: z.string().uuid('Valid serviceId is required'),
+  startAt: z.string().min(1, 'startAt is required'),
+  endAt: z.string().optional().nullable(),
+  locationType: FlowBookingLocationTypeSchema.optional(),
+  locationText: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  idempotencyKey: z.string().optional().nullable(),
+});
+export type CreateBookingRequest = z.infer<typeof CreateBookingRequestSchema>;
+
+export const RescheduleBookingRequestSchema = z.object({
+  startAt: z.string().min(1, 'startAt is required'),
+  endAt: z.string().optional().nullable(),
+});
+export type RescheduleBookingRequest = z.infer<typeof RescheduleBookingRequestSchema>;
+
+export const CancelBookingRequestSchema = z.object({
+  cancellationReason: z.string().optional().nullable(),
+});
+export type CancelBookingRequest = z.infer<typeof CancelBookingRequestSchema>;
+
+// --- Messaging ---
+export const WhatsAppOpenedRequestSchema = z.object({
+  contactId: z.string().uuid('Valid contactId is required'),
+  rawText: z.string().min(1, 'rawText is required'),
+});
+export type WhatsAppOpenedRequest = z.infer<typeof WhatsAppOpenedRequestSchema>;
+
+export const ConfirmWhatsAppSentRequestSchema = z.object({
+  nextActionId: z.string().uuid('Valid nextActionId is required'),
+});
+export type ConfirmWhatsAppSentRequest = z.infer<typeof ConfirmWhatsAppSentRequestSchema>;
+
