@@ -6,6 +6,7 @@ import { DEFAULT_ORGANIZATION_TIMEZONE, normalizePhone, normalizeEmail } from '@
 import { createNextActionRepository } from '../repositories/next-action-repository';
 import { createActivityRepository } from '../repositories/activity-repository';
 import { createContactRepository } from '../repositories/contact-repository';
+import { createContactFlowRepository } from '../repositories/contact-flow-repository';
 import { createBookingRepository } from '../repositories/booking-repository';
 import { createServiceRepository } from '../repositories/service-repository';
 import type { NextActionRow } from '../db/schema';
@@ -89,6 +90,7 @@ export interface SkipNextStepInput {
 export interface NextActionServiceDependencies {
   activities?: typeof createActivityRepository;
   contacts?: typeof createContactRepository;
+  flowContacts?: typeof createContactFlowRepository;
   bookings?: typeof createBookingRepository;
   services?: typeof createServiceRepository;
   clock?: () => Date;
@@ -868,6 +870,7 @@ export function createNextActionService(
         normalizePhone,
         normalizeEmail
       );
+      const contactFlowRepo = (dependencies.flowContacts ?? createContactFlowRepository)(db as any);
       const bookingRepo = (dependencies.bookings ?? createBookingRepository)(db);
       const serviceRepo = (dependencies.services ?? createServiceRepository)(db);
 
@@ -889,16 +892,19 @@ export function createNextActionService(
 
       const allFetchedActions = [...overdueAndTodayActions, ...upcomingActions];
 
-      // 4. Batch fetch contacts, bookings, and services (avoid N+1)
+      // 4. Batch fetch contacts, flow states, bookings, and services (avoid N+1)
       const contactIds = Array.from(new Set(allFetchedActions.map((a) => a.contactId)));
       const bookingIds = Array.from(
         new Set(allFetchedActions.map((a) => a.bookingId).filter((id): id is string => !!id))
       );
 
       const contactsMap = new Map<string, any>();
+      const flowStatesMap = new Map<string, any>();
       for (const cId of contactIds) {
         const c = await contactRepo.findById(ctx, cId);
         if (c) contactsMap.set(cId, c);
+        const fs = await contactFlowRepo.findById(ctx, cId);
+        if (fs) flowStatesMap.set(cId, fs);
       }
 
       const bookingsMap = new Map<string, any>();
@@ -924,6 +930,7 @@ export function createNextActionService(
 
       const enrichAction = (action: (typeof allFetchedActions)[0]) => {
         const contact = contactsMap.get(action.contactId);
+        const flowState = flowStatesMap.get(action.contactId);
         const booking = action.bookingId ? bookingsMap.get(action.bookingId) : null;
         const service = booking ? servicesMap.get(booking.serviceId) : null;
         const effectivePriority = calculateEffectivePriority(action.priority, action.dueAt, now);
@@ -936,6 +943,7 @@ export function createNextActionService(
                 id: contact.id,
                 name: contact.name,
                 phoneE164: contact.phoneE164,
+                stage: flowState?.stage ?? 'NEW',
               }
             : null,
           booking: booking

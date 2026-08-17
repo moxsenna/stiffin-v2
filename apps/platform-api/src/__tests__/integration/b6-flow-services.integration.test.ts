@@ -2,7 +2,7 @@ import { describe, it, before } from 'node:test';
 import assert from 'node:assert';
 import { Client } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, count } from 'drizzle-orm';
 import {
   applyMigrationsAsOwner,
   TEST_DATABASE_URL,
@@ -1277,6 +1277,19 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
           clock: () => now,
           orgTz: 'Asia/Jakarta',
         });
+        const lifecycleService = createContactLifecycleService(db, { clock: () => now });
+
+        // Create contact with non-default stage INTERESTED (creates 1 NA-003 FOLLOW_UP action due next day 10:00)
+        const [interestedContact] = await db
+          .insert(contacts)
+          .values({
+            organizationId: orgAId,
+            name: 'Interested Prospect Lead',
+            phoneE164: '+6281899990001',
+          })
+          .returning();
+
+        await lifecycleService.transitionStage(ctxA, interestedContact.id, 'INTERESTED', {}, actorA);
 
         // Seed 25 future PENDING actions for tomorrow/upcoming (days 2 to 26)
         for (let i = 2; i <= 26; i++) {
@@ -1299,14 +1312,41 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
         // Assert upcoming list is bounded to 20 items
         assert.strictEqual(todayFeed.groups.upcoming.length, 20, 'Upcoming group must be bounded to limit 20');
 
-        // Assert totalActiveCount represents the FULL database pending count (which is > 20)
-        assert.ok(
-          todayFeed.totalActiveCount >= 25,
-          `totalActiveCount (${todayFeed.totalActiveCount}) must reflect full DB count >= 25`
+        // Query actual full pending DB count directly from PostgreSQL
+        const [countRow] = await db
+          .select({ c: count() })
+          .from(nextActions)
+          .where(
+            and(
+              eq(nextActions.organizationId, orgAId),
+              eq(nextActions.status, 'PENDING')
+            )
+          );
+        const actualPendingCount = Number(countRow.c);
+
+        // Assert totalActiveCount strictly equals actual full pending count in DB
+        assert.strictEqual(
+          todayFeed.totalActiveCount,
+          actualPendingCount,
+          `totalActiveCount (${todayFeed.totalActiveCount}) must strictly equal actual full pending DB count (${actualPendingCount})`
         );
         assert.ok(
           todayFeed.totalActiveCount > todayFeed.groups.upcoming.length,
-          'totalActiveCount must exceed the bounded upcoming list length'
+          'totalActiveCount must exceed the bounded upcoming list length (20)'
+        );
+
+        // Assert that the Today feed item for interestedContact carries non-default stage 'INTERESTED'
+        const allFeedItems = [
+          ...todayFeed.groups.overdue,
+          ...todayFeed.groups.today,
+          ...todayFeed.groups.upcoming,
+        ];
+        const interestedItem = allFeedItems.find((item) => item.contactId === interestedContact.id);
+        assert.ok(interestedItem, 'Interested contact action must be in feed');
+        assert.strictEqual(
+          interestedItem.contact?.stage,
+          'INTERESTED',
+          'contact.stage on Today item must reflect the non-default INTERESTED stage'
         );
       });
     });
