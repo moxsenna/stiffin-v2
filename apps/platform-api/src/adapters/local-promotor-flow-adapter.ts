@@ -214,6 +214,19 @@ export class LocalPromotorFlowAdapter implements PromotorFlowAdapter {
     const ctx = this.resolveContext(ctxOverride, parsed.organizationId);
 
     const activityRepo = createActivityRepository(this.db);
+
+    if (parsed.idempotencyKey) {
+      const existing = await activityRepo.listByContact(ctx, parsed.contactId, 50);
+      const duplicate = existing.find(
+        (a) =>
+          a.eventType === 'CLASS_SIGNAL' &&
+          (a.metadataJson as any)?.idempotencyKey === parsed.idempotencyKey
+      );
+      if (duplicate) {
+        return;
+      }
+    }
+
     await activityRepo.append(ctx, null, {
       contactId: parsed.contactId,
       eventType: 'CLASS_SIGNAL',

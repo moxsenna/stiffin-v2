@@ -163,9 +163,12 @@ describe('B6 — Class Integration Seam Integration Suite (§11 & Canonical Cont
         assert.strictEqual(context.contactId, contactAId);
         assert.strictEqual(context.stage, 'BOOKED');
         assert.strictEqual(context.classification, 'PROSPECT');
+        assert.ok(context.primaryNextAction);
+        assert.strictEqual(context.primaryNextAction?.type, 'REMIND_PAYMENT');
         assert.ok(context.activeBooking);
         assert.strictEqual(context.activeBooking?.id, bookingAId);
         assert.strictEqual(context.activeBooking?.serviceId, serviceAId);
+        assert.strictEqual(context.activeBooking?.status, 'PENDING');
       });
     });
 
@@ -568,6 +571,49 @@ describe('B6 — Class Integration Seam Integration Suite (§11 & Canonical Cont
           (signalActivity.metadataJson as any)?.learningEventType,
           'LEARNING_SIGNAL'
         );
+      });
+    });
+
+    it('is strictly idempotent on repeat calls with the same idempotency key (zero duplicate CLASS_SIGNAL activities)', async () => {
+      await withIntegrationDb(async (db) => {
+        const adapter = createLocalPromotorFlowAdapter(db, {
+          context: ctxA,
+        });
+
+        const idempotencyKey = `sig_projection_repeat_${Date.now()}`;
+
+        const projection: LearningActivityProjection = {
+          organizationId: orgAId,
+          contactId: contactAId,
+          source: 'PROMOTORCLASS',
+          sourceEventId: 'evt_learning_repeat_001',
+          eventType: 'LEARNING_SIGNAL',
+          summary: 'Learner lulus modul praktek',
+          context: {
+            moduleId: 'mod_001',
+          },
+          idempotencyKey,
+        };
+
+        // Call twice with identical idempotencyKey
+        await adapter.appendLearningActivity(projection);
+        await adapter.appendLearningActivity(projection);
+
+        // Verify exactly one CLASS_SIGNAL activity exists
+        const matchingActivities = await db
+          .select()
+          .from(activities)
+          .where(
+            and(
+              eq(activities.contactId, contactAId),
+              eq(activities.eventType, 'CLASS_SIGNAL')
+            )
+          );
+
+        const signalsWithKey = matchingActivities.filter(
+          (a) => (a.metadataJson as any)?.idempotencyKey === idempotencyKey
+        );
+        assert.strictEqual(signalsWithKey.length, 1);
       });
     });
 
