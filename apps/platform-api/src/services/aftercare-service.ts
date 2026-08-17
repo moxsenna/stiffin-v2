@@ -34,6 +34,7 @@ export function createAftercareService(
     /**
      * Completes an AFTERCARE next action and records the aftercare outcome.
      * Follows strict R2.1-2 execution order, R2-7 temporal guard, and R2.3-8 WhatsApp decoupling.
+     * Emits ACTION_COMPLETED { completedBy: 'AFTERCARE' } AND AFTERCARE_COMPLETED in the same transaction.
      */
     async completeAftercare(
       ctx: OrganizationContext,
@@ -48,6 +49,10 @@ export function createAftercareService(
       return (db as any).transaction(async (tx: DbHandle) => {
         const actionRepo = createNextActionRepository(tx);
         const aftercareRepo = (dependencies.aftercare ?? createAftercareRepository)(tx);
+        const nextActionService = (dependencies.nextActions ?? createNextActionService)(tx, {
+          activities: dependencies.activities,
+          clock: () => now,
+        });
         const activityRepo = (dependencies.activities ?? createActivityRepository)(tx);
 
         // 1. Load the next action
@@ -108,7 +113,19 @@ export function createAftercareService(
           recordedAt: nowIso,
         });
 
-        // 7. Append AFTERCARE_COMPLETED activity (NEVER fabricates WHATSAPP_SENT, R2.3-8)
+        // 7. Append ACTION_COMPLETED activity with completedBy='AFTERCARE'
+        await activityRepo.append(ctx, actor, {
+          contactId: action.contactId,
+          bookingId: action.bookingId,
+          eventType: 'ACTION_COMPLETED',
+          metadataJson: {
+            actionId: action.id,
+            actionType: 'AFTERCARE',
+            completedBy: 'AFTERCARE',
+          },
+        });
+
+        // 8. Append AFTERCARE_COMPLETED activity (NEVER fabricates WHATSAPP_SENT, R2.3-8)
         await activityRepo.append(ctx, actor, {
           contactId: action.contactId,
           bookingId: action.bookingId,
@@ -119,42 +136,38 @@ export function createAftercareService(
           },
         });
 
-        // 8. Provision follow-on action per canonical rules
+        // 9. Provision follow-on action per canonical rules via NextActionService engine
         const followOn = calculateAftercareFollowOnRule(
           input.outcome as AftercareOutcome,
           now
         );
 
         if (followOn) {
-          const newAction = await actionRepo.create(ctx, {
-            contactId: action.contactId,
-            bookingId: action.bookingId,
-            actionType: followOn.actionType,
-            title:
-              followOn.actionType === 'MANUAL'
-                ? 'Follow-up berkala (30 hari)'
-                : 'Tawarkan sesi lanjutan',
-            dueAt: followOn.dueAt.toISOString(),
-            priority: followOn.priority,
-            status: 'PENDING',
-            source: 'PROMOTORFLOW',
-            contextJson: {
-              aftercareOutcome: input.outcome,
-            },
-          });
-
-          await activityRepo.append(ctx, actor, {
-            contactId: action.contactId,
-            bookingId: action.bookingId,
-            eventType: 'ACTION_CREATED',
-            metadataJson: {
-              actionId: newAction.id,
-              actionType: newAction.actionType,
-              dueAt: newAction.dueAt,
-              priority: newAction.priority,
-              source: 'PROMOTORFLOW',
-            },
-          });
+          if (followOn.actionType === 'MANUAL') {
+            await nextActionService.createManualAction(
+              ctx,
+              {
+                contactId: action.contactId,
+                bookingId: action.bookingId,
+                title: 'Follow-up berkala (30 hari)',
+                dueAt: followOn.dueAt.toISOString(),
+                priority: followOn.priority,
+              },
+              actor
+            );
+          } else if (followOn.actionType === 'FOLLOW_UP') {
+            await nextActionService.createFollowUp(
+              ctx,
+              {
+                contactId: action.contactId,
+                bookingId: action.bookingId,
+                title: 'Tawarkan sesi lanjutan',
+                dueAt: followOn.dueAt.toISOString(),
+                priority: followOn.priority,
+              },
+              actor
+            );
+          }
         }
 
         return {
@@ -165,14 +178,14 @@ export function createAftercareService(
     },
 
     /**
-     * Lists aftercare records for analytics and management.
+     * Lists aftercare records with pagination and status filters.
      */
     async listAftercare(ctx: OrganizationContext, opts: ListAftercareOrgOptions = {}) {
       if (!isOrganizationContext(ctx)) {
         throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
 
-      const aftercareRepo = (dependencies.aftercare ?? createAftercareRepository)(db);
+      const aftercareRepo = createAftercareRepository(db);
       return aftercareRepo.listByOrg(ctx, opts);
     },
   };

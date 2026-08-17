@@ -2,7 +2,7 @@ import { describe, it, before } from 'node:test';
 import assert from 'node:assert';
 import { Client } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import {
   applyMigrationsAsOwner,
   TEST_DATABASE_URL,
@@ -33,6 +33,7 @@ import {
 } from '../../services';
 import type { AuthenticatedActor } from '../../auth/types';
 import { DomainError, isDomainError } from '../../core/errors';
+import { createActivityRepository } from '../../repositories/activity-repository';
 
 const enabled = Boolean(TEST_DATABASE_URL);
 
@@ -232,41 +233,101 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
       });
     });
 
-    it('Case 26c: safe retry of Phase 2 does not duplicate Contact or NA-001', async () => {
+    it('Case 26c: simulated Phase-2 failure rolls back Flow state/actions while Shared Core Contact remains durable; retry succeeds with no duplicate side effects', async () => {
       await withIntegrationDb(async (db) => {
-        const flowService = createContactFlowService(db);
+        const testPhone = '081234567892';
+        const expectedE164 = '+6281234567892';
 
-        // First call
-        const first = await flowService.createFlowContact(
-          ctxA,
-          {
-            name: 'Citra Dewi',
-            phoneRaw: '081234567892',
-            interest: 'Konsultasi Karir',
+        // 1. First attempt: simulate Phase 2 failure using throwing activities dependency
+        let phase2Attempted = false;
+        const throwingActivities = (tx: any) => {
+          const repo = createActivityRepository(tx);
+          return {
+            ...repo,
+            append: async (...args: any[]) => {
+              phase2Attempted = true;
+              throw new Error('SIMULATED_PHASE_2_FAILURE');
+            },
+          };
+        };
+
+        const failingFlowService = createContactFlowService(db, {
+          activities: throwingActivities as any,
+        });
+
+        await assert.rejects(
+          async () => {
+            await failingFlowService.createFlowContact(
+              ctxA,
+              {
+                name: 'Citra Dewi',
+                phoneRaw: testPhone,
+                interest: 'Konsultasi Karir',
+              },
+              actorA
+            );
           },
-          actorA
+          (err: any) => err.message === 'SIMULATED_PHASE_2_FAILURE'
         );
 
-        // Retry same phone
-        const retry = await flowService.createFlowContact(
-          ctxA,
-          {
-            name: 'Citra Dewi',
-            phoneRaw: '081234567892',
-            interest: 'Konsultasi Karir',
-          },
-          actorA
-        );
+        assert.strictEqual(phase2Attempted, true);
 
-        assert.strictEqual(retry.contact.id, first.contact.id);
+        // Verify Phase 1 Contact persists in Shared Core contacts table
+        const [coreContact] = await db
+          .select()
+          .from(contacts)
+          .where(and(eq(contacts.organizationId, orgAId), eq(contacts.phoneE164, expectedE164)));
+        assert.ok(coreContact, 'Shared Core Contact must remain durable after Phase 2 failure');
+        assert.strictEqual(coreContact.name, 'Citra Dewi');
 
-        // Verify only 1 NA-001 exists for this contact
-        const actions = await db
+        // Verify Flow transaction was rolled back: no flow state and no next actions exist
+        const flowStatesAfterFail = await db
+          .select()
+          .from(contactFlowStates)
+          .where(eq(contactFlowStates.contactId, coreContact.id));
+        assert.strictEqual(flowStatesAfterFail.length, 0, 'Flow state must be rolled back');
+
+        const actionsAfterFail = await db
           .select()
           .from(nextActions)
-          .where(eq(nextActions.contactId, first.contact.id));
-        const leadActions = actions.filter((a) => a.actionType === 'CONTACT_LEAD');
+          .where(eq(nextActions.contactId, coreContact.id));
+        assert.strictEqual(actionsAfterFail.length, 0, 'Next actions must be rolled back');
+
+        // 2. Retry onboarding with normal dependencies
+        const normalFlowService = createContactFlowService(db);
+        const retryResult = await normalFlowService.createFlowContact(
+          ctxA,
+          {
+            name: 'Citra Dewi',
+            phoneRaw: testPhone,
+            interest: 'Konsultasi Karir',
+          },
+          actorA
+        );
+
+        // Same canonical contact reused
+        assert.strictEqual(retryResult.contact.id, coreContact.id);
+        assert.strictEqual(retryResult.flowState.stage, 'NEW');
+        assert.strictEqual(retryResult.flowState.classification, 'PROSPECT');
+        assert.strictEqual(retryResult.leadAction.actionType, 'CONTACT_LEAD');
+
+        // Verify exactly one CONTACT_LEAD action exists
+        const allActions = await db
+          .select()
+          .from(nextActions)
+          .where(eq(nextActions.contactId, coreContact.id));
+        const leadActions = allActions.filter((a) => a.actionType === 'CONTACT_LEAD');
         assert.strictEqual(leadActions.length, 1);
+
+        // Verify activities: exactly one CONTACT_CREATED and one ACTION_CREATED
+        const allActs = await db
+          .select()
+          .from(activities)
+          .where(eq(activities.contactId, coreContact.id));
+        const contactCreatedActs = allActs.filter((a) => a.eventType === 'CONTACT_CREATED');
+        assert.strictEqual(contactCreatedActs.length, 1);
+        const actionCreatedActs = allActs.filter((a) => a.eventType === 'ACTION_CREATED');
+        assert.strictEqual(actionCreatedActs.length, 1);
       });
     });
 
@@ -467,6 +528,7 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
   // =========================================================================
   describe('3. Booking Service & State Matrix', () => {
     let bookingContactId: string;
+    let createdBookingId: string;
 
     before(async () => {
       await withIntegrationDb(async (db) => {
@@ -478,11 +540,10 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
       });
     });
 
-    it('Case 8 & 30: createBooking takes server-canonical amount snapshot; client cannot override; sets stage BOOKED', async () => {
+    it('Case 8 & 30: createBooking takes server-canonical amount snapshot; subsequent service price change does NOT alter existing booking amount; sets stage BOOKED', async () => {
       await withIntegrationDb(async (db) => {
         const bookingService = createBookingService(db);
 
-        const fixedNow = new Date('2026-08-17T08:00:00.000Z');
         const startAt = new Date('2026-08-20T10:00:00.000Z').toISOString();
 
         const booking = await bookingService.createBooking(
@@ -497,10 +558,22 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
           actorA
         );
 
+        createdBookingId = booking.id;
+
         // Server-canonical amount snapshot from serviceAStandard (150000)
         assert.strictEqual(booking.amount, 150000);
         assert.strictEqual(booking.status, 'PENDING');
         assert.strictEqual(booking.paymentStatus, 'UNPAID');
+
+        // Case 30: update service price in database to 250000
+        await db
+          .update(services)
+          .set({ priceAmount: 250000 })
+          .where(eq(services.id, serviceAStandardId));
+
+        // Read booking detail: existing booking amount remains 150000
+        const detail = await bookingService.getBookingDetail(ctxA, booking.id);
+        assert.strictEqual(detail.amount, 150000, 'Existing booking amount must remain snapshotted at original price');
 
         // Contact stage must be BOOKED
         const [flowState] = await db
@@ -520,25 +593,19 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
       });
     });
 
-    it('Case 10 & 27: markPaid on PENDING completes REMIND_PAYMENT (Rule F: ensures exactly ONE CONFIRM_BOOKING; repeat is idempotent)', async () => {
+    it('Case 10 & 27: markPaid on UNPAID -> PAID completes REMIND_PAYMENT, emits PAYMENT_MARKED + ACTION_COMPLETED, creates exactly ONE CONFIRM_BOOKING; repeat markPaid is a TRUE NO-OP with zero duplicated activities', async () => {
       await withIntegrationDb(async (db) => {
         const bookingService = createBookingService(db);
 
-        // Find active booking for bookingContactId
-        const [b] = await db
-          .select()
-          .from(bookings)
-          .where(eq(bookings.contactId, bookingContactId));
-
-        // Mark paid
-        const updated = await bookingService.markPaid(ctxA, b.id, 'PAID', actorA);
+        // 1. First UNPAID -> PAID
+        const updated = await bookingService.markPaid(ctxA, createdBookingId, 'PAID', actorA);
         assert.strictEqual(updated.paymentStatus, 'PAID');
 
         // Verify REMIND_PAYMENT completed with completedBy = PAYMENT
         const acts = await db
           .select()
           .from(activities)
-          .where(eq(activities.bookingId, b.id));
+          .where(eq(activities.bookingId, createdBookingId));
         const compAct = acts.find(
           (a) => a.eventType === 'ACTION_COMPLETED' && (a.metadataJson as any)?.completedBy === 'PAYMENT'
         );
@@ -548,43 +615,88 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
         const pendingActions = await db
           .select()
           .from(nextActions)
-          .where(eq(nextActions.bookingId, b.id));
+          .where(eq(nextActions.bookingId, createdBookingId));
         const confirmActions = pendingActions.filter(
           (a) => a.actionType === 'CONFIRM_BOOKING' && a.status === 'PENDING'
         );
         assert.strictEqual(confirmActions.length, 1);
         assert.strictEqual(confirmActions[0].priority, 90);
 
-        // Repeat markPaid is idempotent and does NOT duplicate CONFIRM_BOOKING
-        await bookingService.markPaid(ctxA, b.id, 'PAID', actorA);
-        const confirmActions2 = (
-          await db.select().from(nextActions).where(eq(nextActions.bookingId, b.id))
+        const paymentMarkedCountBefore = acts.filter((a) => a.eventType === 'PAYMENT_MARKED').length;
+        const actionCompCountBefore = acts.filter((a) => a.eventType === 'ACTION_COMPLETED').length;
+        assert.strictEqual(paymentMarkedCountBefore, 1);
+
+        // 2. Repeat markPaid('PAID') is a true no-op
+        const repeatPaid = await bookingService.markPaid(ctxA, createdBookingId, 'PAID', actorA);
+        assert.strictEqual(repeatPaid.paymentStatus, 'PAID');
+
+        // 3. markPaid('WAIVED') on already PAID booking is also a no-op under frozen V0.1
+        const repeatWaived = await bookingService.markPaid(ctxA, createdBookingId, 'WAIVED', actorA);
+        assert.strictEqual(repeatWaived.paymentStatus, 'PAID');
+
+        const actsAfter = await db
+          .select()
+          .from(activities)
+          .where(eq(activities.bookingId, createdBookingId));
+        const paymentMarkedCountAfter = actsAfter.filter((a) => a.eventType === 'PAYMENT_MARKED').length;
+        const actionCompCountAfter = actsAfter.filter((a) => a.eventType === 'ACTION_COMPLETED').length;
+
+        assert.strictEqual(paymentMarkedCountAfter, paymentMarkedCountBefore, 'PAYMENT_MARKED must not duplicate');
+        assert.strictEqual(actionCompCountAfter, actionCompCountBefore, 'ACTION_COMPLETED must not duplicate');
+
+        const confirmActionsAfter = (
+          await db.select().from(nextActions).where(eq(nextActions.bookingId, createdBookingId))
         ).filter((a) => a.actionType === 'CONFIRM_BOOKING' && a.status === 'PENDING');
-        assert.strictEqual(confirmActions2.length, 1);
+        assert.strictEqual(confirmActionsAfter.length, 1, 'CONFIRM_BOOKING must not duplicate');
       });
     });
 
-    it('Case 9: rescheduleBooking cancels stale reminders and recreates for new timing', async () => {
+    it('Case 9 & Regression: rescheduleBooking re-syncs reminders across all 4 booking/payment states (PENDING+UNPAID, CONFIRMED+UNPAID, PENDING+PAID, CONFIRMED+PAID)', async () => {
       await withIntegrationDb(async (db) => {
         const bookingService = createBookingService(db);
 
-        const [b] = await db
-          .select()
-          .from(bookings)
-          .where(eq(bookings.contactId, bookingContactId));
+        // Scenario A: PENDING + PAID reschedule (createdBookingId is currently PENDING + PAID)
+        const newStartA = new Date('2026-08-25T14:00:00.000Z').toISOString();
+        const reschedA = await bookingService.rescheduleBooking(ctxA, createdBookingId, newStartA, null, actorA);
+        assert.strictEqual(new Date(reschedA.startAt).getTime(), new Date(newStartA).getTime());
 
-        const newStart = new Date('2026-08-25T14:00:00.000Z').toISOString();
-        const rescheduled = await bookingService.rescheduleBooking(ctxA, b.id, newStart, null, actorA);
-        assert.strictEqual(new Date(rescheduled.startAt).getTime(), new Date(newStart).getTime());
+        const activeActionsA = (
+          await db.select().from(nextActions).where(eq(nextActions.bookingId, createdBookingId))
+        ).filter((a) => a.status === 'PENDING');
+        assert.strictEqual(activeActionsA.length, 1);
+        assert.strictEqual(activeActionsA[0].actionType, 'CONFIRM_BOOKING');
+        assert.strictEqual(new Date(activeActionsA[0].dueAt).getTime(), new Date(newStartA).getTime());
 
-        // Verify BOOKING_RESCHEDULED activity
-        const acts = await db
-          .select()
-          .from(activities)
-          .where(eq(activities.bookingId, b.id));
-        const reschedAct = acts.find((a) => a.eventType === 'BOOKING_RESCHEDULED');
-        assert.ok(reschedAct);
-        assert.strictEqual((reschedAct.metadataJson as any).to, newStart);
+        // Scenario B: CONFIRMED + UNPAID reschedule
+        const [cUnpaid] = await db
+          .insert(contacts)
+          .values({ organizationId: orgAId, name: 'Unpaid Subject', phoneE164: '+6281400000099' })
+          .returning();
+
+        const bUnpaid = await bookingService.createBooking(
+          ctxA,
+          {
+            contactId: cUnpaid.id,
+            serviceId: serviceAStandardId,
+            startAt: new Date('2026-08-26T10:00:00.000Z').toISOString(),
+            locationType: 'ON_SITE',
+            paymentStatus: 'UNPAID',
+          },
+          actorA
+        );
+        await bookingService.confirmBooking(ctxA, bUnpaid.id, actorA);
+
+        const newStartB = new Date('2026-08-27T15:00:00.000Z').toISOString();
+        const reschedB = await bookingService.rescheduleBooking(ctxA, bUnpaid.id, newStartB, null, actorA);
+        assert.strictEqual(reschedB.status, 'CONFIRMED');
+        assert.strictEqual(reschedB.paymentStatus, 'UNPAID');
+
+        const activeActionsB = (
+          await db.select().from(nextActions).where(eq(nextActions.bookingId, bUnpaid.id))
+        ).filter((a) => a.status === 'PENDING');
+        // Must contain BOTH REMIND_PAYMENT (for unpaid tracking) AND REMIND_BOOKING (for session confirmation)
+        const typesB = activeActionsB.map((a) => a.actionType).sort();
+        assert.deepStrictEqual(typesB, ['REMIND_BOOKING', 'REMIND_PAYMENT']);
       });
     });
 
@@ -592,19 +704,14 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
       await withIntegrationDb(async (db) => {
         const bookingService = createBookingService(db);
 
-        const [b] = await db
-          .select()
-          .from(bookings)
-          .where(eq(bookings.contactId, bookingContactId));
-
-        const confirmed = await bookingService.confirmBooking(ctxA, b.id, actorA);
+        const confirmed = await bookingService.confirmBooking(ctxA, createdBookingId, actorA);
         assert.strictEqual(confirmed.status, 'CONFIRMED');
 
         // Verify NA-006 REMIND_BOOKING created
         const actions = await db
           .select()
           .from(nextActions)
-          .where(eq(nextActions.bookingId, b.id));
+          .where(eq(nextActions.bookingId, createdBookingId));
         const remindBooking = actions.find(
           (a) => a.actionType === 'REMIND_BOOKING' && a.status === 'PENDING'
         );
@@ -612,16 +719,16 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
         assert.strictEqual(remindBooking.priority, 90);
 
         // Repeat confirmBooking is idempotent no-op
-        const repeat = await bookingService.confirmBooking(ctxA, b.id, actorA);
+        const repeat = await bookingService.confirmBooking(ctxA, createdBookingId, actorA);
         assert.strictEqual(repeat.status, 'CONFIRMED');
       });
     });
 
-    it('Case 36b: invalid transitions (e.g. complete on PENDING or confirm on terminal) reject with INVALID_BOOKING_STATE', async () => {
+    it('Case 36b: exhaustive invalid booking terminal matrix & repeat operations', async () => {
       await withIntegrationDb(async (db) => {
         const bookingService = createBookingService(db);
 
-        // Create a new PENDING booking
+        // 1. Create a new PENDING booking
         const pendingBooking = await bookingService.createBooking(
           ctxA,
           {
@@ -633,7 +740,7 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
           actorA
         );
 
-        // Cannot complete PENDING booking directly (must confirm first)
+        // Complete on PENDING -> rejected with INVALID_BOOKING_STATE
         await assert.rejects(
           async () => {
             await bookingService.completeBooking(ctxA, pendingBooking.id, actorA);
@@ -641,13 +748,77 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
           (err: any) => isDomainError(err) && err.message === 'INVALID_BOOKING_STATE'
         );
 
-        // Cancel this booking
-        await bookingService.cancelBooking(ctxA, pendingBooking.id, { reason: 'Batal jadwal' }, actorA);
+        // 2. Cancel this booking
+        const cancelled = await bookingService.cancelBooking(ctxA, pendingBooking.id, { reason: 'Batal jadwal' }, actorA);
+        assert.strictEqual(cancelled.status, 'CANCELLED');
 
-        // Cannot confirm a CANCELLED booking
+        // Repeat cancel is idempotent no-op
+        const repeatCancel = await bookingService.cancelBooking(ctxA, pendingBooking.id, { reason: 'Batal lagi' }, actorA);
+        assert.strictEqual(repeatCancel.status, 'CANCELLED');
+
+        // Confirm on CANCELLED -> rejected
         await assert.rejects(
           async () => {
             await bookingService.confirmBooking(ctxA, pendingBooking.id, actorA);
+          },
+          (err: any) => isDomainError(err) && err.message === 'INVALID_BOOKING_STATE'
+        );
+
+        // Complete on CANCELLED -> rejected
+        await assert.rejects(
+          async () => {
+            await bookingService.completeBooking(ctxA, pendingBooking.id, actorA);
+          },
+          (err: any) => isDomainError(err) && err.message === 'INVALID_BOOKING_STATE'
+        );
+
+        // Reschedule on CANCELLED -> rejected
+        await assert.rejects(
+          async () => {
+            await bookingService.rescheduleBooking(ctxA, pendingBooking.id, new Date().toISOString(), null, actorA);
+          },
+          (err: any) => isDomainError(err) && err.message === 'INVALID_BOOKING_STATE'
+        );
+
+        // 3. Create another booking and mark NO_SHOW
+        const bNoShow = await bookingService.createBooking(
+          ctxA,
+          {
+            contactId: contactA1Id,
+            serviceId: serviceAStandardId,
+            startAt: new Date('2026-08-29T10:00:00.000Z').toISOString(),
+            locationType: 'ON_SITE',
+          },
+          actorA
+        );
+        await bookingService.confirmBooking(ctxA, bNoShow.id, actorA);
+        const markedNoShow = await bookingService.markNoShow(ctxA, bNoShow.id, actorA);
+        assert.strictEqual(markedNoShow.status, 'NO_SHOW');
+
+        // Repeat markNoShow is idempotent no-op
+        const repeatNoShow = await bookingService.markNoShow(ctxA, bNoShow.id, actorA);
+        assert.strictEqual(repeatNoShow.status, 'NO_SHOW');
+
+        // Confirm on NO_SHOW -> rejected
+        await assert.rejects(
+          async () => {
+            await bookingService.confirmBooking(ctxA, bNoShow.id, actorA);
+          },
+          (err: any) => isDomainError(err) && err.message === 'INVALID_BOOKING_STATE'
+        );
+
+        // Complete on NO_SHOW -> rejected
+        await assert.rejects(
+          async () => {
+            await bookingService.completeBooking(ctxA, bNoShow.id, actorA);
+          },
+          (err: any) => isDomainError(err) && err.message === 'INVALID_BOOKING_STATE'
+        );
+
+        // Cancel on NO_SHOW -> rejected
+        await assert.rejects(
+          async () => {
+            await bookingService.cancelBooking(ctxA, bNoShow.id, {}, actorA);
           },
           (err: any) => isDomainError(err) && err.message === 'INVALID_BOOKING_STATE'
         );
@@ -659,12 +830,7 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
         const fixedNow = new Date('2026-08-17T11:00:00.000Z');
         const bookingService = createBookingService(db, { clock: () => fixedNow });
 
-        const [b] = await db
-          .select()
-          .from(bookings)
-          .where(eq(bookings.contactId, bookingContactId));
-
-        const completed = await bookingService.completeBooking(ctxA, b.id, actorA);
+        const completed = await bookingService.completeBooking(ctxA, createdBookingId, actorA);
         assert.strictEqual(completed.status, 'COMPLETED');
         assert.ok(completed.completedAt);
 
@@ -680,7 +846,7 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
         const [aftercareRec] = await db
           .select()
           .from(aftercareRecords)
-          .where(eq(aftercareRecords.bookingId, b.id));
+          .where(eq(aftercareRecords.bookingId, createdBookingId));
         assert.ok(aftercareRec);
         assert.strictEqual(aftercareRec.status, 'PENDING');
         const expectedScheduled = new Date(fixedNow.getTime() + 7 * 24 * 3600_000).toISOString();
@@ -690,7 +856,7 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
         const [aftercareAction] = await db
           .select()
           .from(nextActions)
-          .where(eq(nextActions.bookingId, b.id))
+          .where(eq(nextActions.bookingId, createdBookingId))
           .then((rows) => rows.filter((r) => r.actionType === 'AFTERCARE'));
         assert.ok(aftercareAction);
         assert.strictEqual(aftercareAction.priority, 50);
@@ -698,7 +864,7 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
         assert.strictEqual(new Date(aftercareAction.dueAt).getTime(), new Date(expectedScheduled).getTime());
 
         // Repeat completeBooking is idempotent no-op
-        const repeat = await bookingService.completeBooking(ctxA, b.id, actorA);
+        const repeat = await bookingService.completeBooking(ctxA, createdBookingId, actorA);
         assert.strictEqual(repeat.status, 'COMPLETED');
       });
     });
@@ -708,7 +874,7 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
   // SECTION 4: True PostgreSQL Concurrent Booking Completion (§14.2 #13)
   // =========================================================================
   describe('4. True PostgreSQL Concurrent Booking Completion', () => {
-    it('Case 13: two independent database connections concurrently complete the same booking -> converges to 1 completion and 1 aftercare set', async () => {
+    it('Case 13: two independent database connections concurrently complete the same booking -> converges to exactly 1 BOOKING_COMPLETED, 1 AFTERCARE_CREATED, 1 record, and 1 action', async () => {
       let concurrentBookingId: string = '';
       let concurrentContactId: string = '';
 
@@ -763,21 +929,25 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
             .select()
             .from(aftercareRecords)
             .where(eq(aftercareRecords.bookingId, concurrentBookingId));
-          assert.strictEqual(recs.length, 1);
+          assert.strictEqual(recs.length, 1, 'Exactly one aftercare_records row');
 
           const actions = await db
             .select()
             .from(nextActions)
             .where(eq(nextActions.bookingId, concurrentBookingId));
           const aftercareActs = actions.filter((a) => a.actionType === 'AFTERCARE');
-          assert.strictEqual(aftercareActs.length, 1);
+          assert.strictEqual(aftercareActs.length, 1, 'Exactly one AFTERCARE action');
 
           const bookingActs = await db
             .select()
             .from(activities)
             .where(eq(activities.bookingId, concurrentBookingId));
+
           const completedActs = bookingActs.filter((a) => a.eventType === 'BOOKING_COMPLETED');
-          assert.strictEqual(completedActs.length, 1);
+          assert.strictEqual(completedActs.length, 1, 'Exactly one BOOKING_COMPLETED activity');
+
+          const aftercareCreatedActs = bookingActs.filter((a) => a.eventType === 'AFTERCARE_CREATED');
+          assert.strictEqual(aftercareCreatedActs.length, 1, 'Exactly one AFTERCARE_CREATED activity');
         });
       } finally {
         await client1.end();
@@ -850,7 +1020,7 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
       });
     });
 
-    it('Case 14 & 28b: D+7 completion succeeds, updates record & action, emits AFTERCARE_COMPLETED (no fake WHATSAPP_SENT), creates follow-on', async () => {
+    it('Case 14 & 28b: D+7 completion succeeds, emits ACTION_COMPLETED(AFTERCARE) and AFTERCARE_COMPLETED, creates follow-on', async () => {
       await withIntegrationDb(async (db) => {
         const d7Clock = new Date('2026-08-17T10:00:00.000Z');
         const aftercareService = createAftercareService(db, { clock: () => d7Clock });
@@ -866,15 +1036,22 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
         assert.strictEqual(result.record.status, 'COMPLETED');
         assert.strictEqual(result.record.outcome, 'INTERESTED_NEXT_SESSION');
 
-        // Verify AFTERCARE_COMPLETED activity emitted without fabricating WHATSAPP_SENT
+        // Verify activities: ACTION_COMPLETED with completedBy='AFTERCARE' AND AFTERCARE_COMPLETED
         const acts = await db
           .select()
           .from(activities)
           .where(eq(activities.bookingId, aftercareBookingId));
+
+        const actionCompAct = acts.find(
+          (a) => a.eventType === 'ACTION_COMPLETED' && (a.metadataJson as any)?.completedBy === 'AFTERCARE'
+        );
+        assert.ok(actionCompAct, 'ACTION_COMPLETED { completedBy: AFTERCARE } must be emitted');
+
         const aftercareCompAct = acts.find((a) => a.eventType === 'AFTERCARE_COMPLETED');
-        assert.ok(aftercareCompAct);
+        assert.ok(aftercareCompAct, 'AFTERCARE_COMPLETED must be emitted');
+
         const waSentAct = acts.find((a) => a.eventType === 'WHATSAPP_SENT');
-        assert.strictEqual(waSentAct, undefined);
+        assert.strictEqual(waSentAct, undefined, 'WHATSAPP_SENT must NOT be fabricated');
 
         // Verify follow-on action for INTERESTED_NEXT_SESSION: FOLLOW_UP due D+3 (priority 70)
         const actions = await db
@@ -887,7 +1064,7 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
       });
     });
 
-    it('Case 37: repeat completeAftercare is a true idempotent no-op (no duplicate activities or follow-ons)', async () => {
+    it('Case 37: repeat completeAftercare is a true idempotent no-op (zero duplicate activities, zero duplicate follow-ons)', async () => {
       await withIntegrationDb(async (db) => {
         const d7Clock = new Date('2026-08-17T10:00:00.000Z');
         const aftercareService = createAftercareService(db, { clock: () => d7Clock });
@@ -929,8 +1106,8 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
             .where(eq(nextActions.bookingId, aftercareBookingId))
         ).filter((a) => a.actionType === 'FOLLOW_UP').length;
 
-        assert.strictEqual(actsAfter, actsBefore);
-        assert.strictEqual(followUpsAfter, followUpsBefore);
+        assert.strictEqual(actsAfter, actsBefore, 'Activities must not duplicate on repeat completion');
+        assert.strictEqual(followUpsAfter, followUpsBefore, 'Follow-ons must not duplicate on repeat completion');
       });
     });
   });
@@ -983,18 +1160,73 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
       });
     });
 
-    it('Case 7: completeAction with confirmedWhatsAppSent emits WHATSAPP_SENT; without it does not emit WHATSAPP_SENT', async () => {
+    it('Case 7: wa.me completion rule - completeAction without confirmedWhatsAppSent remains PENDING with 0 activities; explicit true completes action and emits WHATSAPP_SENT + ACTION_COMPLETED; repeat is no-op', async () => {
       await withIntegrationDb(async (db) => {
         const nextActionService = createNextActionService(db);
 
-        // Complete without confirmed WhatsApp
-        await nextActionService.completeAction(ctxA, sampleActionId, {}, actorA);
+        // 1. completeAction without confirmedWhatsAppSent (or false) MUST NOT complete action
+        const noConfirmResult = await nextActionService.completeAction(ctxA, sampleActionId, {}, actorA);
+        assert.strictEqual(noConfirmResult.status, 'PENDING');
+        assert.strictEqual(noConfirmResult.completedAt, null);
 
-        const acts = await db
+        const dbAction1 = await db.select().from(nextActions).where(eq(nextActions.id, sampleActionId));
+        assert.strictEqual(dbAction1[0].status, 'PENDING');
+        assert.strictEqual(dbAction1[0].completedAt, null);
+
+        const acts1 = await db
           .select()
           .from(activities)
           .where(eq(activities.contactId, naContactId));
-        assert.strictEqual(acts.some((a) => a.eventType === 'WHATSAPP_SENT'), false);
+        assert.strictEqual(acts1.some((a) => a.eventType === 'WHATSAPP_SENT'), false);
+        assert.strictEqual(acts1.some((a) => a.eventType === 'ACTION_COMPLETED'), false);
+
+        // 2. completeAction with confirmedWhatsAppSent: false also remains PENDING
+        const falseConfirmResult = await nextActionService.completeAction(
+          ctxA,
+          sampleActionId,
+          { confirmedWhatsAppSent: false },
+          actorA
+        );
+        assert.strictEqual(falseConfirmResult.status, 'PENDING');
+
+        // 3. completeAction with explicit confirmedWhatsAppSent: true completes action
+        const confirmedResult = await nextActionService.completeAction(
+          ctxA,
+          sampleActionId,
+          { confirmedWhatsAppSent: true },
+          actorA
+        );
+        assert.strictEqual(confirmedResult.status, 'COMPLETED');
+        assert.ok(confirmedResult.completedAt);
+
+        const dbAction2 = await db.select().from(nextActions).where(eq(nextActions.id, sampleActionId));
+        assert.strictEqual(dbAction2[0].status, 'COMPLETED');
+        assert.ok(dbAction2[0].completedAt);
+
+        const acts2 = await db
+          .select()
+          .from(activities)
+          .where(eq(activities.contactId, naContactId));
+        const waSentActs = acts2.filter((a) => a.eventType === 'WHATSAPP_SENT');
+        assert.strictEqual(waSentActs.length, 1, 'Exactly one WHATSAPP_SENT emitted');
+        const actionCompActs = acts2.filter((a) => a.eventType === 'ACTION_COMPLETED');
+        assert.strictEqual(actionCompActs.length, 1, 'Exactly one ACTION_COMPLETED emitted');
+
+        // 4. Repeat confirmed completion is an idempotent no-op
+        const repeatResult = await nextActionService.completeAction(
+          ctxA,
+          sampleActionId,
+          { confirmedWhatsAppSent: true },
+          actorA
+        );
+        assert.strictEqual(repeatResult.status, 'COMPLETED');
+
+        const acts3 = await db
+          .select()
+          .from(activities)
+          .where(eq(activities.contactId, naContactId));
+        assert.strictEqual(acts3.filter((a) => a.eventType === 'WHATSAPP_SENT').length, 1);
+        assert.strictEqual(acts3.filter((a) => a.eventType === 'ACTION_COMPLETED').length, 1);
       });
     });
 
@@ -1038,7 +1270,7 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
       });
     });
 
-    it('Case 6 & 41: getToday groups by organization timezone; totalActiveCount uses full pending count independent of bounded upcoming list', async () => {
+    it('Case 6 & 41: getToday groups by organization timezone; totalActiveCount represents FULL pending count while upcoming list is bounded to 20', async () => {
       await withIntegrationDb(async (db) => {
         const now = new Date('2026-08-17T12:00:00.000Z');
         const nextActionService = createNextActionService(db, {
@@ -1046,14 +1278,36 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
           orgTz: 'Asia/Jakarta',
         });
 
+        // Seed 25 future PENDING actions for tomorrow/upcoming (days 2 to 26)
+        for (let i = 2; i <= 26; i++) {
+          const futureDue = new Date(now.getTime() + i * 24 * 3600_000);
+          await nextActionService.createManualAction(
+            ctxA,
+            {
+              contactId: naContactId,
+              title: `Upcoming Action #${i}`,
+              dueAt: futureDue,
+              priority: 40,
+            },
+            actorA
+          );
+        }
+
         const todayFeed = await nextActionService.getToday(ctxA, now);
 
         assert.ok(todayFeed.date);
-        assert.ok(typeof todayFeed.totalActiveCount === 'number');
-        assert.ok(typeof todayFeed.overdueCount === 'number');
-        assert.ok(Array.isArray(todayFeed.groups.overdue));
-        assert.ok(Array.isArray(todayFeed.groups.today));
-        assert.ok(Array.isArray(todayFeed.groups.upcoming));
+        // Assert upcoming list is bounded to 20 items
+        assert.strictEqual(todayFeed.groups.upcoming.length, 20, 'Upcoming group must be bounded to limit 20');
+
+        // Assert totalActiveCount represents the FULL database pending count (which is > 20)
+        assert.ok(
+          todayFeed.totalActiveCount >= 25,
+          `totalActiveCount (${todayFeed.totalActiveCount}) must reflect full DB count >= 25`
+        );
+        assert.ok(
+          todayFeed.totalActiveCount > todayFeed.groups.upcoming.length,
+          'totalActiveCount must exceed the bounded upcoming list length'
+        );
       });
     });
   });
@@ -1074,7 +1328,7 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
       });
     });
 
-    it('Case 16 & 38: syncFromBooking enforces highest precedence (COMPLETED > SCHEDULED > CANCELLED > NOT_STARTED) and emits ASSESSMENT_STATUS_CHANGED', async () => {
+    it('Case 16 & 38: syncFromBooking enforces highest precedence (COMPLETED > SCHEDULED > CANCELLED > NOT_STARTED) and emits ASSESSMENT_STATUS_CHANGED only when status actually changes to final canonical', async () => {
       await withIntegrationDb(async (db) => {
         const bookingService = createBookingService(db);
         const assessmentService = createAssessmentService(db);
@@ -1083,7 +1337,7 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
         const initial = await assessmentService.getAssessmentStatus(ctxA, assessmentContactId);
         assert.strictEqual(initial.status, 'NOT_STARTED');
 
-        // 1. Create ASSESSMENT booking -> candidate SCHEDULED
+        // 1. Create ASSESSMENT booking -> candidate SCHEDULED (status changes NOT_STARTED -> SCHEDULED)
         const b1 = await bookingService.createBooking(
           ctxA,
           {
@@ -1100,14 +1354,23 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
         assert.strictEqual(status1.status, 'SCHEDULED');
         assert.strictEqual(status1.sourceBookingId, b1.id);
 
-        // 2. Complete booking -> status promotes to COMPLETED
+        // 2. Complete booking -> status promotes to COMPLETED (status changes SCHEDULED -> COMPLETED)
         await bookingService.confirmBooking(ctxA, b1.id, actorA);
         await bookingService.completeBooking(ctxA, b1.id, actorA);
 
         const status2 = await assessmentService.getAssessmentStatus(ctxA, assessmentContactId);
         assert.strictEqual(status2.status, 'COMPLETED');
 
-        // 3. Create another ASSESSMENT booking and cancel it -> COMPLETED is NOT overwritten by CANCELLED
+        // Check activity count at this point: exactly 2 ASSESSMENT_STATUS_CHANGED events (SCHEDULED and COMPLETED)
+        const actsBeforeDowngrades = (
+          await db
+            .select()
+            .from(activities)
+            .where(eq(activities.contactId, assessmentContactId))
+        ).filter((a) => a.eventType === 'ASSESSMENT_STATUS_CHANGED');
+        assert.strictEqual(actsBeforeDowngrades.length, 2);
+
+        // 3. Create another ASSESSMENT booking (candidate SCHEDULED) -> blocked downgrade: canonical stays COMPLETED
         const b2 = await bookingService.createBooking(
           ctxA,
           {
@@ -1119,18 +1382,29 @@ describe('B6 — Flow Services PostgreSQL Integration Suite (§14.2 & Canonical 
           },
           actorA
         );
-        await bookingService.cancelBooking(ctxA, b2.id, { reason: 'Dibatalkan' }, actorA);
 
         const status3 = await assessmentService.getAssessmentStatus(ctxA, assessmentContactId);
-        assert.strictEqual(status3.status, 'COMPLETED'); // Still COMPLETED! Precedence preserved!
+        assert.strictEqual(status3.status, 'COMPLETED', 'Status must remain COMPLETED when lower evidence is submitted');
 
-        // Verify ASSESSMENT_STATUS_CHANGED activity
-        const acts = await db
-          .select()
-          .from(activities)
-          .where(eq(activities.contactId, assessmentContactId));
-        const assActs = acts.filter((a) => a.eventType === 'ASSESSMENT_STATUS_CHANGED');
-        assert.ok(assActs.length >= 2);
+        // 4. Cancel the second booking (candidate CANCELLED) -> blocked downgrade: canonical stays COMPLETED
+        await bookingService.cancelBooking(ctxA, b2.id, { reason: 'Dibatalkan' }, actorA);
+
+        const status4 = await assessmentService.getAssessmentStatus(ctxA, assessmentContactId);
+        assert.strictEqual(status4.status, 'COMPLETED', 'Status must remain COMPLETED');
+
+        // Regression assertion: blocked downgrades must NOT emit false ASSESSMENT_STATUS_CHANGED activities!
+        const actsAfterDowngrades = (
+          await db
+            .select()
+            .from(activities)
+            .where(eq(activities.contactId, assessmentContactId))
+        ).filter((a) => a.eventType === 'ASSESSMENT_STATUS_CHANGED');
+
+        assert.strictEqual(
+          actsAfterDowngrades.length,
+          2,
+          'Blocked downgrade attempts must emit zero false ASSESSMENT_STATUS_CHANGED activities'
+        );
       });
     });
   });

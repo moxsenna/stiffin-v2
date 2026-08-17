@@ -8,11 +8,19 @@ import { createActivityRepository } from '../repositories/activity-repository';
 import { createContactRepository } from '../repositories/contact-repository';
 import { createBookingRepository } from '../repositories/booking-repository';
 import { createServiceRepository } from '../repositories/service-repository';
+import type { NextActionRow } from '../db/schema';
 import {
+  calculateContactLeadRule,
+  calculateFollowUpRule,
+  calculateRemindPaymentRule,
+  calculateConfirmBookingRule,
+  calculateRemindBookingRule,
+  calculateAftercareRule,
+  calculateSkipNextStepRule,
   getNextLocalDay10Am,
   getLocalCalendarDate,
   getInstantForZonedDateTime,
-  calculateSkipNextStepRule,
+  type NextActionType,
 } from '../domain/next-action-rules';
 import {
   calculateEffectivePriority,
@@ -21,16 +29,50 @@ import {
 } from '../domain/priority';
 import { groupTodayActions } from '../domain/today-grouping';
 
+export interface CreateContactLeadActionInput {
+  contactId: string;
+  interest: string;
+  sourceChannel?: string | null;
+  notes?: string | null;
+}
+
 export interface CreateFollowUpInput {
   contactId: string;
+  bookingId?: string | null;
   dueAt?: string | Date;
   title?: string;
   description?: string | null;
   priority?: number;
 }
 
+export interface CreatePaymentReminderInput {
+  contactId: string;
+  bookingId: string;
+  startAt: string | Date;
+}
+
+export interface CreateConfirmBookingInput {
+  contactId: string;
+  bookingId: string;
+  startAt: string | Date;
+}
+
+export interface CreateBookingReminderInput {
+  contactId: string;
+  bookingId: string;
+  startAt: string | Date;
+}
+
+export interface CreateAftercareInput {
+  contactId: string;
+  bookingId: string;
+  completedAt: string | Date;
+  amount?: number | null;
+}
+
 export interface CreateManualActionInput {
   contactId: string;
+  bookingId?: string | null;
   title: string;
   dueAt?: string | Date;
   description?: string | null;
@@ -53,16 +95,164 @@ export interface NextActionServiceDependencies {
   orgTz?: string;
 }
 
+export interface NextActionService {
+  createContactLeadAction(
+    ctx: OrganizationContext,
+    input: CreateContactLeadActionInput,
+    actor?: AuthenticatedActor | null
+  ): Promise<NextActionRow>;
+
+  createFollowUp(
+    ctx: OrganizationContext,
+    input: CreateFollowUpInput,
+    actor?: AuthenticatedActor | null
+  ): Promise<NextActionRow>;
+
+  createPaymentReminder(
+    ctx: OrganizationContext,
+    input: CreatePaymentReminderInput,
+    actor?: AuthenticatedActor | null
+  ): Promise<NextActionRow>;
+
+  createConfirmBooking(
+    ctx: OrganizationContext,
+    input: CreateConfirmBookingInput,
+    actor?: AuthenticatedActor | null
+  ): Promise<NextActionRow>;
+
+  createBookingReminder(
+    ctx: OrganizationContext,
+    input: CreateBookingReminderInput,
+    actor?: AuthenticatedActor | null
+  ): Promise<NextActionRow>;
+
+  createAftercare(
+    ctx: OrganizationContext,
+    input: CreateAftercareInput,
+    actor?: AuthenticatedActor | null
+  ): Promise<NextActionRow>;
+
+  createManualAction(
+    ctx: OrganizationContext,
+    input: CreateManualActionInput,
+    actor?: AuthenticatedActor | null
+  ): Promise<NextActionRow>;
+
+  completeAction(
+    ctx: OrganizationContext,
+    actionId: string,
+    opts?: { confirmedWhatsAppSent?: boolean },
+    actor?: AuthenticatedActor | null
+  ): Promise<NextActionRow>;
+
+  skipAction(
+    ctx: OrganizationContext,
+    actionId: string,
+    nextStep: SkipNextStepInput,
+    actor?: AuthenticatedActor | null
+  ): Promise<{ skippedAction: NextActionRow; newAction: NextActionRow }>;
+
+  cancelAction(
+    ctx: OrganizationContext,
+    actionId: string,
+    reason?: string,
+    actor?: AuthenticatedActor | null
+  ): Promise<NextActionRow>;
+
+  rescheduleAction(
+    ctx: OrganizationContext,
+    actionId: string,
+    dueAt: string | Date,
+    actor?: AuthenticatedActor | null
+  ): Promise<NextActionRow>;
+
+  getPrimaryNextAction(
+    ctx: OrganizationContext,
+    contactId: string
+  ): Promise<NextActionRow | null>;
+
+  getToday(
+    ctx: OrganizationContext,
+    nowOverride?: string | Date
+  ): Promise<{
+    date: string;
+    totalActiveCount: number;
+    overdueCount: number;
+    groups: {
+      overdue: any[];
+      today: any[];
+      upcoming: any[];
+    };
+  }>;
+}
+
 export function createNextActionService(
   db: DbHandle,
   dependencies: NextActionServiceDependencies = {}
-) {
+): NextActionService {
   const getNow = dependencies.clock ?? (() => new Date());
   const orgTz = dependencies.orgTz ?? DEFAULT_ORGANIZATION_TIMEZONE;
 
   return {
     /**
-     * Creates a manual or generic FOLLOW_UP next action.
+     * Canonical NA-001: CONTACT_LEAD creator.
+     * due: now + 2 hours, priority: 75, idempotency key: lead:contact:{contactId}.
+     */
+    async createContactLeadAction(
+      ctx: OrganizationContext,
+      input: CreateContactLeadActionInput,
+      actor?: AuthenticatedActor | null
+    ) {
+      if (!isOrganizationContext(ctx)) {
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
+      }
+
+      return (db as any).transaction(async (tx: DbHandle) => {
+        const actionRepo = createNextActionRepository(tx);
+        const activityRepo = (dependencies.activities ?? createActivityRepository)(tx);
+
+        const now = getNow();
+        const leadRule = calculateContactLeadRule(now);
+        const leadIdempotencyKey = `lead:contact:${input.contactId}`;
+
+        const existing = await actionRepo.findByIdempotency(ctx, 'PROMOTORFLOW', leadIdempotencyKey);
+        if (existing) {
+          return existing;
+        }
+
+        const action = await actionRepo.create(ctx, {
+          contactId: input.contactId,
+          actionType: 'CONTACT_LEAD',
+          title: 'Hubungi lead baru',
+          dueAt: leadRule.dueAt.toISOString(),
+          priority: leadRule.priority,
+          status: 'PENDING',
+          source: 'PROMOTORFLOW',
+          idempotencyKey: leadIdempotencyKey,
+          contextJson: {
+            interest: input.interest,
+            sourceChannel: input.sourceChannel ?? null,
+          },
+        });
+
+        await activityRepo.append(ctx, actor, {
+          contactId: input.contactId,
+          eventType: 'ACTION_CREATED',
+          metadataJson: {
+            actionId: action.id,
+            actionType: 'CONTACT_LEAD',
+            dueAt: action.dueAt,
+            priority: action.priority,
+            source: 'PROMOTORFLOW',
+          },
+        });
+
+        return action;
+      });
+    },
+
+    /**
+     * Creates a manual or generic FOLLOW_UP next action (NA-003).
      */
     async createFollowUp(
       ctx: OrganizationContext,
@@ -84,6 +274,7 @@ export function createNextActionService(
 
         const action = await actionRepo.create(ctx, {
           contactId: input.contactId,
+          bookingId: input.bookingId ?? null,
           actionType: 'FOLLOW_UP',
           title: input.title ?? 'Follow-up prospek',
           description: input.description ?? null,
@@ -96,10 +287,217 @@ export function createNextActionService(
 
         await activityRepo.append(ctx, actor, {
           contactId: input.contactId,
+          bookingId: input.bookingId ?? undefined,
           eventType: 'ACTION_CREATED',
           metadataJson: {
             actionId: action.id,
             actionType: 'FOLLOW_UP',
+            dueAt: action.dueAt,
+            priority: action.priority,
+            source: 'PROMOTORFLOW',
+          },
+        });
+
+        return action;
+      });
+    },
+
+    /**
+     * Canonical NA-005: REMIND_PAYMENT creator.
+     */
+    async createPaymentReminder(
+      ctx: OrganizationContext,
+      input: CreatePaymentReminderInput,
+      actor?: AuthenticatedActor | null
+    ) {
+      if (!isOrganizationContext(ctx)) {
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
+      }
+
+      return (db as any).transaction(async (tx: DbHandle) => {
+        const actionRepo = createNextActionRepository(tx);
+        const activityRepo = (dependencies.activities ?? createActivityRepository)(tx);
+
+        const now = getNow();
+        const rule = calculateRemindPaymentRule(now, input.startAt);
+
+        const action = await actionRepo.create(ctx, {
+          contactId: input.contactId,
+          bookingId: input.bookingId,
+          actionType: 'REMIND_PAYMENT',
+          title: 'Kirim pengingat pembayaran booking',
+          dueAt: rule.dueAt.toISOString(),
+          priority: rule.priority,
+          status: 'PENDING',
+          source: 'PROMOTORFLOW',
+          contextJson: {},
+        });
+
+        await activityRepo.append(ctx, actor, {
+          contactId: input.contactId,
+          bookingId: input.bookingId,
+          eventType: 'ACTION_CREATED',
+          metadataJson: {
+            actionId: action.id,
+            actionType: 'REMIND_PAYMENT',
+            dueAt: action.dueAt,
+            priority: action.priority,
+            source: 'PROMOTORFLOW',
+          },
+        });
+
+        return action;
+      });
+    },
+
+    /**
+     * Canonical NA-005b: CONFIRM_BOOKING creator.
+     * Enforces exactly-one active semantic action where required.
+     */
+    async createConfirmBooking(
+      ctx: OrganizationContext,
+      input: CreateConfirmBookingInput,
+      actor?: AuthenticatedActor | null
+    ) {
+      if (!isOrganizationContext(ctx)) {
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
+      }
+
+      return (db as any).transaction(async (tx: DbHandle) => {
+        const actionRepo = createNextActionRepository(tx);
+        const activityRepo = (dependencies.activities ?? createActivityRepository)(tx);
+
+        const active = await actionRepo.findActiveByBookingType(ctx, input.bookingId, 'CONFIRM_BOOKING');
+        if (active.length > 0) {
+          return active[0];
+        }
+
+        const rule = calculateConfirmBookingRule(input.startAt);
+        const action = await actionRepo.create(ctx, {
+          contactId: input.contactId,
+          bookingId: input.bookingId,
+          actionType: 'CONFIRM_BOOKING',
+          title: 'Konfirmasi kehadiran booking',
+          dueAt: rule.dueAt.toISOString(),
+          priority: rule.priority,
+          status: 'PENDING',
+          source: 'PROMOTORFLOW',
+          contextJson: {},
+        });
+
+        await activityRepo.append(ctx, actor, {
+          contactId: input.contactId,
+          bookingId: input.bookingId,
+          eventType: 'ACTION_CREATED',
+          metadataJson: {
+            actionId: action.id,
+            actionType: 'CONFIRM_BOOKING',
+            dueAt: action.dueAt,
+            priority: action.priority,
+            source: 'PROMOTORFLOW',
+          },
+        });
+
+        return action;
+      });
+    },
+
+    /**
+     * Canonical NA-006: REMIND_BOOKING creator.
+     */
+    async createBookingReminder(
+      ctx: OrganizationContext,
+      input: CreateBookingReminderInput,
+      actor?: AuthenticatedActor | null
+    ) {
+      if (!isOrganizationContext(ctx)) {
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
+      }
+
+      return (db as any).transaction(async (tx: DbHandle) => {
+        const actionRepo = createNextActionRepository(tx);
+        const activityRepo = (dependencies.activities ?? createActivityRepository)(tx);
+
+        const now = getNow();
+        const rule = calculateRemindBookingRule(now, input.startAt);
+
+        const action = await actionRepo.create(ctx, {
+          contactId: input.contactId,
+          bookingId: input.bookingId,
+          actionType: 'REMIND_BOOKING',
+          title: 'Kirim pengingat sesi H-1',
+          dueAt: rule.dueAt.toISOString(),
+          priority: rule.priority,
+          status: 'PENDING',
+          source: 'PROMOTORFLOW',
+          contextJson: {},
+        });
+
+        await activityRepo.append(ctx, actor, {
+          contactId: input.contactId,
+          bookingId: input.bookingId,
+          eventType: 'ACTION_CREATED',
+          metadataJson: {
+            actionId: action.id,
+            actionType: 'REMIND_BOOKING',
+            dueAt: action.dueAt,
+            priority: action.priority,
+            source: 'PROMOTORFLOW',
+          },
+        });
+
+        return action;
+      });
+    },
+
+    /**
+     * Canonical NA-009: AFTERCARE creator (+7 days).
+     * Reuses existing canonical action on idempotent retry.
+     */
+    async createAftercare(
+      ctx: OrganizationContext,
+      input: CreateAftercareInput,
+      actor?: AuthenticatedActor | null
+    ) {
+      if (!isOrganizationContext(ctx)) {
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
+      }
+
+      return (db as any).transaction(async (tx: DbHandle) => {
+        const actionRepo = createNextActionRepository(tx);
+        const activityRepo = (dependencies.activities ?? createActivityRepository)(tx);
+
+        const rule = calculateAftercareRule(input.completedAt, input.bookingId);
+        const idempotencyKey = rule.idempotencyKey;
+
+        const existing = await actionRepo.findByIdempotency(ctx, 'PROMOTORFLOW', idempotencyKey);
+        if (existing) {
+          return existing;
+        }
+
+        const action = await actionRepo.create(ctx, {
+          contactId: input.contactId,
+          bookingId: input.bookingId,
+          actionType: 'AFTERCARE',
+          title: 'Aftercare D+7 layanan',
+          dueAt: rule.dueAt.toISOString(),
+          priority: rule.priority,
+          status: 'PENDING',
+          source: 'PROMOTORFLOW',
+          idempotencyKey,
+          contextJson: {
+            bookingId: input.bookingId,
+            amount: input.amount ?? null,
+          },
+        });
+
+        await activityRepo.append(ctx, actor, {
+          contactId: input.contactId,
+          bookingId: input.bookingId,
+          eventType: 'ACTION_CREATED',
+          metadataJson: {
+            actionId: action.id,
+            actionType: 'AFTERCARE',
             dueAt: action.dueAt,
             priority: action.priority,
             source: 'PROMOTORFLOW',
@@ -133,6 +531,7 @@ export function createNextActionService(
 
         const action = await actionRepo.create(ctx, {
           contactId: input.contactId,
+          bookingId: input.bookingId ?? null,
           actionType: 'MANUAL',
           title: input.title,
           description: input.description ?? null,
@@ -145,6 +544,7 @@ export function createNextActionService(
 
         await activityRepo.append(ctx, actor, {
           contactId: input.contactId,
+          bookingId: input.bookingId ?? undefined,
           eventType: 'ACTION_CREATED',
           metadataJson: {
             actionId: action.id,
@@ -161,7 +561,18 @@ export function createNextActionService(
 
     /**
      * Completes a next action.
-     * Respects wa.me rule: emits WHATSAPP_SENT when confirmedWhatsAppSent is true.
+     * Respects wa.me / messaging rule:
+     * completeAction without `confirmedWhatsAppSent === true` MUST NOT complete the action:
+     * - action remains PENDING
+     * - completed_at remains null
+     * - zero ACTION_COMPLETED
+     * - zero WHATSAPP_SENT
+     *
+     * Only with explicit `confirmedWhatsAppSent: true`:
+     * - transitions PENDING -> COMPLETED
+     * - emits WHATSAPP_SENT and ACTION_COMPLETED { completedBy: 'MANUAL' }
+     *
+     * Repeated confirmed completion is a true idempotent no-op.
      */
     async completeAction(
       ctx: OrganizationContext,
@@ -190,20 +601,23 @@ export function createNextActionService(
           throw new DomainError('VALIDATION_ERROR', 'Action is not pending');
         }
 
+        // Without confirmedWhatsAppSent === true, action remains PENDING (no completion, no activity emission)
+        if (opts.confirmedWhatsAppSent !== true) {
+          return action;
+        }
+
         const now = getNow();
         const updated = await actionRepo.complete(ctx, actionId, now.toISOString());
 
-        // Emit WHATSAPP_SENT if confirmed by user
-        if (opts.confirmedWhatsAppSent === true) {
-          await activityRepo.append(ctx, actor, {
-            contactId: action.contactId,
-            bookingId: action.bookingId,
-            eventType: 'WHATSAPP_SENT',
-            metadataJson: {
-              actionId: action.id,
-            },
-          });
-        }
+        // Emit WHATSAPP_SENT
+        await activityRepo.append(ctx, actor, {
+          contactId: action.contactId,
+          bookingId: action.bookingId,
+          eventType: 'WHATSAPP_SENT',
+          metadataJson: {
+            actionId: action.id,
+          },
+        });
 
         // Append ACTION_COMPLETED activity
         await activityRepo.append(ctx, actor, {

@@ -118,29 +118,22 @@ export function createContactLifecycleService(
               const pendingActions = await actionRepo.listByContact(ctx, contactId, 'PENDING');
               const hasFollowUp = pendingActions.some((a) => a.actionType === 'FOLLOW_UP');
               if (!hasFollowUp) {
-                const dueAt = getNextLocalDay10Am(now, orgTz);
-                const followUpAction = await actionRepo.create(ctx, {
-                  contactId,
-                  actionType: 'FOLLOW_UP',
-                  title: 'Follow-up prospek tertarik',
-                  dueAt: dueAt.toISOString(),
-                  priority: 70,
-                  status: 'PENDING',
-                  source: 'PROMOTORFLOW',
-                  contextJson: {},
+                const nextActionService = (dependencies.nextActions ?? createNextActionService)(tx, {
+                  activities: dependencies.activities,
+                  clock: () => now,
+                  orgTz,
                 });
 
-                await activityRepo.append(ctx, actor, {
-                  contactId,
-                  eventType: 'ACTION_CREATED',
-                  metadataJson: {
-                    actionId: followUpAction.id,
-                    actionType: 'FOLLOW_UP',
-                    dueAt: followUpAction.dueAt,
-                    priority: followUpAction.priority,
-                    source: 'PROMOTORFLOW',
+                await nextActionService.createFollowUp(
+                  ctx,
+                  {
+                    contactId,
+                    title: 'Follow-up prospek tertarik',
+                    dueAt: getNextLocalDay10Am(now, orgTz).toISOString(),
+                    priority: 70,
                   },
-                });
+                  actor
+                );
               }
             } else if (trigger === 'PROMPT_FOLLOW_UP_OPTIONS') {
               // Entering CONTACTED -> prompt only, no automated action creation

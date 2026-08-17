@@ -19,8 +19,9 @@ export function createAssessmentService(
   return {
     /**
      * Synchronizes canonical assessment record from an assessment-category booking.
-     * Applies highest-evidence precedence (COMPLETED > SCHEDULED > CANCELLED > NOT_STARTED)
-     * and emits ASSESSMENT_STATUS_CHANGED through the declared tx-scoped activities dependency (R2.1-4).
+     * Applies highest-evidence precedence (COMPLETED > SCHEDULED > CANCELLED > NOT_STARTED).
+     * Emits ASSESSMENT_STATUS_CHANGED ONLY when the canonical status actually changes
+     * and the incoming candidate status was what became persisted (R2.1-4).
      */
     async syncFromBooking(
       ctx: OrganizationContext,
@@ -57,8 +58,9 @@ export function createAssessmentService(
             ? booking.completedAt ?? new Date().toISOString()
             : null;
 
-        // Ensure canonical row exists for this contact
-        await assessmentRepo.getOrCreate(ctx, booking.contactId);
+        // Ensure canonical row exists and capture canonical status before update
+        const beforeRow = await assessmentRepo.getOrCreate(ctx, booking.contactId);
+        const previousStatus = beforeRow?.status;
 
         // Update status with precedence guard
         const updated = await assessmentRepo.updateStatus(
@@ -69,13 +71,18 @@ export function createAssessmentService(
           assessedAt
         );
 
-        if (updated) {
+        // Emit ASSESSMENT_STATUS_CHANGED only if canonical status changed AND matched candidateStatus
+        if (
+          updated &&
+          updated.status !== previousStatus &&
+          updated.status === candidateStatus
+        ) {
           await activityRepo.append(ctx, actor, {
             contactId: booking.contactId,
             bookingId,
             eventType: 'ASSESSMENT_STATUS_CHANGED',
             metadataJson: {
-              status: candidateStatus,
+              status: updated.status,
               sourceBookingId: bookingId,
             },
           });
@@ -98,6 +105,7 @@ export function createAssessmentService(
       if (!assessment) {
         throw new DomainError('NOT_FOUND', 'Active tenant contact not found');
       }
+
       return assessment;
     },
   };

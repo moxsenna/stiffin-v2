@@ -12,8 +12,6 @@ import { createContactLifecycleService } from './contact-lifecycle-service';
 import { createNextActionService } from './next-action-service';
 import { createAssessmentService } from './assessment-service';
 import {
-  calculateRemindPaymentRule,
-  calculateRemindBookingRule,
   calculateAftercareRule,
   buildAftercareIdempotencyKey,
 } from '../domain/next-action-rules';
@@ -66,7 +64,11 @@ export function createBookingService(
         const bookingRepo = createBookingRepository(tx);
         const serviceRepo = (dependencies.services ?? createServiceRepository)(tx);
         const lifecycleService = (dependencies.lifecycle ?? createContactLifecycleService)(tx);
-        const actionRepo = createNextActionRepository(tx);
+        const nextActionService = (dependencies.nextActions ?? createNextActionService)(tx, {
+          activities: dependencies.activities,
+          clock: () => now,
+          orgTz,
+        });
         const activityRepo = (dependencies.activities ?? createActivityRepository)(tx);
         const assessmentService = (dependencies.assessment ?? createAssessmentService)(tx);
 
@@ -100,66 +102,27 @@ export function createBookingService(
         // 3. Update lifecycle stage to BOOKED via lifecycle authority
         await lifecycleService.transitionStage(ctx, input.contactId, 'BOOKED', {}, actor);
 
-        // 4. Provision NextAction based on payment status
+        // 4. Provision NextAction based on payment status via NextActionService engine
         if (paymentStatus === 'UNPAID') {
-          // NA-005: REMIND_PAYMENT
-          const reminderRule = calculateRemindPaymentRule(now, booking.startAt);
-          const paymentAction = await actionRepo.create(ctx, {
-            contactId: booking.contactId,
-            bookingId: booking.id,
-            actionType: 'REMIND_PAYMENT',
-            title: 'Kirim pengingat pembayaran',
-            dueAt: reminderRule.dueAt.toISOString(),
-            priority: reminderRule.priority,
-            status: 'PENDING',
-            source: 'PROMOTORFLOW',
-            contextJson: {
-              serviceName: service.name,
-              amount: booking.amount,
+          await nextActionService.createPaymentReminder(
+            ctx,
+            {
+              contactId: booking.contactId,
+              bookingId: booking.id,
+              startAt: booking.startAt,
             },
-          });
-
-          await activityRepo.append(ctx, actor, {
-            contactId: booking.contactId,
-            bookingId: booking.id,
-            eventType: 'ACTION_CREATED',
-            metadataJson: {
-              actionId: paymentAction.id,
-              actionType: 'REMIND_PAYMENT',
-              dueAt: paymentAction.dueAt,
-              priority: paymentAction.priority,
-              source: 'PROMOTORFLOW',
-            },
-          });
+            actor
+          );
         } else {
-          // NA-005b: CONFIRM_BOOKING
-          const confirmAction = await actionRepo.create(ctx, {
-            contactId: booking.contactId,
-            bookingId: booking.id,
-            actionType: 'CONFIRM_BOOKING',
-            title: 'Konfirmasi kehadiran booking',
-            dueAt: booking.startAt,
-            priority: 90,
-            status: 'PENDING',
-            source: 'PROMOTORFLOW',
-            contextJson: {
-              serviceName: service.name,
-              amount: booking.amount,
+          await nextActionService.createConfirmBooking(
+            ctx,
+            {
+              contactId: booking.contactId,
+              bookingId: booking.id,
+              startAt: booking.startAt,
             },
-          });
-
-          await activityRepo.append(ctx, actor, {
-            contactId: booking.contactId,
-            bookingId: booking.id,
-            eventType: 'ACTION_CREATED',
-            metadataJson: {
-              actionId: confirmAction.id,
-              actionType: 'CONFIRM_BOOKING',
-              dueAt: confirmAction.dueAt,
-              priority: confirmAction.priority,
-              source: 'PROMOTORFLOW',
-            },
-          });
+            actor
+          );
         }
 
         // 5. Append BOOKING_CREATED activity
@@ -200,6 +163,11 @@ export function createBookingService(
       return (db as any).transaction(async (tx: DbHandle) => {
         const bookingRepo = createBookingRepository(tx);
         const actionRepo = createNextActionRepository(tx);
+        const nextActionService = (dependencies.nextActions ?? createNextActionService)(tx, {
+          activities: dependencies.activities,
+          clock: () => now,
+          orgTz,
+        });
         const activityRepo = (dependencies.activities ?? createActivityRepository)(tx);
 
         const booking = await bookingRepo.findById(ctx, bookingId);
@@ -239,32 +207,16 @@ export function createBookingService(
           });
         }
 
-        // NA-006: Create REMIND_BOOKING (due startAt - 24h or now if <24h)
-        const reminderRule = calculateRemindBookingRule(now, booking.startAt);
-        const reminderAction = await actionRepo.create(ctx, {
-          contactId: booking.contactId,
-          bookingId,
-          actionType: 'REMIND_BOOKING',
-          title: 'Kirim pengingat sesi H-1',
-          dueAt: reminderRule.dueAt.toISOString(),
-          priority: reminderRule.priority,
-          status: 'PENDING',
-          source: 'PROMOTORFLOW',
-          contextJson: {},
-        });
-
-        await activityRepo.append(ctx, actor, {
-          contactId: booking.contactId,
-          bookingId,
-          eventType: 'ACTION_CREATED',
-          metadataJson: {
-            actionId: reminderAction.id,
-            actionType: 'REMIND_BOOKING',
-            dueAt: reminderAction.dueAt,
-            priority: reminderAction.priority,
-            source: 'PROMOTORFLOW',
+        // NA-006: Create REMIND_BOOKING via NextActionService engine
+        await nextActionService.createBookingReminder(
+          ctx,
+          {
+            contactId: booking.contactId,
+            bookingId,
+            startAt: booking.startAt,
           },
-        });
+          actor
+        );
 
         // Append BOOKING_CONFIRMED activity
         await activityRepo.append(ctx, actor, {
@@ -281,8 +233,12 @@ export function createBookingService(
     },
 
     /**
-     * Marks payment status for a booking.
-     * Completes pending REMIND_PAYMENT actions (Rule F) and ensures exactly one CONFIRM_BOOKING if still PENDING.
+     * Marks a booking as PAID or WAIVED.
+     * When current booking is already PAID or WAIVED, returns immediately as a TRUE NO-OP:
+     * - No payment status overwrite
+     * - No action re-completion
+     * - No duplicate CONFIRM_BOOKING
+     * - No duplicate PAYMENT_MARKED or ACTION_COMPLETED
      */
     async markPaid(
       ctx: OrganizationContext,
@@ -297,11 +253,21 @@ export function createBookingService(
       return (db as any).transaction(async (tx: DbHandle) => {
         const bookingRepo = createBookingRepository(tx);
         const actionRepo = createNextActionRepository(tx);
+        const nextActionService = (dependencies.nextActions ?? createNextActionService)(tx, {
+          activities: dependencies.activities,
+          clock: () => now,
+          orgTz,
+        });
         const activityRepo = (dependencies.activities ?? createActivityRepository)(tx);
 
         const booking = await bookingRepo.findById(ctx, bookingId);
         if (!booking) {
           throw new DomainError('NOT_FOUND', 'Booking not found');
+        }
+
+        // Canonical early return: already PAID or WAIVED is a complete no-op under V0.1 semantics
+        if (booking.paymentStatus === 'PAID' || booking.paymentStatus === 'WAIVED') {
+          return booking;
         }
 
         const now = getNow();
@@ -329,37 +295,15 @@ export function createBookingService(
 
         // If the booking is still PENDING, ensure exactly one pending CONFIRM_BOOKING action exists (R2-6)
         if (booking.status === 'PENDING') {
-          const activeConfirmActions = await actionRepo.findActiveByBookingType(
+          await nextActionService.createConfirmBooking(
             ctx,
-            bookingId,
-            'CONFIRM_BOOKING'
+            {
+              contactId: booking.contactId,
+              bookingId,
+              startAt: booking.startAt,
+            },
+            actor
           );
-          if (activeConfirmActions.length === 0) {
-            const confirmAction = await actionRepo.create(ctx, {
-              contactId: booking.contactId,
-              bookingId,
-              actionType: 'CONFIRM_BOOKING',
-              title: 'Konfirmasi kehadiran booking',
-              dueAt: booking.startAt,
-              priority: 90,
-              status: 'PENDING',
-              source: 'PROMOTORFLOW',
-              contextJson: {},
-            });
-
-            await activityRepo.append(ctx, actor, {
-              contactId: booking.contactId,
-              bookingId,
-              eventType: 'ACTION_CREATED',
-              metadataJson: {
-                actionId: confirmAction.id,
-                actionType: 'CONFIRM_BOOKING',
-                dueAt: confirmAction.dueAt,
-                priority: confirmAction.priority,
-                source: 'PROMOTORFLOW',
-              },
-            });
-          }
         }
 
         // Append PAYMENT_MARKED activity
@@ -395,6 +339,11 @@ export function createBookingService(
       return (db as any).transaction(async (tx: DbHandle) => {
         const bookingRepo = createBookingRepository(tx);
         const actionRepo = createNextActionRepository(tx);
+        const nextActionService = (dependencies.nextActions ?? createNextActionService)(tx, {
+          activities: dependencies.activities,
+          clock: () => now,
+          orgTz,
+        });
         const activityRepo = (dependencies.activities ?? createActivityRepository)(tx);
 
         const booking = await bookingRepo.findById(ctx, bookingId);
@@ -431,88 +380,47 @@ export function createBookingService(
         // Update booking start time
         const updated = await bookingRepo.reschedule(ctx, bookingId, startAt, endAt);
 
-        // Recreate appropriate reminders
-        if (booking.status === 'CONFIRMED') {
-          const reminderRule = calculateRemindBookingRule(now, startAt);
-          const reminderAction = await actionRepo.create(ctx, {
-            contactId: booking.contactId,
-            bookingId,
-            actionType: 'REMIND_BOOKING',
-            title: 'Kirim pengingat sesi H-1',
-            dueAt: reminderRule.dueAt.toISOString(),
-            priority: reminderRule.priority,
-            status: 'PENDING',
-            source: 'PROMOTORFLOW',
-            contextJson: {},
-          });
-
-          await activityRepo.append(ctx, actor, {
-            contactId: booking.contactId,
-            bookingId,
-            eventType: 'ACTION_CREATED',
-            metadataJson: {
-              actionId: reminderAction.id,
-              actionType: 'REMIND_BOOKING',
-              dueAt: reminderAction.dueAt,
-              priority: reminderAction.priority,
-              source: 'PROMOTORFLOW',
+        // Recreate appropriate reminders using new startAt:
+        // 1. If paymentStatus === 'UNPAID', ensure REMIND_PAYMENT exists (whether PENDING or CONFIRMED)
+        if (booking.paymentStatus === 'UNPAID') {
+          await nextActionService.createPaymentReminder(
+            ctx,
+            {
+              contactId: booking.contactId,
+              bookingId,
+              startAt,
             },
-          });
-        } else if (booking.status === 'PENDING') {
-          if (booking.paymentStatus === 'UNPAID') {
-            const reminderRule = calculateRemindPaymentRule(now, startAt);
-            const paymentAction = await actionRepo.create(ctx, {
-              contactId: booking.contactId,
-              bookingId,
-              actionType: 'REMIND_PAYMENT',
-              title: 'Kirim pengingat pembayaran',
-              dueAt: reminderRule.dueAt.toISOString(),
-              priority: reminderRule.priority,
-              status: 'PENDING',
-              source: 'PROMOTORFLOW',
-              contextJson: {
-                amount: booking.amount,
-              },
-            });
+            actor
+          );
+        }
 
-            await activityRepo.append(ctx, actor, {
+        // 2. If booking status is CONFIRMED, ensure REMIND_BOOKING exists
+        if (booking.status === 'CONFIRMED') {
+          await nextActionService.createBookingReminder(
+            ctx,
+            {
               contactId: booking.contactId,
               bookingId,
-              eventType: 'ACTION_CREATED',
-              metadataJson: {
-                actionId: paymentAction.id,
-                actionType: 'REMIND_PAYMENT',
-                dueAt: paymentAction.dueAt,
-                priority: paymentAction.priority,
-                source: 'PROMOTORFLOW',
-              },
-            });
-          } else {
-            const confirmAction = await actionRepo.create(ctx, {
-              contactId: booking.contactId,
-              bookingId,
-              actionType: 'CONFIRM_BOOKING',
-              title: 'Konfirmasi kehadiran booking',
-              dueAt: startAt,
-              priority: 90,
-              status: 'PENDING',
-              source: 'PROMOTORFLOW',
-              contextJson: {},
-            });
+              startAt,
+            },
+            actor
+          );
+        }
 
-            await activityRepo.append(ctx, actor, {
+        // 3. If booking status is PENDING and already PAID/WAIVED, ensure CONFIRM_BOOKING exists
+        if (
+          booking.status === 'PENDING' &&
+          (booking.paymentStatus === 'PAID' || booking.paymentStatus === 'WAIVED')
+        ) {
+          await nextActionService.createConfirmBooking(
+            ctx,
+            {
               contactId: booking.contactId,
               bookingId,
-              eventType: 'ACTION_CREATED',
-              metadataJson: {
-                actionId: confirmAction.id,
-                actionType: 'CONFIRM_BOOKING',
-                dueAt: confirmAction.dueAt,
-                priority: confirmAction.priority,
-                source: 'PROMOTORFLOW',
-              },
-            });
-          }
+              startAt,
+            },
+            actor
+          );
         }
 
         // Append BOOKING_RESCHEDULED activity
@@ -549,6 +457,11 @@ export function createBookingService(
         const bookingRepo = createBookingRepository(tx);
         const lifecycleService = (dependencies.lifecycle ?? createContactLifecycleService)(tx);
         const actionRepo = createNextActionRepository(tx);
+        const nextActionService = (dependencies.nextActions ?? createNextActionService)(tx, {
+          activities: dependencies.activities,
+          clock: () => now,
+          orgTz,
+        });
         const activityRepo = (dependencies.activities ?? createActivityRepository)(tx);
         const aftercareRepo = (dependencies.aftercare ?? createAftercareRepository)(tx);
         const assessmentService = (dependencies.assessment ?? createAssessmentService)(tx);
@@ -612,40 +525,17 @@ export function createBookingService(
           });
         }
 
-        // 5. Create AFTERCARE NextAction (NA-009)
-        const idempotencyKey = buildAftercareIdempotencyKey(bookingId);
-        const existingAction = await actionRepo.findByIdempotency(ctx, 'PROMOTORFLOW', idempotencyKey);
-
-        if (!existingAction) {
-          const aftercareAction = await actionRepo.create(ctx, {
+        // 5. Create AFTERCARE NextAction (NA-009) via NextActionService engine
+        await nextActionService.createAftercare(
+          ctx,
+          {
             contactId: booking.contactId,
             bookingId,
-            actionType: 'AFTERCARE',
-            title: 'Aftercare D+7 layanan',
-            dueAt: scheduledForIso,
-            priority: aftercareRule.priority,
-            status: 'PENDING',
-            source: 'PROMOTORFLOW',
-            idempotencyKey,
-            contextJson: {
-              bookingId,
-              amount: booking.amount,
-            },
-          });
-
-          await activityRepo.append(ctx, actor, {
-            contactId: booking.contactId,
-            bookingId,
-            eventType: 'ACTION_CREATED',
-            metadataJson: {
-              actionId: aftercareAction.id,
-              actionType: 'AFTERCARE',
-              dueAt: aftercareAction.dueAt,
-              priority: aftercareAction.priority,
-              source: 'PROMOTORFLOW',
-            },
-          });
-        }
+            completedAt: completedAtIso,
+            amount: booking.amount,
+          },
+          actor
+        );
 
         // 6. Append BOOKING_COMPLETED activity
         await activityRepo.append(ctx, actor, {
@@ -828,7 +718,7 @@ export function createBookingService(
     },
 
     /**
-     * Reads calendar agenda bookings with joined service title.
+     * Lists bookings with pagination, date filtering, and contact/service joins.
      */
     async getAgenda(ctx: OrganizationContext, opts: ListBookingsOrgOptions = {}) {
       if (!isOrganizationContext(ctx)) {
@@ -836,44 +726,24 @@ export function createBookingService(
       }
 
       const bookingRepo = createBookingRepository(db);
-      const serviceRepo = (dependencies.services ?? createServiceRepository)(db);
-
-      const bookingRows = await bookingRepo.listByOrg(ctx, opts);
-      if (bookingRows.length === 0) return [];
-
-      const serviceIds = Array.from(new Set(bookingRows.map((b) => b.serviceId)));
-      const serviceRows = await serviceRepo.listByIds(ctx, serviceIds);
-      const serviceMap = new Map(serviceRows.map((s) => [s.id, s]));
-
-      return bookingRows.map((b) => ({
-        ...b,
-        serviceTitle: serviceMap.get(b.serviceId)?.name ?? 'Layanan',
-        serviceCategory: serviceMap.get(b.serviceId)?.category ?? 'OTHER',
-      }));
+      return bookingRepo.listByOrg(ctx, opts);
     },
 
     /**
-     * Reads booking detail with joined service.
+     * Reads booking detail by id.
      */
-    async getBookingDetail(ctx: OrganizationContext, id: string) {
+    async getBookingDetail(ctx: OrganizationContext, bookingId: string) {
       if (!isOrganizationContext(ctx)) {
         throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
 
       const bookingRepo = createBookingRepository(db);
-      const serviceRepo = (dependencies.services ?? createServiceRepository)(db);
+      const booking = await bookingRepo.findById(ctx, bookingId);
+      if (!booking) {
+        throw new DomainError('NOT_FOUND', 'Booking not found');
+      }
 
-      const booking = await bookingRepo.findById(ctx, id);
-      if (!booking) return null;
-
-      const service = await serviceRepo.findById(ctx, booking.serviceId);
-
-      return {
-        ...booking,
-        serviceTitle: service?.name ?? 'Layanan',
-        serviceCategory: service?.category ?? 'OTHER',
-        serviceDurationMinutes: service?.durationMinutes ?? 60,
-      };
+      return booking;
     },
   };
 }

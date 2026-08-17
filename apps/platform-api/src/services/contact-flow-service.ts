@@ -86,7 +86,11 @@ export function createContactFlowService(
 
       const phase2Result = await (db as any).transaction(async (tx: DbHandle) => {
         const flowRepo = createContactFlowRepository(tx);
-        const actionRepo = createNextActionRepository(tx);
+        const nextActionService = (dependencies.nextActions ?? createNextActionService)(tx, {
+          activities: dependencies.activities,
+          clock: () => now,
+          orgTz: dependencies.orgTz,
+        });
         const activityRepo = (dependencies.activities ?? createActivityRepository)(tx);
 
         // 1. Get or create contact_flow_state
@@ -102,41 +106,19 @@ export function createContactFlowService(
           notes: input.notes ?? null,
         });
 
-        // 3. Provision NA-001 CONTACT_LEAD exactly once (idempotent key)
-        const leadIdempotencyKey = `lead:contact:${contact.id}`;
-        let leadAction = await actionRepo.findByIdempotency(ctx, 'PROMOTORFLOW', leadIdempotencyKey);
-
-        if (!leadAction) {
-          leadAction = await actionRepo.create(ctx, {
+        // 3. Provision NA-001 CONTACT_LEAD via canonical NextActionService engine
+        const leadAction = await nextActionService.createContactLeadAction(
+          ctx,
+          {
             contactId: contact.id,
-            actionType: 'CONTACT_LEAD',
-            title: 'Hubungi lead baru',
-            dueAt: leadRule.dueAt.toISOString(),
-            priority: leadRule.priority,
-            status: 'PENDING',
-            source: 'PROMOTORFLOW',
-            idempotencyKey: leadIdempotencyKey,
-            contextJson: {
-              interest: trimmedInterest,
-              sourceChannel: input.sourceChannel ?? null,
-            },
-          });
+            interest: trimmedInterest,
+            sourceChannel: input.sourceChannel ?? null,
+            notes: input.notes ?? null,
+          },
+          actor
+        );
 
-          // 4. Record ACTION_CREATED activity
-          await activityRepo.append(ctx, actor, {
-            contactId: contact.id,
-            eventType: 'ACTION_CREATED',
-            metadataJson: {
-              actionId: leadAction.id,
-              actionType: 'CONTACT_LEAD',
-              dueAt: leadAction.dueAt,
-              priority: leadAction.priority,
-              source: 'PROMOTORFLOW',
-            },
-          });
-        }
-
-        // 5. Append CONTACT_CREATED activity
+        // 4. Append CONTACT_CREATED activity
         await activityRepo.append(ctx, actor, {
           contactId: contact.id,
           eventType: 'CONTACT_CREATED',
