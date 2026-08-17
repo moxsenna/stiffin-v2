@@ -3,6 +3,7 @@ import { isOrganizationContext, type OrganizationContext } from '../core/organiz
 import type { AuthenticatedActor } from '../auth/types';
 import { DomainError } from '../core/errors';
 import { DEFAULT_ORGANIZATION_TIMEZONE, normalizePhone, normalizeEmail } from '@promotor/platform-core';
+import type { LearningNextActionRequest } from '@promotor/contracts';
 import { createNextActionRepository } from '../repositories/next-action-repository';
 import { createActivityRepository } from '../repositories/activity-repository';
 import { createContactRepository } from '../repositories/contact-repository';
@@ -88,6 +89,7 @@ export interface SkipNextStepInput {
 }
 
 export interface NextActionServiceDependencies {
+  nextActions?: typeof createNextActionRepository;
   activities?: typeof createActivityRepository;
   contacts?: typeof createContactRepository;
   flowContacts?: typeof createContactFlowRepository;
@@ -186,6 +188,12 @@ export interface NextActionService {
       upcoming: any[];
     };
   }>;
+
+  createClassNextAction(
+    ctx: OrganizationContext,
+    input: LearningNextActionRequest,
+    actor?: AuthenticatedActor | null
+  ): Promise<NextActionRow>;
 }
 
 export function createNextActionService(
@@ -984,6 +992,108 @@ export function createNextActionService(
           upcoming: richUpcoming,
         },
       };
+    },
+
+    /**
+     * Creates a Flow next action originated from a PromotorClass learning signal.
+     * Transport-neutral integration command with multi-layer idempotency and race safety.
+     */
+    async createClassNextAction(
+      ctx: OrganizationContext,
+      input: LearningNextActionRequest,
+      actor?: AuthenticatedActor | null
+    ): Promise<NextActionRow> {
+      if (!isOrganizationContext(ctx)) {
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
+      }
+      if (input.organizationId && input.organizationId !== ctx.organizationId) {
+        throw new DomainError('FORBIDDEN', 'Payload organizationId does not match tenant context');
+      }
+
+      // Verify active tenant contact parent
+      const contactRepo = (dependencies.contacts ?? createContactRepository)(
+        db as any,
+        normalizePhone,
+        normalizeEmail
+      );
+      const contact = await contactRepo.findById(ctx, input.contactId);
+      if (!contact) {
+        throw new DomainError('NOT_FOUND', 'Active tenant contact not found');
+      }
+
+      const actionRepo = (dependencies.nextActions ?? createNextActionRepository)(db);
+
+      // Pre-check idempotency before opening transaction
+      const existing = await actionRepo.findByIdempotency(ctx, 'PROMOTORCLASS', input.idempotencyKey);
+      if (existing) {
+        return existing;
+      }
+
+      // Determine dueAt and priority
+      const now = (dependencies.clock ?? (() => new Date()))();
+      let dueAtDate: Date;
+      if (input.dueAt) {
+        dueAtDate = new Date(input.dueAt);
+        if (isNaN(dueAtDate.getTime())) {
+          throw new DomainError('VALIDATION_ERROR', 'Invalid dueAt timestamp');
+        }
+      } else {
+        dueAtDate = getNextLocalDay10Am(now, orgTz);
+      }
+
+      const priority = input.actionType === 'FOLLOW_UP' ? 70 : 40;
+
+      try {
+        return await (db as any).transaction(async (tx: DbHandle) => {
+          const txActionRepo = (dependencies.nextActions ?? createNextActionRepository)(tx);
+          const txActivityRepo = (dependencies.activities ?? createActivityRepository)(tx);
+
+          // Second idempotency check inside transaction
+          const txExisting = await txActionRepo.findByIdempotency(ctx, 'PROMOTORCLASS', input.idempotencyKey);
+          if (txExisting) {
+            return txExisting;
+          }
+
+          const newAction = await txActionRepo.create(ctx, {
+            contactId: input.contactId,
+            actionType: input.actionType,
+            title: input.title,
+            description: input.reason ?? null,
+            dueAt: dueAtDate.toISOString(),
+            priority,
+            status: 'PENDING',
+            source: 'PROMOTORCLASS',
+            sourceEventId: input.sourceEventId ?? null,
+            sourceSignalId: input.sourceSignalId ?? null,
+            idempotencyKey: input.idempotencyKey,
+            contextJson: input.context ? (input.context as Record<string, unknown>) : null,
+          });
+
+          await txActivityRepo.append(ctx, actor, {
+            contactId: input.contactId,
+            eventType: 'ACTION_CREATED',
+            metadataJson: {
+              actionId: newAction.id,
+              actionType: newAction.actionType,
+              source: 'PROMOTORCLASS',
+              sourceEventId: input.sourceEventId,
+              sourceSignalId: input.sourceSignalId,
+              idempotencyKey: input.idempotencyKey,
+            },
+          });
+
+          return newAction;
+        });
+      } catch (err: any) {
+        // If concurrent insert raced and caused unique violation (conflict), re-read existing action
+        if (err?.code === 'CONFLICT' || err?.code === '23505' || err?.cause?.code === '23505') {
+          const racedExisting = await actionRepo.findByIdempotency(ctx, 'PROMOTORCLASS', input.idempotencyKey);
+          if (racedExisting) {
+            return racedExisting;
+          }
+        }
+        throw err;
+      }
     },
   };
 }
