@@ -383,6 +383,7 @@ export interface FlowContactContext {
   contactId: string;
   stage: 'NEW' | 'CONTACTED' | 'INTERESTED' | 'FOLLOW_UP' | 'BOOKED' | 'COMPLETED' | 'LOST';
   classification: 'PROSPECT' | 'CLIENT';
+  interest?: string | null;
   primaryNextAction?: {
     id: string;
     type: string;

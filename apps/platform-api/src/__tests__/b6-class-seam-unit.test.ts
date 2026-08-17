@@ -9,10 +9,84 @@ describe('B6 — Class Integration Seam Unit Invariants (No DB)', () => {
   const ctxA: OrganizationContext = { organizationId: 'org-seam-unit-1' };
   const mockNow = new Date('2026-08-17T03:00:00.000Z');
 
-  it('rejects invalid LearningNextActionRequest inputs', async () => {
+  it('unbound adapter rejects createNextAction with UNAUTHORIZED even when payload provides organizationId', async () => {
+    const unboundAdapter = createLocalPromotorFlowAdapter({} as any, { clock: () => mockNow });
+
+    await assert.rejects(
+      async () =>
+        unboundAdapter.createNextAction({
+          organizationId: 'org-seam-unit-1',
+          contactId: 'c-1',
+          source: 'PROMOTORCLASS',
+          sourceEventId: 'evt-1',
+          actionType: 'FOLLOW_UP',
+          title: 'Title',
+          reason: 'Reason',
+          idempotencyKey: 'idem-1',
+          context: {},
+        }),
+      (err: any) => err instanceof DomainError && err.code === 'UNAUTHORIZED'
+    );
+  });
+
+  it('unbound adapter rejects appendLearningActivity with UNAUTHORIZED even when payload provides organizationId', async () => {
+    const unboundAdapter = createLocalPromotorFlowAdapter({} as any, { clock: () => mockNow });
+
+    await assert.rejects(
+      async () =>
+        unboundAdapter.appendLearningActivity({
+          organizationId: 'org-seam-unit-1',
+          contactId: 'c-1',
+          source: 'PROMOTORCLASS',
+          sourceEventId: 'evt-1',
+          eventType: 'PROGRAM_COMPLETED',
+          summary: 'Summary',
+          context: {},
+          idempotencyKey: 'idem-1',
+        }),
+      (err: any) => err instanceof DomainError && err.code === 'UNAUTHORIZED'
+    );
+  });
+
+  it('bound adapter rejects payload organizationId mismatch with FORBIDDEN', async () => {
+    const boundAdapter = createLocalPromotorFlowAdapter({} as any, { ctx: ctxA, clock: () => mockNow });
+
+    await assert.rejects(
+      async () =>
+        boundAdapter.createNextAction({
+          organizationId: 'org-seam-unit-DIFFERENT',
+          contactId: 'c-1',
+          source: 'PROMOTORCLASS',
+          sourceEventId: 'evt-1',
+          actionType: 'FOLLOW_UP',
+          title: 'Title',
+          reason: 'Reason',
+          idempotencyKey: 'idem-1',
+          context: {},
+        }),
+      (err: any) => err instanceof DomainError && err.code === 'FORBIDDEN'
+    );
+
+    await assert.rejects(
+      async () =>
+        boundAdapter.appendLearningActivity({
+          organizationId: 'org-seam-unit-DIFFERENT',
+          contactId: 'c-1',
+          source: 'PROMOTORCLASS',
+          sourceEventId: 'evt-1',
+          eventType: 'PROGRAM_COMPLETED',
+          summary: 'Summary',
+          context: {},
+          idempotencyKey: 'idem-1',
+        }),
+      (err: any) => err instanceof DomainError && err.code === 'FORBIDDEN'
+    );
+  });
+
+  it('rejects invalid LearningNextActionRequest schema inputs', async () => {
     const adapter = createLocalPromotorFlowAdapter({} as any, { ctx: ctxA, clock: () => mockNow });
 
-    // Missing required fields
+    // Missing required fields / invalid type
     await assert.rejects(
       async () =>
         adapter.createNextAction({
@@ -30,7 +104,7 @@ describe('B6 — Class Integration Seam Unit Invariants (No DB)', () => {
     );
   });
 
-  it('rejects invalid LearningActivityProjection inputs', async () => {
+  it('rejects invalid LearningActivityProjection schema inputs', async () => {
     const adapter = createLocalPromotorFlowAdapter({} as any, { ctx: ctxA, clock: () => mockNow });
 
     await assert.rejects(

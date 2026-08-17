@@ -71,18 +71,13 @@ const ALL_24_TABLES = [
 /** Asserts a Drizzle insert/update/delete rejects with a specific PostgreSQL error code. */
 async function rejectsWithCode(
   fn: () => Promise<unknown>,
-  code: string | string[],
+  code: string,
   message: string
 ): Promise<void> {
   await assert.rejects(
     fn,
     (err: unknown) => {
-      const actualCode = pgErrorCode(err);
-      if (Array.isArray(code)) {
-        assert.ok(actualCode && code.includes(actualCode), `${message}: expected one of [${code.join(', ')}], got ${actualCode}`);
-      } else {
-        assert.strictEqual(actualCode, code, message);
-      }
+      assert.strictEqual(pgErrorCode(err), code, message);
       return true;
     },
     message
@@ -777,7 +772,7 @@ describe('B6 — Flow Schema, Migration & Grants Integration Suite', { skip: !en
           async () => {
             await db.delete(organizations).where(eq(organizations.id, org.id));
           },
-          ['23503', '23001'],
+          '23503',
           'hard deleting organization with services must be RESTRICTed'
         );
       });
