@@ -7,6 +7,7 @@ import { createProgramRepository } from '../../repositories/program-repository';
 import { createContactRepository } from '../../repositories/contact-repository';
 import { createEnrollmentRepository, EnrollmentRepository } from '../../repositories/enrollment-repository';
 import { createLearnerAccessRepository, LearnerAccessRepository } from '../../repositories/learner-access-repository';
+import { createLearningEventRepository, LearningEventRepository } from '../../repositories/learning-event-repository';
 import { EnrollmentRow } from '../../db/schema/enrollments';
 
 export interface PublicRegistrationInput {
@@ -25,6 +26,7 @@ export interface PublicRegistrationResult {
   programTitle: string;
   status: string;
   accessToken: string;
+  isNewContact: boolean;
 }
 
 export interface ManualEnrollmentInput {
@@ -59,6 +61,7 @@ export function createEnrollmentService(
   const contactRepo = createContactRepository(db, normalizePhone, normalizeEmail);
   const enrollmentRepo = createEnrollmentRepository(db);
   const learnerAccessRepo = createLearnerAccessRepository(db);
+  const learningEventRepo = createLearningEventRepository(db);
 
   return {
     async registerPublicLearner(input: PublicRegistrationInput): Promise<PublicRegistrationResult> {
@@ -98,7 +101,11 @@ export function createEnrollmentService(
         throw new DomainError('FORBIDDEN', 'Program ini tidak terbuka untuk pendaftaran publik langsung');
       }
 
-      // 4. Match/Create Shared Core Contact
+      // 4. Check whether contact already exists before matchOrCreate
+      const phoneNorm = normalizePhone(input.phoneRaw.trim());
+      const existingContact = await contactRepo.findByPhone({ organizationId: org.id }, phoneNorm);
+      const isNewContact = !existingContact;
+
       let contact;
       try {
         contact = await contactRepo.matchOrCreate({
@@ -112,8 +119,10 @@ export function createEnrollmentService(
       }
 
       // 5. Idempotently create or retrieve existing Enrollment
+      let isNewEnrollment = false;
       let enrollment = await enrollmentRepo.findByProgramAndContact(org.id, program.id, contact.id);
       if (!enrollment) {
+        isNewEnrollment = true;
         enrollment = await enrollmentRepo.create({
           organizationId: org.id,
           programId: program.id,
@@ -121,13 +130,36 @@ export function createEnrollmentService(
           status: 'ENROLLED',
           enrolledAt: nowIso,
           progressPercent: 0,
-          intentScore: 0,
+          intentScore: 10,
           intentLabel: 'COLD',
           learningStatus: 'NOT_STARTED',
         });
       }
 
-      // 6. Generate Opaque High-Entropy Learner Access Token
+      // 6. Emit canonical events (§16)
+      if (isNewContact) {
+        await learningEventRepo.create({
+          organizationId: org.id,
+          enrollmentId: enrollment.id,
+          contactId: contact.id,
+          eventType: 'learner.registered',
+          payload: { programId: program.id, programSlug: program.programSlug },
+          occurredAt: nowIso,
+        });
+      }
+
+      if (isNewEnrollment) {
+        await learningEventRepo.create({
+          organizationId: org.id,
+          enrollmentId: enrollment.id,
+          contactId: contact.id,
+          eventType: 'learner.enrolled',
+          payload: { programId: program.id, programSlug: program.programSlug },
+          occurredAt: nowIso,
+        });
+      }
+
+      // 7. Generate Opaque High-Entropy Learner Access Token
       const rawToken = randomBytes(32).toString('hex');
       const tokenHash = createHash('sha256').update(rawToken).digest('hex');
       const expiresAt = new Date(now.getTime() + tokenExpiryDays * 24 * 60 * 60 * 1000).toISOString();
@@ -147,6 +179,7 @@ export function createEnrollmentService(
         programTitle: program.title,
         status: enrollment.status,
         accessToken: rawToken,
+        isNewContact,
       };
     },
 
@@ -175,17 +208,29 @@ export function createEnrollmentService(
         return existing;
       }
 
-      return await enrollmentRepo.create({
+      const created = await enrollmentRepo.create({
         organizationId: input.organizationId,
         programId: input.programId,
         contactId: input.contactId,
         status: 'ENROLLED',
         enrolledAt: nowIso,
         progressPercent: 0,
-        intentScore: 0,
+        intentScore: 10,
         intentLabel: 'COLD',
         learningStatus: 'NOT_STARTED',
       });
+
+      // Emit canonical learner.enrolled event (§16)
+      await learningEventRepo.create({
+        organizationId: input.organizationId,
+        enrollmentId: created.id,
+        contactId: input.contactId,
+        eventType: 'learner.enrolled',
+        payload: { programId: program.id, manual: true },
+        occurredAt: nowIso,
+      });
+
+      return created;
     },
 
     async redeemLearnerToken(tokenRaw: string): Promise<{ contactId: string; organizationId: string }> {
@@ -198,7 +243,7 @@ export function createEnrollmentService(
 
       const validToken = await learnerAccessRepo.findValidByHash(tokenHash, nowIso);
       if (!validToken) {
-        throw new DomainError('UNAUTHORIZED', 'Token akses learner tidak valid atau sudah kedaluwarsa');
+        throw new DomainError('UNAUTHORIZED', 'Token akses learner tidak valid atau telah kedaluwarsa');
       }
 
       await learnerAccessRepo.markRedeemed(validToken.id, nowIso);
@@ -213,33 +258,21 @@ export function createEnrollmentService(
       return await enrollmentRepo.getById(organizationId, enrollmentId);
     },
 
-    async listEnrollmentsByOrg(
-      organizationId: string,
-      filter?: { programId?: string; contactId?: string }
-    ): Promise<EnrollmentRow[]> {
-      if (filter?.contactId) {
-        return await enrollmentRepo.listByContact(organizationId, filter.contactId);
-      }
-      if (filter?.programId) {
-        return await enrollmentRepo.listByProgram(organizationId, filter.programId);
-      }
-      return await enrollmentRepo.listByOrg(organizationId);
+    async listEnrollmentsByOrg(organizationId: string, filter?: { programId?: string; contactId?: string }): Promise<EnrollmentRow[]> {
+      return await enrollmentRepo.listByOrg(organizationId, filter);
     },
 
-    async getLearnerPrograms(
-      contactId: string,
-      organizationId: string
-    ): Promise<Array<EnrollmentRow & { programTitle: string; programSlug: string }>> {
-      const enrolls = await enrollmentRepo.listByContact(organizationId, contactId);
+    async getLearnerPrograms(contactId: string, organizationId: string): Promise<Array<EnrollmentRow & { programTitle: string; programSlug: string }>> {
+      const enrs = await enrollmentRepo.listByContact(organizationId, contactId);
       const results: Array<EnrollmentRow & { programTitle: string; programSlug: string }> = [];
 
-      for (const e of enrolls) {
-        const prog = await programRepo.findById({ organizationId }, e.programId);
-        if (prog) {
+      for (const e of enrs) {
+        const p = await programRepo.findById({ organizationId }, e.programId);
+        if (p) {
           results.push({
             ...e,
-            programTitle: prog.title,
-            programSlug: prog.programSlug,
+            programTitle: p.title,
+            programSlug: p.programSlug,
           });
         }
       }

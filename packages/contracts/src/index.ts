@@ -1096,3 +1096,60 @@ export const UpdateSignalStatusRequestSchema = z.object({
   status: z.enum(['ACTIVE', 'RESOLVED', 'DISMISSED']),
 });
 export type UpdateSignalStatusRequest = z.infer<typeof UpdateSignalStatusRequestSchema>;
+
+export const StartLessonResponseSchema = z.object({
+  enrollmentId: z.string().uuid(),
+  lessonId: z.string().uuid(),
+  status: z.enum(['ENROLLED', 'STARTED', 'COMPLETED', 'CANCELLED']),
+});
+export type StartLessonResponse = z.infer<typeof StartLessonResponseSchema>;
+
+export const RecordCtaClickRequestSchema = z.object({
+  ctaLabel: z.string().optional().nullable(),
+});
+export type RecordCtaClickRequest = z.infer<typeof RecordCtaClickRequestSchema>;
+
+export const RecordCtaClickResponseSchema = z.object({
+  enrollmentId: z.string().uuid(),
+  lessonId: z.string().uuid(),
+  progressPercent: z.number().int().min(0).max(100),
+  intentScore: z.number().int().min(0).max(100),
+  intentLabel: z.enum(['COLD', 'WARM', 'HOT']),
+});
+export type RecordCtaClickResponse = z.infer<typeof RecordCtaClickResponseSchema>;
+
+export const ProgramAnalyticsResponseSchema = z.object({
+  programId: z.string().uuid(),
+  programTitle: z.string(),
+  enrolledCount: z.number().int().nonnegative(),
+  startedCount: z.number().int().nonnegative(),
+  reached50Count: z.number().int().nonnegative(),
+  reached80Count: z.number().int().nonnegative(),
+  completedCount: z.number().int().nonnegative(),
+  ctaClickedCount: z.number().int().nonnegative(),
+  avgProgressPercent: z.number().int().min(0).max(100),
+});
+export type ProgramAnalyticsResponse = z.infer<typeof ProgramAnalyticsResponseSchema>;
+
+export const LearnerSummaryItemSchema = z.object({
+  contactId: z.string().uuid(),
+  enrollmentId: z.string().uuid(),
+  name: z.string(),
+  phone: z.string(),
+  programId: z.string().uuid(),
+  programTitle: z.string(),
+  progressPercent: z.number().int().min(0).max(100),
+  intentScore: z.number().int().min(0).max(100),
+  intentLabel: z.enum(['COLD', 'WARM', 'HOT']),
+  learningStatus: z.enum(['ACTIVE', 'COMPLETED', 'INACTIVE', 'AT_RISK', 'NOT_STARTED', 'IN_PROGRESS']),
+  lastActivityAt: z.string().nullable().optional(),
+  enrolledAt: z.string(),
+});
+export type LearnerSummaryItem = z.infer<typeof LearnerSummaryItemSchema>;
+
+export const LearnersListResponseSchema = z.object({
+  learners: z.array(LearnerSummaryItemSchema),
+  total: z.number().int().nonnegative(),
+});
+export type LearnersListResponse = z.infer<typeof LearnersListResponseSchema>;
+

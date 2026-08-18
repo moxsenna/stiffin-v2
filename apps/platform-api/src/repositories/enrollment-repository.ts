@@ -14,7 +14,7 @@ export type CreateEnrollmentInput = {
   progressPercent?: number;
   intentScore?: number;
   intentLabel?: 'COLD' | 'WARM' | 'HOT';
-  learningStatus?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'AT_RISK';
+  learningStatus?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'AT_RISK' | 'ACTIVE' | 'INACTIVE';
 };
 
 export type UpdateEnrollmentInput = Partial<{
@@ -25,7 +25,7 @@ export type UpdateEnrollmentInput = Partial<{
   progressPercent: number;
   intentScore: number;
   intentLabel: 'COLD' | 'WARM' | 'HOT';
-  learningStatus: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'AT_RISK';
+  learningStatus: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'AT_RISK' | 'ACTIVE' | 'INACTIVE';
 }>;
 
 export interface EnrollmentRepository {
@@ -38,7 +38,7 @@ export interface EnrollmentRepository {
   findByIdGlobal(id: string): Promise<EnrollmentRow | null>;
   listByContact(organizationId: string, contactId: string): Promise<EnrollmentRow[]>;
   listByProgram(organizationId: string, programId: string): Promise<EnrollmentRow[]>;
-  listByOrg(organizationId: string): Promise<EnrollmentRow[]>;
+  listByOrg(organizationId: string, filter?: { programId?: string; contactId?: string }): Promise<EnrollmentRow[]>;
   create(input: CreateEnrollmentInput): Promise<EnrollmentRow>;
   update(organizationId: string, id: string, input: UpdateEnrollmentInput): Promise<EnrollmentRow | null>;
   updateProgress(organizationId: string, id: string, input: UpdateEnrollmentInput): Promise<EnrollmentRow | null>;
@@ -100,11 +100,14 @@ export function createEnrollmentRepository(db: NodePgDatabase): EnrollmentReposi
         );
     },
 
-    async listByOrg(organizationId: string) {
+    async listByOrg(organizationId: string, filter?: { programId?: string; contactId?: string }) {
+      const conds = [eq(enrollments.organizationId, organizationId)];
+      if (filter?.programId) conds.push(eq(enrollments.programId, filter.programId));
+      if (filter?.contactId) conds.push(eq(enrollments.contactId, filter.contactId));
       return await db
         .select()
         .from(enrollments)
-        .where(eq(enrollments.organizationId, organizationId));
+        .where(and(...conds));
     },
 
     async create(input: CreateEnrollmentInput) {

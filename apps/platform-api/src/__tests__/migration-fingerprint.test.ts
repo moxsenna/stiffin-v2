@@ -26,6 +26,7 @@ const CANONICAL = {
   '0004_swift_availability': 'c22c919d815156efbe9b33623bfae53e92cbbeddcb68e709d4aa259bc02812df',
   '0005_rapid_enrollment': '8b4c1cbd420367ab43464b963628eba83483f0422f734ebf9f5273e8d19d8161',
   '0006_smart_learning_engine': '682716b4c05e2a81270630f12bf211b74812fcaef35ac56334ebd3cda5d9aad6',
+  '0007_v01_release_hardening': '8f89f04930012997f41eaf037149c0356e048b8c79ab7bf089813edea5bf2915',
 } as const;
 
 // Known Windows CRLF working-tree hashes — noncanonical diagnostics.
@@ -37,6 +38,7 @@ const CRLF_KNOWN = {
   '0004_swift_availability': 'cc4e87e75b23455e5a0ba96bcf840a0487a6ef0a14d801d40b5fafe64b31769d',
   '0005_rapid_enrollment': 'b385744966fc12c510dbb431d799b1e91fa96a86a0053b81e17e63df316e0247',
   '0006_smart_learning_engine': '1a36e9fe98341810d6dc5d1b374a1b8f4807b202e030d82970a17586da899b9e',
+  '0007_v01_release_hardening': 'cd842d66c2e788ecee8402ee10d9add0b7260ead4eb1348ba4fa0902233e58b7',
 } as const;
 
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
@@ -51,6 +53,7 @@ function migrationBytes(): { name: string; lf: string }[] {
     '0004_swift_availability',
     '0005_rapid_enrollment',
     '0006_smart_learning_engine',
+    '0007_v01_release_hardening',
   ].map((tag) => {
     // .gitattributes eol=lf guarantees the working-tree bytes are canonical LF.
     const lf = readFileSync(join(dir, `${tag}.sql`), 'utf8').replace(/\r\n/g, '\n');

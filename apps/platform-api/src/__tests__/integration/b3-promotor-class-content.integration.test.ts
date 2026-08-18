@@ -18,6 +18,11 @@ import {
   lessonAttachments,
   programPresentations,
   workspaceProfiles,
+  enrollments,
+  lessonProgress,
+  reflectionResponses,
+  learningEvents,
+  learningSignals,
 } from '../../db/schema';
 import { createProgramRepository } from '../../repositories/program-repository';
 import { createWorkspaceProfileRepository } from '../../repositories/workspace-profile-repository';
@@ -73,7 +78,12 @@ describe('B3 — PromotorClass Content Implementation Suite', { skip: !enabled ?
     await applyMigrationsAsOwner();
 
     await withIntegrationDb(async (db) => {
-      // Clean up past runs
+      // Clean up past runs in dependency order
+      await db.delete(reflectionResponses);
+      await db.delete(lessonProgress);
+      await db.delete(learningSignals);
+      await db.delete(learningEvents);
+      await db.delete(enrollments);
       await db.delete(lessonAttachments);
       await db.delete(lessons);
       await db.delete(modules);
@@ -146,24 +156,19 @@ describe('B3 — PromotorClass Content Implementation Suite', { skip: !enabled ?
     it('runtime role has SELECT, INSERT, UPDATE, DELETE on all 6 tables and NO DDL CREATE', async () => {
       await withRuntimeSql(async (client) => {
         for (const table of B3_TABLES) {
-          const res = await client.query(
-            `SELECT privilege_type FROM information_schema.role_table_grants
-             WHERE table_name = $1 AND grantee = 'promotor_runtime'`,
-            [table]
-          );
-          const privs = res.rows.map((r) => r.privilege_type);
-          assert.ok(privs.includes('SELECT'), `${table} SELECT`);
-          assert.ok(privs.includes('INSERT'), `${table} INSERT`);
-          assert.ok(privs.includes('UPDATE'), `${table} UPDATE`);
-          assert.ok(privs.includes('DELETE'), `${table} DELETE`);
+          for (const privilege of ['SELECT', 'INSERT', 'UPDATE', 'DELETE']) {
+            const res = await client.query(
+              `SELECT has_table_privilege('promotor_runtime', 'public.' || $1, $2) AS has`,
+              [table, privilege]
+            );
+            assert.strictEqual(res.rows[0].has, true, `promotor_runtime must have ${privilege} on ${table}`);
+          }
         }
 
-        // Assert runtime role cannot CREATE tables
-        await assert.rejects(
-          async () => client.query('CREATE TABLE public.forbidden_test (id int)'),
-          (err: any) => err.code === '42501',
-          'Runtime role must not be able to CREATE tables'
+        const createCheck = await client.query(
+          `SELECT has_schema_privilege('promotor_runtime', 'public', 'CREATE') AS can_create`
         );
+        assert.strictEqual(createCheck.rows[0].can_create, false, 'Runtime role must not have CREATE on public schema');
       });
     });
   });

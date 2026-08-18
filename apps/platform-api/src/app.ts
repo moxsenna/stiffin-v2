@@ -17,8 +17,11 @@ import { createProgramService } from './services/program-service';
 import { createPublicContentService } from './services/public-content-service';
 import { createAvailabilityService } from './services/flow/availability-service';
 import { createPublicBookingService } from './services/flow/public-booking-service';
+import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { createEnrollmentService } from './services/class/enrollment-service';
 import { createLearningEngineService } from './services/class/learning-engine-service';
+import { createLearnerSessionService } from './services/class/learner-session-service';
+import { learnerAuthMiddleware } from './middleware/learner-auth-middleware';
 import {
   PublicSlotsQuerySchema,
   CreatePublicBookingRequestSchema,
@@ -26,6 +29,7 @@ import {
   RedeemLearnerTokenRequestSchema,
   SubmitReflectionRequestSchema,
   RecordLearningEventRequestSchema,
+  RecordCtaClickRequestSchema,
 } from '@promotor/contracts';
 import { registerFlowRoutes } from './routes/flow-routes';
 import { registerClassRoutes } from './routes/class-routes';
@@ -294,36 +298,107 @@ export function createApp(deps?: AppDependencies) {
   app.post('/api/v1/public/:slug/programs/:programSlug/register', handlePublicRegistration);
   app.post('/api/v1/public/workspaces/:workspaceSlug/programs/:programSlug/register', handlePublicRegistration);
 
-  app.post('/api/v1/public/learner/redeem-token', async (c) => {
+  // ==========================================
+  // Learner Auth & Session Redemption (§4, §5)
+  // ==========================================
+  const handleRedeemToken = async (c: any) => {
     c.header('Cache-Control', 'no-store');
     const db = c.get('db');
     const raw = await c.req.json().catch(() => ({}));
-    const parsed = RedeemLearnerTokenRequestSchema.safeParse(raw);
-    if (!parsed.success) {
+    const rawToken = raw?.token || raw?.accessToken;
+    if (!rawToken || typeof rawToken !== 'string') {
       throw new DomainError('VALIDATION_ERROR', 'Token akses learner wajib diisi');
     }
-    const service = createEnrollmentService(db);
-    const result = await service.redeemLearnerToken(parsed.data.token);
-    return c.json(result, 200);
+
+    const sessionService = createLearnerSessionService(db);
+    const result = await sessionService.redeemToken(rawToken);
+
+    setCookie(c, 'promotor_learner_session', result.sessionToken, {
+      httpOnly: true,
+      secure: c.env?.NODE_ENV === 'production',
+      sameSite: 'Lax',
+      path: '/',
+      maxAge: 30 * 24 * 3600, // 30 days
+    });
+
+    return c.json({
+      contactId: result.contactId,
+      organizationId: result.organizationId,
+      sessionToken: result.sessionToken,
+      expiresAt: result.session.expiresAt.toISOString(),
+    }, 200);
+  };
+
+  app.post('/api/v1/public/learner/redeem-token', handleRedeemToken);
+  app.post('/api/v1/learner/auth/redeem', handleRedeemToken);
+
+  app.post('/api/v1/learner/auth/logout', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const cookieToken = getCookie(c, 'promotor_learner_session');
+    if (cookieToken) {
+      const sessionService = createLearnerSessionService(db);
+      const val = await sessionService.validateSession(cookieToken);
+      if (val.session) {
+        await sessionService.revokeSession(val.session.id);
+      }
+    }
+    deleteCookie(c, 'promotor_learner_session', { path: '/' });
+    return c.json({ success: true }, 200);
   });
 
   // ==========================================
-  // B5 Learner Portal & Engine API
+  // Learner Protected Learning API (§6, §7)
+  // Protected by learnerAuthMiddleware
   // ==========================================
+  app.use('/api/v1/learner/me', learnerAuthMiddleware);
+  app.use('/api/v1/learner/me/*', learnerAuthMiddleware);
+  app.use('/api/v1/learner/enrollments/*', learnerAuthMiddleware);
+
+  app.get('/api/v1/learner/me/enrollments', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const learnerCtx = c.get('learnerContext' as any) as any;
+    const service = createEnrollmentService(db);
+    const programs = await service.getLearnerPrograms(learnerCtx.contactId, learnerCtx.organizationId);
+    return c.json({ programs }, 200);
+  });
+
   app.get('/api/v1/learner/enrollments/:enrollmentId', async (c) => {
     c.header('Cache-Control', 'no-store');
     const db = c.get('db');
     const enrollmentId = c.req.param('enrollmentId');
-    const enrollmentRepo = createEnrollmentRepository(db);
-
-    const enrollment = await enrollmentRepo.findByIdGlobal(enrollmentId);
-    if (!enrollment) {
-      throw new DomainError('NOT_FOUND', 'Pendaftaran belajar tidak ditemukan');
-    }
+    const learnerCtx = c.get('learnerContext' as any) as any;
 
     const learningService = createLearningEngineService(db);
-    const details = await learningService.getEnrollmentFullDetails(enrollment.organizationId, enrollmentId);
+    const details = await learningService.getEnrollmentFullDetails(
+      learnerCtx.organizationId,
+      enrollmentId,
+      learnerCtx.contactId
+    );
     return c.json(details, 200);
+  });
+
+  app.post('/api/v1/learner/enrollments/:enrollmentId/lessons/:lessonId/start', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const enrollmentId = c.req.param('enrollmentId');
+    const lessonId = c.req.param('lessonId');
+    const learnerCtx = c.get('learnerContext' as any) as any;
+
+    const learningService = createLearningEngineService(db);
+    const result = await learningService.startLesson({
+      organizationId: learnerCtx.organizationId,
+      enrollmentId,
+      lessonId,
+      authenticatedContactId: learnerCtx.contactId,
+    });
+
+    return c.json({
+      enrollmentId: result.enrollment.id,
+      lessonId,
+      status: result.enrollment.status,
+    }, 200);
   });
 
   app.post('/api/v1/learner/enrollments/:enrollmentId/lessons/:lessonId/complete', async (c) => {
@@ -331,18 +406,14 @@ export function createApp(deps?: AppDependencies) {
     const db = c.get('db');
     const enrollmentId = c.req.param('enrollmentId');
     const lessonId = c.req.param('lessonId');
-    const enrollmentRepo = createEnrollmentRepository(db);
-
-    const enrollment = await enrollmentRepo.findByIdGlobal(enrollmentId);
-    if (!enrollment) {
-      throw new DomainError('NOT_FOUND', 'Pendaftaran belajar tidak ditemukan');
-    }
+    const learnerCtx = c.get('learnerContext' as any) as any;
 
     const learningService = createLearningEngineService(db);
     const result = await learningService.completeLesson({
-      organizationId: enrollment.organizationId,
+      organizationId: learnerCtx.organizationId,
       enrollmentId,
       lessonId,
+      authenticatedContactId: learnerCtx.contactId,
     });
 
     return c.json({
@@ -353,7 +424,7 @@ export function createApp(deps?: AppDependencies) {
       learningStatus: result.enrollment.learningStatus,
       intentScore: result.enrollment.intentScore,
       intentLabel: result.enrollment.intentLabel,
-      completedAt: result.progress.completedAt ? result.progress.completedAt.toISOString() : null,
+      completedAt: result.progress.completedAt ? new Date(result.progress.completedAt).toISOString() : null,
     }, 200);
   });
 
@@ -362,6 +433,7 @@ export function createApp(deps?: AppDependencies) {
     const db = c.get('db');
     const enrollmentId = c.req.param('enrollmentId');
     const lessonId = c.req.param('lessonId');
+    const learnerCtx = c.get('learnerContext' as any) as any;
     const raw = await c.req.json().catch(() => ({}));
     const parsed = SubmitReflectionRequestSchema.safeParse(raw);
     if (!parsed.success) {
@@ -369,19 +441,14 @@ export function createApp(deps?: AppDependencies) {
       throw new DomainError('VALIDATION_ERROR', `Payload refleksi tidak valid: ${details}`);
     }
 
-    const enrollmentRepo = createEnrollmentRepository(db);
-    const enrollment = await enrollmentRepo.findByIdGlobal(enrollmentId);
-    if (!enrollment) {
-      throw new DomainError('NOT_FOUND', 'Pendaftaran belajar tidak ditemukan');
-    }
-
     const learningService = createLearningEngineService(db);
     const result = await learningService.submitReflection({
-      organizationId: enrollment.organizationId,
+      organizationId: learnerCtx.organizationId,
       enrollmentId,
       lessonId,
       responseText: parsed.data.responseText,
-      selectedOptions: parsed.data.selectedOptions,
+      selectedOptions: parsed.data.selectedOptions as string[] | undefined,
+      authenticatedContactId: learnerCtx.contactId,
     });
 
     return c.json({
@@ -389,9 +456,35 @@ export function createApp(deps?: AppDependencies) {
       lessonId,
       responseText: result.reflection.responseText,
       selectedOptions: result.reflection.selectedOptions,
-      submittedAt: result.reflection.submittedAt.toISOString(),
+      submittedAt: result.reflection.submittedAt ? new Date(result.reflection.submittedAt).toISOString() : new Date().toISOString(),
       progressPercent: result.enrollment.progressPercent,
       learningStatus: result.enrollment.learningStatus,
+      intentScore: result.enrollment.intentScore,
+      intentLabel: result.enrollment.intentLabel,
+    }, 200);
+  });
+
+  app.post('/api/v1/learner/enrollments/:enrollmentId/lessons/:lessonId/cta-click', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const enrollmentId = c.req.param('enrollmentId');
+    const lessonId = c.req.param('lessonId');
+    const learnerCtx = c.get('learnerContext' as any) as any;
+    const raw = await c.req.json().catch(() => ({}));
+
+    const learningService = createLearningEngineService(db);
+    const result = await learningService.recordCtaClick({
+      organizationId: learnerCtx.organizationId,
+      enrollmentId,
+      lessonId,
+      ctaLabel: raw?.ctaLabel,
+      authenticatedContactId: learnerCtx.contactId,
+    });
+
+    return c.json({
+      enrollmentId: result.enrollment.id,
+      lessonId,
+      progressPercent: result.enrollment.progressPercent,
       intentScore: result.enrollment.intentScore,
       intentLabel: result.enrollment.intentLabel,
     }, 200);
@@ -401,6 +494,7 @@ export function createApp(deps?: AppDependencies) {
     c.header('Cache-Control', 'no-store');
     const db = c.get('db');
     const enrollmentId = c.req.param('enrollmentId');
+    const learnerCtx = c.get('learnerContext' as any) as any;
     const raw = await c.req.json().catch(() => ({}));
     const parsed = RecordLearningEventRequestSchema.safeParse(raw);
     if (!parsed.success) {
@@ -408,18 +502,13 @@ export function createApp(deps?: AppDependencies) {
       throw new DomainError('VALIDATION_ERROR', `Payload event belajar tidak valid: ${details}`);
     }
 
-    const enrollmentRepo = createEnrollmentRepository(db);
-    const enrollment = await enrollmentRepo.findByIdGlobal(enrollmentId);
-    if (!enrollment) {
-      throw new DomainError('NOT_FOUND', 'Pendaftaran belajar tidak ditemukan');
-    }
-
     const learningService = createLearningEngineService(db);
     const result = await learningService.recordLearningEvent({
-      organizationId: enrollment.organizationId,
+      organizationId: learnerCtx.organizationId,
       enrollmentId,
       eventType: parsed.data.eventType,
       payload: parsed.data.payload,
+      authenticatedContactId: learnerCtx.contactId,
     });
 
     return c.json({

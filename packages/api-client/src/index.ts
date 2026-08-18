@@ -50,6 +50,11 @@ import type {
   LearnerEnrollmentDetailsDto,
   LearningSignalDto,
   UpdateSignalStatusRequest,
+  StartLessonResponse,
+  RecordCtaClickRequest,
+  RecordCtaClickResponse,
+  ProgramAnalyticsResponse,
+  LearnersListResponse,
 } from '@promotor/contracts';
 
 export interface ApiClientConfig {
@@ -344,8 +349,9 @@ export class PromotorClassContentApiClient {
     );
   }
 
-  async redeemLearnerToken(data: RedeemLearnerTokenRequest): Promise<RedeemLearnerTokenResponse> {
-    return this.client.post('/api/v1/public/learner/redeem-token', data);
+  async redeemLearnerToken(data: RedeemLearnerTokenRequest | string): Promise<RedeemLearnerTokenResponse> {
+    const payload = typeof data === 'string' ? { token: data } : data;
+    return this.client.post('/api/v1/public/learner/redeem-token', payload);
   }
 
   async getLearnerPrograms(): Promise<{ programs: Array<CanonicalEnrollmentDto & { programTitle: string; programSlug: string }> }> {
@@ -405,6 +411,35 @@ export class PromotorClassContentApiClient {
     status: 'ACTIVE' | 'RESOLVED' | 'DISMISSED'
   ): Promise<{ signal: LearningSignalDto }> {
     return this.client.patch(`/api/v1/class/signals/${encodeURIComponent(signalId)}/status`, { status });
+  }
+
+  async startLearnerLesson(enrollmentId: string, lessonId: string): Promise<StartLessonResponse> {
+    return this.client.post(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/start`);
+  }
+
+  async recordLearnerCtaClick(enrollmentId: string, lessonId: string, data?: RecordCtaClickRequest): Promise<RecordCtaClickResponse> {
+    return this.client.post(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/cta-click`, data ?? {});
+  }
+
+  async getMyLearnerPrograms(): Promise<{ programs: any[] }> {
+    return this.client.get('/api/v1/learner/me/enrollments');
+  }
+
+  async listClassLearners(query?: { programId?: string; limit?: number; offset?: number }): Promise<LearnersListResponse> {
+    const q = new URLSearchParams();
+    if (query?.programId) q.set('programId', query.programId);
+    if (query?.limit) q.set('limit', String(query.limit));
+    if (query?.offset) q.set('offset', String(query.offset));
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return this.client.get(`/api/v1/class/learners${qs}`);
+  }
+
+  async getClassLearnerDetail(contactId: string): Promise<any> {
+    return this.client.get(`/api/v1/class/learners/${encodeURIComponent(contactId)}`);
+  }
+
+  async getProgramAnalytics(programId: string): Promise<ProgramAnalyticsResponse> {
+    return this.client.get(`/api/v1/class/programs/${encodeURIComponent(programId)}/analytics`);
   }
 }
 
@@ -660,6 +695,35 @@ export class PromotorFlowApiClient {
 
   async updateClassSignalStatus(signalId: string, status: 'ACTIVE' | 'RESOLVED' | 'DISMISSED'): Promise<{ signal: LearningSignalDto }> {
     return this.client.patch(`/api/v1/class/signals/${encodeURIComponent(signalId)}/status`, { status });
+  }
+
+  async startLearnerLesson(enrollmentId: string, lessonId: string): Promise<StartLessonResponse> {
+    return this.client.post(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/start`);
+  }
+
+  async recordLearnerCtaClick(enrollmentId: string, lessonId: string, data?: RecordCtaClickRequest): Promise<RecordCtaClickResponse> {
+    return this.client.post(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/cta-click`, data ?? {});
+  }
+
+  async getMyLearnerPrograms(): Promise<{ programs: any[] }> {
+    return this.client.get('/api/v1/learner/me/enrollments');
+  }
+
+  async listClassLearners(query?: { programId?: string; limit?: number; offset?: number }): Promise<LearnersListResponse> {
+    const q = new URLSearchParams();
+    if (query?.programId) q.set('programId', query.programId);
+    if (query?.limit) q.set('limit', String(query.limit));
+    if (query?.offset) q.set('offset', String(query.offset));
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return this.client.get(`/api/v1/class/learners${qs}`);
+  }
+
+  async getClassLearnerDetail(contactId: string): Promise<any> {
+    return this.client.get(`/api/v1/class/learners/${encodeURIComponent(contactId)}`);
+  }
+
+  async getProgramAnalytics(programId: string): Promise<ProgramAnalyticsResponse> {
+    return this.client.get(`/api/v1/class/programs/${encodeURIComponent(programId)}/analytics`);
   }
 }
 

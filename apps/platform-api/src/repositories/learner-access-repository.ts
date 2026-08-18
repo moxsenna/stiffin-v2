@@ -1,6 +1,6 @@
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { eq, and, gt, sql } from 'drizzle-orm';
-import { learnerAccessTokens, LearnerAccessTokenRow, NewLearnerAccessTokenRow } from '../db/schema/learner-access-tokens';
+import { eq, and, gt, isNull } from 'drizzle-orm';
+import { learnerAccessTokens, LearnerAccessTokenRow } from '../db/schema/learner-access-tokens';
 
 export type CreateLearnerTokenInput = {
   organizationId: string;
@@ -12,6 +12,7 @@ export type CreateLearnerTokenInput = {
 export interface LearnerAccessRepository {
   createToken(input: CreateLearnerTokenInput): Promise<LearnerAccessTokenRow>;
   findValidByHash(tokenHash: string, evaluationNow?: string): Promise<LearnerAccessTokenRow | null>;
+  atomicRedeemByHash(tokenHash: string, evaluationNow?: string): Promise<LearnerAccessTokenRow | null>;
   markRedeemed(id: string, redeemedAt?: string): Promise<LearnerAccessTokenRow | null>;
   revokeTokensForContact(organizationId: string, contactId: string): Promise<void>;
 }
@@ -43,6 +44,22 @@ export function createLearnerAccessRepository(db: NodePgDatabase): LearnerAccess
           )
         );
       return rows[0] ?? null;
+    },
+
+    async atomicRedeemByHash(tokenHash: string, evaluationNow?: string) {
+      const nowIso = evaluationNow ?? new Date().toISOString();
+      const [redeemed] = await db
+        .update(learnerAccessTokens)
+        .set({ redeemedAt: nowIso })
+        .where(
+          and(
+            eq(learnerAccessTokens.tokenHash, tokenHash),
+            gt(learnerAccessTokens.expiresAt, nowIso),
+            isNull(learnerAccessTokens.redeemedAt)
+          )
+        )
+        .returning();
+      return redeemed ?? null;
     },
 
     async markRedeemed(id: string, redeemedAt?: string) {

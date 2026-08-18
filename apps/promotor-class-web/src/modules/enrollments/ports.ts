@@ -18,6 +18,7 @@ export interface PublicRegistrationResponse {
 
 export interface EnrollmentRepositoryPort {
   registerPublicLearner(payload: PublicRegistrationPayload): Promise<PublicRegistrationResponse>;
+  redeemToken(token: string): Promise<{ contactId: string; organizationId: string; sessionToken: string }>;
   createEnrollment(contactId: string, programId: string): Promise<{ id: string; status: string }>;
   getEnrollments(filter?: { programId?: string; contactId?: string }): Promise<any[]>;
   getEnrollmentById(id: string): Promise<any>;

@@ -46,4 +46,12 @@ export class HttpLearningRepository implements LearningRepositoryPort {
     const res = await this.client.updateClassSignalStatus(signalId, status);
     return res.signal;
   }
+
+  async startLesson(enrollmentId: string, lessonId: string): Promise<any> {
+    return this.client.startLearnerLesson(enrollmentId, lessonId);
+  }
+
+  async recordCtaClick(enrollmentId: string, lessonId: string, ctaLabel?: string): Promise<any> {
+    return this.client.recordLearnerCtaClick(enrollmentId, lessonId, { ctaLabel });
+  }
 }

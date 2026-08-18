@@ -133,5 +133,44 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
 
     return c.json({ signal: updated }, 200);
   });
+
+  // 8. List Learners for Operator View (§27)
+  app.get('/api/v1/class/learners', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const programId = c.req.query('programId');
+    const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!, 10) : undefined;
+    const offset = c.req.query('offset') ? parseInt(c.req.query('offset')!, 10) : undefined;
+
+    const learningService = createLearningEngineService(db);
+    const result = await learningService.listLearners(ctx.organizationId, {
+      programId: programId || undefined,
+      limit,
+      offset,
+    });
+
+    return c.json(result, 200);
+  });
+
+  // 9. Get Learner Detail for Operator View (§27)
+  app.get('/api/v1/class/learners/:contactId', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const contactId = c.req.param('contactId');
+
+    const learningService = createLearningEngineService(db);
+    const detail = await learningService.getLearnerDetail(ctx.organizationId, contactId);
+
+    return c.json(detail, 200);
+  });
+
+  // 10. Get Program Aggregated Analytics (§28)
+  app.get('/api/v1/class/programs/:programId/analytics', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const programId = c.req.param('programId');
+
+    const learningService = createLearningEngineService(db);
+    const analytics = await learningService.getProgramAnalytics(ctx.organizationId, programId);
+
+    return c.json(analytics, 200);
+  });
 }
 
