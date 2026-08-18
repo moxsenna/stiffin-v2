@@ -31,6 +31,10 @@ import type {
   ListBookingsQuery,
   WhatsAppOpenedRequest,
   ConfirmWhatsAppSentRequest,
+  AvailabilityRuleDto,
+  ReplaceAvailabilityRulesRequest,
+  PublicSlotsQuery,
+  CreatePublicBookingRequest,
 } from '@promotor/contracts';
 
 export interface ApiClientConfig {
@@ -493,4 +497,27 @@ export class PromotorFlowApiClient {
   async confirmWhatsAppSent(data: ConfirmWhatsAppSentRequest): Promise<{ success: boolean; nextActionId: string }> {
     return this.client.post('/api/v1/flow/messaging/confirm-sent', data);
   }
+
+  // Availability
+  async getAvailability(): Promise<{ rules: AvailabilityRuleDto[] }> {
+    return this.client.get('/api/v1/flow/availability');
+  }
+
+  async replaceAvailability(rules: Array<{ dayOfWeek: number; startTime: string; endTime: string; isActive?: boolean }>): Promise<{ rules: AvailabilityRuleDto[] }> {
+    return this.client.put('/api/v1/flow/availability', { rules });
+  }
+
+  // Public Booking & Slots
+  async getPublicSlots(slug: string, query: PublicSlotsQuery): Promise<{ slots: any[]; service: any }> {
+    const q = new URLSearchParams();
+    q.set('serviceId', query.serviceId);
+    q.set('from', query.from);
+    q.set('to', query.to);
+    return this.client.get(`/api/v1/public/${encodeURIComponent(slug)}/slots?${q.toString()}`);
+  }
+
+  async createPublicBooking(slug: string, data: CreatePublicBookingRequest): Promise<{ bookingId: string; status: string; startAt: string; endAt: string; serviceTitle: string; amount: number }> {
+    return this.client.post(`/api/v1/public/${encodeURIComponent(slug)}/bookings`, data);
+  }
 }
+

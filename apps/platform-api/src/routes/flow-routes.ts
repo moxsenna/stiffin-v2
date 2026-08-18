@@ -26,6 +26,7 @@ import {
   CancelBookingRequestSchema,
   WhatsAppOpenedRequestSchema,
   ConfirmWhatsAppSentRequestSchema,
+  ReplaceAvailabilityRulesRequestSchema,
 } from '@promotor/contracts';
 import { nextActions } from '../db/schema';
 import { createContactFlowService } from '../services/contact-flow-service';
@@ -36,6 +37,7 @@ import { createServiceRepository } from '../repositories/service-repository';
 import { createTemplateService } from '../services/template-service';
 import { createAftercareService } from '../services/aftercare-service';
 import { createMessagingService } from '../services/messaging-service';
+import { createAvailabilityService } from '../services/flow/availability-service';
 import type { OrganizationContext } from '../core/organization-context';
 import type { AuthenticatedActor } from '../auth/types';
 
@@ -571,6 +573,27 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
       actor
     );
     return c.json({ nextAction: completed }, 200);
+  });
+
+  // =========================================================================
+  // 9. AVAILABILITY (§12)
+  // =========================================================================
+  flow.get('/availability', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const service = createAvailabilityService(db);
+    const rules = await service.getWeeklyRules(ctx);
+    return c.json({ rules }, 200);
+  });
+
+  flow.put('/availability', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const raw = await c.req.json().catch(() => ({}));
+    const body = parseBody(ReplaceAvailabilityRulesRequestSchema, raw);
+    const service = createAvailabilityService(db);
+    const rules = await service.replaceWeeklyRules(ctx, body.rules);
+    return c.json({ rules }, 200);
   });
 
   // Mount under /api/v1/flow

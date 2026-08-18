@@ -11,6 +11,7 @@ export type DomainErrorCode =
   | 'INVALID_YOUTUBE_URL'
   | 'PROGRAM_NOT_PUBLISHED'
   | 'CONTENT_DELETE_FORBIDDEN'
+  | 'SLOT_UNAVAILABLE'
   | 'INTERNAL_ERROR';
 
 export class DomainError extends Error {

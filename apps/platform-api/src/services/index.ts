@@ -14,3 +14,5 @@ export * from './aftercare-service';
 export * from './assessment-service';
 export * from './template-service';
 export * from './messaging-service';
+export * from './flow/availability-service';
+export * from './flow/public-booking-service';

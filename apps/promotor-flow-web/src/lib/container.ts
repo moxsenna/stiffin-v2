@@ -10,6 +10,7 @@ import {
   getMessagingRepository,
   getSettingsRepository,
   getPromotorClassAdapter,
+  getAvailabilityRepository,
 } from '@/adapters';
 import { mockStateStore } from '@/adapters/mock/mock-state-store';
 import { mockClock } from '@/adapters/mock/mock-clock';
@@ -44,6 +45,9 @@ import { createSettingsCommands } from '@/modules/settings/commands';
 import { createPromotorClassQueries } from '@/modules/promotorclass/queries';
 import { createPromotorClassCommands } from '@/modules/promotorclass/commands';
 
+import { createAvailabilityQueries } from '@/modules/availability/queries';
+import { createAvailabilityCommands } from '@/modules/availability/commands';
+
 // Active repositories resolved via environment-controlled adapter factory
 const contactRepo = getContactRepository();
 const lifecycleRepo = getLifecycleRepository();
@@ -56,6 +60,7 @@ const aftercareRepo = getAftercareRepository();
 const messagingRepo = getMessagingRepository();
 const settingsRepo = getSettingsRepository();
 const promotorClassAdapter = getPromotorClassAdapter();
+const availabilityRepo = getAvailabilityRepository();
 
 // Helper contact lookup for queries
 const contactLookupFn = async (contactId: string) => {
@@ -94,6 +99,9 @@ export const settingsCommands = createSettingsCommands(settingsRepo);
 
 export const promotorClassQueries = createPromotorClassQueries(promotorClassAdapter);
 export const promotorClassCommands = createPromotorClassCommands(promotorClassAdapter);
+
+export const availabilityQueries = createAvailabilityQueries(availabilityRepo);
+export const availabilityCommands = createAvailabilityCommands(availabilityRepo);
 
 export const clock = mockClock;
 export const store = mockStateStore;

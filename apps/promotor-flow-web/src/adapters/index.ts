@@ -9,6 +9,7 @@ import { MessageTemplateRepositoryPort, MessagingPort } from '@/modules/messagin
 import { AftercareRepositoryPort } from '@/modules/aftercare/ports';
 import { SettingsRepositoryPort } from '@/modules/settings/ports';
 import { PromotorClassAdapterPort } from '@/modules/promotorclass/ports';
+import { AvailabilityRepositoryPort } from '@/modules/availability/ports';
 
 import { MockContactRepository } from './mock/contact-repository';
 import { MockLifecycleRepository } from './mock/lifecycle-repository';
@@ -21,6 +22,7 @@ import { MockAftercareRepository } from './mock/aftercare-repository';
 import { MockSettingsRepository } from './mock/settings-repository';
 import { MockPromotorClassAdapter } from './mock/promotorclass-adapter';
 import { MockMessagingRepository } from './mock/messaging-repository';
+import { MockAvailabilityRepository } from './mock/availability-repository';
 import { mockStateStore } from './mock/mock-state-store';
 import { mockClock } from './mock/mock-clock';
 
@@ -35,6 +37,7 @@ import { HttpAftercareRepository } from './http/aftercare-repository';
 import { HttpSettingsRepository } from './http/settings-repository';
 import { HttpPromotorClassAdapter } from './http/promotorclass-adapter';
 import { HttpMessagingRepository } from './http/messaging-repository';
+import { HttpAvailabilityRepository } from './http/availability-repository';
 
 export function getApiMode(): 'http' | 'mock' {
   const mode = process.env.NEXT_PUBLIC_API_MODE;
@@ -173,6 +176,7 @@ export function getPromotorClassAdapter(): PromotorClassAdapterPort {
 }
 
 let messagingRepoInstance: MessagingPort | null = null;
+let availabilityRepoInstance: AvailabilityRepositoryPort | null = null;
 
 export function getMessagingRepository(): MessagingPort {
   if (!messagingRepoInstance) {
@@ -188,6 +192,16 @@ export function getMessagingRepository(): MessagingPort {
   return messagingRepoInstance;
 }
 
+export function getAvailabilityRepository(): AvailabilityRepositoryPort {
+  if (!availabilityRepoInstance) {
+    availabilityRepoInstance =
+      getApiMode() === 'http'
+        ? new HttpAvailabilityRepository(getApiClient())
+        : new MockAvailabilityRepository();
+  }
+  return availabilityRepoInstance;
+}
+
 export function resetAdapterInstances(): void {
   contactRepoInstance = null;
   lifecycleRepoInstance = null;
@@ -200,4 +214,5 @@ export function resetAdapterInstances(): void {
   settingsRepoInstance = null;
   promotorClassAdapterInstance = null;
   messagingRepoInstance = null;
+  availabilityRepoInstance = null;
 }

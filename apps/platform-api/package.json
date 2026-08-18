@@ -14,6 +14,7 @@
     "b1:live-acceptance": "tsx tooling/b1-live-acceptance.ts",
     "b2:live-acceptance": "tsx tooling/b2-live-acceptance.ts",
     "b6:live-acceptance": "tsx tooling/b6-live-acceptance.ts",
+    "b6.1:live-acceptance": "tsx tooling/b6.1-live-acceptance.ts",
     "build": "wrangler deploy --dry-run --outdir dist",
     "deploy:cf": "wrangler deploy"
   },
