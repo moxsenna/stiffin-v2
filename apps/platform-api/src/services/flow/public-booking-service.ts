@@ -161,11 +161,17 @@ export function createPublicBookingService(
           null // System / Anonymous attribution
         );
 
+        const toIso = (val: string | Date | null | undefined): string => {
+          if (!val) return '';
+          if (typeof val === 'string') return new Date(val).toISOString();
+          return (val as Date).toISOString();
+        };
+
         return {
           bookingId: createdBooking.id,
           status: 'PENDING' as const,
-          startAt: createdBooking.startAt.toISOString(),
-          endAt: (createdBooking.endAt ?? endDate).toISOString(),
+          startAt: toIso(createdBooking.startAt),
+          endAt: toIso(createdBooking.endAt ?? endDate),
           serviceTitle: service.name,
           amount: createdBooking.amount,
         };

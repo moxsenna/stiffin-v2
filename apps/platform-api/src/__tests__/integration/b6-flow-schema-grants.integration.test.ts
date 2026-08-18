@@ -885,14 +885,15 @@ describe('B6 — Flow Schema, Migration & Grants Integration Suite', { skip: !en
   });
 
   describe('6. Migration chain & predecessor compatibility', () => {
-    it('migration journal contains the complete canonical chain (0000, 0001, 0002, 0003)', async () => {
+    it('migration journal contains the complete canonical chain (0000, 0001, 0002, 0003, 0004)', async () => {
       await withOwnerSql(async (client) => {
         const res = await client.query(`SELECT id, hash FROM drizzle.__drizzle_migrations ORDER BY id`);
-        assert.strictEqual(res.rows.length, 4, 'all 4 migrations must be recorded in journal');
+        assert.strictEqual(res.rows.length, 5, 'all 5 migrations must be recorded in journal');
         assert.strictEqual(res.rows[0].id, 1);
         assert.strictEqual(res.rows[1].id, 2);
         assert.strictEqual(res.rows[2].id, 3);
         assert.strictEqual(res.rows[3].id, 4);
+        assert.strictEqual(res.rows[4].id, 5);
       });
     });
 
