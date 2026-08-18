@@ -28,6 +28,14 @@ export class MockEnrollmentRepository implements EnrollmentRepositoryPort {
     };
   }
 
+  async redeemToken(token: string): Promise<{ contactId: string; organizationId: string; sessionToken: string }> {
+    return {
+      contactId: 'mock_contact_id',
+      organizationId: 'mock_org_id',
+      sessionToken: token,
+    };
+  }
+
   async createEnrollment(contactId: string, programId: string): Promise<{ id: string; status: string }> {
     const enrollment = await this.repo.createEnrollment(contactId, programId);
     return {

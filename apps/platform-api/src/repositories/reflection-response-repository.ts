@@ -11,6 +11,11 @@ export interface SaveReflectionInput {
 }
 
 export interface ReflectionResponseRepository {
+  findByLesson(
+    organizationId: string,
+    enrollmentId: string,
+    lessonId: string
+  ): Promise<ReflectionResponseRow | null>;
   findByEnrollmentAndLesson(
     organizationId: string,
     enrollmentId: string,
@@ -18,10 +23,19 @@ export interface ReflectionResponseRepository {
   ): Promise<ReflectionResponseRow | null>;
   listByEnrollment(organizationId: string, enrollmentId: string): Promise<ReflectionResponseRow[]>;
   saveResponse(input: SaveReflectionInput): Promise<ReflectionResponseRow>;
+  upsert(input: SaveReflectionInput): Promise<ReflectionResponseRow>;
 }
 
 export function createReflectionResponseRepository(db: NodePgDatabase): ReflectionResponseRepository {
   return {
+    async findByLesson(organizationId, enrollmentId, lessonId) {
+      return this.findByEnrollmentAndLesson(organizationId, enrollmentId, lessonId);
+    },
+
+    async upsert(input) {
+      return this.saveResponse(input);
+    },
+
     async findByEnrollmentAndLesson(organizationId, enrollmentId, lessonId) {
       const rows = await db
         .select()

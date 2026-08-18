@@ -20,6 +20,15 @@ export class HttpEnrollmentRepository implements EnrollmentRepositoryPort {
     });
   }
 
+  async redeemToken(token: string): Promise<{ contactId: string; organizationId: string; sessionToken: string }> {
+    const res = await this.client.redeemLearnerToken(token);
+    return {
+      contactId: res.contactId,
+      organizationId: res.organizationId,
+      sessionToken: (res as any).sessionToken ?? token,
+    };
+  }
+
   async createEnrollment(contactId: string, programId: string): Promise<{ id: string; status: string }> {
     const res = await this.client.createManualEnrollment({ contactId, programId });
     return {

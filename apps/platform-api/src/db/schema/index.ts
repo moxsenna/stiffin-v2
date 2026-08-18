@@ -29,3 +29,5 @@ export * from './lesson-progress';
 export * from './reflection-responses';
 export * from './learning-events';
 export * from './learning-signals';
+export * from './learner-sessions';
+export * from './integration-outbox';

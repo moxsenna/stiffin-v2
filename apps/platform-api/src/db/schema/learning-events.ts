@@ -1,4 +1,5 @@
-import { pgTable, uuid, timestamp, text, jsonb, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, timestamp, text, jsonb, index, check } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { organizations } from './organizations';
 import { enrollments } from './enrollments';
 import { contacts } from './contacts';
@@ -28,6 +29,26 @@ export const learningEvents = pgTable(
     orgEnrollmentIdx: index('idx_learning_events_org_enrollment').on(
       table.organizationId,
       table.enrollmentId
+    ),
+    eventTypeCheck: check(
+      'learning_events_event_type_check',
+      sql`${table.eventType} IN (
+        'learner.registered',
+        'learner.enrolled',
+        'lesson.started',
+        'lesson.completed',
+        'reflection.submitted',
+        'program.progress_50',
+        'program.progress_80',
+        'program.completed',
+        'cta.viewed',
+        'cta.clicked',
+        'learner.inactive',
+        'LESSON_COMPLETED',
+        'REFLECTION_SUBMITTED',
+        'CTA_CLICKED',
+        'PROGRAM_COMPLETED'
+      )`
     ),
   })
 );

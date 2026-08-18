@@ -4,15 +4,22 @@ import { learningSignals, LearningSignalRow, NewLearningSignalRow } from '../db/
 
 export interface CreateLearningSignalInput {
   organizationId: string;
-  enrollmentId: string;
+  enrollmentId?: string | null;
   contactId: string;
+  programId?: string | null;
+  sourceEventId?: string | null;
+  type?: string;
+  priority?: number;
   reason: string;
+  recommendedActionType?: string | null;
+  recommendedActionReason?: string | null;
   status?: 'ACTIVE' | 'RESOLVED' | 'DISMISSED';
   metadata?: Record<string, unknown>;
 }
 
 export interface LearningSignalRepository {
   create(input: CreateLearningSignalInput): Promise<LearningSignalRow>;
+  list(organizationId: string, status?: string): Promise<LearningSignalRow[]>;
   listByOrg(organizationId: string, status?: string): Promise<LearningSignalRow[]>;
   listByContact(organizationId: string, contactId: string): Promise<LearningSignalRow[]>;
   updateStatus(organizationId: string, signalId: string, status: 'ACTIVE' | 'RESOLVED' | 'DISMISSED'): Promise<LearningSignalRow | null>;
@@ -26,9 +33,15 @@ export function createLearningSignalRepository(db: NodePgDatabase): LearningSign
         .insert(learningSignals)
         .values({
           organizationId: input.organizationId,
-          enrollmentId: input.enrollmentId,
+          enrollmentId: input.enrollmentId ?? null,
           contactId: input.contactId,
+          programId: input.programId ?? null,
+          sourceEventId: input.sourceEventId ?? null,
+          type: input.type ?? 'HIGH_LEARNING_INTENT',
+          priority: input.priority ?? 50,
           reason: input.reason,
+          recommendedActionType: input.recommendedActionType ?? null,
+          recommendedActionReason: input.recommendedActionReason ?? null,
           status: input.status ?? 'ACTIVE',
           metadata: input.metadata ?? {},
           createdAt: now,
@@ -39,7 +52,7 @@ export function createLearningSignalRepository(db: NodePgDatabase): LearningSign
       return rows[0];
     },
 
-    async listByOrg(organizationId, status) {
+    async list(organizationId, status) {
       const conds = [eq(learningSignals.organizationId, organizationId)];
       if (status) {
         conds.push(eq(learningSignals.status, status));
@@ -49,6 +62,10 @@ export function createLearningSignalRepository(db: NodePgDatabase): LearningSign
         .from(learningSignals)
         .where(and(...conds))
         .orderBy(desc(learningSignals.createdAt));
+    },
+
+    async listByOrg(organizationId, status) {
+      return this.list(organizationId, status);
     },
 
     async listByContact(organizationId, contactId) {
@@ -70,6 +87,7 @@ export function createLearningSignalRepository(db: NodePgDatabase): LearningSign
         .set({
           status,
           updatedAt: new Date(),
+          resolvedAt: status === 'RESOLVED' ? new Date() : undefined,
         })
         .where(
           and(

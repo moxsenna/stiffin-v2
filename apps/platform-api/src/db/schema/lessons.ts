@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, timestamp, jsonb, uniqueIndex, check } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, integer, timestamp, jsonb, uniqueIndex, check, boolean } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { modules } from './modules';
 import { programs } from './programs';
@@ -23,6 +23,7 @@ export const lessons = pgTable(
     ctaLabel: text('cta_label'),
     ctaTargetProgramId: uuid('cta_target_program_id').references(() => programs.id, { onDelete: 'set null' }),
     ctaConfig: jsonb('cta_config').$type<Record<string, unknown>>(),
+    isRequired: boolean('is_required').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),
   },

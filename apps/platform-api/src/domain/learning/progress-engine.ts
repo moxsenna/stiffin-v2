@@ -5,12 +5,15 @@
 
 export interface LessonProgressItem {
   lessonId: string;
+  isRequired?: boolean;
   isCompleted: boolean;
 }
 
 export interface ProgressCalculationResult {
   completedLessonsCount: number;
   totalLessonsCount: number;
+  completedRequiredLessonsCount: number;
+  totalRequiredLessonsCount: number;
   progressPercent: number;
   learningStatus: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
   isComplete: boolean;
@@ -20,52 +23,69 @@ export interface ProgressCalculationResult {
 }
 
 /**
- * Calculates deterministic progress for a program.
+ * Calculates deterministic progress for a program based on REQUIRED lessons.
  *
- * Formula:
- * - If total lessons == 0, progressPercent = 100
- * - Otherwise: min(100, round((completed / total) * 100))
+ * Canonical Rules:
+ * - Progress = (completed REQUIRED lessons / total REQUIRED lessons) * 100
+ * - Optional lessons (isRequired: false) may be completed, but do NOT block completion.
+ * - If total required lessons == 0, progressPercent = 0, isComplete = false (fail-safe).
  */
 export function calculateProgramProgress(
-  allLessonIds: string[],
+  lessons: Array<{ lessonId: string; isRequired?: boolean }>,
   completedLessonIds: Set<string>
 ): ProgressCalculationResult {
-  const total = allLessonIds.length;
-  if (total === 0) {
-    return {
-      completedLessonsCount: 0,
-      totalLessonsCount: 0,
-      progressPercent: 100,
-      learningStatus: 'COMPLETED',
-      isComplete: true,
-      reached50: true,
-      reached80: true,
-      reached100: true,
-    };
-  }
+  const totalLessonsCount = lessons.length;
+  let completedLessonsCount = 0;
+  let totalRequired = 0;
+  let completedRequired = 0;
 
-  let completed = 0;
-  for (const lid of allLessonIds) {
-    if (completedLessonIds.has(lid)) {
-      completed++;
+  for (const l of lessons) {
+    const isReq = l.isRequired !== false; // Default to true if undefined
+    if (isReq) {
+      totalRequired++;
+    }
+    if (completedLessonIds.has(l.lessonId)) {
+      completedLessonsCount++;
+      if (isReq) {
+        completedRequired++;
+      }
     }
   }
 
-  const rawPercent = Math.round((completed / total) * 100);
+  // Zero required lessons fail-safe (§9):
+  // Opening a program with zero required lessons does NOT auto-complete to 100%.
+  if (totalRequired === 0) {
+    return {
+      completedLessonsCount,
+      totalLessonsCount,
+      completedRequiredLessonsCount: 0,
+      totalRequiredLessonsCount: 0,
+      progressPercent: 0,
+      learningStatus: completedLessonsCount > 0 ? 'IN_PROGRESS' : 'NOT_STARTED',
+      isComplete: false,
+      reached50: false,
+      reached80: false,
+      reached100: false,
+    };
+  }
+
+  const rawPercent = Math.round((completedRequired / totalRequired) * 100);
   const progressPercent = Math.min(100, Math.max(0, rawPercent));
 
   let learningStatus: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
   if (progressPercent === 100) {
     learningStatus = 'COMPLETED';
-  } else if (progressPercent > 0) {
+  } else if (progressPercent > 0 || completedLessonsCount > 0) {
     learningStatus = 'IN_PROGRESS';
   } else {
     learningStatus = 'NOT_STARTED';
   }
 
   return {
-    completedLessonsCount: completed,
-    totalLessonsCount: total,
+    completedLessonsCount,
+    totalLessonsCount,
+    completedRequiredLessonsCount: completedRequired,
+    totalRequiredLessonsCount: totalRequired,
     progressPercent,
     learningStatus,
     isComplete: progressPercent === 100,

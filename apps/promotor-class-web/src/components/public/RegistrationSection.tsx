@@ -35,6 +35,15 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
         phoneRaw: phone.trim(),
       });
 
+      // Atomically redeem token to establish secure HttpOnly session cookie
+      if (res.accessToken) {
+        try {
+          await enrollmentRepo.redeemToken(res.accessToken);
+        } catch (redeemErr) {
+          console.warn('[RegistrationSection] Token auto-redemption notice:', redeemErr);
+        }
+      }
+
       // Set active learner session with workspace context and token
       setActiveLearnerSession({
         contactId: res.contactId,

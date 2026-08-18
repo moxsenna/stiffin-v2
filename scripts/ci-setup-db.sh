@@ -42,3 +42,7 @@ psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
 # Apply least-privilege runtime grants for B5 learning engine
 psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
   -f docs/sql/grants_b5.sql
+
+# Apply least-privilege runtime grants for V0.1 release hardening
+psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
+  -f docs/sql/grants_v01.sql
