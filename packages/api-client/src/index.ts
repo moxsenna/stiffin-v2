@@ -35,6 +35,13 @@ import type {
   ReplaceAvailabilityRulesRequest,
   PublicSlotsQuery,
   CreatePublicBookingRequest,
+  PublicRegisterLearnerRequest,
+  PublicRegisterLearnerResponse,
+  RedeemLearnerTokenRequest,
+  RedeemLearnerTokenResponse,
+  CreateManualEnrollmentRequest,
+  CanonicalEnrollmentDto,
+  LearningContextResponse,
 } from '@promotor/contracts';
 
 export interface ApiClientConfig {
@@ -316,7 +323,44 @@ export class PromotorClassContentApiClient {
     const res = await this.client.put<{ profile: PublicWorkspaceProfile }>('/api/v1/storefront/profile', patch);
     return res.profile;
   }
+
+  // B4 Registration & Enrollment
+  async registerPublicLearner(
+    workspaceSlug: string,
+    programSlug: string,
+    data: PublicRegisterLearnerRequest
+  ): Promise<PublicRegisterLearnerResponse> {
+    return this.client.post(
+      `/api/v1/public/${encodeURIComponent(workspaceSlug)}/programs/${encodeURIComponent(programSlug)}/register`,
+      data
+    );
+  }
+
+  async redeemLearnerToken(data: RedeemLearnerTokenRequest): Promise<RedeemLearnerTokenResponse> {
+    return this.client.post('/api/v1/public/learner/redeem-token', data);
+  }
+
+  async getLearnerPrograms(): Promise<{ programs: Array<CanonicalEnrollmentDto & { programTitle: string; programSlug: string }> }> {
+    return this.client.get('/api/v1/learner/programs');
+  }
+
+  async listClassEnrollments(filter?: { programId?: string; contactId?: string }): Promise<{ enrollments: CanonicalEnrollmentDto[] }> {
+    const q = new URLSearchParams();
+    if (filter?.programId) q.set('programId', filter.programId);
+    if (filter?.contactId) q.set('contactId', filter.contactId);
+    const qs = q.toString();
+    return this.client.get(`/api/v1/class/enrollments${qs ? `?${qs}` : ''}`);
+  }
+
+  async createManualEnrollment(data: CreateManualEnrollmentRequest): Promise<{ enrollment: CanonicalEnrollmentDto }> {
+    return this.client.post('/api/v1/class/enrollments', data);
+  }
+
+  async getLearningContext(contactId: string): Promise<LearningContextResponse> {
+    return this.client.get(`/api/v1/class/contacts/${encodeURIComponent(contactId)}/learning-context`);
+  }
 }
+
 
 export class PromotorFlowApiClient {
   private client: ApiClient;

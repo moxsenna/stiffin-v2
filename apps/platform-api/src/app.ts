@@ -16,8 +16,15 @@ import { createProgramService } from './services/program-service';
 import { createPublicContentService } from './services/public-content-service';
 import { createAvailabilityService } from './services/flow/availability-service';
 import { createPublicBookingService } from './services/flow/public-booking-service';
-import { PublicSlotsQuerySchema, CreatePublicBookingRequestSchema } from '@promotor/contracts';
+import { createEnrollmentService } from './services/class/enrollment-service';
+import {
+  PublicSlotsQuerySchema,
+  CreatePublicBookingRequestSchema,
+  PublicRegisterLearnerRequestSchema,
+  RedeemLearnerTokenRequestSchema,
+} from '@promotor/contracts';
 import { registerFlowRoutes } from './routes/flow-routes';
+import { registerClassRoutes } from './routes/class-routes';
 
 export interface AppDependencies {
   dbHealthProbe?: (env: Env) => Promise<{ serverTime: string }>;
@@ -256,6 +263,47 @@ export function createApp(deps?: AppDependencies) {
   app.post('/api/v1/public/workspaces/:workspaceSlug/bookings', handlePublicBookings);
 
   // ==========================================
+  // B4 Public Registration & Learner Access API (Zero Auth)
+  // ==========================================
+  const handlePublicRegistration = async (c: any) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const slug = c.req.param('slug') || c.req.param('workspaceSlug');
+    const programSlug = c.req.param('programSlug');
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = PublicRegisterLearnerRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      const details = parsed.error.issues.map((i) => i.message).join(', ');
+      throw new DomainError('VALIDATION_ERROR', `Payload pendaftaran tidak valid: ${details}`);
+    }
+    const service = createEnrollmentService(db);
+    const result = await service.registerPublicLearner({
+      slug,
+      programSlug,
+      name: parsed.data.name,
+      phoneRaw: parsed.data.phoneRaw,
+      email: parsed.data.email,
+    });
+    return c.json(result, 201);
+  };
+
+  app.post('/api/v1/public/:slug/programs/:programSlug/register', handlePublicRegistration);
+  app.post('/api/v1/public/workspaces/:workspaceSlug/programs/:programSlug/register', handlePublicRegistration);
+
+  app.post('/api/v1/public/learner/redeem-token', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = RedeemLearnerTokenRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', 'Token akses learner wajib diisi');
+    }
+    const service = createEnrollmentService(db);
+    const result = await service.redeemLearnerToken(parsed.data.token);
+    return c.json(result, 200);
+  });
+
+  // ==========================================
   // B3 Admin Content API (Auth + Entitlement Gated)
   // ==========================================
   app.use('/api/v1/programs', sessionMiddleware, requireOrganization(), requireEntitlement('promotorClass'), requireRole(['owner', 'admin']));
@@ -482,5 +530,26 @@ export function createApp(deps?: AppDependencies) {
 
   registerFlowRoutes(app);
 
+  // ==========================================
+  // B4 PromotorClass Admin API (Auth + Entitlement Gated)
+  // ==========================================
+  app.use(
+    '/api/v1/class',
+    sessionMiddleware,
+    requireOrganization(),
+    requireEntitlement('promotorClass'),
+    requireRole(['owner', 'admin'])
+  );
+  app.use(
+    '/api/v1/class/*',
+    sessionMiddleware,
+    requireOrganization(),
+    requireEntitlement('promotorClass'),
+    requireRole(['owner', 'admin'])
+  );
+
+  registerClassRoutes(app);
+
   return app;
 }
+

@@ -1,8 +1,24 @@
-import { Enrollment } from '@promotor/contracts';
+export interface PublicRegistrationPayload {
+  workspaceSlug: string;
+  programSlug: string;
+  name: string;
+  phoneRaw: string;
+  email?: string | null;
+}
+
+export interface PublicRegistrationResponse {
+  enrollmentId: string;
+  contactId: string;
+  organizationId: string;
+  programId: string;
+  programTitle: string;
+  status: string;
+  accessToken: string;
+}
 
 export interface EnrollmentRepositoryPort {
-  getEnrollments(): Promise<Enrollment[]>;
-  getEnrollmentById(id: string): Promise<Enrollment | undefined>;
-  getEnrollmentsByContactId(contactId: string): Promise<Enrollment[]>;
-  createEnrollment(contactId: string, programId: string): Promise<Enrollment>;
+  registerPublicLearner(payload: PublicRegistrationPayload): Promise<PublicRegistrationResponse>;
+  createEnrollment(contactId: string, programId: string): Promise<{ id: string; status: string }>;
+  getEnrollments(filter?: { programId?: string; contactId?: string }): Promise<any[]>;
+  getEnrollmentById(id: string): Promise<any>;
 }
