@@ -1,18 +1,24 @@
 import { ServiceRepositoryPort } from '@/modules/services/ports';
-import { FlowService, ServiceCategory } from '@promotor/promotor-flow-fixtures';
-import { PromotorFlowApiClient } from '@promotor/api-client';
+import { FlowService } from '@promotor/promotor-flow-fixtures';
+import { PromotorFlowApiClient, ApiError } from '@promotor/api-client';
 
 export class HttpServiceRepository implements ServiceRepositoryPort {
   constructor(private api: PromotorFlowApiClient) {}
 
-  async listServices(_organizationId: string): Promise<FlowService[]> {
+  async listServices(_organizationId?: string): Promise<FlowService[]> {
     const res = await this.api.listServices();
     return (res.services || []).map((s: any) => this.mapToFlowService(s));
   }
 
-  async getServiceDetail(organizationId: string, serviceId: string): Promise<FlowService | null> {
-    const services = await this.listServices(organizationId);
-    return services.find((s) => s.id === serviceId) || null;
+  async getServiceDetail(serviceId: string, _organizationId?: string): Promise<FlowService | null> {
+    try {
+      const list = await this.listServices();
+      const match = list.find((s) => s.id === serviceId);
+      return match || null;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) return null;
+      throw err;
+    }
   }
 
   async createService(service: Omit<FlowService, 'id'>): Promise<FlowService> {
@@ -22,7 +28,6 @@ export class HttpServiceRepository implements ServiceRepositoryPort {
       priceAmount: service.priceAmount,
       durationMinutes: service.durationMinutes,
       description: service.description,
-      isActive: service.isActive,
     });
     return this.mapToFlowService(res.service);
   }
@@ -30,11 +35,9 @@ export class HttpServiceRepository implements ServiceRepositoryPort {
   async updateService(serviceId: string, updates: Partial<FlowService>): Promise<FlowService> {
     const res = await this.api.updateService(serviceId, {
       name: updates.title,
-      category: updates.category as any,
       priceAmount: updates.priceAmount,
       durationMinutes: updates.durationMinutes,
       description: updates.description,
-      isActive: updates.isActive,
     });
     return this.mapToFlowService(res.service);
   }
@@ -44,9 +47,9 @@ export class HttpServiceRepository implements ServiceRepositoryPort {
       id: s.id,
       organizationId: s.organizationId,
       title: s.name ?? s.title,
-      category: (s.category || 'SESSION') as ServiceCategory,
-      priceAmount: s.priceAmount ?? 0,
-      durationMinutes: s.durationMinutes ?? 60,
+      category: s.category,
+      priceAmount: s.priceAmount,
+      durationMinutes: s.durationMinutes,
       description: s.description ?? undefined,
       isActive: s.isActive ?? true,
     };

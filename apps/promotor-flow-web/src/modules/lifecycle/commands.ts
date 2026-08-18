@@ -7,36 +7,39 @@ export function createLifecycleCommands(
   activityRepo: ActivityRepositoryPort
 ) {
   return {
-    async changeStage(contactId: string, stage: LifecycleStage, lostReason?: string): Promise<void> {
+    async changeStage(contactId: string, stage: LifecycleStage, lostReason?: string, organizationId?: string): Promise<void> {
       if (stage === 'LOST') {
         if (!lostReason || !lostReason.trim()) {
           throw new Error('Alasan tidak lanjut (lost reason) wajib diisi.');
         }
         await lifecycleRepo.updateStage(contactId, 'LOST', lostReason.trim());
         
-        // Cancel active actions without deleting them
-        await lifecycleRepo.cancelActiveActionsForContact(contactId, `Contact marked LOST: ${lostReason.trim()}`);
-        
-        // Append activity
-        await activityRepo.appendActivity({
-          organizationId: 'org_rina_stifin',
-          contactId,
-          title: 'Kontak ditandai Tidak Lanjut',
-          detail: `Alasan: ${lostReason.trim()}`,
-          timestamp: new Date().toISOString(),
-          type: 'STAGE_CHANGED',
-        });
+        // In mock mode, simulate cancel actions and activity
+        if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+          await lifecycleRepo.cancelActiveActionsForContact(contactId, `Contact marked LOST: ${lostReason.trim()}`);
+          await activityRepo.appendActivity({
+            organizationId: organizationId || '',
+            contactId,
+            title: 'Kontak ditandai Tidak Lanjut',
+            detail: `Alasan: ${lostReason.trim()}`,
+            timestamp: new Date().toISOString(),
+            type: 'STAGE_CHANGED',
+          });
+        }
         return;
       }
 
       await lifecycleRepo.updateStage(contactId, stage);
-      await activityRepo.appendActivity({
-        organizationId: 'org_rina_stifin',
-        contactId,
-        title: `Tahap kontak diperbarui ke ${stage}`,
-        timestamp: new Date().toISOString(),
-        type: 'STAGE_CHANGED',
-      });
+
+      if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+        await activityRepo.appendActivity({
+          organizationId: organizationId || '',
+          contactId,
+          title: `Tahap kontak diperbarui ke ${stage}`,
+          timestamp: new Date().toISOString(),
+          type: 'STAGE_CHANGED',
+        });
+      }
     },
   };
 }

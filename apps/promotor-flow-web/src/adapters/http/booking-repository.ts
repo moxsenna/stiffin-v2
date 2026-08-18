@@ -5,20 +5,20 @@ import { PromotorFlowApiClient, ApiError } from '@promotor/api-client';
 export class HttpBookingRepository implements BookingRepositoryPort {
   constructor(private api: PromotorFlowApiClient) {}
 
-  async listBookings(_organizationId: string, status?: BookingStatus): Promise<FlowBooking[]> {
-    const res = await this.api.listBookings({ status: status as any });
+  async listBookings(status?: BookingStatus, _organizationId?: string): Promise<FlowBooking[]> {
+    const res = await this.api.listBookings({ status });
     return (res.bookings || []).map((b: any) => this.mapToFlowBooking(b));
   }
 
-  async getContactBookings(_organizationId: string, contactId: string): Promise<FlowBooking[]> {
+  async getContactBookings(contactId: string, _organizationId?: string): Promise<FlowBooking[]> {
     const res = await this.api.listBookings({ contactId });
     return (res.bookings || []).map((b: any) => this.mapToFlowBooking(b));
   }
 
-  async getBookingDetail(_organizationId: string, bookingId: string): Promise<FlowBooking | null> {
+  async getBookingDetail(bookingId: string, _organizationId?: string): Promise<FlowBooking | null> {
     try {
       const res = await this.api.getBooking(bookingId);
-      return this.mapToFlowBooking(res.booking);
+      return this.mapToFlowBooking(res);
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) return null;
       throw err;
@@ -32,9 +32,7 @@ export class HttpBookingRepository implements BookingRepositoryPort {
       startAt: booking.startAt,
       endAt: booking.endAt,
       locationType: booking.locationType as any,
-      locationText: booking.locationAddress,
       notes: booking.notes,
-      idempotencyKey: `bk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
     });
     return this.mapToFlowBooking(res.booking);
   }
@@ -49,7 +47,7 @@ export class HttpBookingRepository implements BookingRepositoryPort {
       return this.mapToFlowBooking(res.booking);
     }
     if (updates.status === 'CANCELLED') {
-      const res = await this.api.cancelBooking(bookingId, { cancellationReason: updates.notes });
+      const res = await this.api.cancelBooking(bookingId, { cancellationReason: updates.notes || 'Cancelled by operator' });
       return this.mapToFlowBooking(res.booking);
     }
     if (updates.status === 'NO_SHOW') {
@@ -61,11 +59,15 @@ export class HttpBookingRepository implements BookingRepositoryPort {
       return this.mapToFlowBooking(res.booking);
     }
     if (updates.startAt) {
-      const res = await this.api.rescheduleBooking(bookingId, { startAt: updates.startAt, endAt: updates.endAt });
+      const res = await this.api.rescheduleBooking(bookingId, {
+        startAt: updates.startAt,
+        endAt: updates.endAt,
+      });
       return this.mapToFlowBooking(res.booking);
     }
-    const res = await this.api.getBooking(bookingId);
-    return this.mapToFlowBooking(res.booking);
+
+    const current = await this.getBookingDetail(bookingId);
+    return current || ({} as FlowBooking);
   }
 
   private mapToFlowBooking(b: any): FlowBooking {
@@ -74,11 +76,10 @@ export class HttpBookingRepository implements BookingRepositoryPort {
       organizationId: b.organizationId,
       contactId: b.contactId,
       serviceId: b.serviceId,
-      serviceTitle: b.service?.name ?? b.serviceTitle ?? 'Session',
+      serviceTitle: b.serviceTitle ?? 'Sesi Konsultasi',
       startAt: b.startAt,
-      endAt: b.endAt ?? new Date(new Date(b.startAt).getTime() + 3600_000).toISOString(),
-      locationType: (b.locationType || 'ONLINE') as 'HOME_VISIT' | 'ON_SITE' | 'ONLINE',
-      locationAddress: b.locationText ?? b.locationAddress ?? undefined,
+      endAt: b.endAt ?? b.startAt,
+      locationType: b.locationType ?? 'ONLINE',
       status: b.status as BookingStatus,
       paymentStatus: (b.paymentStatus || 'UNPAID') as PaymentStatus,
       amount: b.amount ?? 0,

@@ -3,9 +3,9 @@ import { FlowContact } from '@promotor/promotor-flow-fixtures';
 import { normalizePhone } from '@promotor/platform-core';
 
 export interface CreateContactInput {
-  organizationId: string;
   name: string;
   rawPhone: string;
+  organizationId?: string;
   sourceChannel?: string;
   notes?: string;
   tags?: string[];
@@ -21,19 +21,21 @@ export function createContactCommands(repo: ContactRepositoryPort) {
     async createContact(input: CreateContactInput): Promise<CreateContactResult> {
       const phoneE164 = normalizePhone(input.rawPhone);
 
-      // Check if canonical contact already exists
-      const existing = await repo.findContactByPhone(input.organizationId, phoneE164);
-      if (existing) {
-        return {
-          contact: existing,
-          isExisting: true,
-        };
+      // Check if canonical contact already exists in mock mode
+      if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+        const existing = await repo.findContactByPhone(phoneE164, input.organizationId);
+        if (existing) {
+          return {
+            contact: existing,
+            isExisting: true,
+          };
+        }
       }
 
       // Create new contact
       const newContact: Omit<FlowContact, 'createdAt' | 'updatedAt'> = {
         id: `contact_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-        organizationId: input.organizationId,
+        organizationId: input.organizationId || '',
         name: input.name.trim(),
         phoneE164,
         stage: 'NEW',

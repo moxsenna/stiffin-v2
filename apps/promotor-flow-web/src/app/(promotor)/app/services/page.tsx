@@ -9,7 +9,7 @@ export default function ServicesPage() {
   const [services, setServices] = useState<FlowService[]>([]);
 
   const loadServices = useCallback(async () => {
-    const list = await serviceQueries.listServices('org_rina_stifin');
+    const list = await serviceQueries.listServices();
     setServices(list);
   }, []);
 

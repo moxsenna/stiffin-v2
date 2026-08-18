@@ -36,7 +36,6 @@ export default function AddContactPage() {
     setIsSubmitting(true);
     try {
       const result = await contactCommands.createContact({
-        organizationId: 'org_rina_stifin',
         name,
         rawPhone: phone,
         sourceChannel,
@@ -50,28 +49,28 @@ export default function AddContactPage() {
         return;
       }
 
-      // Initial lead action created automatically
-      const newContact = result.contact;
-      await nextActionCommands.scheduleNextAction({
-        organizationId: 'org_rina_stifin',
-        contactId: newContact.id,
-        actionType: 'CONTACT_LEAD',
-        title: 'Hubungi prospek baru',
-        subtitle: `${newContact.name} · ${sourceChannel}`,
-        dueAt: clock.nowIso(),
-        source: 'PROMOTORFLOW',
-      });
+      // In mock mode, create initial lead action and activity in local store
+      if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+        const newContact = result.contact;
+        await nextActionCommands.scheduleNextAction({
+          contactId: newContact.id,
+          actionType: 'CONTACT_LEAD',
+          title: 'Hubungi prospek baru',
+          subtitle: `${newContact.name} · ${sourceChannel}`,
+          dueAt: clock.nowIso(),
+          source: 'PROMOTORFLOW',
+        });
 
-      await activityCommands.appendActivity({
-        organizationId: 'org_rina_stifin',
-        contactId: newContact.id,
-        title: 'Prospek baru ditambahkan',
-        detail: `Channel: ${sourceChannel}`,
-        timestamp: clock.nowIso(),
-        type: 'CONTACT_CREATED',
-      });
+        await activityCommands.appendActivity({
+          contactId: newContact.id,
+          title: 'Prospek baru ditambahkan',
+          detail: `Channel: ${sourceChannel}`,
+          timestamp: clock.nowIso(),
+          type: 'CONTACT_CREATED',
+        });
+      }
 
-      router.push(`/app/contacts/${newContact.id}`);
+      router.push(`/app/contacts/${result.contact.id}`);
     } catch (err: any) {
       setError(err.message || 'Gagal menambahkan kontak.');
       setIsSubmitting(false);

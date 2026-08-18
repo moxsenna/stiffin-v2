@@ -13,10 +13,10 @@ export default function CalendarPage() {
   const [bookings, setBookings] = useState<Array<{ booking: FlowBooking; contactName: string }>>([]);
 
   const loadData = useCallback(async () => {
-    const list = await bookingQueries.getCalendarAgenda('org_rina_stifin');
+    const list = await bookingQueries.getCalendarAgenda();
     const items = await Promise.all(
       list.map(async (bk) => {
-        const c = await contactQueries.getContactDetail('org_rina_stifin', bk.contactId);
+        const c = await contactQueries.getContactDetail(bk.contactId);
         return { booking: bk, contactName: c ? c.name : 'Kontak' };
       })
     );

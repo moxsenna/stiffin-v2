@@ -32,7 +32,7 @@ export default function TodayPage() {
   const [tick, setTick] = useState(0);
 
   const loadData = useCallback(async () => {
-    const q = await nextActionQueries.getTodayQueue('org_rina_stifin');
+    const q = await nextActionQueries.getTodayQueue();
     setQueue(q);
 
     const intState = await promotorClassQueries.getIntegrationState();
@@ -61,7 +61,6 @@ export default function TodayPage() {
   const handleConfirmWASent = async (scheduleNextDays?: number) => {
     if (!activeWaItem) return;
     await messagingCommands.confirmWhatsAppSent({
-      organizationId: 'org_rina_stifin',
       contactId: activeWaItem.item.action.contactId,
       actionId: activeWaItem.item.action.id,
       messageText: activeWaItem.draft,

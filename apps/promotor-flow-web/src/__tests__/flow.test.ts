@@ -118,14 +118,14 @@ test('Lifecycle: valid transition behavior & LOST reason requirement', async () 
 
   // Transitioning to LOST with reason cancels active actions & preserves action history
   const nextActionRepo = new MockNextActionRepository(store);
-  const initialActions = await nextActionRepo.getContactNextActions('org_rina_stifin', 'contact_hendra');
+  const initialActions = await nextActionRepo.getContactNextActions('contact_hendra');
 
   await commands.changeStage('contact_hendra', 'LOST', 'Harga terlalu mahal');
   c = store.getContacts().find((cnt) => cnt.id === 'contact_hendra');
   assert.equal(c?.stage, 'LOST');
   assert.equal(c?.lostReason, 'Harga terlalu mahal');
 
-  const postActions = await nextActionRepo.getContactNextActions('org_rina_stifin', 'contact_hendra');
+  const postActions = await nextActionRepo.getContactNextActions('contact_hendra');
   assert.equal(postActions.length, initialActions.length, 'Action history count preserved');
   assert.equal(postActions[0].status, 'CANCELLED', 'Active action cancelled on LOST');
 });
@@ -144,7 +144,7 @@ test('NextAction: creation, completion, reschedule, skip & due grouping', async 
   const contactRepo = new MockContactRepository(store);
 
   const contactLookup = async (id: string) => {
-    const c = await contactRepo.getContactDetail('org_rina_stifin', id);
+    const c = await contactRepo.getContactDetail(id);
     return c ? { name: c.name, phoneE164: c.phoneE164, stage: c.stage, sourceChannel: c.sourceChannel } : null;
   };
 
@@ -152,14 +152,13 @@ test('NextAction: creation, completion, reschedule, skip & due grouping', async 
   const commands = createNextActionCommands(actionRepo, activityRepo);
 
   // Test due ordering/grouping
-  const queue = await queries.getTodayQueue('org_rina_stifin');
+  const queue = await queries.getTodayQueue();
   assert.ok(queue.overdue.length > 0, 'Should identify overdue action (Ayu Rahma)');
   assert.ok(queue.today.length > 0, 'Should identify today action');
   assert.ok(queue.upcoming.length > 0, 'Should identify upcoming action');
 
   // Creation
   const newAction = await commands.scheduleNextAction({
-    organizationId: 'org_rina_stifin',
     contactId: 'contact_budi',
     actionType: 'FOLLOW_UP',
     title: 'Follow-up proposal corporate',
@@ -178,7 +177,6 @@ test('NextAction: creation, completion, reschedule, skip & due grouping', async 
 
   // Skip action with mandatory next step
   const actionToSkip = await commands.scheduleNextAction({
-    organizationId: 'org_rina_stifin',
     contactId: 'contact_budi',
     actionType: 'MANUAL',
     title: 'Cek email penawaran',
@@ -186,15 +184,13 @@ test('NextAction: creation, completion, reschedule, skip & due grouping', async 
   });
 
   const skipped = await commands.skipNextAction(actionToSkip.id, {
-    organizationId: 'org_rina_stifin',
-    contactId: 'contact_budi',
-    actionType: 'FOLLOW_UP',
+    type: 'FOLLOW_UP',
     title: 'Follow-up email minggu depan',
     dueAt: '2026-08-19T10:00:00+07:00',
   });
 
   assert.equal(skipped.status, 'SKIPPED');
-  const budiActions = await actionRepo.getContactNextActions('org_rina_stifin', 'contact_budi');
+  const budiActions = await actionRepo.getContactNextActions('contact_budi');
   assert.ok(budiActions.some((a) => a.title === 'Follow-up email minggu depan'), 'Next step scheduled after skip');
 });
 
@@ -212,28 +208,27 @@ test('WhatsApp: wa.me link does NOT complete action; explicit confirm completes 
 
   const messagingCmd = createMessagingCommands(actionRepo, activityRepo, clock);
 
-  const initialAction = (await actionRepo.getContactNextActions('org_rina_stifin', 'contact_ayu'))[0];
+  const initialAction = (await actionRepo.getContactNextActions('contact_ayu'))[0];
   assert.equal(initialAction.status, 'PENDING');
 
   // Simulating user opening wa.me does NOT mutate store status.
   // Explicit confirm call:
   await messagingCmd.confirmWhatsAppSent({
-    organizationId: 'org_rina_stifin',
     contactId: 'contact_ayu',
     actionId: initialAction.id,
     messageText: 'Halo Ayu, mengonfirmasi...',
     scheduleNextFollowUpDays: 3,
   });
 
-  const updatedAction = (await actionRepo.getContactNextActions('org_rina_stifin', 'contact_ayu')).find((a) => a.id === initialAction.id);
+  const updatedAction = (await actionRepo.getContactNextActions('contact_ayu')).find((a) => a.id === initialAction.id);
   assert.equal(updatedAction?.status, 'COMPLETED');
 
   // Timeline activity appended
-  const activities = await activityRepo.listActivities('org_rina_stifin', 'contact_ayu');
+  const activities = await activityRepo.listActivities('contact_ayu');
   assert.ok(activities.some((act) => act.type === 'WA_SENT' && act.detail === 'Halo Ayu, mengonfirmasi...'));
 
   // Follow-up scheduled +3 days (15 August 2026)
-  const pendingActions = (await actionRepo.getContactNextActions('org_rina_stifin', 'contact_ayu')).filter((a) => a.status === 'PENDING');
+  const pendingActions = (await actionRepo.getContactNextActions('contact_ayu')).filter((a) => a.status === 'PENDING');
   assert.equal(pendingActions.length, 1);
   assert.equal(clock.formatDayDate(pendingActions[0].dueAt), 'Sabtu, 15 Agustus');
 });
@@ -256,7 +251,6 @@ test('Booking: creation, calendar sync, stage BOOKED, payment mutation, reschedu
 
   // Create new booking for Budi (currently stage CONTACTED)
   const newBk = await bookingCmd.createBooking({
-    organizationId: 'org_rina_stifin',
     contactId: 'contact_budi',
     serviceId: 'srv_tes_personal',
     serviceTitle: 'Tes STIFIn Personal',
@@ -272,7 +266,7 @@ test('Booking: creation, calendar sync, stage BOOKED, payment mutation, reschedu
   assert.equal(budiContact?.stage, 'BOOKED');
 
   // Verify Calendar reflects booking
-  const allBookings = await bookingRepo.listBookings('org_rina_stifin');
+  const allBookings = await bookingRepo.listBookings();
   assert.ok(allBookings.some((b) => b.id === newBk.id));
 
   // Payment status mutation
@@ -309,14 +303,14 @@ test('Completion: booking completion schedules D+7 Aftercare once, outcome not r
   assert.equal(contact?.stage, 'COMPLETED');
 
   // Exactly 1 D+7 Aftercare action created for 19 August 2026
-  const actions = await actionRepo.getContactNextActions('org_rina_stifin', 'contact_arief');
+  const actions = await actionRepo.getContactNextActions('contact_arief');
   const aftercareAct = actions.find((a) => a.actionType === 'AFTERCARE');
   assert.ok(aftercareAct);
   assert.equal(clock.formatDayDate(aftercareAct?.dueAt), 'Rabu, 19 Agustus');
 
   // Repeated completion call is idempotent
   await bookingCmd.completeBooking('bk_arief');
-  const postActions = await actionRepo.getContactNextActions('org_rina_stifin', 'contact_arief');
+  const postActions = await actionRepo.getContactNextActions('contact_arief');
   assert.equal(postActions.filter((a) => a.actionType === 'AFTERCARE').length, 1);
 
   // Advance clock by 7 days to simulate Aftercare becoming due
@@ -325,18 +319,18 @@ test('Completion: booking completion schedules D+7 Aftercare once, outcome not r
 
   // Complete aftercare with outcome CONTACT_LATER
   await aftercareCmd.completeAftercare(
-    'org_rina_stifin',
-    'contact_arief',
     aftercareAct!.id,
     'CONTACT_LATER',
-    'Minta dihubungi bulan depan'
+    'Minta dihubungi bulan depan',
+    'contact_arief',
+    'org_rina_stifin'
   );
 
-  const completedAftercareAct = (await actionRepo.getContactNextActions('org_rina_stifin', 'contact_arief')).find((a) => a.id === aftercareAct!.id);
+  const completedAftercareAct = (await actionRepo.getContactNextActions('contact_arief')).find((a) => a.id === aftercareAct!.id);
   assert.equal(completedAftercareAct?.status, 'COMPLETED');
 
   // Check follow-up scheduled for CONTACT_LATER (+30 days)
-  const nextActions = (await actionRepo.getContactNextActions('org_rina_stifin', 'contact_arief')).filter((a) => a.status === 'PENDING');
+  const nextActions = (await actionRepo.getContactNextActions('contact_arief')).filter((a) => a.status === 'PENDING');
   assert.ok(nextActions.some((a) => a.title.includes('30 Hari')));
 });
 
@@ -365,8 +359,8 @@ test('Integration: FLOW_ONLY, BUNDLE_AVAILABLE, BUNDLE_CLASS_UNAVAILABLE resilie
   // Core Flow functions (NextActions, Bookings) work cleanly under outage
   const actionRepo = new MockNextActionRepository(store);
   const bookingRepo = new MockBookingRepository(store);
-  const act = await actionRepo.listNextActions('org_rina_stifin');
-  const bks = await bookingRepo.listBookings('org_rina_stifin');
+  const act = await actionRepo.listNextActions();
+  const bks = await bookingRepo.listBookings();
   assert.ok(act.length > 0, 'NextActions work during Class outage');
   assert.ok(bks.length > 0, 'Bookings work during Class outage');
 
@@ -378,7 +372,6 @@ test('Integration: FLOW_ONLY, BUNDLE_AVAILABLE, BUNDLE_CLASS_UNAVAILABLE resilie
   const idempotencyKey = 'promotorclass:evt_100:progress_80';
 
   const act1 = await actionCmd.scheduleNextAction({
-    organizationId: 'org_rina_stifin',
     contactId: 'contact_nina',
     actionType: 'FOLLOW_UP',
     title: 'Follow-up lead magnet 80%',
@@ -397,7 +390,6 @@ test('Integration: FLOW_ONLY, BUNDLE_AVAILABLE, BUNDLE_CLASS_UNAVAILABLE resilie
 
   // Send repeated request with same idempotencyKey
   const act2 = await actionCmd.scheduleNextAction({
-    organizationId: 'org_rina_stifin',
     contactId: 'contact_nina',
     actionType: 'FOLLOW_UP',
     title: 'Follow-up lead magnet 80%',

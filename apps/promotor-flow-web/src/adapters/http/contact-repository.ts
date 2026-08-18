@@ -6,16 +6,16 @@ export class HttpContactRepository implements ContactRepositoryPort {
   constructor(private api: PromotorFlowApiClient) {}
 
   async listContacts(
-    _organizationId: string,
     search?: string,
-    filter?: 'ALL' | 'PROSPECT' | 'CLIENT'
+    filter?: 'ALL' | 'PROSPECT' | 'CLIENT',
+    _organizationId?: string
   ): Promise<FlowContact[]> {
     const classification = filter === 'ALL' || !filter ? undefined : filter;
     const res = await this.api.listContacts({ search, classification });
     return (res.contacts || []).map((c: any) => this.mapToFlowContact(c));
   }
 
-  async getContactDetail(_organizationId: string, contactId: string): Promise<FlowContact | null> {
+  async getContactDetail(contactId: string, _organizationId?: string): Promise<FlowContact | null> {
     try {
       const res = await this.api.getContact(contactId);
       return this.mapToFlowContact(res);
@@ -25,7 +25,7 @@ export class HttpContactRepository implements ContactRepositoryPort {
     }
   }
 
-  async findContactByPhone(_organizationId: string, phoneE164: string): Promise<FlowContact | null> {
+  async findContactByPhone(phoneE164: string, _organizationId?: string): Promise<FlowContact | null> {
     const res = await this.api.listContacts({ search: phoneE164 });
     const match = (res.contacts || []).find((c: any) => c.contact?.phoneE164 === phoneE164 || c.phoneE164 === phoneE164);
     return match ? this.mapToFlowContact(match) : null;
@@ -58,14 +58,12 @@ export class HttpContactRepository implements ContactRepositoryPort {
       organizationId: contact.organizationId,
       name: contact.name,
       phoneE164: contact.phoneE164,
-      stage: c.stage ?? 'NEW',
-      classification: c.classification ?? 'PROSPECT',
-      sourceChannel: c.sourceChannel ?? contact.sourceChannel ?? 'Direct',
+      classification: c.classification ?? (contact.classification || 'PROSPECT'),
+      stage: c.stage ?? (contact.stage || 'NEW'),
       notes: c.notes ?? contact.notes ?? undefined,
-      lostReason: c.lostReason ?? undefined,
-      tags: c.tags ?? ['Lead'],
+      sourceChannel: c.sourceChannel ?? contact.sourceChannel ?? undefined,
       createdAt: contact.createdAt ?? new Date().toISOString(),
-      updatedAt: c.updatedAt ?? contact.updatedAt ?? new Date().toISOString(),
+      updatedAt: contact.updatedAt ?? new Date().toISOString(),
     };
   }
 }

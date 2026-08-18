@@ -7,6 +7,7 @@ import { ChevronLeftIcon, ChevronDownIcon, ExternalLinkIcon } from '@/components
 import { WhatsAppBottomSheet } from '@/components/today/WhatsAppBottomSheet';
 import {
   contactQueries,
+  contactCommands,
   lifecycleCommands,
   nextActionQueries,
   nextActionCommands,
@@ -49,15 +50,15 @@ export default function ContactDetailPage() {
 
   const loadData = useCallback(async () => {
     if (!contactId) return;
-    const c = await contactQueries.getContactDetail('org_rina_stifin', contactId);
+    const c = await contactQueries.getContactDetail(contactId);
     setContact(c);
     if (c) {
       setNotesText(c.notes || '');
-      const acts = await nextActionQueries.getContactNextActions('org_rina_stifin', contactId);
+      const acts = await nextActionQueries.getContactNextActions(contactId);
       setActions(acts);
-      const bks = await bookingQueries.getContactBookings('org_rina_stifin', contactId);
+      const bks = await bookingQueries.getContactBookings(contactId);
       setBookings(bks);
-      const evs = await activityQueries.listActivities('org_rina_stifin', contactId);
+      const evs = await activityQueries.listActivities(contactId);
       setActivities(evs);
 
       // PromotorClass Context
@@ -124,7 +125,6 @@ export default function ContactDetailPage() {
   const handleConfirmWaSent = async (scheduleNextDays?: number) => {
     if (!primaryAction || !activeWaModal) return;
     await messagingCommands.confirmWhatsAppSent({
-      organizationId: 'org_rina_stifin',
       contactId: contact.id,
       actionId: primaryAction.id,
       messageText: activeWaModal.draft,
@@ -136,7 +136,6 @@ export default function ContactDetailPage() {
 
   const handleCreateNewBooking = async () => {
     await bookingCommands.createBooking({
-      organizationId: 'org_rina_stifin',
       contactId: contact.id,
       serviceId: 'srv_tes_personal',
       serviceTitle: 'Tes STIFIn Personal',
@@ -157,8 +156,7 @@ export default function ContactDetailPage() {
   };
 
   const handleSaveNotes = async () => {
-    await contactQueries.getContactDetail('org_rina_stifin', contactId);
-    store.updateContact(contactId, { notes: notesText });
+    await contactCommands.updateContactIdentity(contactId, { notes: notesText });
     setIsEditingNotes(false);
     loadData();
   };
@@ -265,7 +263,12 @@ export default function ContactDetailPage() {
                 </button>
                 <button
                   onClick={async () => {
-                    await nextActionCommands.skipNextAction(primaryAction.id);
+                    const tomorrow = clock.addDays(clock.now(), 1).toISOString();
+                    await nextActionCommands.skipNextAction(primaryAction.id, {
+                      type: 'FOLLOW_UP',
+                      title: 'Follow-up prospek',
+                      dueAt: tomorrow,
+                    });
                     loadData();
                   }}
                   style={{ background: 'none', border: 'none', padding: '4px 0', font: '500 14px Inter, sans-serif', color: '#71706B' }}
@@ -280,7 +283,6 @@ export default function ContactDetailPage() {
               <button
                 onClick={async () => {
                   await nextActionCommands.scheduleNextAction({
-                    organizationId: 'org_rina_stifin',
                     contactId: contact.id,
                     actionType: 'FOLLOW_UP',
                     title: 'Follow-up prospek',

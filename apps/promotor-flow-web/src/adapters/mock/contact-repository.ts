@@ -5,12 +5,17 @@ import { MockStateStore } from './mock-state-store';
 export class MockContactRepository implements ContactRepositoryPort {
   constructor(private store: MockStateStore) {}
 
+  private resolveOrgId(organizationId?: string): string {
+    return organizationId || 'org_rina_stifin';
+  }
+
   async listContacts(
-    organizationId: string,
     search?: string,
-    filter?: 'ALL' | 'PROSPECT' | 'CLIENT'
+    filter?: 'ALL' | 'PROSPECT' | 'CLIENT',
+    organizationId?: string
   ): Promise<FlowContact[]> {
-    let contacts = this.store.getContacts().filter((c) => c.organizationId === organizationId);
+    const orgId = this.resolveOrgId(organizationId);
+    let contacts = this.store.getContacts().filter((c) => c.organizationId === orgId);
 
     if (filter === 'PROSPECT') {
       contacts = contacts.filter((c) => c.classification === 'PROSPECT');
@@ -28,14 +33,16 @@ export class MockContactRepository implements ContactRepositoryPort {
     return contacts;
   }
 
-  async getContactDetail(organizationId: string, contactId: string): Promise<FlowContact | null> {
-    const contact = this.store.getContacts().find((c) => c.organizationId === organizationId && c.id === contactId);
+  async getContactDetail(contactId: string, organizationId?: string): Promise<FlowContact | null> {
+    const orgId = this.resolveOrgId(organizationId);
+    const contact = this.store.getContacts().find((c) => c.organizationId === orgId && c.id === contactId);
     return contact || null;
   }
 
-  async findContactByPhone(organizationId: string, phoneE164: string): Promise<FlowContact | null> {
+  async findContactByPhone(phoneE164: string, organizationId?: string): Promise<FlowContact | null> {
+    const orgId = this.resolveOrgId(organizationId);
     const contact = this.store.getContacts().find(
-      (c) => c.organizationId === organizationId && c.phoneE164 === phoneE164
+      (c) => c.organizationId === orgId && c.phoneE164 === phoneE164
     );
     return contact || null;
   }

@@ -1,23 +1,23 @@
-import { NextActionRepositoryPort } from '@/modules/next-actions/ports';
+import { NextActionRepositoryPort, SkipNextStepInput } from '@/modules/next-actions/ports';
 import { FlowNextAction, NextActionStatus, NextActionType, ActionSource } from '@promotor/promotor-flow-fixtures';
 import { PromotorFlowApiClient } from '@promotor/api-client';
 
 export class HttpNextActionRepository implements NextActionRepositoryPort {
   constructor(private api: PromotorFlowApiClient) {}
 
-  async listNextActions(_organizationId: string, status?: NextActionStatus): Promise<FlowNextAction[]> {
+  async listNextActions(status?: NextActionStatus): Promise<FlowNextAction[]> {
     const res = await this.api.listNextActions({ status });
     return (res.nextActions || []).map((a: any) => this.mapToFlowNextAction(a));
   }
 
-  async getContactNextActions(_organizationId: string, contactId: string): Promise<FlowNextAction[]> {
+  async getContactNextActions(contactId: string): Promise<FlowNextAction[]> {
     const res = await this.api.listNextActions({ contactId });
     return (res.nextActions || []).map((a: any) => this.mapToFlowNextAction(a));
   }
 
-  async findByIdempotencyKey(_organizationId: string, _idempotencyKey: string): Promise<FlowNextAction | null> {
+  async findByIdempotencyKey(idempotencyKey: string): Promise<FlowNextAction | null> {
     const res = await this.api.listNextActions();
-    const match = (res.nextActions || []).find((a: any) => a.idempotencyKey === _idempotencyKey);
+    const match = (res.nextActions || []).find((a: any) => a.idempotencyKey === idempotencyKey);
     return match ? this.mapToFlowNextAction(match) : null;
   }
 
@@ -32,31 +32,31 @@ export class HttpNextActionRepository implements NextActionRepositoryPort {
     return this.mapToFlowNextAction(res.nextAction);
   }
 
-  async updateNextAction(actionId: string, updates: Partial<FlowNextAction>): Promise<FlowNextAction> {
-    if (updates.status === 'COMPLETED') {
-      const res = await this.api.completeNextAction(actionId);
-      return this.mapToFlowNextAction(res.nextAction);
-    }
-    if (updates.status === 'SKIPPED') {
-      const res = await this.api.skipNextAction(actionId, {
-        nextStep: {
-          type: 'FOLLOW_UP',
-          title: 'Follow up lead',
-        },
-      });
-      return this.mapToFlowNextAction(res.nextAction);
-    }
-    if (updates.status === 'CANCELLED') {
-      const res = await this.api.cancelNextAction(actionId);
-      return this.mapToFlowNextAction(res.nextAction);
-    }
-    if (updates.dueAt) {
-      const res = await this.api.rescheduleNextAction(actionId, { dueAt: updates.dueAt });
-      return this.mapToFlowNextAction(res.nextAction);
-    }
-    const res = await this.api.listNextActions();
-    const match = (res.nextActions || []).find((a: any) => a.id === actionId);
-    return match ? this.mapToFlowNextAction(match) : ({} as FlowNextAction);
+  async completeAction(actionId: string): Promise<FlowNextAction> {
+    const res = await this.api.completeNextAction(actionId);
+    return this.mapToFlowNextAction(res.nextAction);
+  }
+
+  async skipAction(actionId: string, nextStep: SkipNextStepInput): Promise<FlowNextAction> {
+    const res = await this.api.skipNextAction(actionId, {
+      nextStep: {
+        type: nextStep.type as any,
+        title: nextStep.title,
+        dueAt: nextStep.dueAt,
+        description: nextStep.description,
+      },
+    });
+    return this.mapToFlowNextAction(res.nextAction);
+  }
+
+  async cancelAction(actionId: string): Promise<FlowNextAction> {
+    const res = await this.api.cancelNextAction(actionId);
+    return this.mapToFlowNextAction(res.nextAction);
+  }
+
+  async rescheduleAction(actionId: string, dueAt: string): Promise<FlowNextAction> {
+    const res = await this.api.rescheduleNextAction(actionId, { dueAt });
+    return this.mapToFlowNextAction(res.nextAction);
   }
 
   private mapToFlowNextAction(a: any): FlowNextAction {
