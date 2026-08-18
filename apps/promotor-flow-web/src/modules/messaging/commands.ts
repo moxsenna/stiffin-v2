@@ -10,8 +10,8 @@ export interface ConfirmWASentInput {
 
 export function createMessagingCommands(messagingPort: MessagingPort) {
   return {
-    async recordWhatsAppOpened(contactId: string, phoneE164: string): Promise<void> {
-      return messagingPort.recordWhatsAppOpened(contactId, phoneE164);
+    async recordWhatsAppOpened(contactId: string, rawText: string): Promise<void> {
+      return messagingPort.recordWhatsAppOpened(contactId, rawText);
     },
 
     async confirmWhatsAppSent(input: ConfirmWASentInput): Promise<void> {

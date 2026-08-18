@@ -10,7 +10,7 @@ export class MockMessagingRepository implements MessagingPort {
     private clock: ClockPort
   ) {}
 
-  async recordWhatsAppOpened(_contactId: string, _phoneE164: string): Promise<void> {
+  async recordWhatsAppOpened(_contactId: string, _rawText: string): Promise<void> {
     // In mock mode, opening WhatsApp does not mutate action state
   }
 
@@ -26,6 +26,7 @@ export class MockMessagingRepository implements MessagingPort {
 
     await this.activityRepo.appendActivity({
       contactId: input.contactId,
+      organizationId: '',
       title: 'WhatsApp dikirim',
       detail: input.messageText,
       timestamp: this.clock.nowIso(),
@@ -36,6 +37,7 @@ export class MockMessagingRepository implements MessagingPort {
       const dueAt = this.clock.addDays(this.clock.now(), input.scheduleNextFollowUpDays).toISOString();
       await this.actionRepo.createNextAction({
         contactId: input.contactId,
+        organizationId: '',
         actionType: 'FOLLOW_UP',
         title: `Follow-up ${input.scheduleNextFollowUpDays} hari lagi`,
         dueAt,

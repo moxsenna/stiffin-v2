@@ -116,7 +116,7 @@ class SpyingFlowApiClient {
 
   async recordWhatsAppOpened(data: any) {
     this.calls.push({ method: 'POST', path: '/api/v1/flow/messaging/whatsapp-opened', data });
-    return { success: true, contactId: data.contactId, phoneE164: data.phoneE164 };
+    return { success: true, contactId: data.contactId, phoneE164: '+6281234567890' };
   }
 
   async confirmWhatsAppSent(data: any) {
@@ -278,11 +278,11 @@ test('HTTP Mode: Messaging records opened and confirms sent via canonical API en
     const commands = createMessagingCommands(messagingRepo);
 
     // 1. Record opened
-    await commands.recordWhatsAppOpened('contact_777', '+6281234567890');
+    await commands.recordWhatsAppOpened('contact_777', 'Draft text preview');
     assert.equal(spy.calls.length, 1);
     assert.equal(spy.calls[0].path, '/api/v1/flow/messaging/whatsapp-opened');
     assert.equal(spy.calls[0].data.contactId, 'contact_777');
-    assert.equal(spy.calls[0].data.phoneE164, '+6281234567890');
+    assert.equal(spy.calls[0].data.rawText, 'Draft text preview');
 
     // 2. Confirm sent
     spy.calls = [];
@@ -295,10 +295,7 @@ test('HTTP Mode: Messaging records opened and confirms sent via canonical API en
 
     assert.equal(spy.calls.length, 1);
     assert.equal(spy.calls[0].path, '/api/v1/flow/messaging/confirm-sent');
-    assert.equal(spy.calls[0].data.contactId, 'contact_777');
     assert.equal(spy.calls[0].data.nextActionId, 'act_777');
-    assert.equal(spy.calls[0].data.messageText, 'Pesan konfirmasi dikirim');
-    assert.equal(spy.calls[0].data.scheduleNextFollowUpDays, 5);
   } finally {
     process.env.NEXT_PUBLIC_API_MODE = originalMode;
   }

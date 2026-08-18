@@ -6,7 +6,7 @@ export interface MessageTemplateRepositoryPort {
 }
 
 export interface MessagingPort {
-  recordWhatsAppOpened(contactId: string, phoneE164: string): Promise<void>;
+  recordWhatsAppOpened(contactId: string, rawText: string): Promise<void>;
   confirmWhatsAppSent(input: {
     contactId: string;
     nextActionId?: string;
