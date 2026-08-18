@@ -13,3 +13,4 @@ export * from './contact-flow-repository';
 export * from './aftercare-repository';
 export * from './assessment-repository';
 export * from './template-repository';
+export * from './availability-repository';

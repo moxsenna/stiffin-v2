@@ -66,6 +66,8 @@ const ALL_24_TABLES = [
   'aftercare_records',
   'contact_assessments',
   'message_templates',
+  // B6.1 (1)
+  'availability_rules',
 ];
 
 /** Asserts a Drizzle insert/update/delete rejects with a specific PostgreSQL error code. */
@@ -840,7 +842,7 @@ describe('B6 — Flow Schema, Migration & Grants Integration Suite', { skip: !en
       });
     });
 
-    it('verifies exact 94 runtime capability arithmetic across all 24 tables', async () => {
+    it('verifies exact 98 runtime capability arithmetic across all 25 tables', async () => {
       await withRuntimeSql(async (client) => {
         // Query PostgreSQL information_schema.table_privileges for promotor_runtime
         const res = await client.query(
@@ -854,8 +856,8 @@ describe('B6 — Flow Schema, Migration & Grants Integration Suite', { skip: !en
         const privileges = res.rows as { table_name: string; privilege_type: string }[];
         assert.strictEqual(
           privileges.length,
-          94,
-          `Expected exactly 94 runtime table privileges, found ${privileges.length}`
+          98,
+          `Expected exactly 98 runtime table privileges (94 + 4), found ${privileges.length}`
         );
 
         // Verify activities has ONLY SELECT and INSERT (2 privileges)
@@ -883,14 +885,15 @@ describe('B6 — Flow Schema, Migration & Grants Integration Suite', { skip: !en
   });
 
   describe('6. Migration chain & predecessor compatibility', () => {
-    it('migration journal contains the complete canonical chain (0000, 0001, 0002, 0003)', async () => {
+    it('migration journal contains the complete canonical chain (0000, 0001, 0002, 0003, 0004)', async () => {
       await withOwnerSql(async (client) => {
         const res = await client.query(`SELECT id, hash FROM drizzle.__drizzle_migrations ORDER BY id`);
-        assert.strictEqual(res.rows.length, 4, 'all 4 migrations must be recorded in journal');
+        assert.strictEqual(res.rows.length, 5, 'all 5 migrations must be recorded in journal');
         assert.strictEqual(res.rows[0].id, 1);
         assert.strictEqual(res.rows[1].id, 2);
         assert.strictEqual(res.rows[2].id, 3);
         assert.strictEqual(res.rows[3].id, 4);
+        assert.strictEqual(res.rows[4].id, 5);
       });
     });
 

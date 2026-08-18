@@ -22,3 +22,4 @@ export * from './contact-flow-states';
 export * from './aftercare-records';
 export * from './contact-assessments';
 export * from './message-templates';
+export * from './availability-rules';

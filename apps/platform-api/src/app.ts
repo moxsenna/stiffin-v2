@@ -14,6 +14,9 @@ import { createWorkspaceProfileRepository } from './repositories/workspace-profi
 import { createPublicContentRepository } from './repositories/public-content-repository';
 import { createProgramService } from './services/program-service';
 import { createPublicContentService } from './services/public-content-service';
+import { createAvailabilityService } from './services/flow/availability-service';
+import { createPublicBookingService } from './services/flow/public-booking-service';
+import { PublicSlotsQuerySchema, CreatePublicBookingRequestSchema } from '@promotor/contracts';
 import { registerFlowRoutes } from './routes/flow-routes';
 
 export interface AppDependencies {
@@ -34,6 +37,7 @@ function domainErrorStatus(err: DomainError): 400 | 401 | 403 | 404 | 409 | 500 
     case 'PROGRAM_NOT_PUBLISHED':
       return 400;
     case 'CONFLICT':
+    case 'SLOT_UNAVAILABLE':
       return 409;
     case 'UNAUTHORIZED':
       return 401;
@@ -193,6 +197,63 @@ export function createApp(deps?: AppDependencies) {
     const detail = await publicService.getPublicProgramDetail(workspaceSlug, programSlug);
     return c.json({ detail }, 200);
   });
+
+  // ==========================================
+  // B6.1 Public Booking & Slots API (Zero Auth)
+  // ==========================================
+  const handlePublicSlots = async (c: any) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const slug = c.req.param('slug') || c.req.param('workspaceSlug');
+    const parsedQuery = PublicSlotsQuerySchema.safeParse({
+      serviceId: c.req.query('serviceId'),
+      from: c.req.query('from'),
+      to: c.req.query('to'),
+    });
+    if (!parsedQuery.success) {
+      const details = parsedQuery.error.issues.map((i) => i.message).join(', ');
+      throw new DomainError('VALIDATION_ERROR', `Invalid query parameters: ${details}`);
+    }
+    const service = createAvailabilityService(db);
+    const result = await service.getPublicAvailableSlots({
+      slug,
+      serviceId: parsedQuery.data.serviceId,
+      rangeFrom: new Date(parsedQuery.data.from),
+      rangeTo: new Date(parsedQuery.data.to),
+    });
+    return c.json(result, 200);
+  };
+
+  app.get('/api/v1/public/:slug/slots', handlePublicSlots);
+  app.get('/api/v1/public/workspaces/:workspaceSlug/slots', handlePublicSlots);
+
+  const handlePublicBookings = async (c: any) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const slug = c.req.param('slug') || c.req.param('workspaceSlug');
+    const raw = await c.req.json().catch(() => ({}));
+    const parsedBody = CreatePublicBookingRequestSchema.safeParse(raw);
+    if (!parsedBody.success) {
+      const details = parsedBody.error.issues.map((i) => i.message).join(', ');
+      throw new DomainError('VALIDATION_ERROR', `Invalid booking payload: ${details}`);
+    }
+    const service = createPublicBookingService(db);
+    const result = await service.createPublicBooking({
+      slug,
+      serviceId: parsedBody.data.serviceId,
+      startAt: parsedBody.data.startAt,
+      name: parsedBody.data.name,
+      phoneRaw: parsedBody.data.phoneRaw,
+      email: parsedBody.data.email,
+      notes: parsedBody.data.notes,
+      locationType: parsedBody.data.locationType,
+      locationText: parsedBody.data.locationText,
+    });
+    return c.json(result, 201);
+  };
+
+  app.post('/api/v1/public/:slug/bookings', handlePublicBookings);
+  app.post('/api/v1/public/workspaces/:workspaceSlug/bookings', handlePublicBookings);
 
   // ==========================================
   // B3 Admin Content API (Auth + Entitlement Gated)

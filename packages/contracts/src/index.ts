@@ -864,3 +864,51 @@ export const ConfirmWhatsAppSentRequestSchema = z.object({
 });
 export type ConfirmWhatsAppSentRequest = z.infer<typeof ConfirmWhatsAppSentRequestSchema>;
 
+// --- B6.1 Availability & Public Booking ---
+export const AvailabilityRuleSchema = z.object({
+  id: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  dayOfWeek: z.number().int().min(0).max(6),
+  startTime: z.string().regex(/^([01][0-9]|2[0-3]):[0-5][0-9]$/),
+  endTime: z.string().regex(/^([01][0-9]|2[0-3]):[0-5][0-9]$/),
+  isActive: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type AvailabilityRuleDto = z.infer<typeof AvailabilityRuleSchema>;
+
+export const ReplaceAvailabilityRulesRequestSchema = z.object({
+  rules: z.array(
+    z.object({
+      dayOfWeek: z.number().int().min(0).max(6),
+      startTime: z.string().regex(/^([01][0-9]|2[0-3]):[0-5][0-9]$/, 'startTime must be HH:mm'),
+      endTime: z.string().regex(/^([01][0-9]|2[0-3]):[0-5][0-9]$/, 'endTime must be HH:mm'),
+      isActive: z.boolean().optional(),
+    }).refine((r) => r.startTime < r.endTime, {
+      message: 'startTime must be earlier than endTime',
+      path: ['endTime'],
+    })
+  ),
+});
+export type ReplaceAvailabilityRulesRequest = z.infer<typeof ReplaceAvailabilityRulesRequestSchema>;
+
+export const PublicSlotsQuerySchema = z.object({
+  serviceId: z.string().uuid('Valid serviceId is required'),
+  from: z.string().min(1, 'from timestamp is required'),
+  to: z.string().min(1, 'to timestamp is required'),
+});
+export type PublicSlotsQuery = z.infer<typeof PublicSlotsQuerySchema>;
+
+export const CreatePublicBookingRequestSchema = z.object({
+  serviceId: z.string().uuid('Valid serviceId is required'),
+  startAt: z.string().min(1, 'startAt timestamp is required'),
+  name: z.string().min(1, 'Name is required'),
+  phoneRaw: z.string().min(1, 'Phone is required'),
+  email: z.string().email().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  locationType: z.enum(['HOME_VISIT', 'ON_SITE', 'ONLINE']).optional(),
+  locationText: z.string().optional().nullable(),
+});
+export type CreatePublicBookingRequest = z.infer<typeof CreatePublicBookingRequestSchema>;
+
+
