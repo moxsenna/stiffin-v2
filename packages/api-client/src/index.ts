@@ -42,6 +42,14 @@ import type {
   CreateManualEnrollmentRequest,
   CanonicalEnrollmentDto,
   LearningContextResponse,
+  CompleteLessonResponse,
+  SubmitReflectionRequest,
+  SubmitReflectionResponse,
+  RecordLearningEventRequest,
+  RecordLearningEventResponse,
+  LearnerEnrollmentDetailsDto,
+  LearningSignalDto,
+  UpdateSignalStatusRequest,
 } from '@promotor/contracts';
 
 export interface ApiClientConfig {
@@ -359,8 +367,48 @@ export class PromotorClassContentApiClient {
   async getLearningContext(contactId: string): Promise<LearningContextResponse> {
     return this.client.get(`/api/v1/class/contacts/${encodeURIComponent(contactId)}/learning-context`);
   }
+
+  // --- B5 Learner Portal & Intelligence ---
+  async getLearnerEnrollmentDetails(enrollmentId: string): Promise<LearnerEnrollmentDetailsDto> {
+    return this.client.get(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}`);
+  }
+
+  async completeLearnerLesson(enrollmentId: string, lessonId: string): Promise<CompleteLessonResponse> {
+    return this.client.post(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/complete`);
+  }
+
+  async submitLearnerReflection(
+    enrollmentId: string,
+    lessonId: string,
+    data: SubmitReflectionRequest
+  ): Promise<SubmitReflectionResponse> {
+    return this.client.post(
+      `/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/reflection`,
+      data
+    );
+  }
+
+  async recordLearnerEvent(
+    enrollmentId: string,
+    data: RecordLearningEventRequest
+  ): Promise<RecordLearningEventResponse> {
+    return this.client.post(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/events`, data);
+  }
+
+  async listClassSignals(status?: 'ACTIVE' | 'RESOLVED' | 'DISMISSED'): Promise<{ signals: LearningSignalDto[] }> {
+    const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+    return this.client.get(`/api/v1/class/signals${qs}`);
+  }
+
+  async updateClassSignalStatus(
+    signalId: string,
+    status: 'ACTIVE' | 'RESOLVED' | 'DISMISSED'
+  ): Promise<{ signal: LearningSignalDto }> {
+    return this.client.patch(`/api/v1/class/signals/${encodeURIComponent(signalId)}/status`, { status });
+  }
 }
 
+export { PromotorClassContentApiClient as PromotorApiClient };
 
 export class PromotorFlowApiClient {
   private client: ApiClient;
@@ -563,5 +611,56 @@ export class PromotorFlowApiClient {
   async createPublicBooking(slug: string, data: CreatePublicBookingRequest): Promise<{ bookingId: string; status: string; startAt: string; endAt: string; serviceTitle: string; amount: number }> {
     return this.client.post(`/api/v1/public/${encodeURIComponent(slug)}/bookings`, data);
   }
+
+  // --- B4 / B5 PromotorClass & Learner Portal ---
+  async registerPublicLearner(slug: string, programSlug: string, data: PublicRegisterLearnerRequest): Promise<PublicRegisterLearnerResponse> {
+    return this.client.post(`/api/v1/public/${encodeURIComponent(slug)}/programs/${encodeURIComponent(programSlug)}/register`, data);
+  }
+
+  async redeemLearnerToken(token: string): Promise<RedeemLearnerTokenResponse> {
+    return this.client.post('/api/v1/public/learner/redeem-token', { token });
+  }
+
+  async createManualEnrollment(data: CreateManualEnrollmentRequest): Promise<{ enrollment: CanonicalEnrollmentDto }> {
+    return this.client.post('/api/v1/class/enrollments', data);
+  }
+
+  async listClassEnrollments(query?: { programId?: string; contactId?: string }): Promise<{ enrollments: CanonicalEnrollmentDto[] }> {
+    const q = new URLSearchParams();
+    if (query?.programId) q.set('programId', query.programId);
+    if (query?.contactId) q.set('contactId', query.contactId);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return this.client.get(`/api/v1/class/enrollments${qs}`);
+  }
+
+  async getContactLearningContext(contactId: string): Promise<LearningContextResponse> {
+    return this.client.get(`/api/v1/class/contacts/${encodeURIComponent(contactId)}/learning-context`);
+  }
+
+  async getLearnerEnrollmentDetails(enrollmentId: string): Promise<LearnerEnrollmentDetailsDto> {
+    return this.client.get(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}`);
+  }
+
+  async completeLearnerLesson(enrollmentId: string, lessonId: string): Promise<CompleteLessonResponse> {
+    return this.client.post(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/complete`);
+  }
+
+  async submitLearnerReflection(enrollmentId: string, lessonId: string, data: SubmitReflectionRequest): Promise<SubmitReflectionResponse> {
+    return this.client.post(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/reflection`, data);
+  }
+
+  async recordLearnerEvent(enrollmentId: string, data: RecordLearningEventRequest): Promise<RecordLearningEventResponse> {
+    return this.client.post(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/events`, data);
+  }
+
+  async listClassSignals(status?: 'ACTIVE' | 'RESOLVED' | 'DISMISSED'): Promise<{ signals: LearningSignalDto[] }> {
+    const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+    return this.client.get(`/api/v1/class/signals${qs}`);
+  }
+
+  async updateClassSignalStatus(signalId: string, status: 'ACTIVE' | 'RESOLVED' | 'DISMISSED'): Promise<{ signal: LearningSignalDto }> {
+    return this.client.patch(`/api/v1/class/signals/${encodeURIComponent(signalId)}/status`, { status });
+  }
 }
+
 

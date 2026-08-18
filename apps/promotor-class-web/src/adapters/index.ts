@@ -2,16 +2,20 @@ import { ApiClient, PromotorClassContentApiClient } from '@promotor/api-client';
 import { ProgramRepositoryPort } from '@/modules/programs/ports';
 import { PublicStorefrontRepositoryPort } from '@/modules/public-storefront/ports';
 import { EnrollmentRepositoryPort } from '@/modules/enrollments/ports';
+import { LearningRepositoryPort } from '@/modules/learning/ports';
 import { MockProgramRepository } from './mock/program-repository';
 import { MockPublicStorefrontRepository } from './mock/public-storefront-repository';
 import { MockEnrollmentRepository } from './mock/enrollment-repository';
+import { MockLearningRepository } from './mock/learning-repository';
 import { HttpProgramRepository } from './http/program-repository';
 import { HttpPublicStorefrontRepository } from './http/public-storefront-repository';
 import { HttpEnrollmentRepository } from './http/enrollment-repository';
+import { HttpLearningRepository } from './http/learning-repository';
 
 let programRepoInstance: ProgramRepositoryPort | null = null;
 let storefrontRepoInstance: PublicStorefrontRepositoryPort | null = null;
 let enrollmentRepoInstance: EnrollmentRepositoryPort | null = null;
+let learningRepoInstance: LearningRepositoryPort | null = null;
 
 function getApiMode(): 'http' | 'mock' {
   const mode = process.env.NEXT_PUBLIC_API_MODE;
@@ -74,9 +78,21 @@ export function getEnrollmentRepository(): EnrollmentRepositoryPort {
   return enrollmentRepoInstance;
 }
 
+export function getLearningRepository(): LearningRepositoryPort {
+  if (!learningRepoInstance) {
+    const mode = getApiMode();
+    if (mode === 'http') {
+      learningRepoInstance = new HttpLearningRepository(getApiClient());
+    } else {
+      learningRepoInstance = new MockLearningRepository();
+    }
+  }
+  return learningRepoInstance;
+}
+
 export function resetAdapterInstances(): void {
   programRepoInstance = null;
   storefrontRepoInstance = null;
   enrollmentRepoInstance = null;
+  learningRepoInstance = null;
 }
-

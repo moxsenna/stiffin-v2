@@ -17,6 +17,7 @@ export * from './messaging-service';
 export * from './flow/availability-service';
 export * from './flow/public-booking-service';
 
-// B4 Class Services
+// B4 / B5 Class Services
 export * from './class/enrollment-service';
 export * from './class/promotor-class-adapter';
+export * from './class/learning-engine-service';

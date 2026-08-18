@@ -7,6 +7,7 @@ import {
 } from '@promotor/contracts';
 import { createEnrollmentService } from '../services/class/enrollment-service';
 import { createPromotorClassAdapter } from '../services/class/promotor-class-adapter';
+import { createLearningEngineService } from '../services/class/learning-engine-service';
 import type { OrganizationContext } from '../core/organization-context';
 import type { AuthenticatedActor } from '../auth/types';
 
@@ -103,4 +104,34 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
     const programs = await adapter.listEligiblePrograms(ctx.organizationId, accessType || undefined);
     return c.json({ programs }, 200);
   });
+
+  // 6. List Learning Signals (B5 Operator Intelligence)
+  app.get('/api/v1/class/signals', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const status = c.req.query('status') as 'ACTIVE' | 'RESOLVED' | 'DISMISSED' | undefined;
+    const learningService = createLearningEngineService(db);
+
+    const signals = await learningService.listSignals(ctx.organizationId, status || undefined);
+    return c.json({ signals }, 200);
+  });
+
+  // 7. Update Learning Signal Status
+  app.patch('/api/v1/class/signals/:id/status', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const id = c.req.param('id');
+    const raw = await c.req.json().catch(() => ({}));
+    const status = raw?.status as 'ACTIVE' | 'RESOLVED' | 'DISMISSED';
+    if (!status || !['ACTIVE', 'RESOLVED', 'DISMISSED'].includes(status)) {
+      throw new DomainError('VALIDATION_ERROR', 'Status harus ACTIVE, RESOLVED, atau DISMISSED');
+    }
+
+    const learningService = createLearningEngineService(db);
+    const updated = await learningService.updateSignalStatus(ctx.organizationId, id, status);
+    if (!updated) {
+      throw new DomainError('NOT_FOUND', 'Sinyal belajar tidak ditemukan');
+    }
+
+    return c.json({ signal: updated }, 200);
+  });
 }
+

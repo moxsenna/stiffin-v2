@@ -7,7 +7,7 @@ import { LearnerShell } from '@/components/layout/LearnerShell';
 import { getActiveLearnerContactId } from '@/lib/session';
 import { getEnrollmentByIdQuery } from '@/modules/enrollments/queries';
 import { getProgramByIdQuery } from '@/modules/programs/queries';
-import { completeLessonCommand } from '@/modules/learning/commands';
+import { completeLessonCommand, submitReflectionCommand } from '@/modules/learning/commands';
 import { recordCtaClickCommand } from '@/modules/ctas/commands';
 import { getYoutubeEmbedUrl } from '@/lib/video/parse-youtube-url';
 import { Enrollment, Program, Lesson } from '@promotor/contracts';
@@ -92,8 +92,14 @@ export function LessonReaderClient() {
     setIsSubmitting(true);
 
     try {
-      const updatedEnr = await completeLessonCommand(enrollmentId, lessonId, reflectionAnswer);
-      if (updatedEnr.status === 'selesai') {
+      let res;
+      if (reflectionAnswer.trim()) {
+        res = await submitReflectionCommand(enrollmentId, lessonId, { responseText: reflectionAnswer });
+      } else {
+        res = await completeLessonCommand(enrollmentId, lessonId);
+      }
+
+      if (res.learningStatus === 'COMPLETED' || res.progressPercent === 100) {
         router.push(`/learn/programs/${enrollmentId}/completed`);
       } else {
         router.push(`/learn/programs/${enrollmentId}`);

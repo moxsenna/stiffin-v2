@@ -11,7 +11,7 @@ psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" <<'SQL'
 CREATE ROLE promotor_runtime LOGIN PASSWORD 'ci_runtime_pw';
 SQL
 
-# Apply B1 migrations (owner authority)
+# Apply migrations (owner authority)
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/${DB_NAME}" \
   pnpm --filter @promotor/platform-api db:migrate
 
@@ -39,4 +39,6 @@ psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
 psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
   -f docs/sql/grants_b4.sql
 
-
+# Apply least-privilege runtime grants for B5 learning engine
+psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
+  -f docs/sql/grants_b5.sql

@@ -988,3 +988,111 @@ export const LearningContextResponseSchema = z.object({
   ),
 });
 export type LearningContextResponse = z.infer<typeof LearningContextResponseSchema>;
+
+// --- B5 Learning Engine & Intelligence ---
+export const CompleteLessonResponseSchema = z.object({
+  enrollmentId: z.string().uuid(),
+  lessonId: z.string().uuid(),
+  isCompleted: z.boolean(),
+  progressPercent: z.number().int().min(0).max(100),
+  learningStatus: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED']),
+  intentScore: z.number().int().min(0).max(100),
+  intentLabel: z.enum(['COLD', 'WARM', 'HOT']),
+  completedAt: z.string().nullable().optional(),
+});
+export type CompleteLessonResponse = z.infer<typeof CompleteLessonResponseSchema>;
+
+export const SubmitReflectionRequestSchema = z.object({
+  responseText: z.string().optional().nullable(),
+  selectedOptions: z.unknown().optional().nullable(),
+});
+export type SubmitReflectionRequest = z.infer<typeof SubmitReflectionRequestSchema>;
+
+export const SubmitReflectionResponseSchema = z.object({
+  enrollmentId: z.string().uuid(),
+  lessonId: z.string().uuid(),
+  responseText: z.string().nullable().optional(),
+  selectedOptions: z.unknown().nullable().optional(),
+  submittedAt: z.string(),
+  progressPercent: z.number().int().min(0).max(100),
+  learningStatus: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED']),
+  intentScore: z.number().int().min(0).max(100),
+  intentLabel: z.enum(['COLD', 'WARM', 'HOT']),
+});
+export type SubmitReflectionResponse = z.infer<typeof SubmitReflectionResponseSchema>;
+
+export const RecordLearningEventRequestSchema = z.object({
+  eventType: z.string().min(1, 'eventType is required'),
+  payload: z.record(z.string(), z.unknown()).optional(),
+});
+export type RecordLearningEventRequest = z.infer<typeof RecordLearningEventRequestSchema>;
+
+export const RecordLearningEventResponseSchema = z.object({
+  enrollmentId: z.string().uuid(),
+  progressPercent: z.number().int().min(0).max(100),
+  intentScore: z.number().int().min(0).max(100),
+  intentLabel: z.enum(['COLD', 'WARM', 'HOT']),
+});
+export type RecordLearningEventResponse = z.infer<typeof RecordLearningEventResponseSchema>;
+
+export const LearnerEnrollmentDetailsSchema = z.object({
+  enrollment: CanonicalEnrollmentSchema,
+  program: z.object({
+    id: z.string().uuid(),
+    title: z.string(),
+    programSlug: z.string(),
+    description: z.string().nullable().optional(),
+    modules: z.array(
+      z.object({
+        id: z.string().uuid(),
+        title: z.string(),
+        orderIndex: z.number(),
+        lessons: z.array(
+          z.object({
+            id: z.string().uuid(),
+            title: z.string(),
+            orderIndex: z.number(),
+            videoUrl: z.string().nullable().optional(),
+            videoProvider: z.string().nullable().optional(),
+            reflectionType: z.string().nullable().optional(),
+            reflectionPrompt: z.string().nullable().optional(),
+            reflectionOptions: z.unknown().nullable().optional(),
+            ctaType: z.string().nullable().optional(),
+            ctaLabel: z.string().nullable().optional(),
+            ctaTargetProgramId: z.string().uuid().nullable().optional(),
+            ctaConfig: z.unknown().nullable().optional(),
+            isCompleted: z.boolean(),
+            completedAt: z.string().nullable().optional(),
+            reflection: z
+              .object({
+                responseText: z.string().nullable().optional(),
+                selectedOptions: z.unknown().nullable().optional(),
+                submittedAt: z.string(),
+              })
+              .nullable()
+              .optional(),
+          })
+        ),
+      })
+    ),
+  }),
+});
+export type LearnerEnrollmentDetailsDto = z.infer<typeof LearnerEnrollmentDetailsSchema>;
+
+export const LearningSignalDtoSchema = z.object({
+  id: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  enrollmentId: z.string().uuid(),
+  contactId: z.string().uuid(),
+  reason: z.string(),
+  status: z.enum(['ACTIVE', 'RESOLVED', 'DISMISSED']),
+  metadata: z.record(z.string(), z.unknown()),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type LearningSignalDto = z.infer<typeof LearningSignalDtoSchema>;
+
+export const UpdateSignalStatusRequestSchema = z.object({
+  status: z.enum(['ACTIVE', 'RESOLVED', 'DISMISSED']),
+});
+export type UpdateSignalStatusRequest = z.infer<typeof UpdateSignalStatusRequestSchema>;

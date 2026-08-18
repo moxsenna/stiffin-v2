@@ -1,0 +1,20 @@
+-- ============================================================
+-- B5 — Runtime role grants (least privilege)
+-- ============================================================
+-- Purpose: grant the application runtime role access to
+-- the B5 PromotorClass learning engine tables introduced by migration (0006_*).
+-- This file contains ROLE NAMES ONLY.
+-- Never add credentials or connection strings here.
+--
+-- Roles:
+--   owner            : migration/owner authority (DDL). Never used at runtime.
+--                      Neon: neondb_owner. CI/local: postgres.
+--   promotor_runtime : application runtime role used by the Worker via Hyperdrive.
+--
+-- Run this AS the owner role AFTER the B5 migration has been applied.
+-- ============================================================
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.lesson_progress TO promotor_runtime;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.reflection_responses TO promotor_runtime;
+GRANT SELECT, INSERT ON TABLE public.learning_events TO promotor_runtime; -- Strict append-only (UPDATE/DELETE denied)
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.learning_signals TO promotor_runtime;
