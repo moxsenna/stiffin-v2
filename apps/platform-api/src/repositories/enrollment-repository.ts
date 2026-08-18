@@ -35,11 +35,13 @@ export interface EnrollmentRepository {
     contactId: string
   ): Promise<EnrollmentRow | null>;
   getById(organizationId: string, id: string): Promise<EnrollmentRow | null>;
+  findByIdGlobal(id: string): Promise<EnrollmentRow | null>;
   listByContact(organizationId: string, contactId: string): Promise<EnrollmentRow[]>;
   listByProgram(organizationId: string, programId: string): Promise<EnrollmentRow[]>;
   listByOrg(organizationId: string): Promise<EnrollmentRow[]>;
   create(input: CreateEnrollmentInput): Promise<EnrollmentRow>;
   update(organizationId: string, id: string, input: UpdateEnrollmentInput): Promise<EnrollmentRow | null>;
+  updateProgress(organizationId: string, id: string, input: UpdateEnrollmentInput): Promise<EnrollmentRow | null>;
 }
 
 export function createEnrollmentRepository(db: NodePgDatabase): EnrollmentRepository {
@@ -63,6 +65,14 @@ export function createEnrollmentRepository(db: NodePgDatabase): EnrollmentReposi
         .select()
         .from(enrollments)
         .where(and(eq(enrollments.organizationId, organizationId), eq(enrollments.id, id)));
+      return rows[0] ?? null;
+    },
+
+    async findByIdGlobal(id: string) {
+      const rows = await db
+        .select()
+        .from(enrollments)
+        .where(eq(enrollments.id, id));
       return rows[0] ?? null;
     },
 
@@ -129,5 +139,10 @@ export function createEnrollmentRepository(db: NodePgDatabase): EnrollmentReposi
         .returning();
       return updated ?? null;
     },
+
+    async updateProgress(organizationId: string, id: string, input: UpdateEnrollmentInput) {
+      return this.update(organizationId, id, input);
+    },
   };
 }
+

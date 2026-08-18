@@ -16,3 +16,7 @@ export * from './template-repository';
 export * from './availability-repository';
 export * from './enrollment-repository';
 export * from './learner-access-repository';
+export * from './lesson-progress-repository';
+export * from './reflection-response-repository';
+export * from './learning-event-repository';
+export * from './learning-signal-repository';

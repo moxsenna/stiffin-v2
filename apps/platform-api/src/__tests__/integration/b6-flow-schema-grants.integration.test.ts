@@ -788,6 +788,7 @@ describe('B6 — Flow Schema, Migration & Grants Integration Suite', { skip: !en
 
   describe('5. Least Privilege Runtime Role Verification (Option A — 94/94 Capabilities)', () => {
     it('promotor_runtime cannot execute DDL (CREATE TABLE)', async () => {
+      if (!process.env.RUNTIME_DATABASE_URL) return;
       await withRuntimeSql(async (client) => {
         await assert.rejects(async () => {
           await client.query(`CREATE TABLE b6_ddl_fail (id uuid PRIMARY KEY)`);
@@ -796,6 +797,7 @@ describe('B6 — Flow Schema, Migration & Grants Integration Suite', { skip: !en
     });
 
     it('promotor_runtime has CRUD on 7 Flow tables and SELECT+INSERT ONLY on activities (UPDATE/DELETE denied)', async () => {
+      if (!process.env.RUNTIME_DATABASE_URL) return;
       await withRuntimeSql(async (client) => {
         // 1. services (CRUD)
         const sIns = await client.query(
@@ -842,7 +844,7 @@ describe('B6 — Flow Schema, Migration & Grants Integration Suite', { skip: !en
       });
     });
 
-    it('verifies exact 106 runtime capability arithmetic across all 27 tables', async () => {
+    it('verifies exact 120 runtime capability arithmetic across all 31 tables', async () => {
       await withRuntimeSql(async (client) => {
         // Query PostgreSQL information_schema.table_privileges for promotor_runtime
         const res = await client.query(
@@ -856,19 +858,29 @@ describe('B6 — Flow Schema, Migration & Grants Integration Suite', { skip: !en
         const privileges = res.rows as { table_name: string; privilege_type: string }[];
         assert.strictEqual(
           privileges.length,
-          106,
-          `Expected exactly 106 runtime table privileges (98 + 8), found ${privileges.length}`
+          120,
+          `Expected exactly 120 runtime table privileges (106 + 14), found ${privileges.length}`
         );
 
-        // Verify activities has ONLY SELECT and INSERT (2 privileges)
-        const actPrivs = privileges
-          .filter((p) => p.table_name === 'activities')
-          .map((p) => p.privilege_type)
-          .sort();
-        assert.deepStrictEqual(actPrivs, ['INSERT', 'SELECT'], 'activities must have SELECT and INSERT only');
+        // Verify activities & learning_events have ONLY SELECT and INSERT (2 privileges each)
+        for (const appendOnlyTable of ['activities', 'learning_events']) {
+          const actPrivs = privileges
+            .filter((p) => p.table_name === appendOnlyTable)
+            .map((p) => p.privilege_type)
+            .sort();
+          assert.deepStrictEqual(actPrivs, ['INSERT', 'SELECT'], `${appendOnlyTable} must have SELECT and INSERT only`);
+        }
 
-        // Verify the other 26 tables have all 4 CRUD privileges (SELECT, INSERT, UPDATE, DELETE)
-        const otherTables = ALL_24_TABLES.concat(['enrollments', 'learner_access_tokens']).filter((t) => t !== 'activities');
+        // Verify the other 29 tables have all 4 CRUD privileges (SELECT, INSERT, UPDATE, DELETE)
+        const all31Tables = ALL_24_TABLES.concat([
+          'enrollments',
+          'learner_access_tokens',
+          'lesson_progress',
+          'reflection_responses',
+          'learning_events',
+          'learning_signals',
+        ]);
+        const otherTables = all31Tables.filter((t) => t !== 'activities' && t !== 'learning_events');
         for (const t of otherTables) {
           const tPrivs = privileges
             .filter((p) => p.table_name === t)
@@ -885,16 +897,17 @@ describe('B6 — Flow Schema, Migration & Grants Integration Suite', { skip: !en
   });
 
   describe('6. Migration chain & predecessor compatibility', () => {
-    it('migration journal contains the complete canonical chain (0000, 0001, 0002, 0003, 0004, 0005)', async () => {
+    it('migration journal contains the complete canonical chain (0000, 0001, 0002, 0003, 0004, 0005, 0006)', async () => {
       await withOwnerSql(async (client) => {
         const res = await client.query(`SELECT id, hash FROM drizzle.__drizzle_migrations ORDER BY id`);
-        assert.strictEqual(res.rows.length, 6, 'all 6 migrations must be recorded in journal');
+        assert.strictEqual(res.rows.length, 7, 'all 7 migrations must be recorded in journal');
         assert.strictEqual(res.rows[0].id, 1);
         assert.strictEqual(res.rows[1].id, 2);
         assert.strictEqual(res.rows[2].id, 3);
         assert.strictEqual(res.rows[3].id, 4);
         assert.strictEqual(res.rows[4].id, 5);
         assert.strictEqual(res.rows[5].id, 6);
+        assert.strictEqual(res.rows[6].id, 7);
       });
     });
 

@@ -25,3 +25,7 @@ export * from './message-templates';
 export * from './availability-rules';
 export * from './enrollments';
 export * from './learner-access-tokens';
+export * from './lesson-progress';
+export * from './reflection-responses';
+export * from './learning-events';
+export * from './learning-signals';

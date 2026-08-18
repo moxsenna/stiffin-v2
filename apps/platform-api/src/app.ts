@@ -12,16 +12,20 @@ import { DomainError, isDomainError } from './core/errors';
 import { createProgramRepository } from './repositories/program-repository';
 import { createWorkspaceProfileRepository } from './repositories/workspace-profile-repository';
 import { createPublicContentRepository } from './repositories/public-content-repository';
+import { createEnrollmentRepository } from './repositories/enrollment-repository';
 import { createProgramService } from './services/program-service';
 import { createPublicContentService } from './services/public-content-service';
 import { createAvailabilityService } from './services/flow/availability-service';
 import { createPublicBookingService } from './services/flow/public-booking-service';
 import { createEnrollmentService } from './services/class/enrollment-service';
+import { createLearningEngineService } from './services/class/learning-engine-service';
 import {
   PublicSlotsQuerySchema,
   CreatePublicBookingRequestSchema,
   PublicRegisterLearnerRequestSchema,
   RedeemLearnerTokenRequestSchema,
+  SubmitReflectionRequestSchema,
+  RecordLearningEventRequestSchema,
 } from '@promotor/contracts';
 import { registerFlowRoutes } from './routes/flow-routes';
 import { registerClassRoutes } from './routes/class-routes';
@@ -301,6 +305,129 @@ export function createApp(deps?: AppDependencies) {
     const service = createEnrollmentService(db);
     const result = await service.redeemLearnerToken(parsed.data.token);
     return c.json(result, 200);
+  });
+
+  // ==========================================
+  // B5 Learner Portal & Engine API
+  // ==========================================
+  app.get('/api/v1/learner/enrollments/:enrollmentId', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const enrollmentId = c.req.param('enrollmentId');
+    const enrollmentRepo = createEnrollmentRepository(db);
+
+    const enrollment = await enrollmentRepo.findByIdGlobal(enrollmentId);
+    if (!enrollment) {
+      throw new DomainError('NOT_FOUND', 'Pendaftaran belajar tidak ditemukan');
+    }
+
+    const learningService = createLearningEngineService(db);
+    const details = await learningService.getEnrollmentFullDetails(enrollment.organizationId, enrollmentId);
+    return c.json(details, 200);
+  });
+
+  app.post('/api/v1/learner/enrollments/:enrollmentId/lessons/:lessonId/complete', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const enrollmentId = c.req.param('enrollmentId');
+    const lessonId = c.req.param('lessonId');
+    const enrollmentRepo = createEnrollmentRepository(db);
+
+    const enrollment = await enrollmentRepo.findByIdGlobal(enrollmentId);
+    if (!enrollment) {
+      throw new DomainError('NOT_FOUND', 'Pendaftaran belajar tidak ditemukan');
+    }
+
+    const learningService = createLearningEngineService(db);
+    const result = await learningService.completeLesson({
+      organizationId: enrollment.organizationId,
+      enrollmentId,
+      lessonId,
+    });
+
+    return c.json({
+      enrollmentId: result.enrollment.id,
+      lessonId,
+      isCompleted: result.progress.isCompleted,
+      progressPercent: result.enrollment.progressPercent,
+      learningStatus: result.enrollment.learningStatus,
+      intentScore: result.enrollment.intentScore,
+      intentLabel: result.enrollment.intentLabel,
+      completedAt: result.progress.completedAt ? result.progress.completedAt.toISOString() : null,
+    }, 200);
+  });
+
+  app.post('/api/v1/learner/enrollments/:enrollmentId/lessons/:lessonId/reflection', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const enrollmentId = c.req.param('enrollmentId');
+    const lessonId = c.req.param('lessonId');
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = SubmitReflectionRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      const details = parsed.error.issues.map((i) => i.message).join(', ');
+      throw new DomainError('VALIDATION_ERROR', `Payload refleksi tidak valid: ${details}`);
+    }
+
+    const enrollmentRepo = createEnrollmentRepository(db);
+    const enrollment = await enrollmentRepo.findByIdGlobal(enrollmentId);
+    if (!enrollment) {
+      throw new DomainError('NOT_FOUND', 'Pendaftaran belajar tidak ditemukan');
+    }
+
+    const learningService = createLearningEngineService(db);
+    const result = await learningService.submitReflection({
+      organizationId: enrollment.organizationId,
+      enrollmentId,
+      lessonId,
+      responseText: parsed.data.responseText,
+      selectedOptions: parsed.data.selectedOptions,
+    });
+
+    return c.json({
+      enrollmentId: result.enrollment.id,
+      lessonId,
+      responseText: result.reflection.responseText,
+      selectedOptions: result.reflection.selectedOptions,
+      submittedAt: result.reflection.submittedAt.toISOString(),
+      progressPercent: result.enrollment.progressPercent,
+      learningStatus: result.enrollment.learningStatus,
+      intentScore: result.enrollment.intentScore,
+      intentLabel: result.enrollment.intentLabel,
+    }, 200);
+  });
+
+  app.post('/api/v1/learner/enrollments/:enrollmentId/events', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const enrollmentId = c.req.param('enrollmentId');
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = RecordLearningEventRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      const details = parsed.error.issues.map((i) => i.message).join(', ');
+      throw new DomainError('VALIDATION_ERROR', `Payload event belajar tidak valid: ${details}`);
+    }
+
+    const enrollmentRepo = createEnrollmentRepository(db);
+    const enrollment = await enrollmentRepo.findByIdGlobal(enrollmentId);
+    if (!enrollment) {
+      throw new DomainError('NOT_FOUND', 'Pendaftaran belajar tidak ditemukan');
+    }
+
+    const learningService = createLearningEngineService(db);
+    const result = await learningService.recordLearningEvent({
+      organizationId: enrollment.organizationId,
+      enrollmentId,
+      eventType: parsed.data.eventType,
+      payload: parsed.data.payload,
+    });
+
+    return c.json({
+      enrollmentId: result.enrollment.id,
+      progressPercent: result.enrollment.progressPercent,
+      intentScore: result.enrollment.intentScore,
+      intentLabel: result.enrollment.intentLabel,
+    }, 200);
   });
 
   // ==========================================

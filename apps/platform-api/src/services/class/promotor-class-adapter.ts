@@ -5,6 +5,8 @@ import { createProgramRepository } from '../../repositories/program-repository';
 import { createEnrollmentRepository } from '../../repositories/enrollment-repository';
 import { createContactRepository } from '../../repositories/contact-repository';
 
+import { createLearningSignalRepository } from '../../repositories/learning-signal-repository';
+
 export interface LearningContextDTO {
   contactId: string;
   activeEnrollments: Array<{
@@ -48,6 +50,7 @@ export function createPromotorClassAdapter(db: NodePgDatabase): PromotorClassAda
   const contactRepo = createContactRepository(db, normalizePhone, normalizeEmail);
   const programRepo = createProgramRepository(db);
   const enrollmentRepo = createEnrollmentRepository(db);
+  const signalRepo = createLearningSignalRepository(db);
 
   return {
     async getLearningContext(organizationId: string, contactId: string): Promise<LearningContextDTO> {
@@ -89,12 +92,18 @@ export function createPromotorClassAdapter(db: NodePgDatabase): PromotorClassAda
         ? Math.round(totalProgress / activeEnrollments.length)
         : 0;
 
+      const rawSignals = await signalRepo.listByContact(organizationId, contactId);
+      const recentSignals = rawSignals.slice(0, 10).map((s) => ({
+        reason: s.reason,
+        createdAt: s.createdAt.toISOString(),
+      }));
+
       return {
         contactId,
         activeEnrollments,
         overallProgressPercent: avgProgress,
         highestIntentLabel: highestIntent,
-        recentSignals: [], // B4 baseline (B5 will attach signals)
+        recentSignals,
       };
     },
 
