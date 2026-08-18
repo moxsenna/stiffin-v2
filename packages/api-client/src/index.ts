@@ -9,6 +9,28 @@ import type {
   UpdateProgramPresentationRequest,
   UpdateWorkspaceProfileRequest,
   UpsertLessonRequest,
+  CreateFlowContactRequest,
+  UpdateFlowContactProfileRequest,
+  TransitionFlowContactStageRequest,
+  ListFlowContactsQuery,
+  CreateNextActionRequest,
+  CompleteNextActionRequest,
+  SkipNextActionRequest,
+  RescheduleNextActionRequest,
+  CompleteAftercareActionRequest,
+  ListNextActionsQuery,
+  CreateFlowServiceRequest,
+  UpdateFlowServiceRequest,
+  CreateMessageTemplateRequest,
+  UpdateMessageTemplateRequest,
+  ListMessageTemplatesQuery,
+  ListAftercareQuery,
+  CreateBookingRequest,
+  RescheduleBookingRequest,
+  CancelBookingRequest,
+  ListBookingsQuery,
+  WhatsAppOpenedRequest,
+  ConfirmWhatsAppSentRequest,
 } from '@promotor/contracts';
 
 export interface ApiClientConfig {
@@ -289,5 +311,186 @@ export class PromotorClassContentApiClient {
   async updateWorkspaceProfile(patch: UpdateWorkspaceProfileRequest): Promise<PublicWorkspaceProfile> {
     const res = await this.client.put<{ profile: PublicWorkspaceProfile }>('/api/v1/storefront/profile', patch);
     return res.profile;
+  }
+}
+
+export class PromotorFlowApiClient {
+  private client: ApiClient;
+
+  constructor(client: ApiClient) {
+    this.client = client;
+  }
+
+  // Today
+  async getToday(): Promise<{
+    overdue: any[];
+    today: any[];
+    upcoming: any[];
+    totalActiveCount: number;
+    timezone: string;
+    computedAt: string;
+  }> {
+    return this.client.get('/api/v1/flow/today');
+  }
+
+  // Contacts
+  async listContacts(query?: ListFlowContactsQuery): Promise<{ contacts: any[]; total: number }> {
+    const q = new URLSearchParams();
+    if (query?.search) q.set('search', query.search);
+    if (query?.classification) q.set('classification', query.classification);
+    if (query?.limit !== undefined) q.set('limit', String(query.limit));
+    if (query?.offset !== undefined) q.set('offset', String(query.offset));
+    const qs = q.toString();
+    return this.client.get(`/api/v1/flow/contacts${qs ? `?${qs}` : ''}`);
+  }
+
+  async getContact(id: string): Promise<any> {
+    return this.client.get(`/api/v1/flow/contacts/${encodeURIComponent(id)}`);
+  }
+
+  async createContact(data: CreateFlowContactRequest): Promise<any> {
+    return this.client.post('/api/v1/flow/contacts', data);
+  }
+
+  async updateContact(id: string, data: UpdateFlowContactProfileRequest): Promise<any> {
+    return this.client.patch(`/api/v1/flow/contacts/${encodeURIComponent(id)}`, data);
+  }
+
+  async transitionContactStage(id: string, data: TransitionFlowContactStageRequest): Promise<any> {
+    return this.client.post(`/api/v1/flow/contacts/${encodeURIComponent(id)}/stage`, data);
+  }
+
+  async getContactActivities(id: string): Promise<{ activities: any[] }> {
+    return this.client.get(`/api/v1/flow/contacts/${encodeURIComponent(id)}/activities`);
+  }
+
+  async getContactPrimaryNextAction(id: string): Promise<{ nextAction: any | null }> {
+    return this.client.get(`/api/v1/flow/contacts/${encodeURIComponent(id)}/primary-next-action`);
+  }
+
+  async getContactAssessmentStatus(id: string): Promise<{ status: string }> {
+    return this.client.get(`/api/v1/flow/contacts/${encodeURIComponent(id)}/assessment-status`);
+  }
+
+  // Next Actions
+  async listNextActions(query?: ListNextActionsQuery): Promise<{ nextActions: any[] }> {
+    const q = new URLSearchParams();
+    if (query?.contactId) q.set('contactId', query.contactId);
+    if (query?.status) q.set('status', query.status);
+    const qs = q.toString();
+    return this.client.get(`/api/v1/flow/next-actions${qs ? `?${qs}` : ''}`);
+  }
+
+  async createNextAction(data: CreateNextActionRequest): Promise<{ nextAction: any }> {
+    return this.client.post('/api/v1/flow/next-actions', data);
+  }
+
+  async completeNextAction(id: string, data?: CompleteNextActionRequest): Promise<{ nextAction: any }> {
+    return this.client.post(`/api/v1/flow/next-actions/${encodeURIComponent(id)}/complete`, data ?? {});
+  }
+
+  async skipNextAction(id: string, data: SkipNextActionRequest): Promise<{ nextAction: any }> {
+    return this.client.post(`/api/v1/flow/next-actions/${encodeURIComponent(id)}/skip`, data);
+  }
+
+  async cancelNextAction(id: string): Promise<{ nextAction: any }> {
+    return this.client.post(`/api/v1/flow/next-actions/${encodeURIComponent(id)}/cancel`);
+  }
+
+  async rescheduleNextAction(id: string, data: RescheduleNextActionRequest): Promise<{ nextAction: any }> {
+    return this.client.post(`/api/v1/flow/next-actions/${encodeURIComponent(id)}/reschedule`, data);
+  }
+
+  async completeAftercareAction(id: string, data: CompleteAftercareActionRequest): Promise<{ nextAction: any }> {
+    return this.client.post(`/api/v1/flow/next-actions/${encodeURIComponent(id)}/aftercare-complete`, data);
+  }
+
+  // Services
+  async listServices(): Promise<{ services: any[] }> {
+    return this.client.get('/api/v1/flow/services');
+  }
+
+  async createService(data: CreateFlowServiceRequest): Promise<{ service: any }> {
+    return this.client.post('/api/v1/flow/services', data);
+  }
+
+  async updateService(id: string, data: UpdateFlowServiceRequest): Promise<{ service: any }> {
+    return this.client.patch(`/api/v1/flow/services/${encodeURIComponent(id)}`, data);
+  }
+
+  // Message Templates
+  async listMessageTemplates(query?: ListMessageTemplatesQuery): Promise<{ templates: any[] }> {
+    const q = new URLSearchParams();
+    if (query?.category) q.set('category', query.category);
+    const qs = q.toString();
+    return this.client.get(`/api/v1/flow/message-templates${qs ? `?${qs}` : ''}`);
+  }
+
+  async createMessageTemplate(data: CreateMessageTemplateRequest): Promise<{ template: any }> {
+    return this.client.post('/api/v1/flow/message-templates', data);
+  }
+
+  async updateMessageTemplate(id: string, data: UpdateMessageTemplateRequest): Promise<{ template: any }> {
+    return this.client.patch(`/api/v1/flow/message-templates/${encodeURIComponent(id)}`, data);
+  }
+
+  // Aftercare
+  async listAftercare(query?: ListAftercareQuery): Promise<{ aftercare: any[] }> {
+    const q = new URLSearchParams();
+    if (query?.status) q.set('status', query.status);
+    const qs = q.toString();
+    return this.client.get(`/api/v1/flow/aftercare${qs ? `?${qs}` : ''}`);
+  }
+
+  // Bookings
+  async listBookings(query?: ListBookingsQuery): Promise<{ bookings: any[] }> {
+    const q = new URLSearchParams();
+    if (query?.from) q.set('from', query.from);
+    if (query?.to) q.set('to', query.to);
+    if (query?.contactId) q.set('contactId', query.contactId);
+    if (query?.status) q.set('status', query.status);
+    const qs = q.toString();
+    return this.client.get(`/api/v1/flow/bookings${qs ? `?${qs}` : ''}`);
+  }
+
+  async getBooking(id: string): Promise<{ booking: any }> {
+    return this.client.get(`/api/v1/flow/bookings/${encodeURIComponent(id)}`);
+  }
+
+  async createBooking(data: CreateBookingRequest): Promise<{ booking: any }> {
+    return this.client.post('/api/v1/flow/bookings', data);
+  }
+
+  async confirmBooking(id: string): Promise<{ booking: any }> {
+    return this.client.post(`/api/v1/flow/bookings/${encodeURIComponent(id)}/confirm`);
+  }
+
+  async markBookingPaid(id: string): Promise<{ booking: any }> {
+    return this.client.post(`/api/v1/flow/bookings/${encodeURIComponent(id)}/mark-paid`);
+  }
+
+  async rescheduleBooking(id: string, data: RescheduleBookingRequest): Promise<{ booking: any }> {
+    return this.client.post(`/api/v1/flow/bookings/${encodeURIComponent(id)}/reschedule`, data);
+  }
+
+  async completeBooking(id: string): Promise<{ booking: any }> {
+    return this.client.post(`/api/v1/flow/bookings/${encodeURIComponent(id)}/complete`);
+  }
+
+  async cancelBooking(id: string, data?: CancelBookingRequest): Promise<{ booking: any }> {
+    return this.client.post(`/api/v1/flow/bookings/${encodeURIComponent(id)}/cancel`, data ?? {});
+  }
+
+  async noShowBooking(id: string): Promise<{ booking: any }> {
+    return this.client.post(`/api/v1/flow/bookings/${encodeURIComponent(id)}/no-show`);
+  }
+
+  // Messaging
+  async recordWhatsAppOpened(data: WhatsAppOpenedRequest): Promise<{ success: boolean; contactId: string; phoneE164: string }> {
+    return this.client.post('/api/v1/flow/messaging/whatsapp-opened', data);
+  }
+
+  async confirmWhatsAppSent(data: ConfirmWhatsAppSentRequest): Promise<{ success: boolean; nextActionId: string }> {
+    return this.client.post('/api/v1/flow/messaging/confirm-sent', data);
   }
 }

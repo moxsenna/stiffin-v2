@@ -1,16 +1,17 @@
+import {
+  getContactRepository,
+  getLifecycleRepository,
+  getNextActionRepository,
+  getBookingRepository,
+  getServiceRepository,
+  getActivityRepository,
+  getMessageTemplateRepository,
+  getAftercareRepository,
+  getSettingsRepository,
+  getPromotorClassAdapter,
+} from '@/adapters';
 import { mockStateStore } from '@/adapters/mock/mock-state-store';
 import { mockClock } from '@/adapters/mock/mock-clock';
-
-import { MockContactRepository } from '@/adapters/mock/contact-repository';
-import { MockLifecycleRepository } from '@/adapters/mock/lifecycle-repository';
-import { MockNextActionRepository } from '@/adapters/mock/next-action-repository';
-import { MockBookingRepository } from '@/adapters/mock/booking-repository';
-import { MockServiceRepository } from '@/adapters/mock/service-repository';
-import { MockActivityRepository } from '@/adapters/mock/activity-repository';
-import { MockMessageTemplateRepository } from '@/adapters/mock/message-template-repository';
-import { MockAftercareRepository } from '@/adapters/mock/aftercare-repository';
-import { MockSettingsRepository } from '@/adapters/mock/settings-repository';
-import { MockPromotorClassAdapter } from '@/adapters/mock/promotorclass-adapter';
 
 import { createContactQueries } from '@/modules/contacts/queries';
 import { createContactCommands } from '@/modules/contacts/commands';
@@ -42,21 +43,21 @@ import { createSettingsCommands } from '@/modules/settings/commands';
 import { createPromotorClassQueries } from '@/modules/promotorclass/queries';
 import { createPromotorClassCommands } from '@/modules/promotorclass/commands';
 
-// Instantiation of concrete mock repositories
-const contactRepo = new MockContactRepository(mockStateStore);
-const lifecycleRepo = new MockLifecycleRepository(mockStateStore);
-const nextActionRepo = new MockNextActionRepository(mockStateStore);
-const bookingRepo = new MockBookingRepository(mockStateStore);
-const serviceRepo = new MockServiceRepository(mockStateStore);
-const activityRepo = new MockActivityRepository(mockStateStore);
-const templateRepo = new MockMessageTemplateRepository(mockStateStore);
-const aftercareRepo = new MockAftercareRepository(mockStateStore);
-const settingsRepo = new MockSettingsRepository(mockStateStore);
-const promotorClassAdapter = new MockPromotorClassAdapter(mockStateStore);
+// Active repositories resolved via environment-controlled adapter factory
+const contactRepo = getContactRepository();
+const lifecycleRepo = getLifecycleRepository();
+const nextActionRepo = getNextActionRepository();
+const bookingRepo = getBookingRepository();
+const serviceRepo = getServiceRepository();
+const activityRepo = getActivityRepository();
+const templateRepo = getMessageTemplateRepository();
+const aftercareRepo = getAftercareRepository();
+const settingsRepo = getSettingsRepository();
+const promotorClassAdapter = getPromotorClassAdapter();
 
 // Helper contact lookup for queries
 const contactLookupFn = async (contactId: string) => {
-  const c = await contactRepo.getContactDetail('org_rina_stifin', contactId);
+  const c = await contactRepo.getContactDetail('', contactId);
   if (!c) return null;
   return { name: c.name, phoneE164: c.phoneE164, stage: c.stage, sourceChannel: c.sourceChannel };
 };
