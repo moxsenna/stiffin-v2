@@ -250,8 +250,8 @@ describe('B6.1 — Public Booking & Availability Integration Test Suite', () => 
           contactId: contact.id,
           serviceId: testServiceA1Id,
           amount: 350000,
-          startAt: new Date('2026-08-24T03:00:00.000Z'),
-          endAt: new Date('2026-08-24T04:00:00.000Z'),
+          startAt: '2026-08-24T03:00:00.000Z',
+          endAt: '2026-08-24T04:00:00.000Z',
           locationType: 'ONLINE',
           status: 'PENDING',
           paymentStatus: 'UNPAID',
@@ -398,7 +398,7 @@ describe('B6.1 — Public Booking & Availability Integration Test Suite', () => 
           .where(
             and(
               eq(bookings.organizationId, testOrgAId),
-              eq(bookings.startAt, new Date(targetSlot))
+              eq(bookings.startAt, targetSlot)
             )
           );
         assert.strictEqual(rows.length, 1, 'Database must contain exactly 1 booking for the contested slot');
