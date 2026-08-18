@@ -14,3 +14,5 @@ export * from './aftercare-repository';
 export * from './assessment-repository';
 export * from './template-repository';
 export * from './availability-repository';
+export * from './enrollment-repository';
+export * from './learner-access-repository';

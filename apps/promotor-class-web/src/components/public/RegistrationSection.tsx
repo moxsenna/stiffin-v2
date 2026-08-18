@@ -3,8 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { PublicProgramDetail } from '@/modules/public-storefront/types';
-import { matchOrCreateContactCommand } from '@/modules/contacts/commands';
-import { createEnrollmentCommand } from '@/modules/enrollments/commands';
+import { getEnrollmentRepository } from '@/adapters';
 import { setActiveLearnerSession } from '@/lib/session';
 
 interface RegistrationSectionProps {
@@ -28,19 +27,25 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
     setLoading(true);
 
     try {
-      // 1. Match or Create Contact
-      const contact = await matchOrCreateContactCommand(name.trim(), phone.trim());
+      const enrollmentRepo = getEnrollmentRepository();
+      const res = await enrollmentRepo.registerPublicLearner({
+        workspaceSlug: detail.promoter.workspaceSlug,
+        programSlug: program.programSlug,
+        name: name.trim(),
+        phoneRaw: phone.trim(),
+      });
 
-      // 2. Set active learner session with workspace context
+      // Set active learner session with workspace context and token
       setActiveLearnerSession({
-        contactId: contact.id,
+        contactId: res.contactId,
         workspaceSlug: detail.promoter.workspaceSlug,
       });
 
-      // 3. Create enrollment (idempotent)
-      const enrollment = await createEnrollmentCommand(contact.id, program.id);
+      if (typeof window !== 'undefined' && res.accessToken) {
+        localStorage.setItem(`learner_token_${res.contactId}`, res.accessToken);
+      }
 
-      setCreatedEnrollmentId(enrollment.id);
+      setCreatedEnrollmentId(res.enrollmentId);
     } catch (err: any) {
       setError(err?.message || 'Terjadi kesalahan saat pendaftaran. Silakan coba lagi.');
     } finally {

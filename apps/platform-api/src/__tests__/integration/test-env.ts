@@ -56,9 +56,13 @@ export async function withIntegrationDb<T>(operation: (db: NodePgDatabase) => Pr
   }
 }
 
+export const RUNTIME_DATABASE_URL = process.env.RUNTIME_DATABASE_URL;
+
 /** Raw SQL as the runtime role (for least-privilege assertions). */
 export async function withRuntimeSql<T>(fn: (client: Client) => Promise<T>): Promise<T> {
-  const client = new Client({ connectionString: TEST_DATABASE_URL });
+  const url = RUNTIME_DATABASE_URL ?? TEST_DATABASE_URL;
+  if (!url) throw new Error('RUNTIME_DATABASE_URL or TEST_DATABASE_URL is required for runtime-role assertions');
+  const client = new Client({ connectionString: url });
   await client.connect();
   try {
     return await fn(client);

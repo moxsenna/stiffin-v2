@@ -23,3 +23,5 @@ export * from './aftercare-records';
 export * from './contact-assessments';
 export * from './message-templates';
 export * from './availability-rules';
+export * from './enrollments';
+export * from './learner-access-tokens';

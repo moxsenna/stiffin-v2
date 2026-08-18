@@ -828,8 +828,7 @@ export const ListBookingsQuerySchema = z.object({
   status: FlowBookingStatusSchema.optional(),
 });
 export type ListBookingsQuery = z.infer<typeof ListBookingsQuerySchema>;
-
-export const CreateBookingRequestSchema = z.object({
+export const CreateBookingRequestSchema = z.object({
   contactId: z.string().uuid('Valid contactId is required'),
   serviceId: z.string().uuid('Valid serviceId is required'),
   startAt: z.string().min(1, 'startAt is required'),
@@ -864,7 +863,7 @@ export const ConfirmWhatsAppSentRequestSchema = z.object({
 });
 export type ConfirmWhatsAppSentRequest = z.infer<typeof ConfirmWhatsAppSentRequestSchema>;
 
-// --- B6.1 Availability & Public Booking ---
+// --- B6.1 Availability & Public Booking ----
 export const AvailabilityRuleSchema = z.object({
   id: z.string().uuid(),
   organizationId: z.string().uuid(),
@@ -911,4 +910,81 @@ export const CreatePublicBookingRequestSchema = z.object({
 });
 export type CreatePublicBookingRequest = z.infer<typeof CreatePublicBookingRequestSchema>;
 
+// --- B4 Registration & Enrollment ---
+export const PublicRegisterLearnerRequestSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  phoneRaw: z.string().min(1, 'Phone is required'),
+  email: z.string().email().optional().nullable(),
+});
+export type PublicRegisterLearnerRequest = z.infer<typeof PublicRegisterLearnerRequestSchema>;
 
+export const PublicRegisterLearnerResponseSchema = z.object({
+  enrollmentId: z.string().uuid(),
+  contactId: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  programId: z.string().uuid(),
+  programTitle: z.string(),
+  status: z.string(),
+  accessToken: z.string(),
+});
+export type PublicRegisterLearnerResponse = z.infer<typeof PublicRegisterLearnerResponseSchema>;
+
+export const RedeemLearnerTokenRequestSchema = z.object({
+  token: z.string().min(1, 'Token is required'),
+});
+export type RedeemLearnerTokenRequest = z.infer<typeof RedeemLearnerTokenRequestSchema>;
+
+export const RedeemLearnerTokenResponseSchema = z.object({
+  contactId: z.string().uuid(),
+  organizationId: z.string().uuid(),
+});
+export type RedeemLearnerTokenResponse = z.infer<typeof RedeemLearnerTokenResponseSchema>;
+
+export const CreateManualEnrollmentRequestSchema = z.object({
+  programId: z.string().uuid('Valid programId is required'),
+  contactId: z.string().uuid('Valid contactId is required'),
+});
+export type CreateManualEnrollmentRequest = z.infer<typeof CreateManualEnrollmentRequestSchema>;
+
+export const CanonicalEnrollmentSchema = z.object({
+  id: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  programId: z.string().uuid(),
+  contactId: z.string().uuid(),
+  status: z.enum(['ENROLLED', 'STARTED', 'COMPLETED', 'CANCELLED']),
+  enrolledAt: z.string(),
+  startedAt: z.string().nullable().optional(),
+  completedAt: z.string().nullable().optional(),
+  lastActivityAt: z.string().nullable().optional(),
+  progressPercent: z.number().int().min(0).max(100),
+  intentScore: z.number().int().min(0).max(100),
+  intentLabel: z.enum(['COLD', 'WARM', 'HOT']),
+  learningStatus: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'AT_RISK']),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type CanonicalEnrollmentDto = z.infer<typeof CanonicalEnrollmentSchema>;
+
+export const LearningContextResponseSchema = z.object({
+  contactId: z.string().uuid(),
+  activeEnrollments: z.array(
+    z.object({
+      enrollmentId: z.string().uuid(),
+      programId: z.string().uuid(),
+      programTitle: z.string(),
+      progressPercent: z.number(),
+      learningStatus: z.string(),
+      intentLabel: z.string(),
+      enrolledAt: z.string(),
+    })
+  ),
+  overallProgressPercent: z.number(),
+  highestIntentLabel: z.enum(['COLD', 'WARM', 'HOT']),
+  recentSignals: z.array(
+    z.object({
+      reason: z.string(),
+      createdAt: z.string(),
+    })
+  ),
+});
+export type LearningContextResponse = z.infer<typeof LearningContextResponseSchema>;
