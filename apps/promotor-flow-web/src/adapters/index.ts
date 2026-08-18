@@ -5,7 +5,7 @@ import { NextActionRepositoryPort } from '@/modules/next-actions/ports';
 import { BookingRepositoryPort } from '@/modules/bookings/ports';
 import { ServiceRepositoryPort } from '@/modules/services/ports';
 import { ActivityRepositoryPort } from '@/modules/activities/ports';
-import { MessageTemplateRepositoryPort } from '@/modules/messaging/ports';
+import { MessageTemplateRepositoryPort, MessagingPort } from '@/modules/messaging/ports';
 import { AftercareRepositoryPort } from '@/modules/aftercare/ports';
 import { SettingsRepositoryPort } from '@/modules/settings/ports';
 import { PromotorClassAdapterPort } from '@/modules/promotorclass/ports';
@@ -20,7 +20,9 @@ import { MockMessageTemplateRepository } from './mock/message-template-repositor
 import { MockAftercareRepository } from './mock/aftercare-repository';
 import { MockSettingsRepository } from './mock/settings-repository';
 import { MockPromotorClassAdapter } from './mock/promotorclass-adapter';
+import { MockMessagingRepository } from './mock/messaging-repository';
 import { mockStateStore } from './mock/mock-state-store';
+import { mockClock } from './mock/mock-clock';
 
 import { HttpContactRepository } from './http/contact-repository';
 import { HttpLifecycleRepository } from './http/lifecycle-repository';
@@ -32,6 +34,7 @@ import { HttpMessageTemplateRepository } from './http/message-template-repositor
 import { HttpAftercareRepository } from './http/aftercare-repository';
 import { HttpSettingsRepository } from './http/settings-repository';
 import { HttpPromotorClassAdapter } from './http/promotorclass-adapter';
+import { HttpMessagingRepository } from './http/messaging-repository';
 
 export function getApiMode(): 'http' | 'mock' {
   const mode = process.env.NEXT_PUBLIC_API_MODE;
@@ -169,6 +172,22 @@ export function getPromotorClassAdapter(): PromotorClassAdapterPort {
   return promotorClassAdapterInstance;
 }
 
+let messagingRepoInstance: MessagingPort | null = null;
+
+export function getMessagingRepository(): MessagingPort {
+  if (!messagingRepoInstance) {
+    messagingRepoInstance =
+      getApiMode() === 'http'
+        ? new HttpMessagingRepository(getApiClient())
+        : new MockMessagingRepository(
+            getNextActionRepository(),
+            getActivityRepository(),
+            mockClock
+          );
+  }
+  return messagingRepoInstance;
+}
+
 export function resetAdapterInstances(): void {
   contactRepoInstance = null;
   lifecycleRepoInstance = null;
@@ -180,4 +199,5 @@ export function resetAdapterInstances(): void {
   aftercareRepoInstance = null;
   settingsRepoInstance = null;
   promotorClassAdapterInstance = null;
+  messagingRepoInstance = null;
 }

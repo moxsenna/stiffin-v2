@@ -7,6 +7,7 @@ import {
   getActivityRepository,
   getMessageTemplateRepository,
   getAftercareRepository,
+  getMessagingRepository,
   getSettingsRepository,
   getPromotorClassAdapter,
 } from '@/adapters';
@@ -52,12 +53,13 @@ const serviceRepo = getServiceRepository();
 const activityRepo = getActivityRepository();
 const templateRepo = getMessageTemplateRepository();
 const aftercareRepo = getAftercareRepository();
+const messagingRepo = getMessagingRepository();
 const settingsRepo = getSettingsRepository();
 const promotorClassAdapter = getPromotorClassAdapter();
 
 // Helper contact lookup for queries
 const contactLookupFn = async (contactId: string) => {
-  const c = await contactRepo.getContactDetail('', contactId);
+  const c = await contactRepo.getContactDetail(contactId);
   if (!c) return null;
   return { name: c.name, phoneE164: c.phoneE164, stage: c.stage, sourceChannel: c.sourceChannel };
 };
@@ -82,7 +84,7 @@ export const activityQueries = createActivityQueries(activityRepo);
 export const activityCommands = createActivityCommands(activityRepo);
 
 export const messagingQueries = createMessagingQueries(templateRepo);
-export const messagingCommands = createMessagingCommands(nextActionRepo, activityRepo, mockClock);
+export const messagingCommands = createMessagingCommands(messagingRepo);
 
 export const aftercareQueries = createAftercareQueries();
 export const aftercareCommands = createAftercareCommands(aftercareRepo, nextActionRepo, activityRepo, mockClock);

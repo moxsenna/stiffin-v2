@@ -11,6 +11,7 @@ import { MockActivityRepository } from '../adapters/mock/activity-repository';
 import { MockAftercareRepository } from '../adapters/mock/aftercare-repository';
 import { MockServiceRepository } from '../adapters/mock/service-repository';
 import { MockPromotorClassAdapter } from '../adapters/mock/promotorclass-adapter';
+import { MockMessagingRepository } from '../adapters/mock/messaging-repository';
 
 import { createContactCommands } from '../modules/contacts/commands';
 import { createLifecycleCommands } from '../modules/lifecycle/commands';
@@ -205,8 +206,9 @@ test('WhatsApp: wa.me link does NOT complete action; explicit confirm completes 
   const clock = new MockClock('2026-08-12T10:00:00+07:00');
   const actionRepo = new MockNextActionRepository(store);
   const activityRepo = new MockActivityRepository(store);
+  const messagingRepo = new MockMessagingRepository(actionRepo, activityRepo, clock);
 
-  const messagingCmd = createMessagingCommands(actionRepo, activityRepo, clock);
+  const messagingCmd = createMessagingCommands(messagingRepo);
 
   const initialAction = (await actionRepo.getContactNextActions('contact_ayu'))[0];
   assert.equal(initialAction.status, 'PENDING');
