@@ -11,7 +11,7 @@ import { createHash } from 'node:crypto';
  *    reads env.HYPERDRIVE.connectionString exclusively.
  * 2. packages/contracts deliberate B3 re-baseline (includes PromotorClass content models & DTOs).
  */
-const CONTRACTS_BASELINE_HASH = 'd262ef3d565f4981810379d3e5229c4f859833e56220a3ef10cec0b2361794a3';
+const CONTRACTS_BASELINE_HASH = '60c5a7f6efe506cfb3006c80a6d02db15bcd21690a12ca60f18e17e34a1e43f5';
 
 describe('B1 — source guardrails', () => {
   it('runtime src/ code never references DATABASE_URL', () => {

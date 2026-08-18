@@ -1,8 +1,10 @@
+import { eq, and, or, ilike, isNull, desc } from 'drizzle-orm';
 import type { DbHandle } from '../db/client';
 import { isOrganizationContext, type OrganizationContext } from '../core/organization-context';
 import type { AuthenticatedActor } from '../auth/types';
 import { DomainError } from '../core/errors';
 import { normalizePhone, normalizeEmail } from '@promotor/platform-core';
+import { contacts, contactFlowStates } from '../db/schema';
 import { createContactService } from './contact-service';
 import { createContactRepository } from '../repositories/contact-repository';
 import { createContactFlowRepository } from '../repositories/contact-flow-repository';
@@ -260,6 +262,77 @@ export function createContactFlowService(
 
       const activityRepo = (dependencies.activities ?? createActivityRepository)(db);
       return activityRepo.listByContact(ctx, contactId, limit);
+    },
+
+    /**
+     * Lists Flow contacts with optional name/phone search and classification filter.
+     */
+    async listContacts(
+      ctx: OrganizationContext,
+      query: {
+        search?: string;
+        classification?: 'PROSPECT' | 'CLIENT';
+        limit?: number;
+        offset?: number;
+      } = {}
+    ) {
+      if (!isOrganizationContext(ctx)) {
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
+      }
+
+      const limit = Math.min(Math.max(query.limit ?? 50, 1), 100);
+      const offset = Math.max(query.offset ?? 0, 0);
+
+      const baseConditions = [
+        eq(contacts.organizationId, ctx.organizationId),
+        isNull(contacts.deletedAt),
+      ];
+
+      if (query.search && query.search.trim().length > 0) {
+        const pattern = `%${query.search.trim()}%`;
+        baseConditions.push(
+          or(
+            ilike(contacts.name, pattern),
+            ilike(contacts.phoneE164, pattern)
+          )!
+        );
+      }
+
+      if (query.classification) {
+        baseConditions.push(eq(contactFlowStates.classification, query.classification));
+      }
+
+      const rows = await (db as any)
+        .select({
+          contact: contacts,
+          flowState: contactFlowStates,
+        })
+        .from(contacts)
+        .leftJoin(
+          contactFlowStates,
+          and(
+            eq(contactFlowStates.contactId, contacts.id),
+            eq(contactFlowStates.organizationId, ctx.organizationId)
+          )
+        )
+        .where(and(...baseConditions))
+        .orderBy(desc(contacts.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      return rows.map((r: any) => ({
+        id: r.contact.id,
+        name: r.contact.name,
+        phoneE164: r.contact.phoneE164,
+        email: r.contact.email,
+        stage: r.flowState?.stage ?? 'NEW',
+        classification: r.flowState?.classification ?? 'PROSPECT',
+        interest: r.flowState?.interest ?? null,
+        sourceChannel: r.flowState?.sourceChannel ?? null,
+        notes: r.flowState?.notes ?? null,
+        createdAt: r.contact.createdAt,
+        updatedAt: r.contact.updatedAt,
+      }));
     },
   };
 }
