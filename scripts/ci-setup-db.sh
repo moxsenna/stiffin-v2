@@ -31,3 +31,7 @@ psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
 psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
   -f docs/sql/grants_b6.sql
 
+# Apply least-privilege runtime grants for B6.1 availability rules
+psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
+  -f docs/sql/grants_b6.1.sql
+
