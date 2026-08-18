@@ -1,54 +1,26 @@
-import { NextActionRepositoryPort } from '../next-actions/ports';
-import { ActivityRepositoryPort } from '../activities/ports';
-import { ClockPort } from '../clock/ports';
-import { NextActionType } from '@promotor/promotor-flow-fixtures';
+import { MessagingPort } from './ports';
 
 export interface ConfirmWASentInput {
-  organizationId: string;
+  organizationId?: string;
   contactId: string;
-  actionId: string;
+  actionId?: string;
   messageText: string;
   scheduleNextFollowUpDays?: number;
-  nextActionType?: NextActionType;
-  nextActionTitle?: string;
 }
 
-export function createMessagingCommands(
-  actionRepo: NextActionRepositoryPort,
-  activityRepo: ActivityRepositoryPort,
-  clock: ClockPort
-) {
+export function createMessagingCommands(messagingPort: MessagingPort) {
   return {
+    async recordWhatsAppOpened(contactId: string, rawText: string): Promise<void> {
+      return messagingPort.recordWhatsAppOpened(contactId, rawText);
+    },
+
     async confirmWhatsAppSent(input: ConfirmWASentInput): Promise<void> {
-      // 1. Complete action
-      await actionRepo.updateNextAction(input.actionId, {
-        status: 'COMPLETED',
-        completedAt: clock.nowIso(),
-      });
-
-      // 2. Append timeline activity
-      await activityRepo.appendActivity({
-        organizationId: input.organizationId,
+      await messagingPort.confirmWhatsAppSent({
         contactId: input.contactId,
-        title: 'WhatsApp dikirim',
-        detail: input.messageText,
-        timestamp: clock.nowIso(),
-        type: 'WA_SENT',
+        nextActionId: input.actionId,
+        messageText: input.messageText,
+        scheduleNextFollowUpDays: input.scheduleNextFollowUpDays,
       });
-
-      // 3. Optional follow-up scheduling
-      if (input.scheduleNextFollowUpDays && input.scheduleNextFollowUpDays > 0) {
-        const dueAt = clock.addDays(clock.now(), input.scheduleNextFollowUpDays).toISOString();
-        await actionRepo.createNextAction({
-          organizationId: input.organizationId,
-          contactId: input.contactId,
-          actionType: input.nextActionType || 'FOLLOW_UP',
-          title: input.nextActionTitle || `Follow-up ${input.scheduleNextFollowUpDays} hari lagi`,
-          dueAt,
-          status: 'PENDING',
-          source: 'PROMOTORFLOW',
-        });
-      }
     },
   };
 }

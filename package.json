@@ -12,7 +12,7 @@
     "preview:flow:cf": "pnpm --filter @promotor/promotor-flow-web preview:cf",
     "deploy:class:cf": "pnpm --filter @promotor/promotor-class-web deploy:cf",
     "deploy:flow:cf": "pnpm --filter @promotor/promotor-flow-web deploy:cf",
-    "deploy:api:cf": "pnpm --filter @promotor/platform-api deploy:cf",
+    "rehearsal:b6": "pnpm --filter @promotor/platform-api b6:live-acceptance",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test"

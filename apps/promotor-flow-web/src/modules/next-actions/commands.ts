@@ -1,9 +1,9 @@
-import { NextActionRepositoryPort } from './ports';
+import { NextActionRepositoryPort, SkipNextStepInput } from './ports';
 import { FlowNextAction, NextActionType, ActionSource } from '@promotor/promotor-flow-fixtures';
 import { ActivityRepositoryPort } from '../activities/ports';
 
 export interface ScheduleNextActionInput {
-  organizationId: string;
+  organizationId?: string;
   contactId: string;
   actionType: NextActionType;
   title: string;
@@ -24,14 +24,14 @@ export function createNextActionCommands(
     async scheduleNextAction(input: ScheduleNextActionInput): Promise<FlowNextAction> {
       // Idempotency check
       if (input.idempotencyKey) {
-        const existing = await actionRepo.findByIdempotencyKey(input.organizationId, input.idempotencyKey);
+        const existing = await actionRepo.findByIdempotencyKey(input.idempotencyKey, input.organizationId);
         if (existing) {
           return existing;
         }
       }
 
       const newAction: Omit<FlowNextAction, 'id' | 'createdAt'> = {
-        organizationId: input.organizationId,
+        organizationId: input.organizationId || '',
         contactId: input.contactId,
         actionType: input.actionType,
         title: input.title,
@@ -47,76 +47,69 @@ export function createNextActionCommands(
 
       const created = await actionRepo.createNextAction(newAction);
 
-      await activityRepo.appendActivity({
-        organizationId: input.organizationId,
-        contactId: input.contactId,
-        title: `Tindakan baru dijadwalkan: ${input.title}`,
-        timestamp: new Date().toISOString(),
-        type: 'STAGE_CHANGED',
-      });
+      if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+        await activityRepo.appendActivity({
+          organizationId: input.organizationId || '',
+          contactId: input.contactId,
+          title: `Tindakan baru dijadwalkan: ${input.title}`,
+          timestamp: new Date().toISOString(),
+          type: 'STAGE_CHANGED',
+        });
+      }
 
       return created;
     },
 
     async completeNextAction(actionId: string): Promise<FlowNextAction> {
-      const updated = await actionRepo.updateNextAction(actionId, {
-        status: 'COMPLETED',
-        completedAt: new Date().toISOString(),
-      });
+      const updated = await actionRepo.completeAction(actionId);
 
-      await activityRepo.appendActivity({
-        organizationId: updated.organizationId,
-        contactId: updated.contactId,
-        title: `Tindakan selesai: ${updated.title}`,
-        timestamp: new Date().toISOString(),
-        type: 'STAGE_CHANGED',
-      });
+      if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+        await activityRepo.appendActivity({
+          organizationId: updated.organizationId,
+          contactId: updated.contactId,
+          title: `Tindakan selesai: ${updated.title}`,
+          timestamp: new Date().toISOString(),
+          type: 'STAGE_CHANGED',
+        });
+      }
 
       return updated;
     },
 
     async rescheduleNextAction(actionId: string, newDueAt: string): Promise<FlowNextAction> {
-      const updated = await actionRepo.updateNextAction(actionId, {
-        dueAt: newDueAt,
-        status: 'PENDING',
-      });
+      const updated = await actionRepo.rescheduleAction(actionId, newDueAt);
 
-      await activityRepo.appendActivity({
-        organizationId: updated.organizationId,
-        contactId: updated.contactId,
-        title: `Jadwal tindakan diperbarui: ${updated.title}`,
-        timestamp: new Date().toISOString(),
-        type: 'STAGE_CHANGED',
-      });
+      if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+        await activityRepo.appendActivity({
+          organizationId: updated.organizationId,
+          contactId: updated.contactId,
+          title: `Jadwal tindakan diperbarui: ${updated.title}`,
+          timestamp: new Date().toISOString(),
+          type: 'STAGE_CHANGED',
+        });
+      }
 
       return updated;
     },
 
-    async skipNextAction(actionId: string, nextActionInput?: ScheduleNextActionInput): Promise<FlowNextAction> {
-      const updated = await actionRepo.updateNextAction(actionId, {
-        status: 'SKIPPED',
-        completedAt: new Date().toISOString(),
-      });
+    async skipNextAction(actionId: string, nextStep: SkipNextStepInput): Promise<FlowNextAction> {
+      const updated = await actionRepo.skipAction(actionId, nextStep);
 
-      await activityRepo.appendActivity({
-        organizationId: updated.organizationId,
-        contactId: updated.contactId,
-        title: `Tindakan dilewati: ${updated.title}`,
-        timestamp: new Date().toISOString(),
-        type: 'STAGE_CHANGED',
-      });
-
-      if (nextActionInput) {
-        await this.scheduleNextAction(nextActionInput);
+      if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+        await activityRepo.appendActivity({
+          organizationId: updated.organizationId,
+          contactId: updated.contactId,
+          title: `Tindakan dilewati: ${updated.title}`,
+          timestamp: new Date().toISOString(),
+          type: 'STAGE_CHANGED',
+        });
       }
 
       return updated;
     },
 
     async cancelNextAction(actionId: string): Promise<FlowNextAction> {
-      return actionRepo.updateNextAction(actionId, {
-        status: 'CANCELLED',
-      });
+      return actionRepo.cancelAction(actionId);
     },
   };
 }

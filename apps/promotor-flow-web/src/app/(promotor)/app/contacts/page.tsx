@@ -16,7 +16,7 @@ export default function ContactsPage() {
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'PROSPECT' | 'CLIENT'>('ALL');
 
   const loadContacts = useCallback(async () => {
-    const list = await contactQueries.listContacts('org_rina_stifin', search, activeFilter);
+    const list = await contactQueries.listContacts(search, activeFilter);
     setContacts(list);
   }, [search, activeFilter]);
 

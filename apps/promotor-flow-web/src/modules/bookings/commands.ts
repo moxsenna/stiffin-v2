@@ -6,7 +6,7 @@ import { ActivityRepositoryPort } from '../activities/ports';
 import { ClockPort } from '../clock/ports';
 
 export interface CreateBookingInput {
-  organizationId: string;
+  organizationId?: string;
   contactId: string;
   serviceId: string;
   serviceTitle: string;
@@ -29,7 +29,7 @@ export function createBookingCommands(
   return {
     async createBooking(input: CreateBookingInput): Promise<FlowBooking> {
       const newBooking: Omit<FlowBooking, 'id' | 'createdAt' | 'updatedAt'> = {
-        organizationId: input.organizationId,
+        organizationId: input.organizationId || '',
         contactId: input.contactId,
         serviceId: input.serviceId,
         serviceTitle: input.serviceTitle,
@@ -45,46 +45,51 @@ export function createBookingCommands(
 
       const created = await bookingRepo.createBooking(newBooking);
 
-      // Update stage to BOOKED
-      await lifecycleRepo.updateStage(input.contactId, 'BOOKED');
+      // In mock mode, orchestrate state mutations in client store
+      if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+        // Update stage to BOOKED
+        await lifecycleRepo.updateStage(input.contactId, 'BOOKED');
 
-      // Schedule action for booking confirmation or payment reminder
-      const actionType = input.paymentStatus === 'UNPAID' ? 'REMIND_PAYMENT' : 'CONFIRM_BOOKING';
-      const actionTitle = `${input.serviceTitle} (${input.paymentStatus === 'UNPAID' ? 'DP belum dibayar' : 'Jadwal terkonfirmasi'})`;
-      
-      await actionRepo.createNextAction({
-        organizationId: input.organizationId,
-        contactId: input.contactId,
-        actionType,
-        title: actionTitle,
-        subtitle: `Booking ${created.serviceTitle}`,
-        dueAt: input.startAt,
-        status: 'PENDING',
-        source: 'PROMOTORFLOW',
-      });
+        // Schedule action for booking confirmation or payment reminder
+        const actionType = input.paymentStatus === 'UNPAID' ? 'REMIND_PAYMENT' : 'CONFIRM_BOOKING';
+        const actionTitle = `${input.serviceTitle} (${input.paymentStatus === 'UNPAID' ? 'DP belum dibayar' : 'Jadwal terkonfirmasi'})`;
+        
+        await actionRepo.createNextAction({
+          organizationId: input.organizationId || '',
+          contactId: input.contactId,
+          actionType,
+          title: actionTitle,
+          subtitle: `Booking ${created.serviceTitle}`,
+          dueAt: input.startAt,
+          status: 'PENDING',
+          source: 'PROMOTORFLOW',
+        });
 
-      // Log activity
-      await activityRepo.appendActivity({
-        organizationId: input.organizationId,
-        contactId: input.contactId,
-        title: `Booking dibuat: ${created.serviceTitle}`,
-        detail: `Status pembayaran: ${input.paymentStatus}`,
-        timestamp: clock.nowIso(),
-        type: 'BOOKING_CREATED',
-      });
+        // Log activity
+        await activityRepo.appendActivity({
+          organizationId: input.organizationId || '',
+          contactId: input.contactId,
+          title: `Booking dibuat: ${created.serviceTitle}`,
+          detail: `Status pembayaran: ${input.paymentStatus}`,
+          timestamp: clock.nowIso(),
+          type: 'BOOKING_CREATED',
+        });
+      }
 
       return created;
     },
 
     async changePaymentStatus(bookingId: string, paymentStatus: PaymentStatus): Promise<FlowBooking> {
       const updated = await bookingRepo.updateBooking(bookingId, { paymentStatus });
-      await activityRepo.appendActivity({
-        organizationId: updated.organizationId,
-        contactId: updated.contactId,
-        title: `Status pembayaran diperbarui ke ${paymentStatus}`,
-        timestamp: clock.nowIso(),
-        type: 'STAGE_CHANGED',
-      });
+      if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+        await activityRepo.appendActivity({
+          organizationId: updated.organizationId,
+          contactId: updated.contactId,
+          title: `Status pembayaran diperbarui ke ${paymentStatus}`,
+          timestamp: clock.nowIso(),
+          type: 'STAGE_CHANGED',
+        });
+      }
       return updated;
     },
 
@@ -94,13 +99,15 @@ export function createBookingCommands(
         endAt: newEndAt,
       });
 
-      await activityRepo.appendActivity({
-        organizationId: updated.organizationId,
-        contactId: updated.contactId,
-        title: `Jadwal booking diubah ke ${newStartAt}`,
-        timestamp: clock.nowIso(),
-        type: 'STAGE_CHANGED',
-      });
+      if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+        await activityRepo.appendActivity({
+          organizationId: updated.organizationId,
+          contactId: updated.contactId,
+          title: `Jadwal booking diubah ke ${newStartAt}`,
+          timestamp: clock.nowIso(),
+          type: 'STAGE_CHANGED',
+        });
+      }
 
       return updated;
     },
@@ -110,38 +117,40 @@ export function createBookingCommands(
         status: 'COMPLETED',
       });
 
-      // Update contact stage to COMPLETED
-      await lifecycleRepo.updateStage(updated.contactId, 'COMPLETED');
+      if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+        // Update contact stage to COMPLETED
+        await lifecycleRepo.updateStage(updated.contactId, 'COMPLETED');
 
-      // Schedule D+7 Aftercare NextAction
-      const dueD7 = clock.addDays(clock.now(), 7).toISOString();
-      const idempotencyKey = `aftercare:booking:${bookingId}:d7`;
+        // Schedule D+7 Aftercare NextAction
+        const dueD7 = clock.addDays(clock.now(), 7).toISOString();
+        const idempotencyKey = `aftercare:booking:${bookingId}:d7`;
 
-      // Check if aftercare already exists
-      const existingAction = await actionRepo.findByIdempotencyKey(updated.organizationId, idempotencyKey);
-      if (!existingAction) {
-        await actionRepo.createNextAction({
+        // Check if aftercare already exists
+        const existingAction = await actionRepo.findByIdempotencyKey(idempotencyKey, updated.organizationId);
+        if (!existingAction) {
+          await actionRepo.createNextAction({
+            organizationId: updated.organizationId,
+            contactId: updated.contactId,
+            actionType: 'AFTERCARE',
+            title: 'Tanya pemahaman & perkembangan hasil tes',
+            subtitle: `Aftercare D+7 · ${updated.serviceTitle}`,
+            dueAt: dueD7,
+            status: 'PENDING',
+            source: 'PROMOTORFLOW',
+            idempotencyKey,
+          });
+        }
+
+        // Log activity
+        await activityRepo.appendActivity({
           organizationId: updated.organizationId,
           contactId: updated.contactId,
-          actionType: 'AFTERCARE',
-          title: 'Tanya pemahaman & perkembangan hasil tes',
-          subtitle: `Aftercare D+7 · ${updated.serviceTitle}`,
-          dueAt: dueD7,
-          status: 'PENDING',
-          source: 'PROMOTORFLOW',
-          idempotencyKey,
+          title: `Layanan selesai: ${updated.serviceTitle}`,
+          detail: 'Aftercare D+7 dijadwalkan otomatis',
+          timestamp: clock.nowIso(),
+          type: 'BOOKING_COMPLETED',
         });
       }
-
-      // Log activity
-      await activityRepo.appendActivity({
-        organizationId: updated.organizationId,
-        contactId: updated.contactId,
-        title: `Layanan selesai: ${updated.serviceTitle}`,
-        detail: 'Aftercare D+7 dijadwalkan otomatis',
-        timestamp: clock.nowIso(),
-        type: 'BOOKING_COMPLETED',
-      });
 
       return updated;
     },

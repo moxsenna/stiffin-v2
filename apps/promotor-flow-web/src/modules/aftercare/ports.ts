@@ -10,6 +10,14 @@ export interface AftercareOutcomeOption {
   description: string;
 }
 
+export interface CompleteAftercareInput {
+  actionId: string;
+  outcome: AftercareOutcome;
+  notes?: string;
+  contactId?: string;
+  organizationId?: string;
+}
+
 export interface AftercareRepositoryPort {
-  recordOutcome(contactId: string, outcome: AftercareOutcome, notes?: string): Promise<void>;
+  completeAftercare(input: CompleteAftercareInput): Promise<void>;
 }

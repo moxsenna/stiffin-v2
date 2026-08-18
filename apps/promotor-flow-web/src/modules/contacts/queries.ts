@@ -3,16 +3,16 @@ import { FlowContact } from '@promotor/promotor-flow-fixtures';
 
 export function createContactQueries(repo: ContactRepositoryPort) {
   return {
-    async listContacts(organizationId: string, search?: string, filter?: 'ALL' | 'PROSPECT' | 'CLIENT'): Promise<FlowContact[]> {
-      return repo.listContacts(organizationId, search, filter);
+    async listContacts(search?: string, filter?: 'ALL' | 'PROSPECT' | 'CLIENT', organizationId?: string): Promise<FlowContact[]> {
+      return repo.listContacts(search, filter, organizationId);
     },
 
-    async getContactDetail(organizationId: string, contactId: string): Promise<FlowContact | null> {
-      return repo.getContactDetail(organizationId, contactId);
+    async getContactDetail(contactId: string, organizationId?: string): Promise<FlowContact | null> {
+      return repo.getContactDetail(contactId, organizationId);
     },
 
-    async findContactByPhone(organizationId: string, phoneE164: string): Promise<FlowContact | null> {
-      return repo.findContactByPhone(organizationId, phoneE164);
+    async findContactByPhone(phoneE164: string, organizationId?: string): Promise<FlowContact | null> {
+      return repo.findContactByPhone(phoneE164, organizationId);
     },
   };
 }

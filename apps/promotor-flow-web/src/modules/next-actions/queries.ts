@@ -24,8 +24,8 @@ export function createNextActionQueries(
   contactLookupFn: (contactId: string) => Promise<{ name: string; phoneE164: string; stage: string; sourceChannel?: string } | null>
 ) {
   return {
-    async getTodayQueue(organizationId: string): Promise<TodayQueue> {
-      const actions = await actionRepo.listNextActions(organizationId, 'PENDING');
+    async getTodayQueue(organizationId?: string): Promise<TodayQueue> {
+      const actions = await actionRepo.listNextActions('PENDING', organizationId);
       const now = clock.now();
 
       // Normalize today bounds
@@ -70,8 +70,8 @@ export function createNextActionQueries(
       };
     },
 
-    async getContactNextActions(organizationId: string, contactId: string): Promise<FlowNextAction[]> {
-      return actionRepo.getContactNextActions(organizationId, contactId);
+    async getContactNextActions(contactId: string, organizationId?: string): Promise<FlowNextAction[]> {
+      return actionRepo.getContactNextActions(contactId, organizationId);
     },
   };
 }
