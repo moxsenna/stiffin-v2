@@ -259,11 +259,51 @@ export function createLearningEngineService(
     // 2. Pure Progress Calculation (Required Lessons Only, §8, §9)
     const progressResult = calculateProgramProgress(allLessons, completedLessonIds);
 
-    // 3. Fetch CTA events
+    // 3. Fetch existing learning events
     const events = await learningEventRepo.listByEnrollment(organizationId, enrollmentId);
     const hasCtaClick =
       trigger.hasClickedCta === true ||
       events.some((e) => e.eventType === 'cta.clicked' || e.eventType === 'CTA_CLICKED');
+
+    let prog50Event = events.find((e) => e.eventType === 'program.progress_50');
+    let prog80Event = events.find((e) => e.eventType === 'program.progress_80');
+    let progCompEvent = events.find((e) => e.eventType === 'program.completed');
+
+    // Milestone 50% event (idempotent, exactly-once)
+    if (progressResult.reached50 && !prog50Event) {
+      prog50Event = await learningEventRepo.create({
+        organizationId,
+        enrollmentId,
+        contactId: enrollment.contactId,
+        eventType: 'program.progress_50',
+        payload: { progressPercent: progressResult.progressPercent },
+        occurredAt: nowIso,
+      });
+    }
+
+    // Milestone 80% event (idempotent, exactly-once)
+    if (progressResult.reached80 && !prog80Event) {
+      prog80Event = await learningEventRepo.create({
+        organizationId,
+        enrollmentId,
+        contactId: enrollment.contactId,
+        eventType: 'program.progress_80',
+        payload: { progressPercent: progressResult.progressPercent },
+        occurredAt: nowIso,
+      });
+    }
+
+    // Program completed event (idempotent, exactly-once)
+    if (progressResult.isComplete && !progCompEvent) {
+      progCompEvent = await learningEventRepo.create({
+        organizationId,
+        enrollmentId,
+        contactId: enrollment.contactId,
+        eventType: 'program.completed',
+        payload: { progressPercent: 100 },
+        occurredAt: nowIso,
+      });
+    }
 
     // 4. Pure Canonical Intent Score (§18)
     const intentResult = calculateIntentScore({
@@ -319,14 +359,14 @@ export function createLearningEngineService(
     const hasSignalForReason = (r: string) =>
       existingSignals.some((s) => s.enrollmentId === enrollmentId && s.reason === r);
 
-    // Trigger A: Program Completion
+    // Trigger A: Program Completion (Canonical source_event_id -> program.completed event)
     if (progressResult.isComplete && !hasSignalForReason('PROGRAM_COMPLETED')) {
       const sig = await learningSignalRepo.create({
         organizationId,
         enrollmentId,
         contactId: enrollment.contactId,
         programId: program.id,
-        sourceEventId: trigger.sourceEventId ?? null,
+        sourceEventId: progCompEvent?.id ?? null,
         type: 'PROGRAM_COMPLETED',
         priority: 90,
         reason: 'PROGRAM_COMPLETED',
@@ -343,14 +383,14 @@ export function createLearningEngineService(
       signalsCreated.push(sig);
     }
 
-    // Trigger B: High Engagement (80% Milestone)
+    // Trigger B: High Engagement (80% Milestone - Canonical source_event_id -> program.progress_80 event)
     if (progressResult.reached80 && !hasSignalForReason('MILESTONE_80_PERCENT')) {
       const sig = await learningSignalRepo.create({
         organizationId,
         enrollmentId,
         contactId: enrollment.contactId,
         programId: program.id,
-        sourceEventId: trigger.sourceEventId ?? null,
+        sourceEventId: prog80Event?.id ?? null,
         type: 'HIGH_LEARNING_INTENT',
         priority: 80,
         reason: 'MILESTONE_80_PERCENT',
@@ -366,7 +406,7 @@ export function createLearningEngineService(
       signalsCreated.push(sig);
     }
 
-    // Trigger C: CTA Clicked
+    // Trigger C: CTA Clicked (Canonical source_event_id -> cta.clicked event)
     if (trigger.eventType === 'cta.clicked' && !hasSignalForReason('CTA_CLICKED')) {
       const sig = await learningSignalRepo.create({
         organizationId,
@@ -396,15 +436,20 @@ export function createLearningEngineService(
     if (isFlowEntitled && signalsCreated.length > 0) {
       for (const sig of signalsCreated) {
         let actionTitle = `Tindak Lanjut: Aktivitas Belajar ${program.title}`;
+        let ruleId = sig.reason.toLowerCase();
         if (sig.reason === 'PROGRAM_COMPLETED') {
           actionTitle = `Follow-up Lulus Program: ${program.title}`;
+          ruleId = 'completed';
         } else if (sig.reason === 'CTA_CLICKED') {
           actionTitle = `Follow-up Minat CTA: ${program.title}`;
+          ruleId = 'cta_clicked';
         } else if (sig.reason === 'MILESTONE_80_PERCENT') {
           actionTitle = `Follow-up Kemajuan Tinggi (80%): ${program.title}`;
+          ruleId = 'progress_80';
         }
 
-        const idempotencyKey = `promotorclass:${sig.sourceEventId ?? sig.id}:${sig.reason.toLowerCase()}`;
+        const canonicalSourceEventId = sig.sourceEventId ?? sig.id;
+        const idempotencyKey = `promotorclass:${canonicalSourceEventId}:${ruleId}`;
 
         // Enqueue NextAction in outbox
         await outboxService.enqueue({
@@ -416,7 +461,7 @@ export function createLearningEngineService(
             organizationId,
             contactId: enrollment.contactId,
             source: 'PROMOTORCLASS',
-            sourceEventId: sig.sourceEventId ?? sig.id,
+            sourceEventId: canonicalSourceEventId,
             sourceSignalId: sig.id,
             actionType: 'FOLLOW_UP',
             title: actionTitle,
@@ -443,7 +488,7 @@ export function createLearningEngineService(
             organizationId,
             contactId: enrollment.contactId,
             source: 'PROMOTORCLASS',
-            sourceEventId: sig.sourceEventId ?? sig.id,
+            sourceEventId: canonicalSourceEventId,
             eventType: 'LEARNING_SIGNAL',
             summary: actionTitle,
             context: {
@@ -617,12 +662,24 @@ export function createLearningEngineService(
       });
 
       // Mark lesson progress completed atomically (§17)
-      await lessonProgressRepo.atomicComplete(
+      const { isNewlyCompleted } = await lessonProgressRepo.atomicComplete(
         input.organizationId,
         input.enrollmentId,
         input.lessonId,
         nowIso
       );
+
+      // If newly completed, emit canonical lesson.completed event
+      if (isNewlyCompleted) {
+        await learningEventRepo.create({
+          organizationId: input.organizationId,
+          enrollmentId: input.enrollmentId,
+          contactId: enrollment.contactId,
+          eventType: 'lesson.completed',
+          payload: { lessonId: input.lessonId },
+          occurredAt: nowIso,
+        });
+      }
 
       // Emit reflection.submitted event
       const event = await learningEventRepo.create({

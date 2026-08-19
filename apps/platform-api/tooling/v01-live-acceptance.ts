@@ -87,8 +87,8 @@ async function runLiveAcceptance() {
     const migrationCount = journalRes.rows.length;
     record(
       'MIGRATIONS',
-      'All migrations 0000 through 0008 registered in journal',
-      migrationCount >= 9,
+      'All migrations 0000 through 0009 registered in journal',
+      migrationCount >= 10,
       `Found ${migrationCount} migrations`
     );
 
@@ -240,6 +240,24 @@ async function runLiveAcceptance() {
       `Progress: ${l1Result.enrollment.progressPercent}%, Intent: ${l1Result.enrollment.intentScore}`
     );
 
+    // Assert after Lesson 1 reaches 50%: exactly one lesson.completed for Lesson 1 and exactly one program.progress_50
+    const flowAEvents = await db
+      .select()
+      .from(learningEvents)
+      .where(eq(learningEvents.enrollmentId, reg.enrollmentId));
+
+    const l1CompletedEvents = flowAEvents.filter(
+      (e) => e.eventType === 'lesson.completed' && (e.payload as any)?.lessonId === lesson1.id
+    );
+    const prog50Events = flowAEvents.filter((e) => e.eventType === 'program.progress_50');
+
+    record(
+      'FLOW_A',
+      'After Lesson 1 reaches 50%: exactly one lesson.completed for Lesson 1 and exactly one program.progress_50',
+      l1CompletedEvents.length === 1 && prog50Events.length === 1,
+      `lesson.completed: ${l1CompletedEvents.length}, program.progress_50: ${prog50Events.length}`
+    );
+
     // Idempotency check on Lesson 1
     const l1Retry = await learningService.completeLesson({
       organizationId: org.id,
@@ -293,6 +311,31 @@ async function runLiveAcceptance() {
         reflResult.enrollment.learningStatus === 'COMPLETED'
     );
 
+    // Assert after required reflection completes Lesson 2 and program jumps 50 -> 100:
+    const flowBEvents = await db
+      .select()
+      .from(learningEvents)
+      .where(eq(learningEvents.enrollmentId, reg.enrollmentId));
+
+    const reflSubmittedEvents = flowBEvents.filter(
+      (e) => e.eventType === 'reflection.submitted' && (e.payload as any)?.lessonId === lesson2.id
+    );
+    const l2CompletedEvents = flowBEvents.filter(
+      (e) => e.eventType === 'lesson.completed' && (e.payload as any)?.lessonId === lesson2.id
+    );
+    const prog80Events = flowBEvents.filter((e) => e.eventType === 'program.progress_80');
+    const progCompEvents = flowBEvents.filter((e) => e.eventType === 'program.completed');
+
+    record(
+      'FLOW_B',
+      'After required reflection completes Lesson 2: exactly one reflection.submitted, one lesson.completed for Lesson 2, one program.progress_80, and one program.completed',
+      reflSubmittedEvents.length === 1 &&
+        l2CompletedEvents.length === 1 &&
+        prog80Events.length === 1 &&
+        progCompEvents.length === 1,
+      `refl: ${reflSubmittedEvents.length}, l2: ${l2CompletedEvents.length}, prog80: ${prog80Events.length}, progComp: ${progCompEvents.length}`
+    );
+
     // -------------------------------------------------------------
     // Golden Flow C: Intent Milestones & Transitions
     // -------------------------------------------------------------
@@ -306,6 +349,30 @@ async function runLiveAcceptance() {
     // -------------------------------------------------------------
     // Golden Flow D: Program Completion & Outbox Dispatch to Flow
     // -------------------------------------------------------------
+    // Signal Provenance Assertion
+    const flowSignals = await db
+      .select()
+      .from(learningSignals)
+      .where(eq(learningSignals.enrollmentId, reg.enrollmentId));
+
+    const progCompSignal = flowSignals.find((s) => s.reason === 'PROGRAM_COMPLETED');
+    const prog80Signal = flowSignals.find((s) => s.reason === 'MILESTONE_80_PERCENT');
+
+    const progCompSourceEvent = flowBEvents.find((e) => e.id === progCompSignal?.sourceEventId);
+    const prog80SourceEvent = flowBEvents.find((e) => e.id === prog80Signal?.sourceEventId);
+
+    record(
+      'FLOW_D',
+      'Signal provenance: PROGRAM_COMPLETED.source_event_id -> program.completed and MILESTONE_80_PERCENT.source_event_id -> program.progress_80',
+      Boolean(
+        progCompSignal &&
+          progCompSourceEvent?.eventType === 'program.completed' &&
+          prog80Signal &&
+          prog80SourceEvent?.eventType === 'program.progress_80'
+      ),
+      `progComp source: ${progCompSourceEvent?.eventType}, prog80 source: ${prog80SourceEvent?.eventType}`
+    );
+
     const outboxRows = await db
       .select()
       .from(integrationOutbox)
@@ -316,6 +383,20 @@ async function runLiveAcceptance() {
       'Program completion enqueues NextAction and Activity Projection in outbox',
       outboxRows.length >= 2,
       `Outbox rows: ${outboxRows.length}`
+    );
+
+    // Outbox Idempotency Key Provenance
+    const expectedCompKey = `promotorclass:${progCompEvents[0].id}:completed`;
+    const expectedProg80Key = `promotorclass:${prog80Events[0].id}:progress_80`;
+
+    const hasCanonicalCompKey = outboxRows.some((o) => o.idempotencyKey === expectedCompKey);
+    const hasCanonicalProg80Key = outboxRows.some((o) => o.idempotencyKey === expectedProg80Key);
+
+    record(
+      'FLOW_D',
+      'Outbox idempotency keys naturally derive from canonical source event IDs (promotorclass:{source_event_id}:{rule_id})',
+      hasCanonicalCompKey && hasCanonicalProg80Key,
+      `Keys verified: ${expectedCompKey} (ok=${hasCanonicalCompKey}), ${expectedProg80Key} (ok=${hasCanonicalProg80Key})`
     );
 
     // Verify Flow NextAction and Activity were created
@@ -369,6 +450,67 @@ async function runLiveAcceptance() {
       'CTA click boosts intent score to maximum capped at 100 with HOT label',
       ctaResult.enrollment.intentScore === 100 && ctaResult.enrollment.intentLabel === 'HOT',
       `Final Intent: ${ctaResult.enrollment.intentScore} (${ctaResult.enrollment.intentLabel})`
+    );
+
+    const postCtaEvents = await db
+      .select()
+      .from(learningEvents)
+      .where(eq(learningEvents.enrollmentId, reg.enrollmentId));
+    const ctaEvents = postCtaEvents.filter((e) => e.eventType === 'cta.clicked');
+
+    const postCtaSignals = await db
+      .select()
+      .from(learningSignals)
+      .where(eq(learningSignals.enrollmentId, reg.enrollmentId));
+    const ctaSignal = postCtaSignals.find((s) => s.reason === 'CTA_CLICKED');
+    const ctaSourceEvent = postCtaEvents.find((e) => e.id === ctaSignal?.sourceEventId);
+
+    record(
+      'FLOW_E',
+      'Signal provenance: CTA_CLICKED.source_event_id -> cta.clicked and outbox uses canonical CTA event ID',
+      Boolean(ctaSignal && ctaSourceEvent?.eventType === 'cta.clicked' && ctaEvents.length === 1),
+      `CTA source: ${ctaSourceEvent?.eventType}, ctaEvents: ${ctaEvents.length}`
+    );
+
+    // Repeat mutations and assert counts remain unchanged (Idempotency / Mutation Immutability)
+    const initialEventsCount = postCtaEvents.length;
+    const initialSignalsCount = postCtaSignals.length;
+
+    await learningService.completeLesson({
+      organizationId: org.id,
+      enrollmentId: reg.enrollmentId,
+      lessonId: lesson1.id,
+      authenticatedContactId: reg.contactId,
+    });
+    await learningService.submitReflection({
+      organizationId: org.id,
+      enrollmentId: reg.enrollmentId,
+      lessonId: lesson2.id,
+      responseText: reflectionText,
+      authenticatedContactId: reg.contactId,
+    });
+    await learningService.recordCtaClick({
+      organizationId: org.id,
+      enrollmentId: reg.enrollmentId,
+      lessonId: lesson2.id,
+      ctaLabel: 'Jadwalkan Konsultasi Arsitektur',
+      authenticatedContactId: reg.contactId,
+    });
+
+    const finalEvents = await db
+      .select()
+      .from(learningEvents)
+      .where(eq(learningEvents.enrollmentId, reg.enrollmentId));
+    const finalSignals = await db
+      .select()
+      .from(learningSignals)
+      .where(eq(learningSignals.enrollmentId, reg.enrollmentId));
+
+    record(
+      'FLOW_E',
+      'Repeated semantic mutations guarantee zero duplicate events or signals (exact count immutability)',
+      finalEvents.length === initialEventsCount && finalSignals.length === initialSignalsCount,
+      `Events: ${initialEventsCount} -> ${finalEvents.length}, Signals: ${initialSignalsCount} -> ${finalSignals.length}`
     );
 
     // -------------------------------------------------------------

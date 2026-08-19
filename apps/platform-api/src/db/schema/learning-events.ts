@@ -1,4 +1,4 @@
-import { pgTable, uuid, timestamp, text, jsonb, index, check } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, timestamp, text, jsonb, index, uniqueIndex, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { organizations } from './organizations';
 import { enrollments } from './enrollments';
@@ -46,6 +46,16 @@ export const learningEvents = pgTable(
       table.organizationId,
       table.enrollmentId
     ),
+    milestoneUniqueIdx: uniqueIndex('idx_learning_events_milestone_unique')
+      .on(table.enrollmentId, table.eventType)
+      .where(
+        sql`${table.eventType} IN ('program.progress_50', 'program.progress_80', 'program.completed', 'learner.registered', 'learner.enrolled')`
+      ),
+    lessonUniqueIdx: uniqueIndex('idx_learning_events_lesson_unique')
+      .on(table.enrollmentId, table.eventType, sql`(${table.payload}->>'lessonId')`)
+      .where(
+        sql`${table.eventType} IN ('lesson.completed', 'lesson.started', 'reflection.submitted', 'cta.clicked')`
+      ),
     eventTypeCheck: check(
       'learning_events_event_type_check',
       sql`${table.eventType} IN (

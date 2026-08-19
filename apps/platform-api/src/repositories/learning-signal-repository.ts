@@ -47,9 +47,26 @@ export function createLearningSignalRepository(db: NodePgDatabase): LearningSign
           createdAt: now,
           updatedAt: now,
         })
+        .onConflictDoNothing()
         .returning();
 
-      return rows[0];
+      if (rows[0]) {
+        return rows[0];
+      }
+
+      const existingList = await db
+        .select()
+        .from(learningSignals)
+        .where(
+          and(
+            eq(learningSignals.organizationId, input.organizationId),
+            input.enrollmentId ? eq(learningSignals.enrollmentId, input.enrollmentId) : eq(learningSignals.contactId, input.contactId),
+            eq(learningSignals.reason, input.reason)
+          )
+        )
+        .orderBy(desc(learningSignals.createdAt));
+
+      return existingList[0];
     },
 
     async list(organizationId, status) {

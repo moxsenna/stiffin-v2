@@ -64,6 +64,13 @@
       "when": 1787300000000,
       "tag": "0008_canonical_events_tightening",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1787400000000,
+      "tag": "0009_canonical_milestone_events_provenance",
+      "breakpoints": true
     }
   ]
 }

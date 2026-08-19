@@ -28,6 +28,7 @@ const CANONICAL = {
   '0006_smart_learning_engine': '682716b4c05e2a81270630f12bf211b74812fcaef35ac56334ebd3cda5d9aad6',
   '0007_v01_release_hardening': '8f89f04930012997f41eaf037149c0356e048b8c79ab7bf089813edea5bf2915',
   '0008_canonical_events_tightening': '483a6152b3725990e78efd9d5d2c9f2887a109645fe72e22e13b229f179da2cc',
+  '0009_canonical_milestone_events_provenance': '79eb3fa894c9298cd2be0e02a6eb5414801e0ed9cfc8a619aac31595ad20e192',
 } as const;
 
 // Known Windows CRLF working-tree hashes — noncanonical diagnostics.
@@ -41,6 +42,7 @@ const CRLF_KNOWN = {
   '0006_smart_learning_engine': '1a36e9fe98341810d6dc5d1b374a1b8f4807b202e030d82970a17586da899b9e',
   '0007_v01_release_hardening': 'cd842d66c2e788ecee8402ee10d9add0b7260ead4eb1348ba4fa0902233e58b7',
   '0008_canonical_events_tightening': 'f6180b00374d10bcb32b0c3b9db5b9fa09e2ef1ac3ea70e5665d5d72e3dd2c00',
+  '0009_canonical_milestone_events_provenance': 'c40d05c8773568e72e0e2d904f0b68ec3240113d5491bc4bf580ba3f10127ad6',
 } as const;
 
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
@@ -57,6 +59,7 @@ function migrationBytes(): { name: string; lf: string }[] {
     '0006_smart_learning_engine',
     '0007_v01_release_hardening',
     '0008_canonical_events_tightening',
+    '0009_canonical_milestone_events_provenance',
   ].map((tag) => {
     // .gitattributes eol=lf guarantees the working-tree bytes are canonical LF.
     const lf = readFileSync(join(dir, `${tag}.sql`), 'utf8').replace(/\r\n/g, '\n');
@@ -119,8 +122,14 @@ describe('B2/B3/B6/B6.1/B4/B5 — cross-platform migration fingerprint (canonica
     assert.strictEqual(sha256(m8.lf), CANONICAL['0008_canonical_events_tightening']);
   });
 
+  it('canonical LF 0009 -> 79eb3fa8... (Git/LF fingerprint)', () => {
+    const [, , , , , , , , , m9] = migrationBytes();
+    assert.strictEqual(m9.name, '0009_canonical_milestone_events_provenance');
+    assert.strictEqual(sha256(m9.lf), CANONICAL['0009_canonical_milestone_events_provenance']);
+  });
+
   it('same content as CRLF -> known non-canonical Windows hashes (diagnostic only)', () => {
-    const [m0, m1, m2, m3, m4, m5, m6, m7, m8] = migrationBytes();
+    const [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9] = migrationBytes();
     const crlf0 = m0.lf.replace(/\n/g, '\r\n');
     const crlf1 = m1.lf.replace(/\n/g, '\r\n');
     const crlf2 = m2.lf.replace(/\n/g, '\r\n');
@@ -130,6 +139,7 @@ describe('B2/B3/B6/B6.1/B4/B5 — cross-platform migration fingerprint (canonica
     const crlf6 = m6.lf.replace(/\n/g, '\r\n');
     const crlf7 = m7.lf.replace(/\n/g, '\r\n');
     const crlf8 = m8.lf.replace(/\n/g, '\r\n');
+    const crlf9 = m9.lf.replace(/\n/g, '\r\n');
     assert.strictEqual(sha256(crlf0), CRLF_KNOWN['0000_modern_hydra'], 'CRLF 0000 must hash to the known Windows diagnostic hash');
     assert.strictEqual(sha256(crlf1), CRLF_KNOWN['0001_material_king_bedlam'], 'CRLF 0001 must hash to the known Windows diagnostic hash');
     assert.strictEqual(sha256(crlf2), CRLF_KNOWN['0002_heavy_scarlet_witch'], 'CRLF 0002 must hash to the known Windows diagnostic hash');
@@ -139,6 +149,7 @@ describe('B2/B3/B6/B6.1/B4/B5 — cross-platform migration fingerprint (canonica
     assert.strictEqual(sha256(crlf6), CRLF_KNOWN['0006_smart_learning_engine'], 'CRLF 0006 must hash to the known Windows diagnostic hash');
     assert.strictEqual(sha256(crlf7), CRLF_KNOWN['0007_v01_release_hardening'], 'CRLF 0007 must hash to the known Windows diagnostic hash');
     assert.strictEqual(sha256(crlf8), CRLF_KNOWN['0008_canonical_events_tightening'], 'CRLF 0008 must hash to the known Windows diagnostic hash');
+    assert.strictEqual(sha256(crlf9), CRLF_KNOWN['0009_canonical_milestone_events_provenance'], 'CRLF 0009 must hash to the known Windows diagnostic hash');
     // They are DIFFERENT from canonical — never interchangeable.
     assert.notStrictEqual(CRLF_KNOWN['0000_modern_hydra'], CANONICAL['0000_modern_hydra']);
     assert.notStrictEqual(CRLF_KNOWN['0001_material_king_bedlam'], CANONICAL['0001_material_king_bedlam']);
@@ -149,6 +160,7 @@ describe('B2/B3/B6/B6.1/B4/B5 — cross-platform migration fingerprint (canonica
     assert.notStrictEqual(CRLF_KNOWN['0006_smart_learning_engine'], CANONICAL['0006_smart_learning_engine']);
     assert.notStrictEqual(CRLF_KNOWN['0007_v01_release_hardening'], CANONICAL['0007_v01_release_hardening']);
     assert.notStrictEqual(CRLF_KNOWN['0008_canonical_events_tightening'], CANONICAL['0008_canonical_events_tightening']);
+    assert.notStrictEqual(CRLF_KNOWN['0009_canonical_milestone_events_provenance'], CANONICAL['0009_canonical_milestone_events_provenance']);
   });
 
   it('migration SQL working-tree files contain no CR bytes (eol=lf in effect)', () => {
@@ -163,6 +175,7 @@ describe('B2/B3/B6/B6.1/B4/B5 — cross-platform migration fingerprint (canonica
       '0006_smart_learning_engine',
       '0007_v01_release_hardening',
       '0008_canonical_events_tightening',
+      '0009_canonical_milestone_events_provenance',
     ]) {
       const raw = readFileSync(join(dir, `${tag}.sql`));
       assert.strictEqual(raw.includes(0x0d), false, `${tag}.sql must contain NO 0x0D bytes in working tree`);
