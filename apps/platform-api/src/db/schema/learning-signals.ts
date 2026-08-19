@@ -1,4 +1,4 @@
-import { pgTable, uuid, timestamp, text, integer, jsonb, index, check } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, timestamp, text, integer, jsonb, index, uniqueIndex, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { organizations } from './organizations';
 import { programs } from './programs';
@@ -39,6 +39,9 @@ export const learningSignals = pgTable(
       table.organizationId,
       table.contactId
     ),
+    enrollmentReasonUniqueIdx: uniqueIndex('idx_learning_signals_enrollment_reason_unique')
+      .on(table.enrollmentId, table.reason)
+      .where(sql`${table.enrollmentId} IS NOT NULL`),
     statusCheck: check(
       'learning_signals_status_check',
       sql`${table.status} IN ('ACTIVE', 'RESOLVED', 'DISMISSED')`

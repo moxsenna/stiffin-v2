@@ -36,9 +36,33 @@ export function createLearningEventRepository(db: NodePgDatabase): LearningEvent
           payload: input.payload ?? {},
           occurredAt: now,
         })
+        .onConflictDoNothing()
         .returning();
 
-      return rows[0];
+      if (rows[0]) {
+        return rows[0];
+      }
+
+      const existingList = await db
+        .select()
+        .from(learningEvents)
+        .where(
+          and(
+            eq(learningEvents.organizationId, input.organizationId),
+            eq(learningEvents.enrollmentId, input.enrollmentId),
+            eq(learningEvents.eventType, input.eventType)
+          )
+        )
+        .orderBy(desc(learningEvents.occurredAt));
+
+      if (input.payload && typeof input.payload === 'object' && 'lessonId' in input.payload && input.payload.lessonId) {
+        const matched = existingList.find(
+          (e) => (e.payload as any)?.lessonId === (input.payload as any).lessonId
+        );
+        if (matched) return matched;
+      }
+
+      return existingList[0];
     },
 
     async listByEnrollment(organizationId, enrollmentId) {
