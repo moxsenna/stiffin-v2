@@ -441,21 +441,32 @@ async function runLiveAcceptance() {
       .where(eq(aftercareRecords.bookingId, publicBooking.bookingId));
 
     const initialAftercare = initialAftercareRecords[0];
+    const completedAt = completedBooking.completedAt ? new Date(completedBooking.completedAt) : null;
+    const scheduledAt = initialAftercare?.scheduledFor ? new Date(initialAftercare.scheduledFor) : null;
+    const expectedAftercareAt = completedAt ? new Date(completedAt.getTime() + 7 * 24 * 3600_000) : null;
+
+    const isCanonicalD7 = Boolean(
+      completedBooking.completedAt &&
+      initialAftercare &&
+      initialAftercare.status === 'PENDING' &&
+      initialAftercare.scheduledFor &&
+      completedAt &&
+      scheduledAt &&
+      expectedAftercareAt &&
+      scheduledAt.getTime() === expectedAftercareAt.getTime()
+    );
+
     record(
       'FLOW_F',
       'Aftercare record initialized in PENDING status with canonical D+7 scheduled_for',
-      Boolean(
-        initialAftercare &&
-        initialAftercare.status === 'PENDING' &&
-        initialAftercare.scheduledFor
-      )
+      isCanonicalD7,
+      `Completed: ${completedBooking.completedAt}, Scheduled: ${initialAftercare?.scheduledFor}, Expected D+7: ${expectedAftercareAt?.toISOString()}`
     );
 
-    if (aftercareActions.length > 0 && initialAftercare) {
+    if (aftercareActions.length > 0 && initialAftercare && scheduledAt) {
       // 3. Respect Aftercare D+7 temporal guard by using the AftercareService clock dependency
-      const scheduledTime = new Date(initialAftercare.scheduledFor);
       const aftercareService = createAftercareService(db, {
-        clock: () => scheduledTime,
+        clock: () => scheduledAt,
       });
 
       const aftercareResult = await aftercareService.completeAftercare(orgCtx, aftercareActions[0].id, {
