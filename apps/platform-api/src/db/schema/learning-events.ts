@@ -54,7 +54,7 @@ export const learningEvents = pgTable(
     lessonUniqueIdx: uniqueIndex('idx_learning_events_lesson_unique')
       .on(table.enrollmentId, table.eventType, sql`(${table.payload}->>'lessonId')`)
       .where(
-        sql`${table.eventType} IN ('lesson.completed', 'lesson.started', 'reflection.submitted')`
+        sql`${table.eventType} IN ('lesson.completed', 'lesson.started', 'reflection.submitted', 'cta.clicked')`
       ),
     eventTypeCheck: check(
       'learning_events_event_type_check',

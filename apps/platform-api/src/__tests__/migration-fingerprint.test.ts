@@ -28,7 +28,7 @@ const CANONICAL = {
   '0006_smart_learning_engine': '682716b4c05e2a81270630f12bf211b74812fcaef35ac56334ebd3cda5d9aad6',
   '0007_v01_release_hardening': '8f89f04930012997f41eaf037149c0356e048b8c79ab7bf089813edea5bf2915',
   '0008_canonical_events_tightening': '483a6152b3725990e78efd9d5d2c9f2887a109645fe72e22e13b229f179da2cc',
-  '0009_canonical_milestone_events_provenance': '5a37f47a0673a4cd02f5c58c2ef720d912779d9de6b9c05e9294ded7ffaf0d03',
+  '0009_canonical_milestone_events_provenance': '79eb3fa894c9298cd2be0e02a6eb5414801e0ed9cfc8a619aac31595ad20e192',
 } as const;
 
 // Known Windows CRLF working-tree hashes — noncanonical diagnostics.
@@ -42,7 +42,7 @@ const CRLF_KNOWN = {
   '0006_smart_learning_engine': '1a36e9fe98341810d6dc5d1b374a1b8f4807b202e030d82970a17586da899b9e',
   '0007_v01_release_hardening': 'cd842d66c2e788ecee8402ee10d9add0b7260ead4eb1348ba4fa0902233e58b7',
   '0008_canonical_events_tightening': 'f6180b00374d10bcb32b0c3b9db5b9fa09e2ef1ac3ea70e5665d5d72e3dd2c00',
-  '0009_canonical_milestone_events_provenance': '8fc68194770d41659281c441bec5b55e493c7f1effb7fd47a3c0ef26cef39fcf',
+  '0009_canonical_milestone_events_provenance': 'c40d05c8773568e72e0e2d904f0b68ec3240113d5491bc4bf580ba3f10127ad6',
 } as const;
 
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
@@ -122,7 +122,7 @@ describe('B2/B3/B6/B6.1/B4/B5 — cross-platform migration fingerprint (canonica
     assert.strictEqual(sha256(m8.lf), CANONICAL['0008_canonical_events_tightening']);
   });
 
-  it('canonical LF 0009 -> 5a37f47a... (Git/LF fingerprint)', () => {
+  it('canonical LF 0009 -> 79eb3fa8... (Git/LF fingerprint)', () => {
     const [, , , , , , , , , m9] = migrationBytes();
     assert.strictEqual(m9.name, '0009_canonical_milestone_events_provenance');
     assert.strictEqual(sha256(m9.lf), CANONICAL['0009_canonical_milestone_events_provenance']);

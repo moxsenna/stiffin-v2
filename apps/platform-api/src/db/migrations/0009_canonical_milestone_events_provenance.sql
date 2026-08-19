@@ -12,7 +12,8 @@ ON "learning_events" ("enrollment_id", "event_type", ("payload"->>'lessonId'))
 WHERE "event_type" IN (
 	'lesson.completed',
 	'lesson.started',
-	'reflection.submitted'
+	'reflection.submitted',
+	'cta.clicked'
 );--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "idx_learning_signals_enrollment_reason_unique"
 ON "learning_signals" ("enrollment_id", "reason")
