@@ -47,9 +47,9 @@ import { createApp } from '../src/app';
 const REHEARSAL_DATABASE_URL = process.env.REHEARSAL_DATABASE_URL;
 
 if (!REHEARSAL_DATABASE_URL) {
-  console.log('LIVE ACCEPTANCE TOOLING COMPLETE / REAL REHEARSAL OPERATOR RUN PENDING');
-  console.log('NOTE: REHEARSAL_DATABASE_URL environment variable is required to execute a real disposable rehearsal.');
-  process.exit(0);
+  console.error('LIVE ACCEPTANCE TOOLING ERROR: REHEARSAL_DATABASE_URL environment variable is required to execute a real disposable rehearsal.');
+  console.error('Usage: REHEARSAL_DATABASE_URL="postgresql://..." pnpm --filter @promotor/platform-api v0.1:live-acceptance');
+  process.exit(1);
 }
 
 interface TestResult {
@@ -372,14 +372,14 @@ async function runLiveAcceptance() {
     );
 
     // -------------------------------------------------------------
-    // Golden Flow F: Flow Public Booking, Completion & Aftercare
+    // Golden Flow F: Flow Public Booking, Lifecycle & D+7 Aftercare
     // -------------------------------------------------------------
     const [serviceRow] = await db
       .insert(services)
       .values({
         organizationId: org.id,
-        name: 'Private Architecture Review',
-        category: 'CONSULTATION',
+        name: 'Private Architecture Consultation',
+        category: 'SESSION',
         durationMinutes: 60,
         priceAmount: 500000,
         isActive: true,
@@ -388,7 +388,6 @@ async function runLiveAcceptance() {
 
     const publicBookingService = createPublicBookingService(db);
     const bookingService = createBookingService(db);
-    const aftercareService = createAftercareService(db);
 
     const bookingStartTime = new Date(Date.now() + 86400000 * 2).toISOString();
     const publicBooking = await publicBookingService.createPublicBooking({
@@ -398,7 +397,7 @@ async function runLiveAcceptance() {
       name: 'Bima Satria',
       phoneRaw: regPhone,
       email: 'bima.satria@example.com',
-      notes: 'Initial architecture review',
+      notes: 'Initial architecture consultation',
     });
 
     record(
@@ -408,10 +407,20 @@ async function runLiveAcceptance() {
     );
 
     const orgCtx = { organizationId: org.id };
+
+    // 1. Confirm booking (PENDING -> CONFIRMED)
+    const confirmedBooking = await bookingService.confirmBooking(orgCtx, publicBooking.bookingId);
+    record(
+      'FLOW_F',
+      'Operator confirms booking transitioning status to CONFIRMED',
+      confirmedBooking.status === 'CONFIRMED'
+    );
+
+    // 2. Complete booking (CONFIRMED -> COMPLETED)
     const completedBooking = await bookingService.completeBooking(orgCtx, publicBooking.bookingId);
     record(
       'FLOW_F',
-      'Completing booking updates status to COMPLETED and generates AFTERCARE next action',
+      'Completing booking updates status to COMPLETED and generates AFTERCARE next action and record',
       completedBooking.status === 'COMPLETED'
     );
 
@@ -422,25 +431,61 @@ async function runLiveAcceptance() {
 
     record(
       'FLOW_F',
-      'Aftercare next action created atomically on booking completion',
-      aftercareActions.length === 1
+      'Exactly one AFTERCARE next action created atomically on booking completion in PENDING state',
+      aftercareActions.length === 1 && aftercareActions[0].status === 'PENDING'
     );
 
-    if (aftercareActions.length > 0) {
-      await aftercareService.completeAftercare(orgCtx, aftercareActions[0].id, {
-        outcome: 'SATISFIED',
-        notes: 'Client satisfied with architecture consultation',
+    const initialAftercareRecords = await db
+      .select()
+      .from(aftercareRecords)
+      .where(eq(aftercareRecords.bookingId, publicBooking.bookingId));
+
+    const initialAftercare = initialAftercareRecords[0];
+    const completedAt = completedBooking.completedAt ? new Date(completedBooking.completedAt) : null;
+    const scheduledAt = initialAftercare?.scheduledFor ? new Date(initialAftercare.scheduledFor) : null;
+    const expectedAftercareAt = completedAt ? new Date(completedAt.getTime() + 7 * 24 * 3600_000) : null;
+
+    const isCanonicalD7 = Boolean(
+      completedBooking.completedAt &&
+      initialAftercare &&
+      initialAftercare.status === 'PENDING' &&
+      initialAftercare.scheduledFor &&
+      completedAt &&
+      scheduledAt &&
+      expectedAftercareAt &&
+      scheduledAt.getTime() === expectedAftercareAt.getTime()
+    );
+
+    record(
+      'FLOW_F',
+      'Aftercare record initialized in PENDING status with canonical D+7 scheduled_for',
+      isCanonicalD7,
+      `Completed: ${completedBooking.completedAt}, Scheduled: ${initialAftercare?.scheduledFor}, Expected D+7: ${expectedAftercareAt?.toISOString()}`
+    );
+
+    if (aftercareActions.length > 0 && initialAftercare && scheduledAt) {
+      // 3. Respect Aftercare D+7 temporal guard by using the AftercareService clock dependency
+      const aftercareService = createAftercareService(db, {
+        clock: () => scheduledAt,
       });
 
-      const aftercareRows = await db
+      const aftercareResult = await aftercareService.completeAftercare(orgCtx, aftercareActions[0].id, {
+        outcome: 'NO_NEED',
+        notes: 'Client confirmed implementation is progressing smoothly',
+      });
+
+      const updatedAftercareRows = await db
         .select()
         .from(aftercareRecords)
         .where(eq(aftercareRecords.bookingId, publicBooking.bookingId));
 
       record(
         'FLOW_F',
-        'Completing aftercare records outcome and resolves action',
-        aftercareRows.length === 1 && aftercareRows[0].outcome === 'SATISFIED'
+        'Completing aftercare at D+7 records canonical outcome NO_NEED and updates record & action to COMPLETED',
+        updatedAftercareRows.length === 1 &&
+          updatedAftercareRows[0].status === 'COMPLETED' &&
+          updatedAftercareRows[0].outcome === 'NO_NEED' &&
+          aftercareResult.action.status === 'COMPLETED'
       );
     }
 
