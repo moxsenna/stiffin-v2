@@ -530,16 +530,20 @@ export function createLearningEngineService(
           startedAt: nowIso,
           lastActivityAt: nowIso,
         });
-
-        await learningEventRepo.create({
-          organizationId: input.organizationId,
-          enrollmentId: input.enrollmentId,
-          contactId: enrollment.contactId,
-          eventType: 'lesson.started',
-          payload: { lessonId: input.lessonId },
-          occurredAt: nowIso,
+      } else {
+        await enrollmentRepo.updateProgress(input.organizationId, input.enrollmentId, {
+          lastActivityAt: nowIso,
         });
       }
+
+      await learningEventRepo.create({
+        organizationId: input.organizationId,
+        enrollmentId: input.enrollmentId,
+        contactId: enrollment.contactId,
+        eventType: 'lesson.started',
+        payload: { lessonId: input.lessonId },
+        occurredAt: nowIso,
+      });
 
       const updated = (await enrollmentRepo.getById(input.organizationId, input.enrollmentId))!;
       return { enrollment: updated };

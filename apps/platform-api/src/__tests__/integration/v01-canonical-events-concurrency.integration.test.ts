@@ -129,7 +129,51 @@ describe('V0.1 Canonical Events & Concurrency Exactly-Once Suite', { skip: !enab
     });
   });
 
-  it('2. Concurrent completeLesson on Lesson 1 yields exactly one lesson.completed and one program.progress_50', async () => {
+  it('2. Concurrent startLesson on Lesson 1 emits exactly one lesson.started with correct provenance', async () => {
+    await withIntegrationDb(async (db) => {
+      const learningService = createLearningEngineService(db);
+
+      const results = await Promise.all([
+        learningService.startLesson({
+          organizationId: testOrgId,
+          enrollmentId: testEnrollmentId,
+          lessonId: testLesson1Id,
+          authenticatedContactId: testContactId,
+        }),
+        learningService.startLesson({
+          organizationId: testOrgId,
+          enrollmentId: testEnrollmentId,
+          lessonId: testLesson1Id,
+          authenticatedContactId: testContactId,
+        }),
+        learningService.startLesson({
+          organizationId: testOrgId,
+          enrollmentId: testEnrollmentId,
+          lessonId: testLesson1Id,
+          authenticatedContactId: testContactId,
+        }),
+      ]);
+
+      for (const res of results) {
+        assert.strictEqual(res.enrollment.status, 'STARTED');
+      }
+
+      const events = await db
+        .select()
+        .from(learningEvents)
+        .where(eq(learningEvents.enrollmentId, testEnrollmentId));
+
+      const startedEvents = events.filter(
+        (e) => e.eventType === 'lesson.started' && (e.payload as any)?.lessonId === testLesson1Id
+      );
+
+      assert.strictEqual(startedEvents.length, 1, 'Must have exactly one lesson.started for Lesson 1');
+      assert.strictEqual(startedEvents[0].contactId, testContactId);
+      assert.strictEqual(startedEvents[0].enrollmentId, testEnrollmentId);
+    });
+  });
+
+  it('3. Concurrent completeLesson on Lesson 1 yields exactly one lesson.completed and one program.progress_50', async () => {
     await withIntegrationDb(async (db) => {
       const learningService = createLearningEngineService(db);
 
@@ -186,7 +230,7 @@ describe('V0.1 Canonical Events & Concurrency Exactly-Once Suite', { skip: !enab
     });
   });
 
-  it('3. Reflection submission on Lesson 2 completes program and emits canonical events & signals with provenance', async () => {
+  it('4. Reflection submission on Lesson 2 completes program and emits canonical events & signals with provenance', async () => {
     await withIntegrationDb(async (db) => {
       const learningService = createLearningEngineService(db);
 
@@ -263,7 +307,7 @@ describe('V0.1 Canonical Events & Concurrency Exactly-Once Suite', { skip: !enab
     });
   });
 
-  it('4. CTA Click emits exactly one cta.clicked event, sets signal provenance, and is mutation-immutable', async () => {
+  it('5. CTA Click emits exactly one cta.clicked event, sets signal provenance, and is mutation-immutable', async () => {
     await withIntegrationDb(async (db) => {
       const learningService = createLearningEngineService(db);
 

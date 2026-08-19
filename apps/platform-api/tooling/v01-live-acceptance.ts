@@ -223,6 +223,40 @@ async function runLiveAcceptance() {
       enrState?.progressPercent === 0 && enrState?.intentScore === 10 && enrState?.intentLabel === 'COLD'
     );
 
+    // Start Lesson 1
+    const startResult = await learningService.startLesson({
+      organizationId: org.id,
+      enrollmentId: reg.enrollmentId,
+      lessonId: lesson1.id,
+      authenticatedContactId: reg.contactId,
+    });
+
+    const startRetry = await learningService.startLesson({
+      organizationId: org.id,
+      enrollmentId: reg.enrollmentId,
+      lessonId: lesson1.id,
+      authenticatedContactId: reg.contactId,
+    });
+
+    const postStartEvents = await db
+      .select()
+      .from(learningEvents)
+      .where(eq(learningEvents.enrollmentId, reg.enrollmentId));
+
+    const l1StartedEvents = postStartEvents.filter(
+      (e) => e.eventType === 'lesson.started' && (e.payload as any)?.lessonId === lesson1.id
+    );
+
+    record(
+      'FLOW_A',
+      'startLesson emits lesson.started with correct learner/enrollment/lesson provenance idempotently',
+      startResult.enrollment.status === 'STARTED' &&
+        l1StartedEvents.length === 1 &&
+        l1StartedEvents[0].contactId === reg.contactId &&
+        l1StartedEvents[0].enrollmentId === reg.enrollmentId,
+      `lesson.started count: ${l1StartedEvents.length}, status: ${startResult.enrollment.status}`
+    );
+
     // Complete Lesson 1
     const l1Result = await learningService.completeLesson({
       organizationId: org.id,
