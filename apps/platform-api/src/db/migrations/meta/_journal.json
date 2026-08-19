@@ -57,6 +57,13 @@
       "when": 1787200000000,
       "tag": "0007_v01_release_hardening",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1787300000000,
+      "tag": "0008_canonical_events_tightening",
+      "breakpoints": true
     }
   ]
 }

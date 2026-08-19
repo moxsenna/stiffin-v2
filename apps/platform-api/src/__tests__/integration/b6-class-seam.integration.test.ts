@@ -22,7 +22,9 @@ import { DomainError } from '../../core/errors';
 import type { OrganizationContext } from '../../core/organization-context';
 import type { AuthenticatedActor } from '../../auth/types';
 
-describe('B6 — Class Integration Seam Integration Suite', () => {
+const enabled = Boolean(TEST_DATABASE_URL);
+
+describe('B6 — Class Integration Seam Integration Suite', { skip: !enabled ? 'TEST_DATABASE_URL not set' : false }, () => {
   let orgAId: string;
   let orgBId: string;
   let ctxA: OrganizationContext;

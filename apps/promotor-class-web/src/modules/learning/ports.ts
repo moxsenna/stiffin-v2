@@ -4,6 +4,7 @@ import {
   SubmitReflectionResponse,
   RecordLearningEventResponse,
   LearningSignalDto,
+  LearningEventType,
 } from '@promotor/contracts';
 
 export interface LearningRepositoryPort {
@@ -16,7 +17,7 @@ export interface LearningRepositoryPort {
   ): Promise<SubmitReflectionResponse>;
   recordEvent(
     enrollmentId: string,
-    data: { eventType: string; payload?: Record<string, unknown> }
+    data: { eventType: LearningEventType; payload?: Record<string, unknown> }
   ): Promise<RecordLearningEventResponse>;
   listSignals(status?: 'ACTIVE' | 'RESOLVED' | 'DISMISSED'): Promise<LearningSignalDto[]>;
   updateSignalStatus(signalId: string, status: 'ACTIVE' | 'RESOLVED' | 'DISMISSED'): Promise<LearningSignalDto>;

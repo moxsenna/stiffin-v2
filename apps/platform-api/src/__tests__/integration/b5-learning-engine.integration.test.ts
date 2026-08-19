@@ -214,7 +214,7 @@ describe('B5 — Learning Engine & Intelligence Integration Suite', { skip: !ena
           .select()
           .from(learningEvents)
           .where(eq(learningEvents.enrollmentId, testEnrollmentId));
-        assert.ok(events.some((e) => e.eventType === 'lesson.completed' || e.eventType === 'LESSON_COMPLETED'));
+        assert.ok(events.some((e) => e.eventType === 'lesson.completed'));
       });
     });
 
@@ -325,8 +325,8 @@ describe('B5 — Learning Engine & Intelligence Integration Suite', { skip: !ena
         );
 
         assert.strictEqual(redeemRes.status, 200);
-        const redeemBody = (await redeemRes.json()) as any;
-        const sessionToken = redeemBody.sessionToken;
+        const cookie = redeemRes.headers.get('set-cookie')!;
+        assert.ok(cookie, 'Must set session cookie');
 
         // 2. Query enrollment details with session cookie
         const res = await app.request(
@@ -334,7 +334,7 @@ describe('B5 — Learning Engine & Intelligence Integration Suite', { skip: !ena
           {
             method: 'GET',
             headers: {
-              Cookie: `promotor_learner_session=${sessionToken}`,
+              Cookie: cookie,
             },
           },
           TEST_ENV as any

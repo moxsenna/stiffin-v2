@@ -367,7 +367,7 @@ export function createLearningEngineService(
     }
 
     // Trigger C: CTA Clicked
-    if ((trigger.eventType === 'cta.clicked' || trigger.eventType === 'CTA_CLICKED') && !hasSignalForReason('CTA_CLICKED')) {
+    if (trigger.eventType === 'cta.clicked' && !hasSignalForReason('CTA_CLICKED')) {
       const sig = await learningSignalRepo.create({
         organizationId,
         enrollmentId,
@@ -713,7 +713,7 @@ export function createLearningEngineService(
         occurredAt: nowIso,
       });
 
-      const hasCta = input.eventType === 'cta.clicked' || input.eventType === 'CTA_CLICKED';
+      const hasCta = input.eventType === 'cta.clicked';
 
       const { enrollment: updatedEnrollment, signalsCreated } = await syncEnrollmentState(
         input.organizationId,

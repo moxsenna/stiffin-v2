@@ -4,6 +4,7 @@ import {
   SubmitReflectionResponse,
   RecordLearningEventResponse,
   LearningSignalDto,
+  LearningEventType,
 } from '@promotor/contracts';
 import { LearningRepositoryPort } from '@/modules/learning/ports';
 
@@ -83,7 +84,7 @@ export class MockLearningRepository implements LearningRepositoryPort {
 
   async recordEvent(
     enrollmentId: string,
-    data: { eventType: string; payload?: Record<string, unknown> }
+    data: { eventType: LearningEventType; payload?: Record<string, unknown> }
   ): Promise<RecordLearningEventResponse> {
     return {
       enrollmentId,

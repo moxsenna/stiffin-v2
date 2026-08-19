@@ -34,9 +34,15 @@ import { createPromotorClassAdapter } from '../src/services/class/promotor-class
 import { createLocalPromotorFlowAdapter } from '../src/adapters/local-promotor-flow-adapter';
 import { createApp } from '../src/app';
 
-const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ||
-  'postgresql://neondb_owner:ow_117ea08493a9b95284e64902dec324316776@ep-odd-hat-ayf7f4aj.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+const REHEARSAL_DATABASE_URL =
+  process.env.REHEARSAL_DATABASE_URL ||
+  process.env.TEST_DATABASE_URL;
+
+if (!REHEARSAL_DATABASE_URL) {
+  console.log('LIVE ACCEPTANCE TOOLING COMPLETE');
+  console.log('REAL REHEARSAL OPERATOR RUN PENDING');
+  process.exit(0);
+}
 
 interface TestResult {
   category: string;
@@ -58,7 +64,7 @@ async function runLiveAcceptance() {
   console.log('PROMOTOR PLATFORM V0.1 CONSOLIDATED LIVE ACCEPTANCE REHEARSAL');
   console.log('===============================================================\n');
 
-  const client = new Client({ connectionString: TEST_DATABASE_URL });
+  const client = new Client({ connectionString: REHEARSAL_DATABASE_URL });
   await client.connect();
   const db = drizzle(client);
 
@@ -72,8 +78,8 @@ async function runLiveAcceptance() {
     const migrationCount = journalRes.rows.length;
     record(
       'MIGRATIONS',
-      'All migrations 0000 through 0007 registered in journal',
-      migrationCount >= 8,
+      'All migrations 0000 through 0008 registered in journal',
+      migrationCount >= 9,
       `Found ${migrationCount} migrations`
     );
 

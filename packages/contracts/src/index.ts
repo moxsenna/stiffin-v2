@@ -248,8 +248,6 @@ export type Reflection = z.infer<typeof ReflectionSchema>;
 // 4. Canonical Learning Events & Activity Projection
 // ==========================================
 export const LearningEventTypeSchema = z.enum([
-  'program.created',
-  'program.published',
   'learner.registered',
   'learner.enrolled',
   'lesson.started',
@@ -1022,7 +1020,7 @@ export const SubmitReflectionResponseSchema = z.object({
 export type SubmitReflectionResponse = z.infer<typeof SubmitReflectionResponseSchema>;
 
 export const RecordLearningEventRequestSchema = z.object({
-  eventType: z.string().min(1, 'eventType is required'),
+  eventType: LearningEventTypeSchema,
   payload: z.record(z.string(), z.unknown()).optional(),
 });
 export type RecordLearningEventRequest = z.infer<typeof RecordLearningEventRequestSchema>;
