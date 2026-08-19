@@ -1,4 +1,5 @@
 import { getLearningRepository } from '@/adapters';
+import type { LearningEventType } from '@promotor/contracts';
 
 export async function completeLessonCommand(enrollmentId: string, lessonId: string) {
   const repo = getLearningRepository();
@@ -16,7 +17,7 @@ export async function submitReflectionCommand(
 
 export async function recordLearningEventCommand(
   enrollmentId: string,
-  data: { eventType: string; payload?: Record<string, unknown> }
+  data: { eventType: LearningEventType; payload?: Record<string, unknown> }
 ) {
   const repo = getLearningRepository();
   return repo.recordEvent(enrollmentId, data);

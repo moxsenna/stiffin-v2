@@ -324,7 +324,6 @@ export function createApp(deps?: AppDependencies) {
     return c.json({
       contactId: result.contactId,
       organizationId: result.organizationId,
-      sessionToken: result.sessionToken,
       expiresAt: result.session.expiresAt.toISOString(),
     }, 200);
   };

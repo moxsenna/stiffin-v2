@@ -75,7 +75,7 @@ describe('Durable Outbox & Dispatcher Integration Suite (§21, §22, §23, §24,
       assert.strictEqual(enq.status, 'PENDING');
 
       // Dispatch pending tasks
-      const processedCount = await outboxService.dispatchPending(mockFlowAdapter, 10);
+      const processedCount = await outboxService.dispatchPending(mockFlowAdapter, 10, testOrgId);
       assert.strictEqual(processedCount, 1);
       assert.ok(createdActionPayload);
       assert.strictEqual(createdActionPayload.title, 'Hot Lead Follow-up');
@@ -126,7 +126,7 @@ describe('Durable Outbox & Dispatcher Integration Suite (§21, §22, §23, §24,
       });
 
       // Dispatch pending tasks
-      const count = await outboxService.dispatchPending(failingFlowAdapter, 10);
+      const count = await outboxService.dispatchPending(failingFlowAdapter, 10, testOrgId);
       assert.strictEqual(count, 0, 'No task should be marked processed');
 
       const [row] = await db

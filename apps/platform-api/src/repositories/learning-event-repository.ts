@@ -1,12 +1,17 @@
 import { eq, and, desc } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { learningEvents, LearningEventRow, NewLearningEventRow } from '../db/schema/learning-events';
+import {
+  learningEvents,
+  LearningEventRow,
+  NewLearningEventRow,
+  CanonicalLearningEventType,
+} from '../db/schema/learning-events';
 
 export interface CreateLearningEventInput {
   organizationId: string;
   enrollmentId: string;
   contactId: string;
-  eventType: string;
+  eventType: CanonicalLearningEventType | (string & {});
   payload?: Record<string, unknown>;
   occurredAt?: string | null;
 }

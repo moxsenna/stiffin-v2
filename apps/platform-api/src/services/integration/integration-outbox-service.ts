@@ -15,12 +15,12 @@ export interface EnqueueOutboxInput {
 
 export interface IntegrationOutboxService {
   enqueue(input: EnqueueOutboxInput, tx?: NodePgDatabase): Promise<IntegrationOutboxRow>;
-  processPending(options?: { limit?: number; now?: Date }): Promise<{
+  processPending(options?: { limit?: number; now?: Date; organizationId?: string }): Promise<{
     processedCount: number;
     successCount: number;
     failedCount: number;
   }>;
-  dispatchPending(flowAdapter: PromotorFlowAdapter, limit?: number): Promise<number>;
+  dispatchPending(flowAdapter: PromotorFlowAdapter, limit?: number, organizationId?: string): Promise<number>;
 }
 
 export function createIntegrationOutboxService(
@@ -78,19 +78,22 @@ export function createIntegrationOutboxService(
     async processPending(options = {}) {
       const limit = options.limit ?? 20;
       const now = options.now ?? getNow();
-      const searchUntil = new Date(now.getTime() + 5000);
+      const searchUntil = new Date(now.getTime() + 60000);
       const flowAdapter = dependencies.flowAdapter ?? defaultAdapter;
+
+      const conditions = [
+        eq(integrationOutbox.status, 'PENDING'),
+        lte(integrationOutbox.nextAttemptAt, searchUntil),
+      ];
+      if (options.organizationId) {
+        conditions.push(eq(integrationOutbox.organizationId, options.organizationId));
+      }
 
       // Select candidate rows
       const candidates = await db
         .select()
         .from(integrationOutbox)
-        .where(
-          and(
-            eq(integrationOutbox.status, 'PENDING'),
-            lte(integrationOutbox.nextAttemptAt, searchUntil)
-          )
-        )
+        .where(and(...conditions))
         .limit(limit);
 
       let successCount = 0;
@@ -153,18 +156,21 @@ export function createIntegrationOutboxService(
       };
     },
 
-    async dispatchPending(flowAdapter: PromotorFlowAdapter, limit = 20) {
+    async dispatchPending(flowAdapter: PromotorFlowAdapter, limit = 20, organizationId?: string) {
       const now = getNow();
-      const searchUntil = new Date(now.getTime() + 5000);
+      const searchUntil = new Date(now.getTime() + 60000);
+      const conditions = [
+        eq(integrationOutbox.status, 'PENDING'),
+        lte(integrationOutbox.nextAttemptAt, searchUntil),
+      ];
+      if (organizationId) {
+        conditions.push(eq(integrationOutbox.organizationId, organizationId));
+      }
+
       const candidates = await db
         .select()
         .from(integrationOutbox)
-        .where(
-          and(
-            eq(integrationOutbox.status, 'PENDING'),
-            lte(integrationOutbox.nextAttemptAt, searchUntil)
-          )
-        )
+        .where(and(...conditions))
         .limit(limit);
 
       let processed = 0;

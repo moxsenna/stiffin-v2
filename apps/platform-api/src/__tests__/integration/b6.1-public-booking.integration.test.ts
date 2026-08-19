@@ -54,7 +54,9 @@ const ALL_25_TABLES = [
   'workspace_profiles',
 ];
 
-describe('B6.1 — Public Booking & Availability Integration Test Suite', () => {
+const enabled = Boolean(TEST_DATABASE_URL);
+
+describe('B6.1 — Public Booking & Availability Integration Test Suite', { skip: !enabled ? 'TEST_DATABASE_URL not set' : false }, () => {
   let testOrgAId: string;
   let testOrgBId: string;
   let testOrgASlug: string;

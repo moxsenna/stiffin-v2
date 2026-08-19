@@ -4,6 +4,22 @@ import { organizations } from './organizations';
 import { enrollments } from './enrollments';
 import { contacts } from './contacts';
 
+export const CANONICAL_LEARNING_EVENTS = [
+  'learner.registered',
+  'learner.enrolled',
+  'lesson.started',
+  'lesson.completed',
+  'reflection.submitted',
+  'program.progress_50',
+  'program.progress_80',
+  'program.completed',
+  'cta.viewed',
+  'cta.clicked',
+  'learner.inactive',
+] as const;
+
+export type CanonicalLearningEventType = (typeof CANONICAL_LEARNING_EVENTS)[number];
+
 export const learningEvents = pgTable(
   'learning_events',
   {
@@ -43,11 +59,7 @@ export const learningEvents = pgTable(
         'program.completed',
         'cta.viewed',
         'cta.clicked',
-        'learner.inactive',
-        'LESSON_COMPLETED',
-        'REFLECTION_SUBMITTED',
-        'CTA_CLICKED',
-        'PROGRAM_COMPLETED'
+        'learner.inactive'
       )`
     ),
   })

@@ -4,6 +4,10 @@ import { calculateProgramProgress } from '../domain/learning/progress-engine';
 import { calculateIntentScore } from '../domain/learning/intent-engine';
 import { calculateLearningStatus } from '../domain/learning/learning-status-engine';
 import { validateReflectionSubmission } from '../domain/learning/reflection-validator';
+import {
+  LearningEventTypeSchema,
+  RecordLearningEventRequestSchema,
+} from '@promotor/contracts';
 
 describe('V0.1 Hardened — Pure Learning & Intent Engines', () => {
   describe('1. Canonical Progress Engine (calculateProgramProgress)', () => {
@@ -241,6 +245,71 @@ describe('V0.1 Hardened — Pure Learning & Intent Engines', () => {
       assert.strictEqual(validateReflectionSubmission(config, { selectedOptions: ['opt1', 'opt2'] }).isValid, true);
       assert.strictEqual(validateReflectionSubmission(config, { selectedOptions: ['opt1', 'unknown'] }).isValid, false);
       assert.strictEqual(validateReflectionSubmission(config, { selectedOptions: [] }).isValid, false);
+    });
+  });
+
+  describe('5. Canonical Learning Event Vocabulary (§16)', () => {
+    const canonicalEvents = [
+      'learner.registered',
+      'learner.enrolled',
+      'lesson.started',
+      'lesson.completed',
+      'reflection.submitted',
+      'program.progress_50',
+      'program.progress_80',
+      'program.completed',
+      'cta.viewed',
+      'cta.clicked',
+      'learner.inactive',
+    ];
+
+    it('accepts all 11 canonical event vocabulary items in schema', () => {
+      for (const evt of canonicalEvents) {
+        const parsed = LearningEventTypeSchema.safeParse(evt);
+        assert.strictEqual(parsed.success, true, `Event ${evt} should be valid in LearningEventTypeSchema`);
+
+        const reqParsed = RecordLearningEventRequestSchema.safeParse({ eventType: evt });
+        assert.strictEqual(reqParsed.success, true, `Event ${evt} should be valid in RecordLearningEventRequestSchema`);
+      }
+      assert.strictEqual(canonicalEvents.length, 11, 'Must have exactly 11 canonical learning events');
+    });
+
+    it('rejects legacy uppercase event types fail-closed', () => {
+      const legacyUppercase = [
+        'LESSON_COMPLETED',
+        'REFLECTION_SUBMITTED',
+        'CTA_CLICKED',
+        'PROGRAM_COMPLETED',
+        'LEARNER_REGISTERED',
+        'LEARNER_ENROLLED',
+      ];
+
+      for (const evt of legacyUppercase) {
+        const parsed = LearningEventTypeSchema.safeParse(evt);
+        assert.strictEqual(parsed.success, false, `Legacy uppercase event ${evt} must be rejected`);
+
+        const reqParsed = RecordLearningEventRequestSchema.safeParse({ eventType: evt });
+        assert.strictEqual(reqParsed.success, false, `Legacy uppercase event ${evt} must be rejected in request schema`);
+      }
+    });
+
+    it('rejects arbitrary unknown event types fail-closed', () => {
+      const unknownEvents = [
+        'random.event',
+        'lesson.finished',
+        'program.done',
+        'cta.clicked.twice',
+        '',
+        'INVALID',
+      ];
+
+      for (const evt of unknownEvents) {
+        const parsed = LearningEventTypeSchema.safeParse(evt);
+        assert.strictEqual(parsed.success, false, `Unknown event ${evt} must be rejected`);
+
+        const reqParsed = RecordLearningEventRequestSchema.safeParse({ eventType: evt });
+        assert.strictEqual(reqParsed.success, false, `Unknown event ${evt} must be rejected in request schema`);
+      }
     });
   });
 });

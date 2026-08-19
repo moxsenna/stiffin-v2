@@ -78,19 +78,6 @@ describe('B3 — PromotorClass Content Implementation Suite', { skip: !enabled ?
     await applyMigrationsAsOwner();
 
     await withIntegrationDb(async (db) => {
-      // Clean up past runs in dependency order
-      await db.delete(reflectionResponses);
-      await db.delete(lessonProgress);
-      await db.delete(learningSignals);
-      await db.delete(learningEvents);
-      await db.delete(enrollments);
-      await db.delete(lessonAttachments);
-      await db.delete(lessons);
-      await db.delete(modules);
-      await db.delete(programPresentations);
-      await db.delete(workspaceProfiles);
-      await db.delete(programs);
-
       const auth = createAuth(db, TEST_ENV, { disableRateLimit: true });
 
       orgASlug = `org-a-b3-${Date.now()}`;
