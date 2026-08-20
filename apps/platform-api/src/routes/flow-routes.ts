@@ -38,6 +38,7 @@ import { createTemplateService } from '../services/template-service';
 import { createAftercareService } from '../services/aftercare-service';
 import { createMessagingService } from '../services/messaging-service';
 import { createAvailabilityService } from '../services/flow/availability-service';
+import { createContactPrivacyService } from '../services/contact-privacy-service';
 import type { OrganizationContext } from '../core/organization-context';
 import type { AuthenticatedActor } from '../auth/types';
 
@@ -175,6 +176,15 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
     const service = createContactFlowService(db);
     const assessment = await service.getAssessmentStatus(ctx, contactId);
     return c.json({ assessment }, 200);
+  });
+
+  flow.post('/contacts/:id/privacy-anonymize', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, actor, db } = getRequestContext(c);
+    const contactId = c.req.param('id');
+    const service = createContactPrivacyService(db);
+    const result = await service.anonymizeContact(ctx.organizationId, contactId, actor.userId);
+    return c.json(result, 200);
   });
 
   // =========================================================================
