@@ -46,23 +46,23 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     await page.reload();
     await expect(page.locator('body')).toContainText(programTitle);
 
-    // Add Module
-    const addModuleBtn = page.locator('button:has-text("Tambah Modul"), button:has-text("+ Tambah Modul")').first();
+    // Add Module / Bab
+    const addModuleBtn = page.locator('button:has-text("Tambah Bab"), button:has-text("+ Tambah Bab Baru"), button:has-text("Tambah Modul")').first();
     await addModuleBtn.click();
 
-    const moduleInput = page.locator('input[placeholder*="modul"], input[placeholder*="Modul"]').first();
+    const moduleInput = page.locator('input[placeholder*="Modul 2"], input[placeholder*="modul"], input[placeholder*="Modul"]').first();
     await moduleInput.fill('Modul 1: Pengenalan Karakter');
-    const saveModuleBtn = page.locator('button:has-text("Simpan Modul"), button:has-text("Tambah")').first();
+    const saveModuleBtn = page.locator('button:has-text("Simpan Bab"), button:has-text("Simpan Modul"), button:has-text("Simpan")').first();
     await saveModuleBtn.click();
     await expect(page.locator('body')).toContainText('Modul 1: Pengenalan Karakter');
 
-    // Add Text Lesson with Reflection
-    const addLessonBtn = page.locator('button:has-text("Tambah Materi"), button:has-text("+ Tambah Materi")').first();
+    // Add Text Lesson / Pelajaran with Reflection
+    const addLessonBtn = page.locator('button:has-text("Tambah Pelajaran"), button:has-text("+ Tambah Pelajaran"), button:has-text("Tambah Materi")').first();
     await addLessonBtn.click();
 
-    const lessonTitleInput = page.locator('input[placeholder*="materi"], input[placeholder*="Materi"]').first();
+    const lessonTitleInput = page.locator('input[placeholder*="Sesi 1"], input[placeholder*="materi"], input[placeholder*="Materi"]').first();
     await lessonTitleInput.fill('Materi 1: Menemukan Potensi Diri');
-    const saveLessonBtn = page.locator('button:has-text("Simpan Materi"), button:has-text("Simpan")').first();
+    const saveLessonBtn = page.locator('button:has-text("Simpan Pelajaran"), button:has-text("Simpan Materi"), button:has-text("Simpan")').first();
     await saveLessonBtn.click();
     await expect(page.locator('body')).toContainText('Materi 1: Menemukan Potensi Diri');
 
