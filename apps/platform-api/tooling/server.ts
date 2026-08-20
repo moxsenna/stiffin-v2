@@ -1,5 +1,10 @@
 import http from 'node:http';
 import { createApp } from '../src/app';
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { provisionPromotorUser } from '../src/auth/provisioning';
+import { productEntitlements, programs, modules, lessons, organizations } from '../src/db/schema';
+import { eq } from 'drizzle-orm';
 
 const port = Number(process.env.PORT || 8787);
 const databaseUrl =
@@ -7,6 +12,86 @@ const databaseUrl =
   process.env.DATABASE_URL ||
   process.env.OWNER_DATABASE_URL ||
   'postgresql://promotor_runtime:ci_runtime_pw@localhost:5432/postgres';
+
+async function ensureSeedData() {
+  try {
+    const pool = new Pool({ connectionString: databaseUrl });
+    const db = drizzle(pool);
+
+    try {
+      const existingOrg = await db
+        .select()
+        .from(organizations)
+        .where(eq(organizations.slug, 'rina'))
+        .limit(1);
+
+      let orgId: string | undefined = existingOrg[0]?.id;
+
+      if (!orgId) {
+        const provisioned = await provisionPromotorUser(db, {
+          name: 'Rina Promotor',
+          email: 'rina@stifin.id',
+          password: 'password123',
+          organizationName: 'STIFIn Promotor',
+          organizationSlug: 'rina',
+        });
+        orgId = provisioned.organizationId;
+      }
+
+      const currentOrgId = orgId;
+      if (currentOrgId) {
+        await db
+          .update(productEntitlements)
+          .set({ promotorClass: true, promotorFlow: true })
+          .where(eq(productEntitlements.organizationId, currentOrgId));
+
+        const existingProg = await db
+          .select()
+          .from(programs)
+          .where(eq(programs.slug, '7-hari-mengenal-cara-belajar-anak'))
+          .limit(1);
+
+        if (existingProg.length === 0) {
+          const [prog] = await db
+            .insert(programs)
+            .values({
+              organizationId: currentOrgId,
+              title: '7 Hari Mengenal Cara Belajar Anak',
+              slug: '7-hari-mengenal-cara-belajar-anak',
+              programType: 'lead_magnet',
+              status: 'published',
+              pricing: 'free',
+              priceAmount: 0,
+            })
+            .returning();
+
+          const [mod1] = await db
+            .insert(modules)
+            .values({
+              programId: prog.id,
+              title: 'Modul 1: Fondasi Karakter',
+              order: 1,
+            })
+            .returning();
+
+          await db.insert(lessons).values({
+            moduleId: mod1.id,
+            title: 'Hari 1: Mengenali Pola',
+            order: 1,
+            isRequired: true,
+            textContent: 'Konten hari 1',
+          });
+        }
+      }
+    } catch (err: any) {
+      console.warn('Seed data initialization note:', err?.message || err);
+    } finally {
+      await pool.end();
+    }
+  } catch (err: any) {
+    console.warn('Seed pool note:', err?.message || err);
+  }
+}
 
 const app = createApp();
 
@@ -75,6 +160,8 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(port, '0.0.0.0', () => {
-  console.log(`Platform API server listening on http://127.0.0.1:${port}`);
+ensureSeedData().finally(() => {
+  server.listen(port, '0.0.0.0', () => {
+    console.log(`Platform API server listening on http://127.0.0.1:${port}`);
+  });
 });
