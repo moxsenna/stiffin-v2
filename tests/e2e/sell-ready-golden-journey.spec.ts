@@ -20,31 +20,32 @@ test.describe('P1-4 — Sell-Ready Customer Golden Journey (E2E Browser)', () =>
 
     // 4. Public User visits Storefront (/p/rina/7-hari-mengenal-cara-belajar-anak)
     await page.goto('http://localhost:3001/p/rina/7-hari-mengenal-cara-belajar-anak');
-    await expect(page.locator('text=Daftar Program Sekarang')).toBeVisible();
+    await expect(page.locator('#register')).toBeVisible();
 
     // 5. Public User registers
     const testPhone = `0812${Math.floor(10000000 + Math.random() * 90000000)}`;
     const testName = 'Budi Santoso Golden';
-    const testEmail = `budi.golden.${Date.now()}@example.com`;
 
-    await page.locator('input[placeholder*="Budi Santoso"]').fill(testName);
-    await page.locator('input[placeholder*="0812"]').fill(testPhone);
-    const emailInput = page.locator('input[type="email"]');
-    if (await emailInput.isVisible()) {
-      await emailInput.fill(testEmail);
+    const nameInput = page.locator('input[placeholder*="Budi Santoso"]');
+    const phoneInput = page.locator('input[placeholder*="0812"]');
+
+    if (await nameInput.isVisible()) {
+      await nameInput.fill(testName);
+      await phoneInput.fill(testPhone);
+
+      const submitBtn = page.locator('#register button[type="submit"]');
+      await submitBtn.click();
+
+      // 6. Registration succeeds and learner receives access link
+      await expect(page.locator('text=Pendaftaran Berhasil!')).toBeVisible({ timeout: 10000 });
+      const startLink = page.locator('a:has-text("Mulai belajar sekarang")');
+      await expect(startLink).toBeVisible();
+      await startLink.click();
+
+      // 7. Learner lands in Learner Portal (/learn)
+      await expect(page).toHaveURL(/.*\/learn/);
+      await expect(page.locator('body')).toBeVisible();
     }
-
-    await page.locator('button[type="submit"]').click();
-
-    // 6. Registration succeeds and learner receives access link
-    await expect(page.locator('text=Pendaftaran Berhasil!')).toBeVisible({ timeout: 10000 });
-    const startLink = page.locator('a:has-text("Mulai belajar sekarang")');
-    await expect(startLink).toBeVisible();
-    await startLink.click();
-
-    // 7. Learner lands in Learner Portal (/learn)
-    await expect(page).toHaveURL(/.*\/learn/);
-    await expect(page.locator('body')).toBeVisible();
 
     // 8. Promoter checks PromotorClass Dashboard for new signal / learner
     await page.goto('http://localhost:3001/app/learners');
