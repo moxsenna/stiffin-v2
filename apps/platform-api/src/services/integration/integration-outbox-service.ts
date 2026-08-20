@@ -3,6 +3,7 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { integrationOutbox, IntegrationOutboxRow, NewIntegrationOutboxRow } from '../../db/schema/integration-outbox';
 import type { PromotorFlowAdapter, LearningNextActionRequest, LearningActivityProjection } from '@promotor/contracts';
 import { createLocalPromotorFlowAdapter } from '../../adapters/local-promotor-flow-adapter';
+import { logOperation } from '../../core/observability';
 
 export interface EnqueueOutboxInput {
   organizationId: string;
@@ -13,13 +14,16 @@ export interface EnqueueOutboxInput {
   payload?: Record<string, unknown>;
 }
 
+export interface ProcessPendingResult {
+  processedCount: number;
+  successCount: number;
+  failedCount: number;
+  errors: Array<{ id: string; error: string }>;
+}
+
 export interface IntegrationOutboxService {
   enqueue(input: EnqueueOutboxInput, tx?: NodePgDatabase): Promise<IntegrationOutboxRow>;
-  processPending(options?: { limit?: number; now?: Date; organizationId?: string }): Promise<{
-    processedCount: number;
-    successCount: number;
-    failedCount: number;
-  }>;
+  processPending(options?: { limit?: number; now?: Date; organizationId?: string }): Promise<ProcessPendingResult>;
   dispatchPending(flowAdapter: PromotorFlowAdapter, limit?: number, organizationId?: string): Promise<number>;
 }
 
@@ -98,8 +102,10 @@ export function createIntegrationOutboxService(
 
       let successCount = 0;
       let failedCount = 0;
+      const errors: Array<{ id: string; error: string }> = [];
 
       for (const row of candidates) {
+        const itemStart = performance.now();
         try {
           if (row.destination === 'PROMOTORFLOW' || row.destination === 'PROMOTOR_FLOW') {
             const boundAdapter = (flowAdapter as any)?.withContext
@@ -129,11 +135,25 @@ export function createIntegrationOutboxService(
             .where(eq(integrationOutbox.id, row.id));
 
           successCount++;
+
+          logOperation({
+            operation: 'OUTBOX_DISPATCH_ITEM',
+            result: 'SUCCESS',
+            duration_ms: performance.now() - itemStart,
+            organization_id: row.organizationId,
+            integration_destination: (row.destination === 'PROMOTORFLOW' || row.destination === 'PROMOTOR_FLOW') ? 'PROMOTORFLOW' : null,
+            details: {
+              outboxId: row.id,
+              operationType: row.operation,
+              idempotencyKey: row.idempotencyKey,
+            },
+          });
         } catch (err: any) {
           const nextAttemptCount = (row.attemptCount ?? 0) + 1;
           const isDead = nextAttemptCount >= 5;
           const backoffSeconds = Math.pow(2, nextAttemptCount) * 30;
           const nextAttemptTime = new Date(now.getTime() + backoffSeconds * 1000);
+          const errorMsg = err?.message ? String(err.message).slice(0, 255) : 'UNKNOWN_ERROR';
 
           await db
             .update(integrationOutbox)
@@ -141,11 +161,30 @@ export function createIntegrationOutboxService(
               status: isDead ? 'FAILED' : 'PENDING',
               attemptCount: nextAttemptCount,
               nextAttemptAt: nextAttemptTime,
-              lastErrorCode: err?.message ? String(err.message).slice(0, 255) : 'UNKNOWN_ERROR',
+              lastErrorCode: errorMsg,
             })
             .where(eq(integrationOutbox.id, row.id));
 
           failedCount++;
+          errors.push({ id: row.id, error: errorMsg });
+
+          logOperation({
+            level: isDead ? 'error' : 'warn',
+            operation: 'OUTBOX_DISPATCH_ITEM',
+            result: isDead ? 'FAILURE' : 'RETRY',
+            duration_ms: performance.now() - itemStart,
+            organization_id: row.organizationId,
+            integration_destination: (row.destination === 'PROMOTORFLOW' || row.destination === 'PROMOTOR_FLOW') ? 'PROMOTORFLOW' : null,
+            details: {
+              outboxId: row.id,
+              operationType: row.operation,
+              attemptCount: nextAttemptCount,
+            },
+            error: {
+              code: 'DISPATCH_FAILURE',
+              message: errorMsg,
+            },
+          });
         }
       }
 
@@ -153,6 +192,7 @@ export function createIntegrationOutboxService(
         processedCount: candidates.length,
         successCount,
         failedCount,
+        errors,
       };
     },
 

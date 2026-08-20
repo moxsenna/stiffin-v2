@@ -5,9 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "cross-env NEXT_PUBLIC_API_MODE=http next build",
-    "preview:cf": "opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion && opennextjs-cloudflare preview",
-    "deploy:cf": "opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion && opennextjs-cloudflare deploy",
-    "upload:cf": "opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion && opennextjs-cloudflare upload",
+    "preview:cf": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy:cf": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "upload:cf": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "start": "next start",
     "lint": "next lint",
@@ -19,7 +19,7 @@
     "@promotor/contracts": "workspace:*",
     "@promotor/platform-core": "workspace:*",
     "@promotor/promotor-class-fixtures": "workspace:*",
-    "next": "14.2.35",
+    "next": "15.3.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "styled-jsx": "5.1.1"
@@ -31,7 +31,7 @@
     "@types/react-dom": "^18.2.0",
     "cross-env": "^10.1.0",
     "eslint": "^8.57.1",
-    "eslint-config-next": "^14.1.0",
+    "eslint-config-next": "15.3.8",
     "tsx": "^4.23.12",
     "typescript": "^5.3.3",
     "wrangler": "^4.120.1"

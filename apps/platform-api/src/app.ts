@@ -33,6 +33,7 @@ import {
 } from '@promotor/contracts';
 import { registerFlowRoutes } from './routes/flow-routes';
 import { registerClassRoutes } from './routes/class-routes';
+import { requestLoggerMiddleware, logOperation } from './core/observability';
 
 export interface AppDependencies {
   dbHealthProbe?: (env: Env) => Promise<{ serverTime: string }>;
@@ -68,17 +69,65 @@ export function createApp(deps?: AppDependencies) {
   const app = new Hono<AppEnv>();
   const probeDb = deps?.dbHealthProbe ?? executeDbHealthProbe;
 
+  // Global Structured Request Logging Middleware
+  app.use('*', requestLoggerMiddleware());
+
   // Global Error Handler: maps AuthError & DomainError -> clean JSON envelope
   app.onError((err, c) => {
+    const requestId =
+      c.get('requestId' as any) ||
+      c.req.header('cf-ray') ||
+      c.req.header('x-request-id') ||
+      undefined;
+
+    const authCtx = (c.get as any)('authContext');
+    const orgId = authCtx?.organization?.organizationId || null;
+    const userId = authCtx?.user?.id || null;
+
     if (err instanceof AuthError) {
       const status = authErrorStatus(err);
+      logOperation({
+        level: 'warn',
+        request_id: requestId,
+        operation: `HTTP_${c.req.method}_${c.req.path}`,
+        result: 'FAILURE',
+        status_code: status,
+        organization_id: orgId,
+        user_id: userId,
+        error: { code: err.code, message: err.message },
+      });
       return c.json({ error: { code: err.code, message: err.message } }, status);
     }
+
     if (isDomainError(err)) {
       const status = domainErrorStatus(err);
+      logOperation({
+        level: status >= 500 ? 'error' : 'warn',
+        request_id: requestId,
+        operation: `HTTP_${c.req.method}_${c.req.path}`,
+        result: 'FAILURE',
+        status_code: status,
+        organization_id: orgId,
+        user_id: userId,
+        error: { code: err.code, message: err.message },
+      });
       return c.json({ error: { code: err.code, message: err.message } }, status);
     }
-    console.error('[APP_ERROR]', { code: 'APP_ERROR', timestamp: new Date().toISOString() });
+
+    logOperation({
+      level: 'error',
+      request_id: requestId,
+      operation: `HTTP_${c.req.method}_${c.req.path}`,
+      result: 'FAILURE',
+      status_code: 500,
+      organization_id: orgId,
+      user_id: userId,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: err?.message || 'Internal server error',
+      },
+    });
+
     return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, 500);
   });
 

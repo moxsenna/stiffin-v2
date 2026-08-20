@@ -6,17 +6,18 @@ import { StorefrontClient } from './StorefrontClient';
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: { workspaceSlug: string };
+  params: Promise<{ workspaceSlug: string }>;
 }
 
 export default async function PublicStorefrontPage({ params }: PageProps) {
-  const profile = await getPublicWorkspaceQuery(params.workspaceSlug);
+  const { workspaceSlug } = await params;
+  const profile = await getPublicWorkspaceQuery(workspaceSlug);
   if (!profile) {
     notFound();
     return null;
   }
 
-  const catalog = await listPublicProgramsQuery(params.workspaceSlug);
+  const catalog = await listPublicProgramsQuery(workspaceSlug);
 
   return (
     <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Memuat Storefront...</div>}>

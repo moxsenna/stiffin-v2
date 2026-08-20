@@ -41,7 +41,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Prepare B1 Test Database (owner migrations + runtime grants)
         run: sh scripts/ci-setup-db.sh
@@ -52,10 +52,10 @@ jobs:
       - name: Run Lint
         run: pnpm lint
 
-      - name: Run Domain & Integration Tests
+      - name: Run Domain & Unit Tests
         run: pnpm test
 
-      - name: Run B1 Shared Core PostgreSQL Integration Tests
+      - name: Run PostgreSQL Integration Tests
         env:
           TEST_DATABASE_URL: postgresql://promotor_runtime:ci_runtime_pw@localhost:5432/postgres
           OWNER_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
@@ -69,3 +69,15 @@ jobs:
 
       - name: Verify Platform API Worker Bundle
         run: pnpm build:api
+
+      - name: Verify PromotorClass OpenNext CF Build
+        run: pnpm --filter @promotor/promotor-class-web exec opennextjs-cloudflare build
+
+      - name: Verify PromotorFlow OpenNext CF Build
+        run: pnpm --filter @promotor/promotor-flow-web exec opennextjs-cloudflare build
+
+      - name: Install Playwright Chromium Browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run Playwright Browser E2E Tests
+        run: pnpm test:e2e

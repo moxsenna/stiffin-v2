@@ -6,11 +6,12 @@ import { PublicLandingClient } from './PublicLandingClient';
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: { workspaceSlug: string; programSlug: string };
+  params: Promise<{ workspaceSlug: string; programSlug: string }>;
 }
 
 export default async function PublicProgramLandingPage({ params }: PageProps) {
-  const detail = await getPublicProgramDetailQuery(params.workspaceSlug, params.programSlug);
+  const { workspaceSlug, programSlug } = await params;
+  const detail = await getPublicProgramDetailQuery(workspaceSlug, programSlug);
   if (!detail) {
     notFound();
     return null;
