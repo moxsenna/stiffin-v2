@@ -119,11 +119,16 @@ export function createContactPrivacyService(db: NodePgDatabase<any>): ContactPri
         );
 
       // 7. Record immutable audit activity log
+      const isValidActorUuid =
+        typeof actorUserId === 'string' &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(actorUserId);
+      const safeActorUserId = isValidActorUuid ? actorUserId : null;
+
       await db.insert(activities).values({
         organizationId,
         contactId,
         eventType: 'CONTACT_UPDATED',
-        actorUserId: actorUserId ?? null,
+        actorUserId: safeActorUserId,
         metadataJson: {
           anonymized: true,
           policy: 'UU_PDP_GDPR_COMPLIANT',
