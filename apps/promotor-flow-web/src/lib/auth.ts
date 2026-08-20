@@ -68,6 +68,14 @@ export async function getSession(): Promise<UserSession | null> {
 }
 
 export async function signIn(email: string, password: string): Promise<{ success: boolean; error?: string }> {
+  const mode = process.env.NEXT_PUBLIC_API_MODE;
+  if (mode !== 'http' && process.env.NODE_ENV !== 'production') {
+    if (email && password) {
+      return { success: true };
+    }
+    return { success: false, error: 'Email dan kata sandi wajib diisi' };
+  }
+
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
   try {
     const res = await fetch(`${apiUrl}/api/auth/sign-in/email`, {
@@ -87,6 +95,14 @@ export async function signIn(email: string, password: string): Promise<{ success
 }
 
 export async function signOut(): Promise<void> {
+  const mode = process.env.NEXT_PUBLIC_API_MODE;
+  if (mode !== 'http' && process.env.NODE_ENV !== 'production') {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('promotor_session_token');
+    }
+    return;
+  }
+
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
   try {
     await fetch(`${apiUrl}/api/auth/sign-out`, {
