@@ -6,12 +6,12 @@ import { StorefrontClient } from './StorefrontClient';
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: Promise<{ workspaceSlug: string }> | { workspaceSlug: string };
+  params: Promise<{ workspaceSlug: string }>;
 }
 
 export default async function PublicStorefrontPage({ params }: PageProps) {
-  const resolvedParams = await params;
-  const profile = await getPublicWorkspaceQuery(resolvedParams.workspaceSlug);
+  const { workspaceSlug } = await params;
+  const profile = await getPublicWorkspaceQuery(workspaceSlug);
   if (!profile) {
     notFound();
     return null;
