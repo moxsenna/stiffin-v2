@@ -1,10 +1,10 @@
-name: Manual Production Deployment
+name: Manual Staging Deployment
 
 on:
   workflow_dispatch:
     inputs:
       target:
-        description: 'Component to deploy'
+        description: 'Component to deploy to Staging'
         required: true
         type: choice
         options:
@@ -78,80 +78,11 @@ jobs:
       - name: Verify Platform API Worker Bundle
         run: pnpm build:api
 
-  deploy-class:
-    name: Deploy PromotorClass to Cloudflare Workers
-    needs: verify
-    if: ${{ github.event.inputs.target == 'all' || github.event.inputs.target == 'promotor-class' }}
-    runs-on: ubuntu-latest
-    environment: production
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      WRANGLER_SEND_METRICS: 'false'
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 11.9.0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - name: Install Dependencies
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Log Deployment GITHUB_SHA
-        run: echo "Deploying PromotorClass from GITHUB_SHA=${{ github.sha }}"
-
-      - name: Deploy PromotorClass to Cloudflare Workers
-        run: pnpm deploy:class:cf
-
-  deploy-flow:
-    name: Deploy PromotorFlow to Cloudflare Workers
-    needs: verify
-    if: ${{ github.event.inputs.target == 'all' || github.event.inputs.target == 'promotor-flow' }}
-    runs-on: ubuntu-latest
-    environment: production
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      WRANGLER_SEND_METRICS: 'false'
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 11.9.0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - name: Install Dependencies
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Log Deployment GITHUB_SHA
-        run: echo "Deploying PromotorFlow from GITHUB_SHA=${{ github.sha }}"
-
-      - name: Deploy PromotorFlow to Cloudflare Workers
-        run: pnpm deploy:flow:cf
-
-  deploy-api:
-    name: Deploy stiffin-promotor-api to Cloudflare Workers
+  deploy-api-staging:
+    name: Deploy stiffin-promotor-api-staging to Cloudflare Workers
     needs: verify
     if: ${{ github.event.inputs.target == 'all' || github.event.inputs.target == 'platform-api' }}
     runs-on: ubuntu-latest
-    environment: production
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -175,7 +106,88 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Log Deployment GITHUB_SHA
-        run: echo "Deploying stiffin-promotor-api from GITHUB_SHA=${{ github.sha }}"
+        run: echo "Deploying stiffin-promotor-api-staging from GITHUB_SHA=${{ github.sha }}"
 
-      - name: Deploy stiffin-promotor-api to Cloudflare Workers
-        run: pnpm deploy:api:cf
+      - name: Deploy stiffin-promotor-api-staging to Cloudflare Workers
+        run: pnpm deploy:api:staging:cf
+
+      - name: Output Staging API URL
+        run: |
+          echo "Platform API Staging Worker: stiffin-promotor-api-staging"
+          echo "Platform API Staging URL: https://stiffin-promotor-api-staging.moxsenna.workers.dev"
+
+  deploy-class-staging:
+    name: Deploy promotor-class-staging to Cloudflare Workers
+    needs: [verify, deploy-api-staging]
+    if: ${{ always() && (needs.verify.result == 'success') && (github.event.inputs.target == 'all' || github.event.inputs.target == 'promotor-class') }}
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 11.9.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Log Deployment GITHUB_SHA
+        run: echo "Deploying promotor-class-staging from GITHUB_SHA=${{ github.sha }}"
+
+      - name: Deploy promotor-class-staging to Cloudflare Workers
+        run: pnpm deploy:class:staging:cf
+
+      - name: Output Staging Class URL
+        run: |
+          echo "PromotorClass Staging Worker: promotor-class-staging"
+          echo "PromotorClass Staging URL: https://promotor-class-staging.moxsenna.workers.dev"
+
+  deploy-flow-staging:
+    name: Deploy promotor-flow-staging to Cloudflare Workers
+    needs: [verify, deploy-api-staging]
+    if: ${{ always() && (needs.verify.result == 'success') && (github.event.inputs.target == 'all' || github.event.inputs.target == 'promotor-flow') }}
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 11.9.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Log Deployment GITHUB_SHA
+        run: echo "Deploying promotor-flow-staging from GITHUB_SHA=${{ github.sha }}"
+
+      - name: Deploy promotor-flow-staging to Cloudflare Workers
+        run: pnpm deploy:flow:staging:cf
+
+      - name: Output Staging Flow URL
+        run: |
+          echo "PromotorFlow Staging Worker: promotor-flow-staging"
+          echo "PromotorFlow Staging URL: https://promotor-flow-staging.moxsenna.workers.dev"

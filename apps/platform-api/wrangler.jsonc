@@ -22,5 +22,19 @@
   ],
   "vars": {
     "BETTER_AUTH_URL": "https://stiffin-promotor-api.moxsenna.workers.dev"
+  },
+  "env": {
+    "staging": {
+      "name": "stiffin-promotor-api-staging",
+      "hyperdrive": [
+        {
+          "binding": "HYPERDRIVE",
+          "id": "ea7e56b0c0424b33a8c8156b8bb923bc"
+        }
+      ],
+      "vars": {
+        "BETTER_AUTH_URL": "https://stiffin-promotor-api-staging.moxsenna.workers.dev"
+      }
+    }
   }
 }

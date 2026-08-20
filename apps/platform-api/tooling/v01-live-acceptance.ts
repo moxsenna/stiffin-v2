@@ -581,9 +581,10 @@ async function runLiveAcceptance() {
         organizationId: org.id,
         title: 'Masterclass Lanjutan — Arsitektur Micro-Frontends',
         slug: `prog-aftersales-${timestamp}`,
-        programType: 'course',
+        programType: 'paid',
+        accessType: 'public',
         status: 'published',
-        pricing: 'paid',
+        pricing: 'one_time',
         priceAmount: 1500000,
       })
       .returning();
