@@ -59,9 +59,9 @@ pnpm deploy:flow:cf
 ### Application Package Scripts
 Each app (`apps/promotor-class-web` and `apps/promotor-flow-web`) provides:
 ```json
-"preview:cf": "opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion && opennextjs-cloudflare preview",
-"deploy:cf": "opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion && opennextjs-cloudflare deploy",
-"upload:cf": "opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion && opennextjs-cloudflare deploy",
+"preview:cf": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+"deploy:cf": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+"upload:cf": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
 "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
 ```
 

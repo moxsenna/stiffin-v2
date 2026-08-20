@@ -16,13 +16,15 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
-    "test:integration": "pnpm --filter @promotor/platform-api test:integration"
+    "test:integration": "pnpm --filter @promotor/platform-api test:integration",
+    "test:e2e": "playwright test"
   },
   "overrides": {
     "@aws-sdk/xml-builder": "3.972.33",
     "@aws-sdk/signature-v4-multi-region": "3.996.38"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "esbuild": "^0.28.2",
     "next": "14.2.35",
     "sharp": "^0.35.3",
