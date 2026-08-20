@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { resolveWorkspaceSlug } from '@/lib/session';
 import { getPromoterReferralOverviewQuery } from '@/modules/referrals/queries';
 import { PromoterReferralOverview } from '@/modules/referrals/types';
+import { isReferralPrototypeEnabled } from '@/lib/feature-flags';
 
 export default function PromotorReferralPage() {
   const [overview, setOverview] = useState<PromoterReferralOverview | null>(null);
@@ -13,6 +15,7 @@ export default function PromotorReferralPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isReferralPrototypeEnabled()) return;
     const slug = resolveWorkspaceSlug();
     setResolvedSlug(slug);
 
@@ -24,6 +27,10 @@ export default function PromotorReferralPage() {
       setLoading(false);
     }
   }, []);
+
+  if (!isReferralPrototypeEnabled()) {
+    return notFound();
+  }
 
   if (loading) {
     return (

@@ -1,13 +1,13 @@
-import { learnerRepository } from '@/adapters/mock/learner-repository';
+import { getEnrollmentRepository } from '@/adapters';
 
 export async function getEnrollmentsQuery() {
-  return learnerRepository.getEnrollments();
+  return getEnrollmentRepository().getEnrollments();
 }
 
 export async function getEnrollmentByIdQuery(id: string) {
-  return learnerRepository.getEnrollmentById(id);
+  return getEnrollmentRepository().getEnrollmentById(id);
 }
 
 export async function getEnrollmentsByContactIdQuery(contactId: string) {
-  return learnerRepository.getEnrollmentsByContactId(contactId);
+  return getEnrollmentRepository().getEnrollments({ contactId });
 }

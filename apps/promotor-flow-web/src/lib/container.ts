@@ -11,9 +11,8 @@ import {
   getSettingsRepository,
   getPromotorClassAdapter,
   getAvailabilityRepository,
+  getClock,
 } from '@/adapters';
-import { mockStateStore } from '@/adapters/mock/mock-state-store';
-import { mockClock } from '@/adapters/mock/mock-clock';
 
 import { createContactQueries } from '@/modules/contacts/queries';
 import { createContactCommands } from '@/modules/contacts/commands';
@@ -61,6 +60,7 @@ const messagingRepo = getMessagingRepository();
 const settingsRepo = getSettingsRepository();
 const promotorClassAdapter = getPromotorClassAdapter();
 const availabilityRepo = getAvailabilityRepository();
+const activeClock = getClock();
 
 // Helper contact lookup for queries
 const contactLookupFn = async (contactId: string) => {
@@ -76,11 +76,11 @@ export const contactCommands = createContactCommands(contactRepo);
 export const lifecycleQueries = createLifecycleQueries();
 export const lifecycleCommands = createLifecycleCommands(lifecycleRepo, activityRepo);
 
-export const nextActionQueries = createNextActionQueries(nextActionRepo, mockClock, contactLookupFn);
+export const nextActionQueries = createNextActionQueries(nextActionRepo, activeClock, contactLookupFn);
 export const nextActionCommands = createNextActionCommands(nextActionRepo, activityRepo);
 
 export const bookingQueries = createBookingQueries(bookingRepo);
-export const bookingCommands = createBookingCommands(bookingRepo, lifecycleRepo, nextActionRepo, activityRepo, mockClock);
+export const bookingCommands = createBookingCommands(bookingRepo, lifecycleRepo, nextActionRepo, activityRepo, activeClock);
 
 export const serviceQueries = createServiceQueries(serviceRepo);
 export const serviceCommands = createServiceCommands(serviceRepo);
@@ -92,7 +92,7 @@ export const messagingQueries = createMessagingQueries(templateRepo);
 export const messagingCommands = createMessagingCommands(messagingRepo);
 
 export const aftercareQueries = createAftercareQueries();
-export const aftercareCommands = createAftercareCommands(aftercareRepo, nextActionRepo, activityRepo, mockClock);
+export const aftercareCommands = createAftercareCommands(aftercareRepo, nextActionRepo, activityRepo, activeClock);
 
 export const settingsQueries = createSettingsQueries(settingsRepo);
 export const settingsCommands = createSettingsCommands(settingsRepo);
@@ -103,5 +103,6 @@ export const promotorClassCommands = createPromotorClassCommands(promotorClassAd
 export const availabilityQueries = createAvailabilityQueries(availabilityRepo);
 export const availabilityCommands = createAvailabilityCommands(availabilityRepo);
 
-export const clock = mockClock;
-export const store = mockStateStore;
+export const clock = activeClock;
+
+

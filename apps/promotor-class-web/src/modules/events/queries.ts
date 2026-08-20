@@ -1,9 +1,9 @@
-import { MockStateStore } from '@/adapters/mock/mock-state-store';
+import { getEventRepository } from '@/adapters';
 
 export async function getLearningEventsQuery() {
-  return MockStateStore.getState().learningEvents;
+  return getEventRepository().getLearningEvents();
 }
 
 export async function getLearningEventsByContactIdQuery(contactId: string) {
-  return MockStateStore.getState().learningEvents.filter(e => e.contactId === contactId);
+  return getEventRepository().getLearningEventsByContactId(contactId);
 }

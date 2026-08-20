@@ -27,13 +27,17 @@ export const DevControlsOverlay: React.FC<DevControlsOverlayProps> = ({
 
   const handleAdvanceDays = (days: number) => {
     setDaysAdvanced((prev) => prev + days);
-    clock.advanceDays(days);
+    if ('advanceDays' in clock && typeof (clock as any).advanceDays === 'function') {
+      (clock as any).advanceDays(days);
+    }
     onRefresh();
   };
 
   const handleResetClock = () => {
     setDaysAdvanced(0);
-    clock.setNow('2026-08-12T10:00:00+07:00');
+    if ('setNow' in clock && typeof (clock as any).setNow === 'function') {
+      (clock as any).setNow('2026-08-12T10:00:00+07:00');
+    }
     onRefresh();
   };
 

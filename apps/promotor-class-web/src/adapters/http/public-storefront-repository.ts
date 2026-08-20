@@ -48,4 +48,31 @@ export class HttpPublicStorefrontRepository implements PublicStorefrontRepositor
         : undefined,
     });
   }
+
+  async getStorefrontProfile(): Promise<PublicWorkspaceProfile | null> {
+    return this.client.getWorkspaceProfile();
+  }
+
+  async updateStorefrontProfile(
+    profile: Partial<PublicWorkspaceProfile>
+  ): Promise<PublicWorkspaceProfile> {
+    return this.client.updateWorkspaceProfile({
+      displayName: profile.displayName,
+      tagline: profile.tagline,
+      headline: profile.headline,
+      bio: profile.bio,
+      city: profile.city,
+      roleLabel: profile.roleLabel,
+      heroProgramId: profile.heroProgramId,
+      whatsappPhoneE164: profile.whatsappPhoneE164,
+      avatarUrl: profile.avatarUrl,
+      logoUrl: profile.logoUrl,
+      stats: profile.stats
+        ? {
+            familiesHelped: profile.stats.familiesHelped,
+            location: profile.stats.location,
+          }
+        : undefined,
+    });
+  }
 }

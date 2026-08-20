@@ -1,9 +1,9 @@
-import { contactRepository } from '@/adapters/mock/contact-repository';
+import { getContactRepository } from '@/adapters';
 
 export async function getContactsQuery() {
-  return contactRepository.getContacts();
+  return getContactRepository().getContacts();
 }
 
 export async function getContactByIdQuery(id: string) {
-  return contactRepository.getContactById(id);
+  return getContactRepository().getContactById(id);
 }

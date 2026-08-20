@@ -260,6 +260,21 @@ export class MockPublicStorefrontRepository implements PublicStorefrontRepositor
     });
     return updatedProfile!;
   }
+
+  async getStorefrontProfile(): Promise<PublicWorkspaceProfile | null> {
+    const storeProfiles = MockStateStore.getState().workspaceProfiles;
+    if (storeProfiles) {
+      const firstSlug = Object.keys(storeProfiles)[0];
+      if (firstSlug && storeProfiles[firstSlug]) return storeProfiles[firstSlug];
+    }
+    return MOCK_RINA_PROFILE;
+  }
+
+  async updateStorefrontProfile(profile: Partial<PublicWorkspaceProfile>): Promise<PublicWorkspaceProfile> {
+    const current = await this.getStorefrontProfile();
+    const slug = current?.workspaceSlug || 'rina';
+    return this.updatePublicWorkspaceProfile(slug, profile);
+  }
 }
 
 export const publicStorefrontRepository = new MockPublicStorefrontRepository();

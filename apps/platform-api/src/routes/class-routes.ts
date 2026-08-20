@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { eq, and, desc, isNull } from 'drizzle-orm';
 import type { AppEnv } from '../app';
 import { DomainError } from '../core/errors';
 import {
@@ -8,6 +9,11 @@ import {
 import { createEnrollmentService } from '../services/class/enrollment-service';
 import { createPromotorClassAdapter } from '../services/class/promotor-class-adapter';
 import { createLearningEngineService } from '../services/class/learning-engine-service';
+import { contacts } from '../db/schema/contacts';
+import { reflectionResponses } from '../db/schema/reflection-responses';
+import { learningEvents } from '../db/schema/learning-events';
+import { enrollments } from '../db/schema/enrollments';
+import { programs } from '../db/schema/programs';
 import type { OrganizationContext } from '../core/organization-context';
 import type { AuthenticatedActor } from '../auth/types';
 
@@ -171,6 +177,101 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
     const analytics = await learningService.getProgramAnalytics(ctx.organizationId, programId);
 
     return c.json(analytics, 200);
+  });
+
+  // 11. List Contacts for PromotorClass
+  app.get('/api/v1/class/contacts', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const rows = await db
+      .select({
+        id: contacts.id,
+        organizationId: contacts.organizationId,
+        name: contacts.name,
+        phoneE164: contacts.phoneE164,
+        createdAt: contacts.createdAt,
+      })
+      .from(contacts)
+      .where(and(eq(contacts.organizationId, ctx.organizationId), isNull(contacts.deletedAt)))
+      .orderBy(desc(contacts.createdAt));
+
+    return c.json({
+      contacts: rows.map((r: any) => ({
+        ...r,
+        createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
+      })),
+    }, 200);
+  });
+
+  // 12. List Reflections for PromotorClass
+  app.get('/api/v1/class/reflections', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const rows = await db
+      .select({
+        id: reflectionResponses.id,
+        organizationId: reflectionResponses.organizationId,
+        enrollmentId: reflectionResponses.enrollmentId,
+        lessonId: reflectionResponses.lessonId,
+        contactId: enrollments.contactId,
+        contactName: contacts.name,
+        contactPhone: contacts.phoneE164,
+        programId: enrollments.programId,
+        programTitle: programs.title,
+        responseText: reflectionResponses.responseText,
+        selectedOptions: reflectionResponses.selectedOptions,
+        submittedAt: reflectionResponses.submittedAt,
+      })
+      .from(reflectionResponses)
+      .innerJoin(enrollments, eq(reflectionResponses.enrollmentId, enrollments.id))
+      .innerJoin(contacts, eq(enrollments.contactId, contacts.id))
+      .innerJoin(programs, eq(enrollments.programId, programs.id))
+      .where(eq(reflectionResponses.organizationId, ctx.organizationId))
+      .orderBy(desc(reflectionResponses.submittedAt));
+
+    return c.json({
+      reflections: rows.map((r: any) => ({
+        id: r.id,
+        organizationId: r.organizationId,
+        enrollmentId: r.enrollmentId,
+        lessonId: r.lessonId,
+        contactId: r.contactId,
+        contactName: r.contactName,
+        contactPhone: r.contactPhone,
+        programId: r.programId,
+        programTitle: r.programTitle,
+        answerText: r.responseText || '',
+        responseText: r.responseText,
+        selectedOptions: r.selectedOptions,
+        submittedAt: r.submittedAt ? new Date(r.submittedAt).toISOString() : new Date().toISOString(),
+      })),
+    }, 200);
+  });
+
+  // 13. List Learning Activity for PromotorClass
+  app.get('/api/v1/class/activity', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const rows = await db
+      .select({
+        id: learningEvents.id,
+        organizationId: learningEvents.organizationId,
+        contactId: learningEvents.contactId,
+        contactName: contacts.name,
+        contactPhone: contacts.phoneE164,
+        eventType: learningEvents.eventType,
+        payload: learningEvents.payload,
+        occurredAt: learningEvents.occurredAt,
+      })
+      .from(learningEvents)
+      .innerJoin(contacts, eq(learningEvents.contactId, contacts.id))
+      .where(eq(learningEvents.organizationId, ctx.organizationId))
+      .orderBy(desc(learningEvents.occurredAt))
+      .limit(100);
+
+    return c.json({
+      activity: rows.map((r: any) => ({
+        ...r,
+        occurredAt: r.occurredAt ? new Date(r.occurredAt).toISOString() : new Date().toISOString(),
+      })),
+    }, 200);
   });
 }
 

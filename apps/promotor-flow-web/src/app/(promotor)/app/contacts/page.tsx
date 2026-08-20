@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { PlusIcon, SearchIcon, ChevronRightIcon } from '@/components/foundation/icons';
-import { contactQueries, lifecycleQueries, store } from '@/lib/container';
+import { contactQueries, lifecycleQueries } from '@/lib/container';
 import { FlowContact } from '@promotor/promotor-flow-fixtures';
 import { formatPhoneDisplay } from '@promotor/platform-core';
 
@@ -22,10 +22,6 @@ export default function ContactsPage() {
 
   useEffect(() => {
     loadContacts();
-    const unsubscribe = store.subscribe(() => {
-      loadContacts();
-    });
-    return () => unsubscribe();
   }, [loadContacts]);
 
   return (

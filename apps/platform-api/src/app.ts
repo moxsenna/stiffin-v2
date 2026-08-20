@@ -182,6 +182,7 @@ export function createApp(deps?: AppDependencies) {
     '/api/*',
     cors({
       origin: (origin, c) => {
+        if (!origin) return null;
         const env = c.env;
         const allowed = [
           'http://localhost:3000',
@@ -193,7 +194,7 @@ export function createApp(deps?: AppDependencies) {
           'https://stiffin-promotor-flow.moxsenna.workers.dev',
           ...(env.BETTER_AUTH_TRUSTED_ORIGINS ?? '').split(',').map((s: string) => s.trim()).filter(Boolean),
         ];
-        return origin && allowed.includes(origin) ? origin : (origin || '');
+        return allowed.includes(origin) ? origin : null;
       },
       credentials: true,
       allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],

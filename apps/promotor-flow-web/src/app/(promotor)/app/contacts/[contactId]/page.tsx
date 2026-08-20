@@ -17,7 +17,6 @@ import {
   messagingQueries,
   messagingCommands,
   promotorClassQueries,
-  store,
   clock,
 } from '@/lib/container';
 import { FlowContact, FlowNextAction, FlowBooking, FlowActivity, LifecycleStage } from '@promotor/promotor-flow-fixtures';
@@ -79,8 +78,6 @@ export default function ContactDetailPage() {
 
   useEffect(() => {
     loadData();
-    const unsubscribe = store.subscribe(() => loadData());
-    return () => unsubscribe();
   }, [loadData]);
 
   if (!contact) {

@@ -9,12 +9,7 @@ export default function TemplatesPage() {
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
 
   useEffect(() => {
-    messagingQueries.generateDraftMessage('CONTACT_LEAD', 'Test').then(async () => {
-      const list = await (await import('@/adapters/mock/message-template-repository')).MockMessageTemplateRepository.prototype.listTemplates.call({
-        store: (await import('@/lib/container')).store,
-      });
-      setTemplates(list);
-    });
+    messagingQueries.listTemplates().then(setTemplates).catch(() => setTemplates([]));
   }, []);
 
   return (

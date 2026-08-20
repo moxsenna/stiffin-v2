@@ -1,8 +1,12 @@
 import { MessageTemplateRepositoryPort } from './ports';
-import { NextActionType } from '@promotor/promotor-flow-fixtures';
+import { NextActionType, MessageTemplate } from '@promotor/promotor-flow-fixtures';
 
 export function createMessagingQueries(templateRepo: MessageTemplateRepositoryPort) {
   return {
+    async listTemplates(): Promise<MessageTemplate[]> {
+      return templateRepo.listTemplates();
+    },
+
     async generateDraftMessage(
       category: NextActionType,
       contactName: string,
@@ -10,7 +14,7 @@ export function createMessagingQueries(templateRepo: MessageTemplateRepositoryPo
     ): Promise<string> {
       const template = await templateRepo.getTemplateByCategory(category);
       if (!template) {
-        return `Halo ${contactName}, salam dari Mbak Rina (STIFIn Center). Ada yang bisa saya bantu?`;
+        return `Halo ${contactName}, salam dari promotor STIFIn. Ada yang bisa saya bantu terkait tes atau konsultasi?`;
       }
 
       let text = template.templateText.replace(/\[Nama\]/g, contactName);

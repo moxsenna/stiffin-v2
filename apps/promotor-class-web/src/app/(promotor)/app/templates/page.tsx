@@ -2,16 +2,24 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { getTemplatesQuery } from '@/modules/templates/queries';
 import { ProgramTemplate } from '@/modules/templates/ports';
+import { isTemplatesEnabled } from '@/lib/feature-flags';
 
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<ProgramTemplate[]>([]);
 
   useEffect(() => {
-    getTemplatesQuery().then(setTemplates);
+    if (isTemplatesEnabled()) {
+      getTemplatesQuery().then(setTemplates);
+    }
   }, []);
+
+  if (!isTemplatesEnabled()) {
+    return notFound();
+  }
 
   return (
     <PromotorShell>

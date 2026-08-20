@@ -1,5 +1,5 @@
-import { MockStateStore } from '@/adapters/mock/mock-state-store';
+import { resetDemoState } from '@/adapters';
 
 export async function resetDemoStateCommand() {
-  MockStateStore.resetDemo();
+  await resetDemoState();
 }

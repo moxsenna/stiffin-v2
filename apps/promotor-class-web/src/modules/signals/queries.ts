@@ -1,9 +1,9 @@
-import { MockStateStore } from '@/adapters/mock/mock-state-store';
+import { getSignalRepository } from '@/adapters';
 
 export async function getLearningSignalsQuery() {
-  return MockStateStore.getState().learningSignals;
+  return getSignalRepository().getSignals();
 }
 
 export async function getSignalByContactIdQuery(contactId: string) {
-  return MockStateStore.getState().learningSignals.find(s => s.contactId === contactId);
+  return getSignalRepository().getSignalByContactId(contactId);
 }

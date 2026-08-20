@@ -1,5 +1,8 @@
-import { learnerRepository } from '@/adapters/mock/learner-repository';
+import { getLearningRepository } from '@/adapters';
 
 export async function recordCtaClickCommand(enrollmentId: string, lessonId: string, ctaUrl: string) {
-  return learnerRepository.recordCtaClick(enrollmentId, lessonId, ctaUrl);
+  const learningRepo = getLearningRepository() as any;
+  if (typeof learningRepo.recordCtaClick === 'function') {
+    return learningRepo.recordCtaClick(enrollmentId, lessonId, ctaUrl);
+  }
 }

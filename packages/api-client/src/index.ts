@@ -442,9 +442,43 @@ export class PromotorClassContentApiClient {
     return this.client.get(`/api/v1/class/programs/${encodeURIComponent(programId)}/analytics`);
   }
 
-  async listEligiblePrograms(accessType?: string): Promise<{ programs: EligibleProgramDto[] }> {
-    const qs = accessType ? `?accessType=${encodeURIComponent(accessType)}` : '';
-    return this.client.get(`/api/v1/class/programs/eligible${qs}`);
+  async listClassContacts(): Promise<{ contacts: Array<{ id: string; organizationId: string; name: string; phoneE164: string; createdAt: string }> }> {
+    return this.client.get('/api/v1/class/contacts');
+  }
+
+  async listClassReflections(): Promise<{
+    reflections: Array<{
+      id: string;
+      organizationId: string;
+      enrollmentId: string;
+      lessonId: string;
+      contactId: string;
+      contactName: string;
+      contactPhone: string;
+      programId: string;
+      programTitle: string;
+      answerText: string;
+      responseText: string | null;
+      selectedOptions: unknown;
+      submittedAt: string;
+    }>;
+  }> {
+    return this.client.get('/api/v1/class/reflections');
+  }
+
+  async listClassActivity(): Promise<{
+    activity: Array<{
+      id: string;
+      organizationId: string;
+      contactId: string;
+      contactName: string;
+      contactPhone: string;
+      eventType: string;
+      payload: unknown;
+      occurredAt: string;
+    }>;
+  }> {
+    return this.client.get('/api/v1/class/activity');
   }
 }
 

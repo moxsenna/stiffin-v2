@@ -1,5 +1,3 @@
-import { MockStateStore } from '@/adapters/mock/mock-state-store';
-
 export interface LearnerSessionContext {
   contactId: string;
   workspaceSlug: string;
@@ -7,6 +5,9 @@ export interface LearnerSessionContext {
 
 const SESSION_KEY_V2 = 'promotor_class_learner_session_v2';
 const LAST_PUBLIC_WORKSPACE_KEY = 'promotor_class_last_public_workspace';
+
+// In-memory fallback for non-browser/test environments
+let inMemoryLearnerSession: LearnerSessionContext | null = null;
 
 // Helper to safely get active session without tenant guessing
 export function getActiveLearnerSession(): LearnerSessionContext | null {
@@ -31,23 +32,12 @@ export function getActiveLearnerSession(): LearnerSessionContext | null {
         localStorage.setItem(SESSION_KEY_V2, JSON.stringify(migrated));
         return migrated;
       }
-      // If legacy contactId exists without known workspace, do NOT invent a tenant!
     } catch {
       // Fallback on parse error
     }
   }
 
-  const mockAccess = MockStateStore.getState().currentLearnerAccess;
-  if (mockAccess.contactId) {
-    const wsSlug = mockAccess.workspaceSlug || getLastPublicWorkspaceSlug();
-    if (wsSlug && wsSlug.trim()) {
-      return {
-        contactId: mockAccess.contactId,
-        workspaceSlug: wsSlug.trim(),
-      };
-    }
-  }
-  return null;
+  return inMemoryLearnerSession;
 }
 
 export function getActiveLearnerContactId(): string | null {
@@ -66,28 +56,20 @@ export function setActiveLearnerSession(session: LearnerSessionContext): void {
     workspaceSlug: session.workspaceSlug.trim(),
   };
 
+  inMemoryLearnerSession = sanitized;
+
   if (typeof window !== 'undefined') {
     localStorage.setItem(SESSION_KEY_V2, JSON.stringify(sanitized));
     localStorage.setItem(LAST_PUBLIC_WORKSPACE_KEY, sanitized.workspaceSlug);
   }
-  MockStateStore.updateState(curr => ({
-    ...curr,
-    currentLearnerAccess: {
-      contactId: sanitized.contactId,
-      workspaceSlug: sanitized.workspaceSlug,
-    },
-  }));
 }
 
 export function clearActiveLearnerSession(): void {
+  inMemoryLearnerSession = null;
   if (typeof window !== 'undefined') {
     localStorage.removeItem(SESSION_KEY_V2);
     localStorage.removeItem('promotor_class_learner_session_v1');
   }
-  MockStateStore.updateState(curr => ({
-    ...curr,
-    currentLearnerAccess: { contactId: null, workspaceSlug: null },
-  }));
 }
 
 export function setLastPublicWorkspaceSlug(slug: string): void {

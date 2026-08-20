@@ -49,6 +49,7 @@ describe('Domain Guardrails & Architecture Integrity Tests', () => {
       path.join(__dirname, '../components/learner'),
       path.join(__dirname, '../components/public'),
       path.join(__dirname, '../components/promotor'),
+      path.join(__dirname, '../components/layout'),
     ];
 
     let allUiFiles: string[] = [];
@@ -76,6 +77,11 @@ describe('Domain Guardrails & Architecture Integrity Tests', () => {
         content.includes('@promotor/promotor-class-fixtures'),
         false,
         `UI layer file ${relPath} MUST NOT directly import fixtures`
+      );
+      assert.strictEqual(
+        content.includes('staging-promotor-session-token-demo'),
+        false,
+        `UI layer file ${relPath} MUST NOT contain demo session token`
       );
     }
   });
@@ -122,7 +128,7 @@ describe('Domain Guardrails & Architecture Integrity Tests', () => {
     );
   });
 
-  it('6. session.ts MUST NOT contain tenant fallbacks like || rina or workspaceSlug: rina', () => {
+  it('6. session.ts MUST NOT contain tenant fallbacks or MockStateStore imports', () => {
     const sessionFilePath = path.join(__dirname, '../lib/session.ts');
     const content = fs.readFileSync(sessionFilePath, 'utf-8');
 
@@ -132,17 +138,14 @@ describe('Domain Guardrails & Architecture Integrity Tests', () => {
       "session.ts MUST NOT contain fallback || 'rina'"
     );
     assert.strictEqual(
-      content.includes('workspaceSlug: \'rina\''),
+      content.includes('MockStateStore'),
       false,
-      "session.ts MUST NOT contain workspaceSlug: 'rina'"
+      'session.ts MUST NOT import MockStateStore'
     );
   });
 
-  it('7. modules/programs/** and modules/public-storefront/** files MUST NOT directly import from /adapters/mock/ or /adapters/http/ (factory only)', () => {
-    const targetDirs = [
-      path.join(__dirname, '../modules/programs'),
-      path.join(__dirname, '../modules/public-storefront'),
-    ];
+  it('7. ALL modules/** files MUST NOT directly import from /adapters/mock/ or /adapters/http/ (factory only)', () => {
+    const targetDir = path.join(__dirname, '../modules');
     const files: string[] = [];
 
     function scan(dir: string) {
@@ -156,9 +159,7 @@ describe('Domain Guardrails & Architecture Integrity Tests', () => {
         }
       }
     }
-    for (const d of targetDirs) {
-      scan(d);
-    }
+    scan(targetDir);
 
     assert.ok(files.length > 0, 'Target module files must be found');
 
@@ -169,6 +170,11 @@ describe('Domain Guardrails & Architecture Integrity Tests', () => {
         content.includes('/adapters/mock/'),
         false,
         `modules file ${rel} MUST NOT import from /adapters/mock/`
+      );
+      assert.strictEqual(
+        content.includes('MockStateStore'),
+        false,
+        `modules file ${rel} MUST NOT import MockStateStore`
       );
       assert.strictEqual(
         content.includes('/adapters/http/'),

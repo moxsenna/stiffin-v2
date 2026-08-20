@@ -1,9 +1,9 @@
-import { MockStateStore } from '@/adapters/mock/mock-state-store';
+import { getReflectionRepository } from '@/adapters';
 
 export async function getReflectionsQuery() {
-  return MockStateStore.getState().reflections;
+  return getReflectionRepository().getReflections();
 }
 
 export async function getReflectionsByEnrollmentIdQuery(enrollmentId: string) {
-  return MockStateStore.getState().reflections.filter(r => r.enrollmentId === enrollmentId);
+  return getReflectionRepository().getReflectionsByEnrollmentId(enrollmentId);
 }

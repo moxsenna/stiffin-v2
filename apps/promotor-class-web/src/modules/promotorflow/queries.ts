@@ -1,6 +1,6 @@
-import { promotorFlowAdapter } from '@/adapters/mock/promotorflow-adapter';
+import { getPromotorFlowAdapter } from '@/adapters';
 import { IntegrationHealth } from '@promotor/contracts';
 
 export async function getIntegrationHealthQuery(): Promise<IntegrationHealth> {
-  return promotorFlowAdapter.getIntegrationHealth();
+  return getPromotorFlowAdapter().getIntegrationHealth();
 }
