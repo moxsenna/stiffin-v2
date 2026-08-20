@@ -132,8 +132,8 @@ test.describe('P1-5 — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     // =========================================================================
     await page.goto('http://localhost:3000/app/settings');
     await expect(page.locator('body')).toBeVisible();
-    await expect(page.locator('text=PROMOTOR')).toBeVisible();
-    await expect(page.locator('text=ORGANISASI')).toBeVisible();
+    await expect(page.getByText('PROMOTOR', { exact: true })).toBeVisible();
+    await expect(page.getByText('ORGANISASI', { exact: true })).toBeVisible();
 
     // Verify logout button is accessible
     const logoutBtn = page.locator('button:has-text("Keluar dari Akun")');
