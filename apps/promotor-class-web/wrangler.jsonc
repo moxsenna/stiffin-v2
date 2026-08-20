@@ -19,5 +19,21 @@
   ],
   "vars": {
     "NEXT_PRIVATE_MINIMAL_MODE": "1"
+  },
+  "env": {
+    "staging": {
+      "name": "promotor-class-staging",
+      "services": [
+        {
+          "binding": "WORKER_SELF_REFERENCE",
+          "service": "promotor-class-staging"
+        }
+      ],
+      "vars": {
+        "NEXT_PRIVATE_MINIMAL_MODE": "1",
+        "NEXT_PUBLIC_API_MODE": "http",
+        "NEXT_PUBLIC_API_URL": "https://stiffin-promotor-api-staging.moxsenna.workers.dev"
+      }
+    }
   }
 }
