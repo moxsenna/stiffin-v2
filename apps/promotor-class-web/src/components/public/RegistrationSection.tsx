@@ -44,15 +44,11 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
         }
       }
 
-      // Set active learner session with workspace context and token
+      // Set active learner session with workspace context
       setActiveLearnerSession({
         contactId: res.contactId,
         workspaceSlug: detail.promoter.workspaceSlug,
       });
-
-      if (typeof window !== 'undefined' && res.accessToken) {
-        localStorage.setItem(`learner_token_${res.contactId}`, res.accessToken);
-      }
 
       setCreatedEnrollmentId(res.enrollmentId);
     } catch (err: any) {

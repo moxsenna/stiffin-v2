@@ -8,6 +8,25 @@ describe('P1-3 & P1-4 — Signal DTO Canonical Truth & Class Learners Invariants
       listClassSignals: async () => ({
         signals: [
           {
+            id: 'sig-cold',
+            organizationId: 'org-1',
+            contactId: 'cnt-0',
+            contactName: 'Rudi Cold',
+            contactPhone: '+6281200000001',
+            programId: 'prog-1',
+            programTitle: 'Parenting STIFIn',
+            enrollmentId: 'enr-0',
+            sourceEventId: 'evt-prog-start',
+            type: 'ENROLLMENT_BASE',
+            reason: 'LESSON_STARTED',
+            recommendedActionReason: 'Peserta baru memulai pelajaran pertama.',
+            status: 'ACTIVE',
+            createdAt: '2026-08-20T09:00:00.000Z',
+            intentScore: 20,
+            intentLabel: 'cold',
+            signalLevel: 'Minat rendah',
+          },
+          {
             id: 'sig-1',
             organizationId: 'org-1',
             contactId: 'cnt-1',
@@ -71,26 +90,36 @@ describe('P1-3 & P1-4 — Signal DTO Canonical Truth & Class Learners Invariants
     const repo = new HttpSignalRepository(mockApiClient as any);
     const signals = await repo.getSignals();
 
-    assert.strictEqual(signals.length, 3);
+    assert.strictEqual(signals.length, 4);
 
-    // Signal 1 (80% milestone)
-    assert.strictEqual(signals[0].id, 'sig-1');
-    assert.strictEqual(signals[0].sourceEventId, 'evt-prog-80');
-    assert.strictEqual(signals[0].intentScore, 60);
-    assert.strictEqual(signals[0].signalLevel, 'Minat sedang');
-    assert.strictEqual(signals[0].primaryReason, 'Kemajuan belajar mencapai 80%.');
+    // COLD signal
+    assert.strictEqual(signals[0].id, 'sig-cold');
+    assert.strictEqual(signals[0].sourceEventId, 'evt-prog-start');
+    assert.strictEqual(signals[0].intentScore, 20);
+    assert.strictEqual((signals[0] as any).intentLabel, 'cold');
+    assert.strictEqual(signals[0].signalLevel, 'Minat rendah');
 
-    // Signal 2 (Completed)
-    assert.strictEqual(signals[1].id, 'sig-2');
-    assert.strictEqual(signals[1].sourceEventId, 'evt-completed');
-    assert.strictEqual(signals[1].intentScore, 80);
-    assert.strictEqual(signals[1].signalLevel, 'Minat tinggi');
+    // WARM Signal (80% milestone)
+    assert.strictEqual(signals[1].id, 'sig-1');
+    assert.strictEqual(signals[1].sourceEventId, 'evt-prog-80');
+    assert.strictEqual(signals[1].intentScore, 60);
+    assert.strictEqual((signals[1] as any).intentLabel, 'warm');
+    assert.strictEqual(signals[1].signalLevel, 'Minat sedang');
+    assert.strictEqual(signals[1].primaryReason, 'Kemajuan belajar mencapai 80%.');
 
-    // Signal 3 (CTA clicked)
-    assert.strictEqual(signals[2].id, 'sig-3');
-    assert.strictEqual(signals[2].sourceEventId, 'evt-cta-click');
-    assert.strictEqual(signals[2].intentScore, 100);
+    // HOT Signal (Completed)
+    assert.strictEqual(signals[2].id, 'sig-2');
+    assert.strictEqual(signals[2].sourceEventId, 'evt-completed');
+    assert.strictEqual(signals[2].intentScore, 80);
+    assert.strictEqual((signals[2] as any).intentLabel, 'hot');
     assert.strictEqual(signals[2].signalLevel, 'Minat tinggi');
+
+    // HOT Signal with CTA (+20 binary bump = 100)
+    assert.strictEqual(signals[3].id, 'sig-3');
+    assert.strictEqual(signals[3].sourceEventId, 'evt-cta-click');
+    assert.strictEqual(signals[3].intentScore, 100);
+    assert.strictEqual((signals[3] as any).intentLabel, 'hot');
+    assert.strictEqual(signals[3].signalLevel, 'Minat tinggi');
   });
 
   it('2. Class Learners semantic filtering: contacts without enrollments are excluded', () => {

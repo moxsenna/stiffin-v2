@@ -8,19 +8,18 @@ export class HttpSettingsRepository implements SettingsRepositoryPort {
   async getSettings(): Promise<PromotorSettings> {
     const session = await getSession();
     return {
-      promotorName: session?.user?.name || 'Promotor STIFIn',
-      promotorPhoneE164: '+6281200000000',
-      organizationName: session?.organization?.name || 'STIFIn Center',
+      promotorName: session?.user?.name || 'Promotor',
+      promotorPhoneE164: '',
+      organizationName: session?.organization?.name || '',
       isDevMode: false,
     };
   }
 
-  async updateSettings(updates: Partial<PromotorSettings>): Promise<PromotorSettings> {
-    const current = await this.getSettings();
-    return { ...current, ...updates };
+  async updateSettings(_updates: Partial<PromotorSettings>): Promise<PromotorSettings> {
+    throw new Error('Pengaturan profil hanya dapat diubah melalui portal manajemen organisasi di HTTP mode');
   }
 
   async resetDemo(): Promise<void> {
-    // In HTTP mode, live backend is the single source of truth
+    // No-op in HTTP production mode
   }
 }

@@ -8,23 +8,18 @@ export class HttpSignalRepository implements SignalRepositoryPort {
   async getSignals(): Promise<LearningSignal[]> {
     const res = await this.client.listClassSignals();
     return (res.signals || []).map((s: any) => {
-      const intentLabel = (s.intentLabel || '').toUpperCase();
+      const intentLabel = s.intentLabel ? String(s.intentLabel).toUpperCase() : null;
       const signalLevel =
         s.signalLevel ||
         (intentLabel === 'HOT'
           ? 'Minat tinggi'
           : intentLabel === 'WARM'
           ? 'Minat sedang'
-          : 'Minat rendah');
+          : intentLabel === 'COLD'
+          ? 'Minat rendah'
+          : 'Belum dievaluasi');
 
-      const intentScore =
-        typeof s.intentScore === 'number'
-          ? s.intentScore
-          : intentLabel === 'HOT'
-          ? 80
-          : intentLabel === 'WARM'
-          ? 40
-          : 10;
+      const intentScore = typeof s.intentScore === 'number' ? s.intentScore : (s.intentScore ?? 0);
 
       return {
         id: s.id,
@@ -33,12 +28,13 @@ export class HttpSignalRepository implements SignalRepositoryPort {
         programId: s.programId || s.enrollmentId,
         enrollmentId: s.enrollmentId,
         sourceEventId: s.sourceEventId || undefined,
-        signalLevel,
+        signalLevel: signalLevel as 'Minat tinggi' | 'Minat sedang' | 'Minat rendah',
         intentScore,
-        primaryReason: s.primaryReason || s.recommendedActionReason || s.reason || 'Aktivitas belajar terdeteksi',
+        intentLabel: intentLabel ? (intentLabel.toLowerCase() as 'cold' | 'warm' | 'hot') : undefined,
+        primaryReason: s.primaryReason || s.recommendedActionReason || s.reason || 'Sinyal pembelajaran',
         rawReflectionQuote: s.rawReflectionQuote || undefined,
         status: s.status,
-        evaluatedAt: s.evaluatedAt || s.createdAt,
+        evaluatedAt: s.evaluatedAt || s.createdAt || new Date().toISOString(),
       };
     });
   }

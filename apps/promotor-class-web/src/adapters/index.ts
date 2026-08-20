@@ -172,8 +172,10 @@ export function getEventRepository(): EventRepositoryPort {
 }
 
 export class HttpPromotorFlowAdapter implements PromotorFlowAdapterPort {
+  constructor(private readonly client: PromotorClassContentApiClient) {}
+
   async getIntegrationHealth(): Promise<IntegrationHealth> {
-    return { promotorFlow: 'AVAILABLE' };
+    return this.client.getIntegrationHealth();
   }
 
   async dispatchOutboxEnvelope(_envelope: IntegrationEventEnvelope): Promise<FlowNextActionRef | null> {
@@ -186,7 +188,7 @@ export function getPromotorFlowAdapter(): PromotorFlowAdapterPort {
   if (!flowAdapterInstance) {
     const mode = getApiMode();
     if (mode === 'http') {
-      flowAdapterInstance = new HttpPromotorFlowAdapter();
+      flowAdapterInstance = new HttpPromotorFlowAdapter(getApiClient());
     } else {
       flowAdapterInstance = mockPromotorFlowAdapter;
     }

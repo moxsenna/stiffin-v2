@@ -55,6 +55,7 @@ import type {
   RecordCtaClickResponse,
   ProgramAnalyticsResponse,
   LearnersListResponse,
+  IntegrationHealth,
 } from '@promotor/contracts';
 
 export interface ApiClientConfig {
@@ -480,6 +481,14 @@ export class PromotorClassContentApiClient {
   }> {
     return this.client.get('/api/v1/class/activity');
   }
+
+  async getIntegrationHealth(): Promise<IntegrationHealth> {
+    try {
+      return await this.client.get<IntegrationHealth>('/api/v1/class/integration/health');
+    } catch {
+      return { promotorFlow: 'UNAVAILABLE' };
+    }
+  }
 }
 
 export { PromotorClassContentApiClient as PromotorApiClient };
@@ -768,6 +777,14 @@ export class PromotorFlowApiClient {
   async listEligiblePrograms(accessType?: string): Promise<{ programs: EligibleProgramDto[] }> {
     const qs = accessType ? `?accessType=${encodeURIComponent(accessType)}` : '';
     return this.client.get(`/api/v1/class/programs/eligible${qs}`);
+  }
+
+  async getIntegrationHealth(): Promise<IntegrationHealth> {
+    try {
+      return await this.client.get<IntegrationHealth>('/api/v1/flow/integration/health');
+    } catch {
+      return { promotorFlow: 'AVAILABLE' };
+    }
   }
 }
 

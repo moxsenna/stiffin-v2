@@ -184,9 +184,10 @@ export function createApp(deps?: AppDependencies) {
       origin: (origin, c) => {
         if (!origin) return null;
         const env = c.env || {};
-        const appEnv = env.APP_ENV || env.ENVIRONMENT || env.NODE_ENV || 'development';
-        const isProduction = appEnv === 'production';
-        const isStaging = appEnv === 'staging';
+        const rawEnv = env.APP_ENV || env.ENVIRONMENT || env.NODE_ENV;
+        const isDevelopment = rawEnv === 'development' || rawEnv === 'test';
+        const isStaging = rawEnv === 'staging';
+        const isProduction = rawEnv === 'production';
 
         const trustedConfigOrigins = (env.BETTER_AUTH_TRUSTED_ORIGINS ?? '')
           .split(',')
@@ -195,28 +196,49 @@ export function createApp(deps?: AppDependencies) {
 
         let allowed: string[] = [];
         if (isProduction) {
+          // Production: exclude localhost, 127.0.0.1, or staging origins even if accidentally configured
+          const prodTrusted = trustedConfigOrigins.filter(
+            (o: string) =>
+              !o.includes('localhost') &&
+              !o.includes('127.0.0.1') &&
+              !o.includes('staging')
+          );
           allowed = [
             'https://stiffin-promotor-class.moxsenna.workers.dev',
             'https://stiffin-promotor-flow.moxsenna.workers.dev',
-            ...trustedConfigOrigins,
+            ...prodTrusted,
           ];
         } else if (isStaging) {
+          // Staging: exclude localhost or 127.0.0.1
+          const stagingTrusted = trustedConfigOrigins.filter(
+            (o: string) => !o.includes('localhost') && !o.includes('127.0.0.1')
+          );
           allowed = [
             'https://promotor-class-staging.moxsenna.workers.dev',
             'https://promotor-flow-staging.moxsenna.workers.dev',
-            ...trustedConfigOrigins,
+            ...stagingTrusted,
           ];
-        } else {
+        } else if (isDevelopment) {
           // Development / Test
           allowed = [
             'http://localhost:3000',
             'http://localhost:3001',
             'http://localhost:5173',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:3001',
+            'http://127.0.0.1:5173',
             'https://promotor-class-staging.moxsenna.workers.dev',
             'https://promotor-flow-staging.moxsenna.workers.dev',
             'https://stiffin-promotor-class.moxsenna.workers.dev',
             'https://stiffin-promotor-flow.moxsenna.workers.dev',
             ...trustedConfigOrigins,
+          ];
+        } else {
+          // Missing or unknown APP_ENV: Fail-closed safe default.
+          // Only allow exact production origins, never localhost or arbitrary origins.
+          allowed = [
+            'https://stiffin-promotor-class.moxsenna.workers.dev',
+            'https://stiffin-promotor-flow.moxsenna.workers.dev',
           ];
         }
 

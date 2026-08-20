@@ -128,17 +128,17 @@ export default function SettingsPage() {
           <div>
             <div style={{ font: '600 12px Inter, sans-serif', color: '#71706B', textTransform: 'uppercase' }}>PROMOTOR</div>
             <div style={{ font: '600 16px Inter, sans-serif', color: '#191918', paddingTop: '2px' }}>
-              {session?.user?.name || settings.promotorName}
+              {session?.user?.name || settings.promotorName || 'Promotor'}
             </div>
             <div style={{ font: '400 14px Inter, sans-serif', color: '#71706B' }}>
-              {session?.user?.email || formatPhoneDisplay(settings.promotorPhoneE164)}
+              {session?.user?.email || (settings.promotorPhoneE164 ? formatPhoneDisplay(settings.promotorPhoneE164) : 'Belum tersedia')}
             </div>
           </div>
 
           <div style={{ borderTop: '1px solid #E8E7E3', paddingTop: '12px' }}>
             <div style={{ font: '600 12px Inter, sans-serif', color: '#71706B', textTransform: 'uppercase' }}>ORGANISASI</div>
             <div style={{ font: '600 15px Inter, sans-serif', color: '#191918', paddingTop: '2px' }}>
-              {session?.organization?.name || settings.organizationName}
+              {session?.organization?.name || settings.organizationName || 'Belum tersedia'}
             </div>
           </div>
 

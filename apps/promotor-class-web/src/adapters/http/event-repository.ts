@@ -24,14 +24,15 @@ export class HttpEventRepository implements EventRepositoryPort {
     lessonId?: string,
     payload?: Record<string, unknown>
   ): Promise<LearningEvent> {
-    if (enrollmentId) {
-      await this.client.recordLearnerEvent(enrollmentId, {
-        eventType,
-        payload,
-      });
+    if (!enrollmentId) {
+      throw new Error('Pencatatan event pembelajaran membutuhkan enrollmentId di mode HTTP');
     }
+    const res = await this.client.recordLearnerEvent(enrollmentId, {
+      eventType,
+      payload,
+    });
     return {
-      id: crypto.randomUUID(),
+      id: (res as any).eventId || `${enrollmentId}_${eventType}_${Date.now()}`,
       organizationId,
       contactId,
       eventType,
@@ -39,7 +40,7 @@ export class HttpEventRepository implements EventRepositoryPort {
       enrollmentId,
       lessonId,
       payload: payload || {},
-      occurredAt: new Date().toISOString(),
+      occurredAt: (res as any).occurredAt || new Date().toISOString(),
     };
   }
 }

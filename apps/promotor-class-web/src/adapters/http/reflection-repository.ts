@@ -31,7 +31,7 @@ export class HttpReflectionRepository implements ReflectionRepositoryPort {
       responseText: answerText,
     });
     return {
-      id: crypto.randomUUID(),
+      id: (res as any).id || `${enrollmentId}_${lessonId}`,
       organizationId,
       enrollmentId,
       lessonId,

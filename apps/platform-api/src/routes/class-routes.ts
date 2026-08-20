@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, and, desc, isNull } from 'drizzle-orm';
+import { eq, and, desc, isNull, sql } from 'drizzle-orm';
 import type { AppEnv } from '../app';
 import { DomainError } from '../core/errors';
 import {
@@ -9,12 +9,14 @@ import {
 import { createEnrollmentService } from '../services/class/enrollment-service';
 import { createPromotorClassAdapter } from '../services/class/promotor-class-adapter';
 import { createLearningEngineService } from '../services/class/learning-engine-service';
+import { createEntitlementRepository } from '../repositories/entitlement-repository';
 import { contacts } from '../db/schema/contacts';
 import { reflectionResponses } from '../db/schema/reflection-responses';
 import { learningEvents } from '../db/schema/learning-events';
 import { enrollments } from '../db/schema/enrollments';
 import { programs } from '../db/schema/programs';
 import { learningSignals } from '../db/schema/learning-signals';
+import { integrationOutbox } from '../db/schema/integration-outbox';
 import type { OrganizationContext } from '../core/organization-context';
 import type { AuthenticatedActor } from '../auth/types';
 
@@ -112,7 +114,28 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
     return c.json({ programs }, 200);
   });
 
-  // 6. List Learning Signals (B5 Operator Intelligence)
+  // 6. Integration Health for PromotorFlow (derived from entitlements & outbox failure state)
+  app.get('/api/v1/class/integration/health', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const ent = await createEntitlementRepository(db).getForOrg({ organizationId: ctx.organizationId });
+    if (!ent || !ent.promotorFlow) {
+      return c.json({ promotorFlow: 'UNAVAILABLE' }, 200);
+    }
+    const recentFailed = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(integrationOutbox)
+      .where(
+        and(
+          eq(integrationOutbox.organizationId, ctx.organizationId),
+          eq(integrationOutbox.status, 'FAILED')
+        )
+      );
+    const failCount = recentFailed[0]?.count ?? 0;
+    const isDegraded = failCount >= 5;
+    return c.json({ promotorFlow: isDegraded ? 'UNAVAILABLE' : 'AVAILABLE' }, 200);
+  });
+
+  // 7. List Learning Signals (B5 Operator Intelligence)
   app.get('/api/v1/class/signals', async (c) => {
     const { ctx, db } = getRequestContext(c);
     const status = c.req.query('status') as 'ACTIVE' | 'RESOLVED' | 'DISMISSED' | undefined;
@@ -154,13 +177,15 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
 
     return c.json({
       signals: rows.map((r: any) => {
-        const intentLabel = (r.intentLabel || 'COLD').toUpperCase();
+        const intentLabel = r.intentLabel ? String(r.intentLabel).toUpperCase() : null;
         const signalLevel =
           intentLabel === 'HOT'
             ? 'Minat tinggi'
             : intentLabel === 'WARM'
             ? 'Minat sedang'
-            : 'Minat rendah';
+            : intentLabel === 'COLD'
+            ? 'Minat rendah'
+            : 'Belum dievaluasi';
 
         return {
           id: r.id,
@@ -173,14 +198,14 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
           enrollmentId: r.enrollmentId || '',
           sourceEventId: r.sourceEventId || null,
           signalLevel,
-          intentScore: typeof r.intentScore === 'number' ? r.intentScore : (intentLabel === 'HOT' ? 80 : intentLabel === 'WARM' ? 40 : 10),
-          intentLabel: intentLabel.toLowerCase() as 'cold' | 'warm' | 'hot',
+          intentScore: typeof r.intentScore === 'number' ? r.intentScore : null,
+          intentLabel: intentLabel ? (intentLabel.toLowerCase() as 'cold' | 'warm' | 'hot') : null,
           reason: r.reason,
-          primaryReason: r.recommendedActionReason || r.reason || 'Aktivitas belajar terdeteksi',
-          rawReflectionQuote: r.metadata?.rawReflectionQuote,
+          primaryReason: r.recommendedActionReason || r.reason || '',
+          rawReflectionQuote: r.metadata?.rawReflectionQuote || null,
           status: r.status,
-          evaluatedAt: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
-          createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
+          evaluatedAt: r.createdAt ? new Date(r.createdAt).toISOString() : null,
+          createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : null,
         };
       }),
     }, 200);

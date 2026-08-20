@@ -39,6 +39,7 @@ import { createAftercareService } from '../services/aftercare-service';
 import { createMessagingService } from '../services/messaging-service';
 import { createAvailabilityService } from '../services/flow/availability-service';
 import { createContactPrivacyService } from '../services/contact-privacy-service';
+import { createEntitlementRepository } from '../repositories/entitlement-repository';
 import type { OrganizationContext } from '../core/organization-context';
 import type { AuthenticatedActor } from '../auth/types';
 
@@ -604,6 +605,19 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
     const service = createAvailabilityService(db);
     const rules = await service.replaceWeeklyRules(ctx, body.rules);
     return c.json({ rules }, 200);
+  });
+
+  // =========================================================================
+  // 10. INTEGRATION HEALTH
+  // =========================================================================
+  flow.get('/integration/health', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const ent = await createEntitlementRepository(db).getForOrg({ organizationId: ctx.organizationId });
+    if (!ent || !ent.promotorClass) {
+      return c.json({ promotorFlow: 'AVAILABLE', promotorClass: 'UNAVAILABLE' }, 200);
+    }
+    return c.json({ promotorFlow: 'AVAILABLE', promotorClass: 'AVAILABLE' }, 200);
   });
 
   // Mount under /api/v1/flow

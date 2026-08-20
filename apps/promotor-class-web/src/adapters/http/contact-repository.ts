@@ -22,14 +22,10 @@ export class HttpContactRepository implements ContactRepositoryPort {
 
   async matchOrCreateContact(name: string, phoneRaw: string): Promise<Contact> {
     const contacts = await this.getContacts();
-    const existing = contacts.find((c) => c.name.toLowerCase() === name.toLowerCase());
+    const existing = contacts.find(
+      (c) => c.name.toLowerCase() === name.toLowerCase() || c.phoneE164 === phoneRaw
+    );
     if (existing) return existing;
-    return {
-      id: crypto.randomUUID(),
-      organizationId: '',
-      name,
-      phoneE164: phoneRaw as PhoneE164,
-      createdAt: new Date().toISOString(),
-    };
+    throw new Error('Pencocokan dan pembuatan kontak harus melalui endpoint pendaftaran Platform API di mode HTTP');
   }
 }
