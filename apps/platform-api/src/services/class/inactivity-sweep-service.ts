@@ -8,6 +8,7 @@ import {
   productEntitlements,
 } from '../../db/schema';
 import { createIntegrationOutboxService } from '../integration/integration-outbox-service';
+import { logOperation } from '../../core/observability';
 
 export interface InactivitySweepOptions {
   clock?: () => Date;
@@ -248,16 +249,38 @@ export function createInactivitySweepService(
       // Process pending outbox queue
       try {
         await outboxService.processPending({ limit: 20, now });
-      } catch (err) {
-        console.warn('[InactivitySweepService] Outbox dispatch deferred to subsequent schedule:', err);
+      } catch (err: any) {
+        logOperation({
+          level: 'warn',
+          operation: 'INACTIVITY_SWEEP_OUTBOX_DISPATCH',
+          result: 'FAILURE',
+          error: {
+            code: 'OUTBOX_DISPATCH_DEFERRED',
+            message: err?.message || 'Outbox dispatch deferred',
+          },
+        });
       }
+
+      const durationMs = Date.now() - startTime;
+
+      logOperation({
+        operation: 'INACTIVITY_SWEEP_EXECUTION',
+        result: errors.length === 0 ? 'SUCCESS' : 'PARTIAL',
+        duration_ms: durationMs,
+        details: {
+          scannedCount,
+          atRiskCount,
+          emittedEventsCount,
+          errorCount: errors.length,
+        },
+      });
 
       return {
         scannedCount,
         atRiskCount,
         emittedEventsCount,
         errors,
-        durationMs: Date.now() - startTime,
+        durationMs,
       };
     },
   };
