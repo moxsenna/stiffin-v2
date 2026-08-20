@@ -190,7 +190,7 @@ describe('V0.1 L1 Operational Readiness — Full HTTP & Cross-Product E2E Rehear
       );
       assert.strictEqual(comp1Res.status, 200);
       const comp1Data = (await comp1Res.json()) as any;
-      assert.strictEqual(comp1Data.enrollment.progressPercent, 50);
+      assert.strictEqual(comp1Data.progressPercent, 50);
 
       // 5. Submit Reflection for Lesson 2
       const refRes = await app.request(
@@ -209,8 +209,8 @@ describe('V0.1 L1 Operational Readiness — Full HTTP & Cross-Product E2E Rehear
       );
       assert.strictEqual(refRes.status, 200);
       const refData = (await refRes.json()) as any;
-      assert.strictEqual(refData.enrollment.progressPercent, 100);
-      assert.strictEqual(refData.enrollment.learningStatus, 'COMPLETED');
+      assert.strictEqual(refData.progressPercent, 100);
+      assert.strictEqual(refData.learningStatus, 'COMPLETED');
 
       // 6. Record CTA Click
       const ctaRes = await app.request(
