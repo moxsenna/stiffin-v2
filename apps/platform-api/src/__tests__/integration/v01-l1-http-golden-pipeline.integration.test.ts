@@ -233,15 +233,17 @@ describe('V0.1 L1 Operational Readiness — Full HTTP & Cross-Product E2E Rehear
       // 2. CROSS-PRODUCT INTEGRATION (Outbox -> Flow Next Actions)
       // =========================================================================
       const outboxService = createIntegrationOutboxService(db);
-      const outboxResult = await outboxService.processPending({ limit: 50 });
-      if (outboxResult.processedCount < 1) {
-        const remaining = await db
-          .select()
-          .from(integrationOutbox)
-          .where(eq(integrationOutbox.organizationId, testOrgId));
-        console.error('DEBUG_OUTBOX_FAILURE:', JSON.stringify({ outboxResult, remaining }, null, 2));
-      }
-      assert.ok(outboxResult.processedCount >= 1, `Must process outbox items: ${JSON.stringify(outboxResult)}`);
+      await outboxService.processPending({ limit: 50 });
+
+      const outboxRows = await db
+        .select()
+        .from(integrationOutbox)
+        .where(eq(integrationOutbox.organizationId, testOrgId));
+      assert.ok(outboxRows.length >= 2, 'Must have created outbox rows');
+      assert.ok(
+        outboxRows.every((r) => r.status === 'COMPLETED'),
+        'All outbox rows must be completed'
+      );
 
       // Verify Contact ID
       const [enrRow] = await db
