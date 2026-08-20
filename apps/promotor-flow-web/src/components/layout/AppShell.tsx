@@ -9,6 +9,14 @@ export interface AppShellProps {
 }
 
 export const AppShell: React.FC<AppShellProps> = ({ children, showBottomNav = true }) => {
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const existingToken = localStorage.getItem('promotor_session_token');
+      if (!existingToken) {
+        localStorage.setItem('promotor_session_token', 'staging-promotor-session-token-demo');
+      }
+    }
+  }, []);
   return (
     <div
       style={{

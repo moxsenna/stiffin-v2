@@ -19,177 +19,356 @@ export function LessonEditorClient() {
   const [videoYoutubeUrl, setVideoYoutubeUrl] = useState('');
   const [textContent, setTextContent] = useState('');
   const [hasReflection, setHasReflection] = useState(true);
-  const [reflectionPrompt, setReflectionPrompt] = useState('');
+  const [reflectionPrompt, setReflectionPrompt] = useState('Tuliskan catatan refleksi & hal menarik yang Anda temukan dari materi ini:');
   const [hasCta, setHasCta] = useState(false);
-  const [ctaLabel, setCtaLabel] = useState('');
+  const [ctaLabel, setCtaLabel] = useState('Konsultasi via WhatsApp');
   const [ctaUrl, setCtaUrl] = useState('');
   const [moduleId, setModuleId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    getProgramByIdQuery(programId).then((prog: Program | undefined) => {
-      if (!prog) return;
-      setProgram(prog);
-      for (const mod of prog.modules) {
-        for (const les of mod.lessons) {
-          if (les.id === lessonId) {
-            setModuleId(mod.id);
-            setTitle(les.title);
-            setVideoYoutubeUrl(les.videoYoutubeUrl || '');
-            setTextContent(les.textContent || '');
-            setHasReflection(!!les.hasReflection);
-            setReflectionPrompt(les.reflectionPrompt || '');
-            setHasCta(!!les.hasCta);
-            setCtaLabel(les.ctaLabel || '');
-            setCtaUrl(les.ctaUrl || '');
+    getProgramByIdQuery(programId)
+      .then((prog: Program | undefined) => {
+        if (!prog) {
+          setErrorMessage('Program tidak ditemukan.');
+          return;
+        }
+        setProgram(prog);
+        let found = false;
+        for (const mod of prog.modules) {
+          for (const les of mod.lessons) {
+            if (les.id === lessonId) {
+              found = true;
+              setModuleId(mod.id);
+              setTitle(les.title);
+              setVideoYoutubeUrl(les.videoYoutubeUrl || '');
+              setTextContent(les.textContent || '');
+              setHasReflection(!!les.hasReflection || !!les.reflectionPrompt);
+              setReflectionPrompt(
+                les.reflectionPrompt || 'Tuliskan catatan refleksi & hal menarik yang Anda temukan dari materi ini:'
+              );
+              setHasCta(!!les.hasCta || !!les.ctaLabel);
+              setCtaLabel(les.ctaLabel || 'Konsultasi via WhatsApp');
+              setCtaUrl((les.ctaConfig as any)?.url || les.ctaUrl || '');
+            }
           }
         }
-      }
-    });
+        if (!found) {
+          setErrorMessage('Pelajaran tidak ditemukan dalam program ini.');
+        }
+      })
+      .catch((err) => {
+        console.error('Error loading lesson:', err);
+        setErrorMessage('Gagal memuat data pelajaran.');
+      })
+      .finally(() => {
+        setInitialLoading(false);
+      });
   }, [programId, lessonId]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!program || !moduleId) return;
+    setErrorMessage(null);
 
-    const updatedLesson: Lesson = {
-      id: lessonId,
-      moduleId,
-      title: title.trim(),
-      order: 1,
-      videoYoutubeUrl: videoYoutubeUrl.trim() || undefined,
-      textContent: textContent.trim() || undefined,
-      hasReflection,
-      reflectionPrompt: hasReflection ? reflectionPrompt : undefined,
-      hasCta,
-      ctaLabel: hasCta ? ctaLabel : undefined,
-      ctaUrl: hasCta ? ctaUrl : undefined,
-    };
+    if (!title.trim()) {
+      setErrorMessage('Judul Pelajaran wajib diisi.');
+      return;
+    }
 
-    await saveLessonCommand(programId, moduleId, updatedLesson);
-    router.push(`/app/programs/${programId}`);
+    if (!program || !moduleId) {
+      setErrorMessage('Konteks program atau modul tidak valid.');
+      return;
+    }
+
+    const trimmedText = textContent.trim();
+    const trimmedVideo = videoYoutubeUrl.trim();
+    const hasAnyContent = Boolean(trimmedText || trimmedVideo || hasReflection || hasCta);
+
+    if (!hasAnyContent) {
+      setErrorMessage('Pelajaran harus memiliki setidaknya materi teks, video YouTube, refleksi, atau tombol aksi (CTA).');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const updatedLesson: Lesson = {
+        id: lessonId,
+        moduleId,
+        title: title.trim(),
+        order: 1,
+        videoYoutubeUrl: trimmedVideo || undefined,
+        videoProvider: trimmedVideo ? 'youtube' : undefined,
+        textContent: trimmedText || undefined,
+        hasReflection,
+        reflectionType: hasReflection ? 'long_text' : undefined,
+        reflectionPrompt: hasReflection ? reflectionPrompt.trim() || 'Tuliskan catatan refleksi Anda:' : undefined,
+        hasCta,
+        ctaType: hasCta ? 'EXTERNAL' : undefined,
+        ctaLabel: hasCta ? ctaLabel.trim() || 'Konsultasi via WhatsApp' : undefined,
+        ctaUrl: hasCta ? ctaUrl.trim() || 'https://wa.me/' : undefined,
+        ctaConfig: hasCta ? { url: ctaUrl.trim() || 'https://wa.me/' } : undefined,
+      };
+
+      await saveLessonCommand(programId, moduleId, updatedLesson);
+      router.push(`/app/programs/${programId}`);
+    } catch (err: any) {
+      console.error('Failed to save lesson:', err);
+      setErrorMessage(err?.message || 'Gagal menyimpan perubahan pelajaran. Periksa kembali isian form.');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (initialLoading) {
+    return (
+      <PromotorShell>
+        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+          Memuat data editor pelajaran...
+        </div>
+      </PromotorShell>
+    );
+  }
 
   return (
     <PromotorShell>
-      <div style={{ padding: '16px' }}>
-        <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
-          <Link href={`/app/programs/${programId}`}>← Kembali ke Kurikulum</Link>
+      <div style={{ padding: '20px 16px', maxWidth: '760px', margin: '0 auto' }}>
+        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '14px' }}>
+          <Link href={`/app/programs/${programId}`} style={{ textDecoration: 'none', color: 'var(--color-text-muted)', fontWeight: 600 }}>
+            ← Kembali ke Kurikulum Program
+          </Link>
         </div>
 
-        <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '16px' }}>
-          Editor Pelajaran
+        <h1 style={{ fontSize: '22px', fontWeight: 750, marginBottom: '6px' }}>
+          Editor Materi Pelajaran
         </h1>
+        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
+          Atur konten materi, video, lembar refleksi pengunci, dan arahan aksi untuk peserta.
+        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
-          {/* Editor Form */}
-          <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: 'var(--color-surface)', padding: '20px', borderRadius: 'var(--border-radius-md)', border: '1px solid var(--color-divider)' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>
-                Judul Pelajaran
-              </label>
+        {errorMessage && (
+          <div
+            role="alert"
+            style={{
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #F87171',
+              borderRadius: '12px',
+              padding: '14px 16px',
+              marginBottom: '20px',
+              color: '#991B1B',
+              fontSize: '14px',
+              lineHeight: 1.5,
+            }}
+          >
+            <div style={{ fontWeight: 750, marginBottom: '4px' }}>⚠️ Gagal Menyimpan</div>
+            <div>{errorMessage}</div>
+          </div>
+        )}
+
+        <form
+          onSubmit={handleSave}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '18px',
+            backgroundColor: 'var(--color-surface)',
+            padding: '24px',
+            borderRadius: '16px',
+            border: '1px solid var(--color-divider)',
+          }}
+        >
+          {/* Judul Pelajaran */}
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+              Judul Pelajaran *
+            </label>
+            <input
+              type="text"
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Contoh: Mengenali Cara Kerja Otak Kanan"
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid var(--color-divider)',
+                fontSize: '14px',
+                outline: 'none',
+              }}
+            />
+          </div>
+
+          {/* Video URL */}
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+              Tautan Video YouTube (Unlisted / Publik)
+            </label>
+            <input
+              type="url"
+              value={videoYoutubeUrl}
+              onChange={(e) => setVideoYoutubeUrl(e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=... atau https://youtu.be/..."
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid var(--color-divider)',
+                fontSize: '14px',
+                outline: 'none',
+              }}
+            />
+            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+              Dukungan native untuk YouTube unlisted / publik. Kosongkan jika materi berbasis teks murni.
+            </div>
+          </div>
+
+          {/* Materi Teks */}
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+              Materi Teks / Panduan Belajar
+            </label>
+            <textarea
+              rows={7}
+              value={textContent}
+              onChange={(e) => setTextContent(e.target.value)}
+              placeholder="Tuliskan uraian materi, rangkuman, atau poin-poin pembelajaran untuk peserta..."
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                borderRadius: '10px',
+                border: '1px solid var(--color-divider)',
+                fontSize: '14px',
+                lineHeight: 1.6,
+                outline: 'none',
+              }}
+            />
+          </div>
+
+          {/* Reflection Setup */}
+          <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '16px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
               <input
-                type="text"
-                required
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                style={{ width: '100%', padding: '10px', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-divider)', fontSize: '14px' }}
+                type="checkbox"
+                checked={hasReflection}
+                onChange={(e) => setHasReflection(e.target.checked)}
+                style={{ width: '16px', height: '16px' }}
               />
-            </div>
+              <span>Wajibkan Lembar Refleksi (Pengunci Pelajaran)</span>
+            </label>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>
-                Video Tautan YouTube (Unlisted / Publik)
-              </label>
-              <input
-                type="url"
-                value={videoYoutubeUrl}
-                onChange={e => setVideoYoutubeUrl(e.target.value)}
-                placeholder="https://www.youtube.com/watch?v=..."
-                style={{ width: '100%', padding: '10px', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-divider)', fontSize: '14px' }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>
-                Materi Teks / Panduan
-              </label>
-              <textarea
-                rows={6}
-                value={textContent}
-                onChange={e => setTextContent(e.target.value)}
-                placeholder="Tuliskan materi pelajaran..."
-                style={{ width: '100%', padding: '10px', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-divider)', fontSize: '14px' }}
-              />
-            </div>
-
-            {/* Reflection Setup */}
-            <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '14px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600 }}>
-                <input
-                  type="checkbox"
-                  checked={hasReflection}
-                  onChange={e => setHasReflection(e.target.checked)}
-                />
-                Wajibkan Pertanyaan Refleksi (Pengunci Pelajaran)
-              </label>
-
-              {hasReflection && (
+            {hasReflection && (
+              <div style={{ marginTop: '10px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
+                  Pertanyaan Panduan Refleksi
+                </label>
                 <input
                   type="text"
                   value={reflectionPrompt}
-                  onChange={e => setReflectionPrompt(e.target.value)}
-                  placeholder="Contoh: Tuliskan 1 hal yang paling menonjol..."
-                  style={{ width: '100%', padding: '10px', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-divider)', fontSize: '13px', marginTop: '8px' }}
+                  onChange={(e) => setReflectionPrompt(e.target.value)}
+                  placeholder="Contoh: Tuliskan 1 hal yang paling membuka wawasan Anda..."
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-divider)',
+                    fontSize: '13px',
+                    outline: 'none',
+                  }}
                 />
-              )}
-            </div>
+              </div>
+            )}
+          </div>
 
-            {/* CTA Setup */}
-            <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '14px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600 }}>
-                <input
-                  type="checkbox"
-                  checked={hasCta}
-                  onChange={e => setHasCta(e.target.checked)}
-                />
-                Tambahkan Tombol Aksi / Call-to-Action (CTA)
-              </label>
+          {/* CTA Setup */}
+          <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '16px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={hasCta}
+                onChange={(e) => setHasCta(e.target.checked)}
+                style={{ width: '16px', height: '16px' }}
+              />
+              <span>Tambahkan Tombol Aksi / Call-to-Action (CTA) di Akhir Materi</span>
+            </label>
 
-              {hasCta && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+            {hasCta && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
+                    Label Tombol CTA
+                  </label>
                   <input
                     type="text"
                     value={ctaLabel}
-                    onChange={e => setCtaLabel(e.target.value)}
-                    placeholder="Label Tombol (e.g. Konsultasi via WhatsApp)"
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-divider)', fontSize: '13px' }}
+                    onChange={(e) => setCtaLabel(e.target.value)}
+                    placeholder="Contoh: Konsultasi via WhatsApp"
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-divider)',
+                      fontSize: '13px',
+                      outline: 'none',
+                    }}
                   />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
+                    URL Tujuan (e.g. WhatsApp Link / External Page)
+                  </label>
                   <input
                     type="url"
                     value={ctaUrl}
-                    onChange={e => setCtaUrl(e.target.value)}
-                    placeholder="URL Tujuan (e.g. https://wa.me/...)"
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--color-divider)', fontSize: '13px' }}
+                    onChange={(e) => setCtaUrl(e.target.value)}
+                    placeholder="https://wa.me/6281234567890"
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-divider)',
+                      fontSize: '13px',
+                      outline: 'none',
+                    }}
                   />
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
 
-            <button
-              type="submit"
-              className="touch-target-primary"
-              style={{
-                backgroundColor: 'var(--color-primary)',
-                color: '#FFF',
-                fontWeight: 700,
-                borderRadius: 'var(--border-radius-md)',
-                marginTop: '10px',
-              }}
-            >
-              Simpan Pelajaran
-            </button>
-          </form>
-        </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="touch-target-primary"
+            style={{
+              backgroundColor: 'var(--color-primary)',
+              color: '#FFF',
+              fontWeight: 780,
+              fontSize: '14px',
+              borderRadius: '12px',
+              marginTop: '10px',
+              border: 0,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.7 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
+            {loading ? (
+              <>
+                <span>⏳</span>
+                <span>Menyimpan Perubahan Pelajaran...</span>
+              </>
+            ) : (
+              <span>Simpan Pelajaran & Perbarui Kurikulum</span>
+            )}
+          </button>
+        </form>
       </div>
     </PromotorShell>
   );

@@ -20,7 +20,8 @@
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
     "test:integration": "pnpm --filter @promotor/platform-api test:integration",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:staging": "playwright test --config=playwright.staging.config.ts"
   },
   "overrides": {
     "@aws-sdk/xml-builder": "3.972.33",

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PromotorShell } from '@/components/layout/PromotorShell';
@@ -12,7 +12,6 @@ function NewProgramForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const templateId = searchParams.get('templateId');
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
@@ -24,6 +23,8 @@ function NewProgramForm() {
   const [coverImageUrl, setCoverImageUrl] = useState<string>('');
   const [priceAmount, setPriceAmount] = useState(150000);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState(false);
 
   // Dynamic Learning Outcomes
   const [outcomes, setOutcomes] = useState<Array<{ title: string; description: string }>>([
@@ -33,7 +34,7 @@ function NewProgramForm() {
 
   useEffect(() => {
     if (templateId) {
-      getTemplateByIdQuery(templateId).then(tpl => {
+      getTemplateByIdQuery(templateId).then((tpl) => {
         if (tpl) {
           setTitle(tpl.title);
           setSubtitle(tpl.subtitle);
@@ -59,18 +60,6 @@ function NewProgramForm() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = event => {
-      if (event.target?.result) {
-        setCoverImageUrl(event.target.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
   const handleAddOutcome = () => {
     setOutcomes([...outcomes, { title: '', description: '' }]);
   };
@@ -87,27 +76,47 @@ function NewProgramForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    setErrorMessage(null);
+
+    if (!title.trim()) {
+      setTitleError(true);
+      setErrorMessage('Judul Program wajib diisi untuk membuat program baru.');
+      return;
+    }
+    setTitleError(false);
+
+    if (programType === 'paid' && (!priceAmount || priceAmount <= 0)) {
+      setErrorMessage('Harga investasi program berbayar harus lebih besar dari Rp 0.');
+      return;
+    }
 
     setLoading(true);
 
     try {
       const newProg = await createProgramDetailedCommand({
         title: title.trim(),
-        subtitle: subtitle.trim(),
+        subtitle: subtitle.trim() || undefined,
         description: description.trim() || subtitle.trim() || 'Program edukasi untuk peserta STIFIn',
         programType,
-        heroEyebrow: heroEyebrow.trim(),
-        durationLabel: durationLabel.trim(),
+        heroEyebrow: heroEyebrow.trim() || undefined,
+        durationLabel: durationLabel.trim() || undefined,
         coverVariant,
-        imageUrl: coverImageUrl || undefined,
+        imageUrl: coverImageUrl.trim() || undefined,
         priceAmount: programType === 'paid' ? priceAmount : 0,
-        outcomes: outcomes.filter(o => o.title.trim()),
+        outcomes: outcomes.filter((o) => o.title.trim()),
       });
 
-      router.push(`/app/programs/${newProg.id}`);
-    } catch (err) {
+      if (newProg && newProg.id) {
+        router.push(`/app/programs/${newProg.id}`);
+      } else {
+        throw new Error('Respons server tidak menyertakan identitas program yang valid.');
+      }
+    } catch (err: any) {
       console.error('Failed to create program:', err);
+      const msg =
+        err?.message ||
+        'Gagal membuat program. Pastikan Anda terhubung ke server atau periksa kembali isian formulir.';
+      setErrorMessage(msg);
     } finally {
       setLoading(false);
     }
@@ -126,9 +135,32 @@ function NewProgramForm() {
           Buat Program & Kelas Baru
         </h1>
         <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-          Isi informasi program yang akan ditampilkan pada katalog dan landing page storefront publik.
+          Isi informasi program yang akan ditampilkan pada katalog dan storefront publik.
         </div>
       </div>
+
+      {/* Error Alert Banner */}
+      {errorMessage && (
+        <div
+          role="alert"
+          style={{
+            backgroundColor: '#FEF2F2',
+            border: '1px solid #F87171',
+            borderRadius: '12px',
+            padding: '14px 16px',
+            marginBottom: '20px',
+            color: '#991B1B',
+            fontSize: '14px',
+            lineHeight: 1.5,
+          }}
+        >
+          <div style={{ fontWeight: 750, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>⚠️</span>
+            <span>Gagal Menyimpan Program</span>
+          </div>
+          <div>{errorMessage}</div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
         {/* Section 1: Informasi Dasar */}
@@ -151,17 +183,25 @@ function NewProgramForm() {
                 type="text"
                 required
                 value={title}
-                onChange={e => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  if (e.target.value.trim()) setTitleError(false);
+                }}
                 placeholder="Contoh: 7 Hari Mengenal Cara Belajar Anak"
                 style={{
                   width: '100%',
                   padding: '10px 14px',
                   borderRadius: '10px',
-                  border: '1px solid var(--color-divider)',
+                  border: titleError ? '2px solid #EF4444' : '1px solid var(--color-divider)',
                   fontSize: '14px',
                   outline: 'none',
                 }}
               />
+              {titleError && (
+                <div style={{ fontSize: '12px', color: '#EF4444', marginTop: '4px', fontWeight: 600 }}>
+                  Judul program tidak boleh kosong.
+                </div>
+              )}
             </div>
 
             <div>
@@ -171,7 +211,7 @@ function NewProgramForm() {
               <input
                 type="text"
                 value={subtitle}
-                onChange={e => setSubtitle(e.target.value)}
+                onChange={(e) => setSubtitle(e.target.value)}
                 placeholder="Contoh: E-course 7 hari khusus untuk orang tua yang ingin memahami gaya belajar anak"
                 style={{
                   width: '100%',
@@ -191,7 +231,7 @@ function NewProgramForm() {
               <textarea
                 rows={3}
                 value={description}
-                onChange={e => setDescription(e.target.value)}
+                onChange={(e) => setDescription(e.target.value)}
                 placeholder="Jelaskan gambaran umum, manfaat, dan siapa yang cocok mengikuti program ini..."
                 style={{
                   width: '100%',
@@ -226,8 +266,12 @@ function NewProgramForm() {
                 style={{
                   padding: '14px',
                   borderRadius: '12px',
-                  border: programType === 'lead_magnet' ? '2px solid var(--color-primary)' : '1px solid var(--color-divider)',
-                  backgroundColor: programType === 'lead_magnet' ? 'var(--color-primary-light)' : 'var(--color-canvas)',
+                  border:
+                    programType === 'lead_magnet'
+                      ? '2px solid var(--color-primary)'
+                      : '1px solid var(--color-divider)',
+                  backgroundColor:
+                    programType === 'lead_magnet' ? 'var(--color-primary-light)' : 'var(--color-canvas)',
                   cursor: 'pointer',
                 }}
               >
@@ -245,16 +289,27 @@ function NewProgramForm() {
                 style={{
                   padding: '14px',
                   borderRadius: '12px',
-                  border: programType === 'aftersales' ? '2px solid var(--color-status-warning)' : '1px solid var(--color-divider)',
-                  backgroundColor: programType === 'aftersales' ? 'var(--color-status-warning-bg)' : 'var(--color-canvas)',
+                  border:
+                    programType === 'aftersales'
+                      ? '2px solid var(--color-status-warning)'
+                      : '1px solid var(--color-divider)',
+                  backgroundColor:
+                    programType === 'aftersales' ? 'var(--color-status-warning-bg)' : 'var(--color-canvas)',
                   cursor: 'pointer',
                 }}
               >
-                <div style={{ fontWeight: 750, fontSize: '14px', color: 'var(--color-status-warning)', marginBottom: '4px' }}>
+                <div
+                  style={{
+                    fontWeight: 750,
+                    fontSize: '14px',
+                    color: 'var(--color-status-warning)',
+                    marginBottom: '4px',
+                  }}
+                >
                   Khusus Peserta Tes
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
-                  Pendampingan lanjutan pasca-tes STIFIn. Pendaftaran dibatasi untuk peserta terdaftar.
+                  Pendampingan lanjutan pasca-tes STIFIn. Pendaftaran untuk peserta terdaftar.
                 </div>
               </div>
 
@@ -289,7 +344,7 @@ function NewProgramForm() {
                   min={10000}
                   step={10000}
                   value={priceAmount}
-                  onChange={e => setPriceAmount(Number(e.target.value))}
+                  onChange={(e) => setPriceAmount(Number(e.target.value))}
                   style={{
                     width: '100%',
                     padding: '10px 14px',
@@ -304,7 +359,7 @@ function NewProgramForm() {
           </div>
         </div>
 
-        {/* Section 3: Visual Cover & Image Upload */}
+        {/* Section 3: Visual Cover & Presets (Non-blocking) */}
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
@@ -313,7 +368,7 @@ function NewProgramForm() {
             padding: '20px',
           }}
         >
-          <h2 style={{ fontSize: '16px', fontWeight: 750, marginBottom: '14px' }}>3. Gambar Cover & Label Storefront</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: 750, marginBottom: '14px' }}>3. Visual Cover & Label Storefront</h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
@@ -324,7 +379,7 @@ function NewProgramForm() {
                 <input
                   type="text"
                   value={heroEyebrow}
-                  onChange={e => setHeroEyebrow(e.target.value)}
+                  onChange={(e) => setHeroEyebrow(e.target.value)}
                   placeholder="Contoh: Program Gratis / Khusus Peserta Tes"
                   style={{
                     width: '100%',
@@ -344,7 +399,7 @@ function NewProgramForm() {
                 <input
                   type="text"
                   value={durationLabel}
-                  onChange={e => setDurationLabel(e.target.value)}
+                  onChange={(e) => setDurationLabel(e.target.value)}
                   placeholder="Contoh: 7 hari / 30 hari / 8 minggu"
                   style={{
                     width: '100%',
@@ -358,59 +413,100 @@ function NewProgramForm() {
               </div>
             </div>
 
-            {/* Custom Image Upload Section */}
+            {/* Cover Preset Selector */}
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '8px' }}>
-                Upload Gambar Cover Program *
+                Pilihan Cover Standar (Preset V0.1)
               </label>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-              />
-
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                style={{
-                  border: coverImageUrl ? '2px solid var(--color-primary)' : '2px dashed var(--color-divider)',
-                  borderRadius: '14px',
-                  padding: '20px 16px',
-                  textAlign: 'center',
-                  backgroundColor: coverImageUrl ? 'var(--color-primary-light)' : 'var(--color-canvas)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <div style={{ fontSize: '28px', marginBottom: '6px' }}>📸</div>
-                <div style={{ fontSize: '14px', fontWeight: 750, color: 'var(--color-primary)', marginBottom: '4px' }}>
-                  {coverImageUrl ? 'Ganti File Gambar Upload' : 'Klik untuk Upload Gambar Cover Baru'}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '14px' }}>
+                <div
+                  onClick={() => setCoverVariant('cover-a')}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '10px',
+                    border: coverVariant === 'cover-a' ? '2px solid var(--color-primary)' : '1px solid var(--color-divider)',
+                    backgroundColor: coverVariant === 'cover-a' ? 'var(--color-primary-light)' : 'var(--color-canvas)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--color-primary)', marginBottom: '2px' }}>
+                    🎨 Preset A (Gaya Belajar)
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                    Nuansa Hijau STIFIn (Rekomendasi Lead Magnet)
+                  </div>
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                  Format PNG, JPG, WEBP (Rekomendasi rasio 16:9 atau 16:10, max 5MB)
+
+                <div
+                  onClick={() => setCoverVariant('cover-b')}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '10px',
+                    border: coverVariant === 'cover-b' ? '2px solid var(--color-status-warning)' : '1px solid var(--color-divider)',
+                    backgroundColor: coverVariant === 'cover-b' ? 'var(--color-status-warning-bg)' : 'var(--color-canvas)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--color-status-warning)', marginBottom: '2px' }}>
+                    🎨 Preset B (Pendampingan)
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                    Nuansa Hangat (Rekomendasi Aftersales)
+                  </div>
+                </div>
+
+                <div
+                  onClick={() => setCoverVariant('cover-c')}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '10px',
+                    border: coverVariant === 'cover-c' ? '2px solid #4F46E5' : '1px solid var(--color-divider)',
+                    backgroundColor: coverVariant === 'cover-c' ? '#EEF2FF' : 'var(--color-canvas)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontWeight: 700, fontSize: '13px', color: '#4F46E5', marginBottom: '2px' }}>
+                    🎨 Preset C (Parenting & Spesialisasi)
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                    Nuansa Modern (Rekomendasi Berbayar)
+                  </div>
                 </div>
               </div>
 
-              {/* Live Preview of Uploaded Image */}
-              {coverImageUrl && (
-                <div style={{ marginTop: '14px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 750, color: 'var(--color-status-success)' }}>
-                      ✓ Gambar Kustom Terpilih (Live Preview)
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setCoverImageUrl('')}
-                      style={{ fontSize: '12px', color: 'var(--color-status-danger)', fontWeight: 700, border: 0, background: 'none', cursor: 'pointer' }}
-                    >
-                      Hapus Gambar
-                    </button>
-                  </div>
-                  <ProgramCover title={title || 'Judul Program'} publicLabel={heroEyebrow} imageUrl={coverImageUrl} />
+              {/* Optional Custom Image URL */}
+              <div style={{ marginTop: '10px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                  URL Gambar Kustom (Opsional)
+                </label>
+                <input
+                  type="url"
+                  value={coverImageUrl}
+                  onChange={(e) => setCoverImageUrl(e.target.value)}
+                  placeholder="https://example.com/cover-image.webp (Kosongkan untuk menggunakan Preset)"
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--color-divider)',
+                    fontSize: '13px',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              {/* Live Preview */}
+              <div style={{ marginTop: '16px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-subtle)', marginBottom: '8px' }}>
+                  Pratinjau Visual Cover Storefront:
                 </div>
-              )}
+                <ProgramCover
+                  title={title || 'Judul Program'}
+                  publicLabel={heroEyebrow}
+                  variant={coverVariant}
+                  imageUrl={coverImageUrl || undefined}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -428,7 +524,7 @@ function NewProgramForm() {
             <div>
               <h2 style={{ fontSize: '16px', fontWeight: 750, marginBottom: '2px' }}>4. Hasil yang Diharapkan (Outcomes)</h2>
               <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                Poin manfaat yang akan dilihat peserta di halaman deskripsi landing page.
+                Poin manfaat yang akan dilihat peserta di landing page deskripsi program.
               </div>
             </div>
 
@@ -472,7 +568,14 @@ function NewProgramForm() {
                     <button
                       type="button"
                       onClick={() => handleRemoveOutcome(idx)}
-                      style={{ fontSize: '12px', color: 'var(--color-status-danger)', fontWeight: 600, border: 0, background: 'none', cursor: 'pointer' }}
+                      style={{
+                        fontSize: '12px',
+                        color: 'var(--color-status-danger)',
+                        fontWeight: 600,
+                        border: 0,
+                        background: 'none',
+                        cursor: 'pointer',
+                      }}
                     >
                       Hapus
                     </button>
@@ -483,7 +586,7 @@ function NewProgramForm() {
                   type="text"
                   placeholder="Judul Hasil (Contoh: Mengenali Pola Belajar)"
                   value={out.title}
-                  onChange={e => handleOutcomeChange(idx, 'title', e.target.value)}
+                  onChange={(e) => handleOutcomeChange(idx, 'title', e.target.value)}
                   style={{
                     width: '100%',
                     padding: '8px 12px',
@@ -498,7 +601,7 @@ function NewProgramForm() {
                   type="text"
                   placeholder="Deskripsi singkat (Contoh: Memahami sinyal ketika anak menolak belajar)"
                   value={out.description}
-                  onChange={e => handleOutcomeChange(idx, 'description', e.target.value)}
+                  onChange={(e) => handleOutcomeChange(idx, 'description', e.target.value)}
                   style={{
                     width: '100%',
                     padding: '8px 12px',
@@ -528,9 +631,20 @@ function NewProgramForm() {
             cursor: loading ? 'not-allowed' : 'pointer',
             opacity: loading ? 0.7 : 1,
             boxShadow: 'var(--shadow-md)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
           }}
         >
-          {loading ? 'Menyimpan Program...' : 'Simpan & Mulai Susun Kurikulum →'}
+          {loading ? (
+            <>
+              <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>⏳</span>
+              <span>Menyimpan & Menyiapkan Kurikulum...</span>
+            </>
+          ) : (
+            <span>Simpan & Mulai Susun Kurikulum →</span>
+          )}
         </button>
       </form>
     </div>

@@ -57,8 +57,13 @@ export function getApiMode(): 'http' | 'mock' {
 
 function getApiClient(): PromotorFlowApiClient {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+  let authToken: string | undefined;
+  if (typeof window !== 'undefined') {
+    authToken = localStorage.getItem('promotor_session_token') || undefined;
+  }
   const client = new ApiClient({
     baseUrl,
+    authToken,
     credentials: 'include',
   });
   return new PromotorFlowApiClient(client);

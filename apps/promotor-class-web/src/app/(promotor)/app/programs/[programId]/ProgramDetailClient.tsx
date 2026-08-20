@@ -40,39 +40,89 @@ export function ProgramDetailClient() {
   });
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const loadProgramData = useCallback(async () => {
-    const data = await getProgramByIdQuery(programId);
-    if (data) setProgram(data);
+    try {
+      const data = await getProgramByIdQuery(programId);
+      if (data) {
+        setProgram(data);
+        setLoadError(null);
+      } else {
+        setLoadError('Program tidak ditemukan atau Anda tidak memiliki akses ke program ini.');
+      }
+    } catch (err: any) {
+      console.error('Failed to load program:', err);
+      setLoadError(err?.message || 'Gagal memuat detail program.');
+    } finally {
+      setInitialLoading(false);
+    }
   }, [programId]);
 
   useEffect(() => {
     loadProgramData();
   }, [loadProgramData]);
 
-  if (!program) {
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  if (initialLoading) {
     return (
       <PromotorShell>
-        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-          Memuat detail kurikulum program...
+        <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+          <div style={{ fontSize: '24px', marginBottom: '8px' }}>⏳</div>
+          <div style={{ fontWeight: 600 }}>Memuat detail kurikulum program...</div>
         </div>
       </PromotorShell>
     );
   }
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
+  if (loadError || !program) {
+    return (
+      <PromotorShell>
+        <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ backgroundColor: 'var(--color-surface)', borderRadius: '16px', border: '1px solid var(--color-divider)', padding: '32px 24px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>📁</div>
+            <h1 style={{ fontSize: '18px', fontWeight: 750, marginBottom: '8px' }}>Program Tidak Ditemukan</h1>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
+              {loadError || 'Program dengan identitas tersebut tidak ditemukan atau belum dibuat.'}
+            </p>
+            <Link
+              href="/app/programs"
+              style={{
+                display: 'inline-block',
+                padding: '10px 20px',
+                backgroundColor: 'var(--color-primary)',
+                color: '#FFF',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: 700,
+                textDecoration: 'none',
+              }}
+            >
+              ← Kembali ke Daftar Program
+            </Link>
+          </div>
+        </div>
+      </PromotorShell>
+    );
+  }
 
   const publicUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/p/${program.workspaceSlug}/${program.programSlug}`;
   const waShareUrl = `https://wa.me/?text=${encodeURIComponent(`Halo! Silakan daftar program "${program.title}" di sini: ${publicUrl}`)}`;
 
   // Status toggle handler
   const handleToggleStatus = async () => {
-    const updated = await toggleProgramStatusCommand(program.id);
-    setProgram(updated);
-    showToast(`Status program diubah menjadi: ${updated.status === 'published' ? 'Terbit di Storefront' : 'Draf'}`);
+    try {
+      const updated = await toggleProgramStatusCommand(program.id);
+      setProgram(updated);
+      showToast(`Status program diubah menjadi: ${updated.status === 'published' ? 'Terbit di Storefront' : 'Draf'}`);
+    } catch (err: any) {
+      showToast(`Gagal mengubah status: ${err?.message || 'Terjadi kesalahan'}`);
+    }
   };
 
   // Move module handler
@@ -86,9 +136,13 @@ export function ProgramDetailClient() {
     newModules[index] = newModules[targetIdx];
     newModules[targetIdx] = temp;
 
-    const updated = await reorderModulesCommand(program.id, newModules.map(m => m.id));
-    setProgram(updated);
-    showToast('Urutan modul berhasil diperbarui!');
+    try {
+      const updated = await reorderModulesCommand(program.id, newModules.map(m => m.id));
+      setProgram(updated);
+      showToast('Urutan modul berhasil diperbarui!');
+    } catch (err: any) {
+      showToast(`Gagal mengubah urutan: ${err?.message || 'Terjadi kesalahan'}`);
+    }
   };
 
   // Add Module handler
@@ -96,19 +150,27 @@ export function ProgramDetailClient() {
     e.preventDefault();
     if (!newModuleTitle.trim()) return;
 
-    const updated = await addModuleCommand(program.id, newModuleTitle.trim());
-    setProgram(updated);
-    setNewModuleTitle('');
-    setShowAddModuleModal(false);
-    showToast(`Bab "${newModuleTitle.trim()}" berhasil ditambahkan!`);
+    try {
+      const updated = await addModuleCommand(program.id, newModuleTitle.trim());
+      setProgram(updated);
+      setNewModuleTitle('');
+      setShowAddModuleModal(false);
+      showToast(`Bab "${newModuleTitle.trim()}" berhasil ditambahkan!`);
+    } catch (err: any) {
+      showToast(`Gagal menambahkan modul: ${err?.message || 'Terjadi kesalahan'}`);
+    }
   };
 
   // Delete Module handler
   const handleDeleteModule = async (moduleId: string, modTitle: string) => {
     if (confirm(`Apakah Anda yakin ingin menghapus "${modTitle}" beserta seluruh pelajarannya?`)) {
-      const updated = await deleteModuleCommand(program.id, moduleId);
-      setProgram(updated);
-      showToast(`Modul "${modTitle}" telah dihapus.`);
+      try {
+        const updated = await deleteModuleCommand(program.id, moduleId);
+        setProgram(updated);
+        showToast(`Modul "${modTitle}" telah dihapus.`);
+      } catch (err: any) {
+        showToast(`Gagal menghapus modul: ${err?.message || 'Terjadi kesalahan'}`);
+      }
     }
   };
 
@@ -117,35 +179,43 @@ export function ProgramDetailClient() {
     e.preventDefault();
     if (!activeModuleIdForLesson || !lessonForm.title.trim()) return;
 
-    const updated = await addLessonCommand(
-      program.id,
-      activeModuleIdForLesson,
-      lessonForm.title.trim(),
-      lessonForm.materialType === 'video' ? lessonForm.videoYoutubeUrl : undefined
-    );
+    try {
+      const updated = await addLessonCommand(
+        program.id,
+        activeModuleIdForLesson,
+        lessonForm.title.trim(),
+        lessonForm.materialType === 'video' ? lessonForm.videoYoutubeUrl : undefined
+      );
 
-    setProgram(updated);
-    setActiveModuleIdForLesson(null);
-    setLessonForm({
-      title: '',
-      materialType: 'video',
-      videoYoutubeUrl: '',
-      textContent: '',
-      hasReflection: true,
-      reflectionPrompt: 'Tuliskan catatan refleksi & hal menarik yang Anda temukan dari materi ini:',
-      hasCta: false,
-      ctaLabel: 'Konsultasi via WhatsApp',
-      ctaUrl: '',
-    });
-    showToast(`Pelajaran "${lessonForm.title.trim()}" berhasil ditambahkan!`);
+      setProgram(updated);
+      setActiveModuleIdForLesson(null);
+      setLessonForm({
+        title: '',
+        materialType: 'video',
+        videoYoutubeUrl: '',
+        textContent: '',
+        hasReflection: true,
+        reflectionPrompt: 'Tuliskan catatan refleksi & hal menarik yang Anda temukan dari materi ini:',
+        hasCta: false,
+        ctaLabel: 'Konsultasi via WhatsApp',
+        ctaUrl: '',
+      });
+      showToast(`Pelajaran "${lessonForm.title.trim()}" berhasil ditambahkan!`);
+    } catch (err: any) {
+      showToast(`Gagal menambahkan pelajaran: ${err?.message || 'Terjadi kesalahan'}`);
+    }
   };
 
   // Delete Lesson handler
   const handleDeleteLesson = async (moduleId: string, lessonId: string, lessonTitle: string) => {
     if (confirm(`Apakah Anda yakin ingin menghapus pelajaran "${lessonTitle}"?`)) {
-      const updated = await deleteLessonCommand(program.id, moduleId, lessonId);
-      setProgram(updated);
-      showToast(`Pelajaran "${lessonTitle}" telah dihapus.`);
+      try {
+        const updated = await deleteLessonCommand(program.id, moduleId, lessonId);
+        setProgram(updated);
+        showToast(`Pelajaran "${lessonTitle}" telah dihapus.`);
+      } catch (err: any) {
+        showToast(`Gagal menghapus pelajaran: ${err?.message || 'Terjadi kesalahan'}`);
+      }
     }
   };
 
