@@ -23,6 +23,7 @@ import {
   productEntitlements,
   learningEvents,
   learningSignals,
+  users,
 } from '../../db/schema';
 import { createInactivitySweepService } from '../../services/class/inactivity-sweep-service';
 import { createContactPrivacyService } from '../../services/contact-privacy-service';
@@ -34,6 +35,7 @@ const enabled = Boolean(TEST_DATABASE_URL);
 
 describe('V0.1 L1 Operational Readiness Suite (Inactivity Sweep & Privacy Deletion)', { skip: !enabled ? 'TEST_DATABASE_URL not set' : false }, () => {
   let testOrgId: string;
+  let testUserId: string;
   let testProgramId: string;
   let testLesson1Id: string;
   let testLesson2Id: string;
@@ -51,6 +53,15 @@ describe('V0.1 L1 Operational Readiness Suite (Inactivity Sweep & Privacy Deleti
         })
         .returning();
       testOrgId = org.id;
+
+      const [adminUser] = await db
+        .insert(users)
+        .values({
+          name: 'L1 Test Admin Operator',
+          email: `admin-l1-${now}@example.com`,
+        })
+        .returning();
+      testUserId = adminUser.id;
 
       await db.insert(productEntitlements).values({
         organizationId: testOrgId,
@@ -302,7 +313,7 @@ describe('V0.1 L1 Operational Readiness Suite (Inactivity Sweep & Privacy Deleti
         });
 
         // 5. Execute privacy anonymization
-        const result = await privacyService.anonymizeContact(testOrgId, reg.contactId, 'actor_admin_1');
+        const result = await privacyService.anonymizeContact(testOrgId, reg.contactId, testUserId);
         assert.strictEqual(result.contactId, reg.contactId);
         assert.strictEqual(result.anonymized, true);
 
@@ -362,7 +373,7 @@ describe('V0.1 L1 Operational Readiness Suite (Inactivity Sweep & Privacy Deleti
             )
           );
         assert.strictEqual(auditActivities.length, 1);
-        assert.strictEqual(auditActivities[0].actorUserId, 'actor_admin_1');
+        assert.strictEqual(auditActivities[0].actorUserId, testUserId);
       });
     });
 
