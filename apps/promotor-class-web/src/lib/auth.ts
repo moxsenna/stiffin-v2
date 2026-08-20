@@ -5,6 +5,44 @@ export interface UserSession {
   entitlements: { promotorClass: boolean; promotorFlow: boolean } | null;
 }
 
+/**
+ * Deterministically sanitizes returnTo query parameter to prevent open redirects
+ * and ensure redirection stays strictly within the protected /app internal surface.
+ */
+export function sanitizeReturnTo(returnTo: string | null | undefined): string {
+  if (!returnTo || typeof returnTo !== 'string') {
+    return '/app';
+  }
+
+  const trimmed = returnTo.trim();
+
+  // Must start with /app (and not //, /\, or \ )
+  if (!trimmed.startsWith('/app')) {
+    return '/app';
+  }
+
+  // Reject protocol/scheme bypasses or backslashes
+  if (
+    trimmed.startsWith('//') ||
+    trimmed.startsWith('/\\') ||
+    trimmed.includes('\\') ||
+    trimmed.includes('%5c') ||
+    trimmed.includes('%5C') ||
+    /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed) ||
+    /javascript:|data:|vbscript:/i.test(trimmed)
+  ) {
+    return '/app';
+  }
+
+  // Ensure path delimiter right after /app if there is additional path (e.g. /app/..., /app?..., /app#...)
+  const afterApp = trimmed.slice(4);
+  if (afterApp.length > 0 && afterApp[0] !== '/' && afterApp[0] !== '?' && afterApp[0] !== '#') {
+    return '/app';
+  }
+
+  return trimmed;
+}
+
 export async function getSession(): Promise<UserSession | null> {
   const mode = process.env.NEXT_PUBLIC_API_MODE;
   if (mode !== 'http' && process.env.NODE_ENV !== 'production') {

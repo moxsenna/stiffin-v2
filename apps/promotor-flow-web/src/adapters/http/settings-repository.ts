@@ -1,23 +1,23 @@
 import { SettingsRepositoryPort, PromotorSettings } from '@/modules/settings/ports';
 import { PromotorFlowApiClient } from '@promotor/api-client';
+import { getSession } from '@/lib/auth';
 
 export class HttpSettingsRepository implements SettingsRepositoryPort {
-  private settings: PromotorSettings = {
-    promotorName: 'Operator',
-    promotorPhoneE164: '+6281200000000',
-    organizationName: 'Active Organization',
-    isDevMode: false,
-  };
-
-  constructor(_api: PromotorFlowApiClient) {}
+  constructor(private readonly api: PromotorFlowApiClient) {}
 
   async getSettings(): Promise<PromotorSettings> {
-    return { ...this.settings };
+    const session = await getSession();
+    return {
+      promotorName: session?.user?.name || 'Promotor STIFIn',
+      promotorPhoneE164: '+6281200000000',
+      organizationName: session?.organization?.name || 'STIFIn Center',
+      isDevMode: false,
+    };
   }
 
   async updateSettings(updates: Partial<PromotorSettings>): Promise<PromotorSettings> {
-    this.settings = { ...this.settings, ...updates };
-    return { ...this.settings };
+    const current = await this.getSettings();
+    return { ...current, ...updates };
   }
 
   async resetDemo(): Promise<void> {

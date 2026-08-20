@@ -2,12 +2,13 @@
 
 import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signIn, getSession } from '@/lib/auth';
+import { signIn, getSession, sanitizeReturnTo } from '@/lib/auth';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnTo = searchParams.get('returnTo') || '/app';
+  const rawReturnTo = searchParams.get('returnTo');
+  const returnTo = sanitizeReturnTo(rawReturnTo);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,7 +42,7 @@ function LoginForm() {
         return;
       }
 
-      router.push(returnTo);
+      router.replace(returnTo);
     } catch (err: any) {
       setErrorMessage(err?.message || 'Terjadi kesalahan sistem saat masuk.');
       setIsLoading(false);

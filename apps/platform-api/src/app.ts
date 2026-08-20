@@ -183,17 +183,43 @@ export function createApp(deps?: AppDependencies) {
     cors({
       origin: (origin, c) => {
         if (!origin) return null;
-        const env = c.env;
-        const allowed = [
-          'http://localhost:3000',
-          'http://localhost:3001',
-          'http://localhost:5173',
-          'https://promotor-class-staging.moxsenna.workers.dev',
-          'https://promotor-flow-staging.moxsenna.workers.dev',
-          'https://stiffin-promotor-class.moxsenna.workers.dev',
-          'https://stiffin-promotor-flow.moxsenna.workers.dev',
-          ...(env.BETTER_AUTH_TRUSTED_ORIGINS ?? '').split(',').map((s: string) => s.trim()).filter(Boolean),
-        ];
+        const env = c.env || {};
+        const appEnv = env.APP_ENV || env.ENVIRONMENT || env.NODE_ENV || 'development';
+        const isProduction = appEnv === 'production';
+        const isStaging = appEnv === 'staging';
+
+        const trustedConfigOrigins = (env.BETTER_AUTH_TRUSTED_ORIGINS ?? '')
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter(Boolean);
+
+        let allowed: string[] = [];
+        if (isProduction) {
+          allowed = [
+            'https://stiffin-promotor-class.moxsenna.workers.dev',
+            'https://stiffin-promotor-flow.moxsenna.workers.dev',
+            ...trustedConfigOrigins,
+          ];
+        } else if (isStaging) {
+          allowed = [
+            'https://promotor-class-staging.moxsenna.workers.dev',
+            'https://promotor-flow-staging.moxsenna.workers.dev',
+            ...trustedConfigOrigins,
+          ];
+        } else {
+          // Development / Test
+          allowed = [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'http://localhost:5173',
+            'https://promotor-class-staging.moxsenna.workers.dev',
+            'https://promotor-flow-staging.moxsenna.workers.dev',
+            'https://stiffin-promotor-class.moxsenna.workers.dev',
+            'https://stiffin-promotor-flow.moxsenna.workers.dev',
+            ...trustedConfigOrigins,
+          ];
+        }
+
         return allowed.includes(origin) ? origin : null;
       },
       credentials: true,

@@ -11,15 +11,15 @@ export default function MorePage() {
       <div style={{ padding: '12px 16px 8px' }}>
         <h1 style={{ font: '700 24px/29px Inter, sans-serif', color: '#191918' }}>Lainnya</h1>
         <div style={{ font: '400 13.5px Inter, sans-serif', color: '#71706B', paddingTop: '2px' }}>
-          Pengaturan layanan, template, dan konfigurasi.
+          Pengaturan layanan, template pesan, dan konfigurasi profil.
         </div>
       </div>
 
       <div style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid #E8E7E3', marginTop: '12px' }}>
         {[
           { title: 'Katalog Layanan STIFIn', href: '/app/services', subtitle: 'Atur jenis tes, durasi, dan harga' },
-          { title: 'Template Pesan WhatsApp', href: '/app/templates', subtitle: 'Atur isi draft follow-up otomatis' },
-          { title: 'Pengaturan Profil & Demo', href: '/app/settings', subtitle: 'Info organisasi dan reset demo' },
+          { title: 'Template Pesan WhatsApp', href: '/app/templates', subtitle: 'Atur isi draft follow-up cepat' },
+          { title: 'Pengaturan Profil & Ketersediaan', href: '/app/settings', subtitle: 'Info promotor, organisasi, dan jam kerja' },
         ].map((item) => (
           <Link
             key={item.href}

@@ -1,4 +1,9 @@
 import { ApiClient, PromotorClassContentApiClient } from '@promotor/api-client';
+import {
+  IntegrationEventEnvelope,
+  FlowNextActionRef,
+  IntegrationHealth,
+} from '@promotor/contracts';
 import { ProgramRepositoryPort } from '@/modules/programs/ports';
 import { PublicStorefrontRepositoryPort } from '@/modules/public-storefront/ports';
 import { EnrollmentRepositoryPort } from '@/modules/enrollments/ports';
@@ -166,9 +171,25 @@ export function getEventRepository(): EventRepositoryPort {
   return eventRepoInstance;
 }
 
+export class HttpPromotorFlowAdapter implements PromotorFlowAdapterPort {
+  async getIntegrationHealth(): Promise<IntegrationHealth> {
+    return { promotorFlow: 'AVAILABLE' };
+  }
+
+  async dispatchOutboxEnvelope(_envelope: IntegrationEventEnvelope): Promise<FlowNextActionRef | null> {
+    // In HTTP mode, Class ↔ Flow outbox is dispatched automatically by the Platform API backend
+    return null;
+  }
+}
+
 export function getPromotorFlowAdapter(): PromotorFlowAdapterPort {
   if (!flowAdapterInstance) {
-    flowAdapterInstance = mockPromotorFlowAdapter;
+    const mode = getApiMode();
+    if (mode === 'http') {
+      flowAdapterInstance = new HttpPromotorFlowAdapter();
+    } else {
+      flowAdapterInstance = mockPromotorFlowAdapter;
+    }
   }
   return flowAdapterInstance;
 }

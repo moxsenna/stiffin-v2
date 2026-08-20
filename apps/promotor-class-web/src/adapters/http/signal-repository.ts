@@ -7,24 +7,40 @@ export class HttpSignalRepository implements SignalRepositoryPort {
 
   async getSignals(): Promise<LearningSignal[]> {
     const res = await this.client.listClassSignals();
-    return (res.signals || []).map((s: any) => ({
-      id: s.id,
-      organizationId: s.organizationId,
-      contactId: s.contactId,
-      programId: s.metadata?.programId || s.enrollmentId,
-      enrollmentId: s.enrollmentId,
-      sourceEventId: s.metadata?.sourceEventId,
-      signalLevel: (s.metadata?.intentLabel === 'HOT' || s.reason?.toLowerCase().includes('tinggi'))
-        ? 'Minat tinggi'
-        : (s.metadata?.intentLabel === 'WARM' || s.reason?.toLowerCase().includes('sedang'))
-        ? 'Minat sedang'
-        : 'Minat rendah',
-      intentScore: s.metadata?.intentScore ?? 50,
-      primaryReason: s.reason || 'Aktivitas belajar terdeteksi',
-      rawReflectionQuote: s.metadata?.rawReflectionQuote,
-      status: s.status,
-      evaluatedAt: s.createdAt,
-    }));
+    return (res.signals || []).map((s: any) => {
+      const intentLabel = (s.intentLabel || '').toUpperCase();
+      const signalLevel =
+        s.signalLevel ||
+        (intentLabel === 'HOT'
+          ? 'Minat tinggi'
+          : intentLabel === 'WARM'
+          ? 'Minat sedang'
+          : 'Minat rendah');
+
+      const intentScore =
+        typeof s.intentScore === 'number'
+          ? s.intentScore
+          : intentLabel === 'HOT'
+          ? 80
+          : intentLabel === 'WARM'
+          ? 40
+          : 10;
+
+      return {
+        id: s.id,
+        organizationId: s.organizationId,
+        contactId: s.contactId,
+        programId: s.programId || s.enrollmentId,
+        enrollmentId: s.enrollmentId,
+        sourceEventId: s.sourceEventId || undefined,
+        signalLevel,
+        intentScore,
+        primaryReason: s.primaryReason || s.recommendedActionReason || s.reason || 'Aktivitas belajar terdeteksi',
+        rawReflectionQuote: s.rawReflectionQuote || undefined,
+        status: s.status,
+        evaluatedAt: s.evaluatedAt || s.createdAt,
+      };
+    });
   }
 
   async getSignalById(id: string): Promise<LearningSignal | undefined> {
@@ -41,16 +57,6 @@ export class HttpSignalRepository implements SignalRepositoryPort {
     const signals = await this.getSignals();
     const existing = signals.find((s) => s.contactId === contactId && s.enrollmentId === enrollmentId);
     if (existing) return existing;
-    return {
-      id: crypto.randomUUID(),
-      organizationId: '',
-      contactId,
-      enrollmentId,
-      signalLevel: 'Minat sedang',
-      intentScore: 50,
-      primaryReason: 'Evaluasi sinyal',
-      status: 'ACTIVE',
-      evaluatedAt: new Date().toISOString(),
-    };
+    throw new Error(`Sinyal belajar untuk kontak ${contactId} tidak ditemukan`);
   }
 }
