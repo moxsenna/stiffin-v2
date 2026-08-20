@@ -234,7 +234,14 @@ describe('V0.1 L1 Operational Readiness — Full HTTP & Cross-Product E2E Rehear
       // =========================================================================
       const outboxService = createIntegrationOutboxService(db);
       const outboxResult = await outboxService.processPending({ limit: 50 });
-      assert.ok(outboxResult.processedCount >= 1, 'Must process outbox items');
+      if (outboxResult.processedCount < 1) {
+        const remaining = await db
+          .select()
+          .from(integrationOutbox)
+          .where(eq(integrationOutbox.organizationId, testOrgId));
+        console.error('DEBUG_OUTBOX_FAILURE:', JSON.stringify({ outboxResult, remaining }, null, 2));
+      }
+      assert.ok(outboxResult.processedCount >= 1, `Must process outbox items: ${JSON.stringify(outboxResult)}`);
 
       // Verify Contact ID
       const [enrRow] = await db
