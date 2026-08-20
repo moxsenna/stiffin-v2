@@ -3,13 +3,12 @@ import { getPublicWorkspaceQuery, listPublicProgramsQuery } from '@/modules/publ
 import { CatalogClient } from './CatalogClient';
 
 interface CatalogPageProps {
-  params: {
-    workspaceSlug: string;
-  };
+  params: Promise<{ workspaceSlug: string }> | { workspaceSlug: string };
 }
 
 export default async function CatalogPage({ params }: CatalogPageProps) {
-  const { workspaceSlug } = params;
+  const resolvedParams = await params;
+  const { workspaceSlug } = resolvedParams;
 
   const profile = await getPublicWorkspaceQuery(workspaceSlug);
   if (!profile) {
