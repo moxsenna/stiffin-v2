@@ -441,6 +441,11 @@ export class PromotorClassContentApiClient {
   async getProgramAnalytics(programId: string): Promise<ProgramAnalyticsResponse> {
     return this.client.get(`/api/v1/class/programs/${encodeURIComponent(programId)}/analytics`);
   }
+
+  async listEligiblePrograms(accessType?: string): Promise<{ programs: EligibleProgramDto[] }> {
+    const qs = accessType ? `?accessType=${encodeURIComponent(accessType)}` : '';
+    return this.client.get(`/api/v1/class/programs/eligible${qs}`);
+  }
 }
 
 export { PromotorClassContentApiClient as PromotorApiClient };
@@ -725,6 +730,22 @@ export class PromotorFlowApiClient {
   async getProgramAnalytics(programId: string): Promise<ProgramAnalyticsResponse> {
     return this.client.get(`/api/v1/class/programs/${encodeURIComponent(programId)}/analytics`);
   }
+
+  async listEligiblePrograms(accessType?: string): Promise<{ programs: EligibleProgramDto[] }> {
+    const qs = accessType ? `?accessType=${encodeURIComponent(accessType)}` : '';
+    return this.client.get(`/api/v1/class/programs/eligible${qs}`);
+  }
 }
+
+export interface EligibleProgramDto {
+  id: string;
+  title: string;
+  slug: string;
+  programType: string;
+  accessType: string;
+  pricing: string;
+  priceAmount: number;
+}
+
 
 
