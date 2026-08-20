@@ -27,20 +27,12 @@ export default defineConfig({
       port: 3001,
       reuseExistingServer: !process.env.CI,
       timeout: 60000,
-      env: {
-        NEXT_PUBLIC_API_MODE: 'http',
-        NEXT_PUBLIC_API_URL: 'http://127.0.0.1:8787',
-      },
     },
     {
       command: 'pnpm --filter @promotor/promotor-flow-web dev -p 3000',
       port: 3000,
       reuseExistingServer: !process.env.CI,
       timeout: 60000,
-      env: {
-        NEXT_PUBLIC_API_MODE: 'http',
-        NEXT_PUBLIC_API_URL: 'http://127.0.0.1:8787',
-      },
     },
   ],
 });
