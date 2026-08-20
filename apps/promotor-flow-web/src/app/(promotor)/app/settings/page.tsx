@@ -33,7 +33,9 @@ export default function SettingsPage() {
   useEffect(() => {
     getSession().then(setSession);
     settingsQueries.getSettings().then(setSettings);
-    promotorClassQueries.getIntegrationState().then((res) => setScenarioPreset(res.scenarioPreset));
+    promotorClassQueries.getIntegrationState().then((res) => {
+      if (res.scenarioPreset) setScenarioPreset(res.scenarioPreset);
+    });
     availabilityQueries.getWeeklyRules().then((rules) => {
       // Ensure all 7 days exist in local state
       const initialized = [1, 2, 3, 4, 5, 6, 0].map((d) => {
@@ -101,7 +103,7 @@ export default function SettingsPage() {
     const updatedSettings = await settingsQueries.getSettings();
     setSettings(updatedSettings);
     const res = await promotorClassQueries.getIntegrationState();
-    setScenarioPreset(res.scenarioPreset);
+    if (res.scenarioPreset) setScenarioPreset(res.scenarioPreset);
     alert('Demo state berhasil di-reset ke data seed awal.');
   };
 

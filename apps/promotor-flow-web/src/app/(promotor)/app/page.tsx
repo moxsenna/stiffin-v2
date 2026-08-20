@@ -35,7 +35,9 @@ export default function TodayPage() {
     setQueue(q);
 
     const intState = await promotorClassQueries.getIntegrationState();
-    setCurrentPreset(intState.scenarioPreset);
+    if (intState.scenarioPreset) {
+      setCurrentPreset(intState.scenarioPreset);
+    }
   }, []);
 
   useEffect(() => {

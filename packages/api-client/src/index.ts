@@ -482,10 +482,14 @@ export class PromotorClassContentApiClient {
     return this.client.get('/api/v1/class/activity');
   }
 
-  async getIntegrationHealth(): Promise<IntegrationHealth> {
+  async getIntegrationHealth(): Promise<{ promotorFlow: 'AVAILABLE' | 'UNAVAILABLE' }> {
     try {
-      return await this.client.get<IntegrationHealth>('/api/v1/class/integration/health');
-    } catch {
+      return await this.client.get<{ promotorFlow: 'AVAILABLE' | 'UNAVAILABLE' }>('/api/v1/class/integration/health');
+    } catch (err: any) {
+      const status = err?.status || err?.statusCode;
+      if (status === 401 || status === 403) {
+        throw err;
+      }
       return { promotorFlow: 'UNAVAILABLE' };
     }
   }
@@ -779,11 +783,15 @@ export class PromotorFlowApiClient {
     return this.client.get(`/api/v1/class/programs/eligible${qs}`);
   }
 
-  async getIntegrationHealth(): Promise<IntegrationHealth> {
+  async getIntegrationHealth(): Promise<{ promotorFlow: 'AVAILABLE' | 'UNAVAILABLE'; promotorClass: 'AVAILABLE' | 'UNAVAILABLE' }> {
     try {
-      return await this.client.get<IntegrationHealth>('/api/v1/flow/integration/health');
-    } catch {
-      return { promotorFlow: 'AVAILABLE' };
+      return await this.client.get<{ promotorFlow: 'AVAILABLE' | 'UNAVAILABLE'; promotorClass: 'AVAILABLE' | 'UNAVAILABLE' }>('/api/v1/flow/integration/health');
+    } catch (err: any) {
+      const status = err?.status || err?.statusCode;
+      if (status === 401 || status === 403) {
+        throw err;
+      }
+      return { promotorFlow: 'AVAILABLE', promotorClass: 'UNAVAILABLE' };
     }
   }
 }

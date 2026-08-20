@@ -19,7 +19,7 @@ export interface PromotorClassAdapterPort extends PromotorClassAdapter {
   getEntitlementsAndHealth(): Promise<{
     entitlements: ProductEntitlements;
     integrationHealth: FlowIntegrationHealth;
-    scenarioPreset: DemoScenarioPreset;
+    scenarioPreset?: DemoScenarioPreset;
   }>;
-  setDemoScenario(preset: DemoScenarioPreset): Promise<void>;
+  setDemoScenario?(preset: DemoScenarioPreset): Promise<void>;
 }

@@ -21,6 +21,7 @@
     "test": "pnpm -r test",
     "test:integration": "pnpm --filter @promotor/platform-api test:integration",
     "test:e2e": "playwright test",
+    "test:e2e:sell-ready": "playwright test --config=playwright.sell-ready.config.ts",
     "test:e2e:staging": "playwright test --config=playwright.staging.config.ts"
   },
   "overrides": {

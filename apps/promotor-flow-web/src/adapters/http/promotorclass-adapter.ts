@@ -1,4 +1,4 @@
-import { PromotorClassAdapterPort, DemoScenarioPreset, FlowIntegrationHealth } from '@/modules/promotorclass/ports';
+import { PromotorClassAdapterPort, FlowIntegrationHealth } from '@/modules/promotorclass/ports';
 import {
   ProductEntitlements,
   LearningContext,
@@ -9,54 +9,39 @@ import {
   EnrollmentStatus,
 } from '@promotor/contracts';
 import { PromotorFlowApiClient } from '@promotor/api-client';
+import { getSession } from '@/lib/auth';
 
 export class HttpPromotorClassAdapter implements PromotorClassAdapterPort {
-  private scenarioPreset: DemoScenarioPreset = 'BUNDLE_AVAILABLE';
-  private integrationHealth: FlowIntegrationHealth = { promotorClass: 'AVAILABLE' };
-  private entitlements: ProductEntitlements = { promotorFlow: true, promotorClass: true };
-
   constructor(private api: PromotorFlowApiClient) {}
 
   async getEntitlementsAndHealth(): Promise<{
     entitlements: ProductEntitlements;
     integrationHealth: FlowIntegrationHealth;
-    scenarioPreset: DemoScenarioPreset;
   }> {
-    if (this.scenarioPreset === 'FLOW_ONLY') {
-      return {
-        entitlements: { promotorFlow: true, promotorClass: false },
-        integrationHealth: { promotorClass: 'AVAILABLE' },
-        scenarioPreset: this.scenarioPreset,
-      };
-    }
+    const session = await getSession();
+    const entitlements: ProductEntitlements = {
+      promotorFlow: session?.entitlements?.promotorFlow ?? true,
+      promotorClass: session?.entitlements?.promotorClass ?? false,
+    };
 
-    if (this.scenarioPreset === 'BUNDLE_CLASS_UNAVAILABLE') {
-      return {
-        entitlements: { promotorFlow: true, promotorClass: true },
-        integrationHealth: { promotorClass: 'UNAVAILABLE' },
-        scenarioPreset: this.scenarioPreset,
+    let integrationHealth: FlowIntegrationHealth = { promotorClass: 'UNAVAILABLE' };
+    try {
+      const health = await this.api.getIntegrationHealth();
+      integrationHealth = {
+        promotorClass: health.promotorClass === 'AVAILABLE' ? 'AVAILABLE' : 'UNAVAILABLE',
       };
+    } catch (err: any) {
+      const status = err?.status || err?.statusCode;
+      if (status === 401 || status === 403) {
+        throw err;
+      }
+      integrationHealth = { promotorClass: 'UNAVAILABLE' };
     }
 
     return {
-      entitlements: this.entitlements,
-      integrationHealth: this.integrationHealth,
-      scenarioPreset: this.scenarioPreset,
+      entitlements,
+      integrationHealth,
     };
-  }
-
-  async setDemoScenario(preset: DemoScenarioPreset): Promise<void> {
-    this.scenarioPreset = preset;
-    if (preset === 'FLOW_ONLY') {
-      this.entitlements.promotorClass = false;
-      this.integrationHealth.promotorClass = 'AVAILABLE';
-    } else if (preset === 'BUNDLE_CLASS_UNAVAILABLE') {
-      this.entitlements.promotorClass = true;
-      this.integrationHealth.promotorClass = 'UNAVAILABLE';
-    } else {
-      this.entitlements.promotorClass = true;
-      this.integrationHealth.promotorClass = 'AVAILABLE';
-    }
   }
 
   async getLearningContext(contactId: string): Promise<LearningContext> {
@@ -76,7 +61,6 @@ export class HttpPromotorClassAdapter implements PromotorClassAdapterPort {
 
     try {
       const res = await this.api.getContactLearningContext(contactId);
-      this.integrationHealth.promotorClass = 'AVAILABLE';
       return {
         contactId,
         activeEnrollments: (res.activeEnrollments || []).map((e) => ({
@@ -85,19 +69,18 @@ export class HttpPromotorClassAdapter implements PromotorClassAdapterPort {
           programTitle: e.programTitle,
           progressPercent: e.progressPercent,
           learningStatus: e.learningStatus,
-          intentLabel: (e.intentLabel?.toLowerCase() as 'cold' | 'warm' | 'hot') || 'cold',
+          intentLabel: (e.intentLabel?.toLowerCase() as 'cold' | 'warm' | 'hot') || null as any,
           lastActivityAt: null,
         })),
         recentSignals: (res.recentSignals || []).map((s) => ({
           type: 'LEARNING_SIGNAL',
           reason: s.reason,
-          priority: 50,
+          priority: (s as any).priority ?? null,
           createdAt: s.createdAt,
         })),
       };
     } catch (err: any) {
       const status = err?.status || err?.statusCode;
-      // 404 means no learning record for contact
       if (status === 404) {
         return {
           contactId,
@@ -105,16 +88,9 @@ export class HttpPromotorClassAdapter implements PromotorClassAdapterPort {
           recentSignals: [],
         };
       }
-      if (status === 403) {
-        this.entitlements.promotorClass = false;
-        return {
-          contactId,
-          activeEnrollments: [],
-          recentSignals: [],
-        };
+      if (status === 401 || status === 403) {
+        throw err;
       }
-      // Outage/5xx/Network failure: update health and throw
-      this.integrationHealth.promotorClass = 'UNAVAILABLE';
       throw new Error(`PromotorClass service is currently unavailable: ${err?.message || String(err)}`);
     }
   }
@@ -132,21 +108,18 @@ export class HttpPromotorClassAdapter implements PromotorClassAdapterPort {
 
     try {
       const res = await this.api.listEligiblePrograms(input?.category);
-      this.integrationHealth.promotorClass = 'AVAILABLE';
       return (res.programs || []).map((p) => ({
         programId: p.id,
         title: p.title,
-        programType: (p.programType as any) || 'course',
-        pricing: (p.pricing as any) || 'free',
+        programType: p.programType as any,
+        pricing: p.pricing as any,
         priceAmount: p.priceAmount,
       }));
     } catch (err: any) {
       const status = err?.status || err?.statusCode;
-      if (status === 403) {
-        this.entitlements.promotorClass = false;
-        return [];
+      if (status === 401 || status === 403) {
+        throw err;
       }
-      this.integrationHealth.promotorClass = 'UNAVAILABLE';
       throw new Error(`PromotorClass service is currently unavailable: ${err?.message || String(err)}`);
     }
   }
@@ -163,7 +136,6 @@ export class HttpPromotorClassAdapter implements PromotorClassAdapterPort {
         programId: input.programId,
         contactId: input.contactId,
       });
-      this.integrationHealth.promotorClass = 'AVAILABLE';
       return {
         enrollmentId: res.enrollment.id,
         programId: res.enrollment.programId,
@@ -172,12 +144,6 @@ export class HttpPromotorClassAdapter implements PromotorClassAdapterPort {
         enrolledAt: res.enrollment.enrolledAt,
       };
     } catch (err: any) {
-      const status = err?.status || err?.statusCode;
-      if (status === 403) {
-        this.entitlements.promotorClass = false;
-      } else if (!status || status >= 500) {
-        this.integrationHealth.promotorClass = 'UNAVAILABLE';
-      }
       throw err;
     }
   }
@@ -195,7 +161,6 @@ export class HttpPromotorClassAdapter implements PromotorClassAdapterPort {
 
     try {
       const res = await this.api.listClassEnrollments({ contactId, programId });
-      this.integrationHealth.promotorClass = 'AVAILABLE';
       const enr = res.enrollments?.[0];
       if (!enr) return null;
       return {
@@ -208,11 +173,9 @@ export class HttpPromotorClassAdapter implements PromotorClassAdapterPort {
     } catch (err: any) {
       const status = err?.status || err?.statusCode;
       if (status === 404) return null;
-      if (status === 403) {
-        this.entitlements.promotorClass = false;
-        return null;
+      if (status === 401 || status === 403) {
+        throw err;
       }
-      this.integrationHealth.promotorClass = 'UNAVAILABLE';
       throw new Error(`PromotorClass service is currently unavailable: ${err?.message || String(err)}`);
     }
   }
