@@ -17,7 +17,7 @@ export default async function PublicStorefrontPage({ params }: PageProps) {
     return null;
   }
 
-  const catalog = await listPublicProgramsQuery(params.workspaceSlug);
+  const catalog = await listPublicProgramsQuery(workspaceSlug);
 
   return (
     <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Memuat Storefront...</div>}>
