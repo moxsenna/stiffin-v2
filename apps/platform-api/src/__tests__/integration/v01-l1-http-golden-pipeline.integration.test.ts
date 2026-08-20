@@ -89,7 +89,7 @@ describe('V0.1 L1 Operational Readiness — Full HTTP & Cross-Product E2E Rehear
         .values({
           programId: testProgramId,
           title: 'Modul Utama — Cloudflare & Architecture',
-          order: 0,
+          order: 1,
         })
         .returning();
 
@@ -98,10 +98,11 @@ describe('V0.1 L1 Operational Readiness — Full HTTP & Cross-Product E2E Rehear
         .values({
           moduleId: mod.id,
           title: 'Pelajaran 1 — HTTP Endpoints',
-          order: 0,
+          order: 1,
           isRequired: true,
           videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ',
           videoProvider: 'youtube',
+          videoExternalId: 'dQw4w9WgXcQ',
         })
         .returning();
       testLesson1Id = l1.id;
@@ -111,11 +112,11 @@ describe('V0.1 L1 Operational Readiness — Full HTTP & Cross-Product E2E Rehear
         .values({
           moduleId: mod.id,
           title: 'Pelajaran 2 — Cross-Product Verification',
-          order: 1,
+          order: 2,
           isRequired: true,
           reflectionType: 'long_text',
           reflectionPrompt: 'Refleksikan dampak arsitektur decoupling.',
-          ctaType: 'whatsapp',
+          ctaType: 'WHATSAPP',
           ctaLabel: 'Jadwalkan Sesi Konsultasi',
         })
         .returning();

@@ -78,7 +78,7 @@ describe('V0.1 L1 Operational Readiness Suite (Inactivity Sweep & Privacy Deleti
         .values({
           programId: testProgramId,
           title: 'Modul 1 — Operational Mastery',
-          order: 0,
+          order: 1,
         })
         .returning();
 
@@ -87,10 +87,11 @@ describe('V0.1 L1 Operational Readiness Suite (Inactivity Sweep & Privacy Deleti
         .values({
           moduleId: mod.id,
           title: 'Pelajaran 1 — Scheduled Jobs',
-          order: 0,
+          order: 1,
           isRequired: true,
           videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ',
           videoProvider: 'youtube',
+          videoExternalId: 'dQw4w9WgXcQ',
         })
         .returning();
       testLesson1Id = l1.id;
@@ -100,7 +101,7 @@ describe('V0.1 L1 Operational Readiness Suite (Inactivity Sweep & Privacy Deleti
         .values({
           moduleId: mod.id,
           title: 'Pelajaran 2 — Privacy & GDPR',
-          order: 1,
+          order: 2,
           isRequired: true,
           reflectionType: 'long_text',
           reflectionPrompt: 'Bagaimana Anda merancang penghapusan PII?',
