@@ -139,13 +139,13 @@ describe('V0.1 L1 Operational Readiness — Full HTTP & Cross-Product E2E Rehear
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: 'Bima Satria E2E',
-            phone: regPhone,
+            phoneRaw: regPhone,
           }),
         },
         TEST_ENV as any
       );
 
-      assert.strictEqual(regRes.status, 200, 'Public registration must succeed');
+      assert.strictEqual(regRes.status, 201, 'Public registration must succeed');
       const regData = (await regRes.json()) as any;
       assert.ok(regData.enrollmentId);
       assert.ok(regData.accessToken);
@@ -298,7 +298,7 @@ describe('V0.1 L1 Operational Readiness — Full HTTP & Cross-Product E2E Rehear
         TEST_ENV as any
       );
 
-      assert.strictEqual(pubBookRes.status, 200);
+      assert.strictEqual(pubBookRes.status, 201);
       const pubBookData = (await pubBookRes.json()) as any;
       assert.ok(pubBookData.bookingId);
       assert.strictEqual(pubBookData.status, 'PENDING');
