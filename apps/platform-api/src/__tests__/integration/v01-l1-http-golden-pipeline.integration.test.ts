@@ -133,7 +133,7 @@ describe('V0.1 L1 Operational Readiness — Full HTTP & Cross-Product E2E Rehear
       // =========================================================================
       const regPhone = `+62812${Math.floor(10000000 + Math.random() * 90000000)}`;
       const regRes = await app.request(
-        `/api/v1/public/programs/${testOrgSlug}/${testProgramSlug}/register`,
+        `/api/v1/public/${testOrgSlug}/programs/${testProgramSlug}/register`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -282,12 +282,11 @@ describe('V0.1 L1 Operational Readiness — Full HTTP & Cross-Product E2E Rehear
       // Create Public Booking via HTTP API
       const bookingStartAt = new Date(Date.now() + 86400000 * 2).toISOString();
       const pubBookRes = await app.request(
-        '/api/v1/public/bookings',
+        `/api/v1/public/${testOrgSlug}/bookings`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            slug: testOrgSlug,
             serviceId: srvRow.id,
             startAt: bookingStartAt,
             name: 'Bima Satria E2E',
