@@ -548,6 +548,70 @@ async function runLiveAcceptance() {
     );
 
     // -------------------------------------------------------------
+    // Golden Flow E2: M17 Flow -> Class Reverse Integration Seam
+    // -------------------------------------------------------------
+    const classAdapter = createPromotorClassAdapter(db);
+
+    // 1. Flow queries learning context for contact
+    const flowLearningCtx = await classAdapter.getLearningContext(org.id, reg.contactId);
+    record(
+      'M17_FLOW_TO_CLASS',
+      'Flow queries canonical LearningContext for contact with active enrollments, progress, and signals',
+      flowLearningCtx.contactId === reg.contactId &&
+        flowLearningCtx.overallProgressPercent === 100 &&
+        flowLearningCtx.highestIntentLabel === 'HOT' &&
+        flowLearningCtx.activeEnrollments.length === 1 &&
+        flowLearningCtx.recentSignals.length >= 2,
+      `Progress: ${flowLearningCtx.overallProgressPercent}%, Intent: ${flowLearningCtx.highestIntentLabel}, Signals: ${flowLearningCtx.recentSignals.length}`
+    );
+
+    // 2. Flow lists eligible programs for aftersales enrollment
+    const eligiblePrograms = await classAdapter.listEligiblePrograms(org.id);
+    record(
+      'M17_FLOW_TO_CLASS',
+      'Flow lists published programs eligible for manual or aftersales enrollment',
+      eligiblePrograms.length >= 1 && eligiblePrograms.some((p) => p.id === program.id),
+      `Eligible count: ${eligiblePrograms.length}`
+    );
+
+    // 3. Flow enrolls contact into second program idempotently
+    const [secondProgram] = await db
+      .insert(programs)
+      .values({
+        organizationId: org.id,
+        title: 'Masterclass Lanjutan — Arsitektur Micro-Frontends',
+        slug: `prog-aftersales-${timestamp}`,
+        programType: 'course',
+        status: 'published',
+        pricing: 'paid',
+        priceAmount: 1500000,
+      })
+      .returning();
+
+    const manualEnrollResult = await classAdapter.enrollContact(org.id, secondProgram.id, reg.contactId);
+    const manualEnrollRetry = await classAdapter.enrollContact(org.id, secondProgram.id, reg.contactId);
+
+    record(
+      'M17_FLOW_TO_CLASS',
+      'Flow enrolls contact into program idempotently (same canonical contact_id and duplicate prevention)',
+      Boolean(manualEnrollResult.enrollmentId) &&
+        manualEnrollResult.enrollmentId === manualEnrollRetry.enrollmentId &&
+        manualEnrollResult.status === 'ENROLLED',
+      `Enrollment ID: ${manualEnrollResult.enrollmentId}`
+    );
+
+    // 4. Flow queries enrollment status
+    const secondProgramStatus = await classAdapter.getEnrollmentStatus(org.id, reg.contactId, secondProgram.id);
+    record(
+      'M17_FLOW_TO_CLASS',
+      'Flow queries enrollment status returning canonical progress and status',
+      secondProgramStatus?.status === 'ENROLLED' &&
+        secondProgramStatus?.progressPercent === 0 &&
+        secondProgramStatus?.learningStatus === 'NOT_STARTED',
+      `Status: ${secondProgramStatus?.status}, Progress: ${secondProgramStatus?.progressPercent}%`
+    );
+
+    // -------------------------------------------------------------
     // Golden Flow F: Flow Public Booking, Lifecycle & D+7 Aftercare
     // -------------------------------------------------------------
     const [serviceRow] = await db

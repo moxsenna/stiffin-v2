@@ -18,6 +18,7 @@ import {
 } from '../../db/schema';
 import { createLearningEngineService } from '../../services/class/learning-engine-service';
 import { createEnrollmentService } from '../../services/class/enrollment-service';
+import { createPromotorClassAdapter } from '../../services/class/promotor-class-adapter';
 
 const enabled = Boolean(TEST_DATABASE_URL);
 
@@ -375,4 +376,37 @@ describe('V0.1 Canonical Events & Concurrency Exactly-Once Suite', { skip: !enab
       assert.strictEqual(finalSignals.length, initialSignalsCount, 'Signals count must remain immutable');
     });
   });
+
+  it('6. M17 Flow -> Class Reverse Integration Seam: getLearningContext, listEligiblePrograms, enrollContact, getEnrollmentStatus', async () => {
+    await withIntegrationDb(async (db) => {
+      const adapter = createPromotorClassAdapter(db);
+
+      // 1. getLearningContext
+      const ctx = await adapter.getLearningContext(testOrgId, testContactId);
+      assert.strictEqual(ctx.contactId, testContactId);
+      assert.strictEqual(ctx.overallProgressPercent, 100);
+      assert.strictEqual(ctx.highestIntentLabel, 'HOT');
+      assert.ok(ctx.activeEnrollments.length > 0);
+      assert.ok(ctx.recentSignals.length >= 2);
+
+      // 2. listEligiblePrograms
+      const eligible = await adapter.listEligiblePrograms(testOrgId);
+      assert.ok(eligible.length >= 1);
+      assert.ok(eligible.some((p: any) => p.id === testProgramId));
+
+      // 3. enrollContact idempotency
+      const res1 = await adapter.enrollContact(testOrgId, testProgramId, testContactId);
+      const res2 = await adapter.enrollContact(testOrgId, testProgramId, testContactId);
+      assert.strictEqual(res1.enrollmentId, res2.enrollmentId);
+      assert.strictEqual(res1.enrollmentId, testEnrollmentId);
+
+      // 4. getEnrollmentStatus
+      const status = await adapter.getEnrollmentStatus(testOrgId, testContactId, testProgramId);
+      assert.ok(status);
+      assert.strictEqual(status.enrollmentId, testEnrollmentId);
+      assert.strictEqual(status.progressPercent, 100);
+      assert.strictEqual(status.learningStatus, 'COMPLETED');
+    });
+  });
 });
+
