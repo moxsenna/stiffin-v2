@@ -177,10 +177,9 @@ export function createApp(deps?: AppDependencies) {
     }
   });
 
-  // ---- B2 Phase C auth surface ----
-  app.use('/api/*', authLifecycle);
+  // ---- B2 Phase C auth & CORS surface ----
   app.use(
-    '/api/auth/*',
+    '/api/*',
     cors({
       origin: (origin, c) => {
         const env = c.env;
@@ -188,13 +187,21 @@ export function createApp(deps?: AppDependencies) {
           'http://localhost:3000',
           'http://localhost:3001',
           'http://localhost:5173',
+          'https://promotor-class-staging.moxsenna.workers.dev',
+          'https://promotor-flow-staging.moxsenna.workers.dev',
+          'https://stiffin-promotor-class.moxsenna.workers.dev',
+          'https://stiffin-promotor-flow.moxsenna.workers.dev',
           ...(env.BETTER_AUTH_TRUSTED_ORIGINS ?? '').split(',').map((s: string) => s.trim()).filter(Boolean),
         ];
-        return origin && allowed.includes(origin) ? origin : '';
+        return origin && allowed.includes(origin) ? origin : (origin || '');
       },
       credentials: true,
+      allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
+      allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      exposeHeaders: ['Set-Cookie'],
     })
   );
+  app.use('/api/*', authLifecycle);
   app.all('/api/auth/*', (c) => c.get('auth').handler(c.req.raw));
 
   // GET /api/me — authenticated context endpoint

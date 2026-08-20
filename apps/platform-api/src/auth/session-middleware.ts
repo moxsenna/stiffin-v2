@@ -1,6 +1,8 @@
 import { createMiddleware } from 'hono/factory';
 import { Client } from 'pg';
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { eq } from 'drizzle-orm';
+import { sessions, users } from '../db/schema';
 import { createAuth, AuthConfigError, CreateAuthEnv } from './create-auth';
 import type { AuthInstance } from './create-auth';
 import { resolveAuthContext, createEntitlementsForOrg } from './context-resolver';
@@ -59,7 +61,37 @@ export const authLifecycle = createMiddleware<{ Bindings: AuthBindings; Variable
 export const sessionMiddleware = createMiddleware<{ Bindings: AuthBindings; Variables: AuthVariables }>(
   async (c, next) => {
     const auth = c.get('auth');
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    let session = await auth.api.getSession({ headers: c.req.raw.headers });
+
+    // Fallback: check Authorization: Bearer <token> directly in database
+    if (!session?.user || !session.session) {
+      const authHeader = c.req.header('Authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.slice(7).trim();
+        if (token) {
+          const db = c.get('db');
+          const [sessionRow] = await db
+            .select()
+            .from(sessions)
+            .where(eq(sessions.token, token))
+            .limit(1);
+          if (sessionRow && new Date(sessionRow.expiresAt) > new Date()) {
+            const [userRow] = await db
+              .select()
+              .from(users)
+              .where(eq(users.id, sessionRow.userId))
+              .limit(1);
+            if (userRow && userRow.deletedAt === null) {
+              session = {
+                user: userRow as any,
+                session: sessionRow as any,
+              };
+            }
+          }
+        }
+      }
+    }
+
     if (!session?.user || !session.session) {
       c.set('authContext', null);
       await next();

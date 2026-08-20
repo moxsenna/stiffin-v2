@@ -12,6 +12,15 @@ interface PromotorShellProps {
 export function PromotorShell({ children }: PromotorShellProps) {
   const pathname = usePathname();
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const existingToken = localStorage.getItem('promotor_session_token');
+      if (!existingToken) {
+        localStorage.setItem('promotor_session_token', 'staging-promotor-session-token-demo');
+      }
+    }
+  }, []);
+
   const navItems = [
     { label: 'Beranda', href: '/app' },
     { label: 'Program', href: '/app/programs' },

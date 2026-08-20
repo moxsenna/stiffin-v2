@@ -48,6 +48,10 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:5173',
+    'https://promotor-class-staging.moxsenna.workers.dev',
+    'https://promotor-flow-staging.moxsenna.workers.dev',
+    'https://stiffin-promotor-class.moxsenna.workers.dev',
+    'https://stiffin-promotor-flow.moxsenna.workers.dev',
     ...(env.BETTER_AUTH_TRUSTED_ORIGINS ?? '')
       .split(',')
       .map((s) => s.trim())
@@ -89,6 +93,10 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
       : { enabled: true, storage: 'database', modelName: MODEL_NAMES.rateLimit },
     advanced: {
       database: { generateId: 'uuid' },
+      defaultCookieAttributes: {
+        sameSite: 'none',
+        secure: true,
+      },
     },
     databaseHooks: {
       session: {
