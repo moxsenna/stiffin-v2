@@ -150,7 +150,7 @@ export function LessonReaderClient() {
     );
   }
 
-  const isReflectionRequired = !!lesson.hasReflection;
+  const isReflectionRequired = true;
   const isButtonDisabled = isReflectionRequired && !reflectionAnswer.trim();
 
   const handleComplete = async () => {
@@ -263,43 +263,41 @@ export function LessonReaderClient() {
         )}
 
         {/* Mandatory Reflection Box */}
-        {(lesson.hasReflection || lesson.reflectionPrompt || lesson.reflectionType) && (
-          <div
-            style={{
-              backgroundColor: 'var(--color-surface)',
-              padding: '16px',
-              borderRadius: 'var(--border-radius-md)',
-              border: '2px solid var(--color-primary-border)',
-              marginBottom: '20px',
-            }}
-          >
-            <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '6px' }}>
-              Refleksi Wajib *
-            </h3>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-main)', marginBottom: '10px' }}>
-              {lesson.reflectionPrompt || 'Tuliskan pemikiran dan hasil pengamatan Anda:'}
-            </p>
+        <div
+          style={{
+            backgroundColor: 'var(--color-surface)',
+            padding: '16px',
+            borderRadius: 'var(--border-radius-md)',
+            border: '2px solid var(--color-primary-border)',
+            marginBottom: '20px',
+          }}
+        >
+          <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '6px' }}>
+            Refleksi Wajib *
+          </h3>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-main)', marginBottom: '10px' }}>
+            {lesson.reflectionPrompt || 'Tuliskan pemikiran dan hasil pengamatan Anda:'}
+          </p>
 
-            <textarea
-              rows={4}
-              value={reflectionAnswer}
-              onChange={e => setReflectionAnswer(e.target.value)}
-              placeholder="Tuliskan refleksi Anda di sini..."
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: 'var(--border-radius-sm)',
-                border: '1px solid var(--color-divider)',
-                fontSize: '13px',
-              }}
-            />
-            {isButtonDisabled && (
-              <div style={{ fontSize: '11px', color: 'var(--color-status-warning)', marginTop: '4px' }}>
-                * Anda wajib mengisi refleksi di atas untuk membuka tombol Selesai.
-              </div>
-            )}
-          </div>
-        )}
+          <textarea
+            rows={4}
+            value={reflectionAnswer}
+            onChange={e => setReflectionAnswer(e.target.value)}
+            placeholder="Tuliskan refleksi Anda di sini..."
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: 'var(--border-radius-sm)',
+              border: '1px solid var(--color-divider)',
+              fontSize: '13px',
+            }}
+          />
+          {isButtonDisabled && (
+            <div style={{ fontSize: '11px', color: 'var(--color-status-warning)', marginTop: '4px' }}>
+              * Anda wajib mengisi refleksi di atas untuk membuka tombol Selesai.
+            </div>
+          )}
+        </div>
 
         {/* Call to Action Button with Explicit Event Tracking */}
         {(lesson.hasCta || lesson.ctaLabel) && (lesson.ctaUrl || (lesson.ctaConfig as any)?.url || lesson.ctaLabel) && (
