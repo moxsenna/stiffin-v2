@@ -351,7 +351,7 @@ export class PromotorClassContentApiClient {
     );
   }
 
-  async redeemLearnerToken(data: RedeemLearnerTokenRequest | string): Promise<RedeemLearnerTokenResponse> {
+  async redeemLearnerToken(data: RedeemLearnerTokenRequest | string): Promise<RedeemLearnerTokenResponse & { sessionToken?: string; expiresAt?: string }> {
     const payload = typeof data === 'string' ? { token: data } : data;
     return this.client.post('/api/v1/public/learner/redeem-token', payload);
   }
@@ -705,7 +705,7 @@ export class PromotorFlowApiClient {
     return this.client.post(`/api/v1/public/${encodeURIComponent(slug)}/programs/${encodeURIComponent(programSlug)}/register`, data);
   }
 
-  async redeemLearnerToken(token: string): Promise<RedeemLearnerTokenResponse> {
+  async redeemLearnerToken(token: string): Promise<RedeemLearnerTokenResponse & { sessionToken?: string; expiresAt?: string }> {
     return this.client.post('/api/v1/public/learner/redeem-token', { token });
   }
 

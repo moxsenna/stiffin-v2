@@ -935,8 +935,6 @@ export type RedeemLearnerTokenRequest = z.infer<typeof RedeemLearnerTokenRequest
 export const RedeemLearnerTokenResponseSchema = z.object({
   contactId: z.string().uuid(),
   organizationId: z.string().uuid(),
-  sessionToken: z.string().optional(),
-  expiresAt: z.string().optional(),
 });
 export type RedeemLearnerTokenResponse = z.infer<typeof RedeemLearnerTokenResponseSchema>;
 
