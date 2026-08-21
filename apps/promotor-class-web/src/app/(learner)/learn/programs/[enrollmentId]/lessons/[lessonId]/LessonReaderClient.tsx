@@ -302,13 +302,13 @@ export function LessonReaderClient() {
         )}
 
         {/* Call to Action Button with Explicit Event Tracking */}
-        {lesson.hasCta && lesson.ctaUrl && (
+        {(lesson.hasCta || lesson.ctaLabel) && (lesson.ctaUrl || (lesson.ctaConfig as any)?.url || lesson.ctaLabel) && (
           <div style={{ marginBottom: '20px' }}>
             <a
-              href={lesson.ctaUrl}
+              href={lesson.ctaUrl || (lesson.ctaConfig as any)?.url || '#'}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => handleCtaClick(lesson.ctaUrl!)}
+              onClick={() => handleCtaClick(lesson.ctaUrl || (lesson.ctaConfig as any)?.url || '#')}
               className="touch-target-primary"
               style={{
                 width: '100%',

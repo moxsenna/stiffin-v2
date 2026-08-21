@@ -143,6 +143,7 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
         hasCta: !!(les.ctaType && les.ctaLabel),
         ctaType: les.ctaType as any,
         ctaLabel: les.ctaLabel ?? undefined,
+        ctaUrl: (les.ctaConfig as any)?.url ?? undefined,
         ctaTargetProgramId: les.ctaTargetProgramId ?? undefined,
         ctaConfig: les.ctaConfig ?? undefined,
       });
