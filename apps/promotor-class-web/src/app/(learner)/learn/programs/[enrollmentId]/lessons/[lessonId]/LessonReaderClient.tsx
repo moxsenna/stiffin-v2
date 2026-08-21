@@ -110,7 +110,7 @@ export function LessonReaderClient() {
             for (const les of mod.lessons) {
               if (les.id === lessonId) {
                 setLesson(les);
-                const prevProgress = enr.lessonProgress[lessonId];
+                const prevProgress = enr.lessonProgress?.[lessonId];
                 if (prevProgress?.reflectionAnswer) {
                   setReflectionAnswer(prevProgress.reflectionAnswer);
                 }

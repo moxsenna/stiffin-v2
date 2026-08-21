@@ -32,18 +32,20 @@ export function LearnerProgramClient() {
             return;
           }
 
+          const progressMap: Record<string, any> = {};
+          for (const m of prog.modules || []) {
+            for (const l of m.lessons || []) {
+              progressMap[l.id] = {
+                completed: !!l.isCompleted,
+                completedAt: l.completedAt || '',
+                reflectionAnswer: l.reflection?.responseText || undefined,
+              };
+            }
+          }
+
           setEnrollment({
             ...enr,
-            lessonProgress: (prog.modules || []).reduce((acc: any, m: any) => {
-              for (const l of m.lessons || []) {
-                acc[l.id] = {
-                  completed: l.isCompleted,
-                  completedAt: l.completedAt || '',
-                  reflectionAnswer: l.reflection?.responseText || undefined,
-                };
-              }
-              return acc;
-            }, {}),
+            lessonProgress: progressMap,
           } as any);
 
           setProgram({
@@ -72,7 +74,10 @@ export function LearnerProgramClient() {
           setAccessDenied(true);
           return;
         }
-        setEnrollment(enr);
+        setEnrollment({
+          ...enr,
+          lessonProgress: enr.lessonProgress || {},
+        });
         getProgramByIdQuery(enr.programId).then(prog => {
           if (prog) setProgram(prog);
         });
@@ -136,8 +141,8 @@ export function LearnerProgramClient() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {mod.lessons.map(les => {
-                  const lessonProgress = enrollment.lessonProgress[les.id];
-                  const isCompleted = lessonProgress?.completed;
+                  const lessonProgress = (enrollment.lessonProgress && enrollment.lessonProgress[les.id]) || undefined;
+                  const isCompleted = (les as any).isCompleted ?? lessonProgress?.completed;
 
                   return (
                     <Link
