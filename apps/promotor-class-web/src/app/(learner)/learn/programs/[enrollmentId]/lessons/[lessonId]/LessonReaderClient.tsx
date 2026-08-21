@@ -76,9 +76,9 @@ export function LessonReaderClient() {
                   videoYoutubeUrl: l.videoUrl || l.videoYoutubeUrl,
                   hasReflection: !!l.reflectionType,
                   reflectionPrompt: l.reflectionPrompt || undefined,
-                  hasCta: !!l.ctaType,
-                  ctaLabel: l.ctaLabel || undefined,
-                  ctaUrl: (l.ctaConfig as any)?.url || l.ctaUrl || undefined,
+                  hasCta: !!l.ctaType || !!l.ctaLabel,
+                  ctaLabel: l.ctaLabel || 'Konsultasi via WhatsApp',
+                  ctaUrl: l.ctaUrl || (l.ctaConfig as any)?.url || 'https://wa.me/6281234567890',
                   textContent: l.textContent || undefined,
                 });
                 if (l.reflection?.responseText) {

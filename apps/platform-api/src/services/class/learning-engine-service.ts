@@ -828,6 +828,7 @@ export function createLearningEngineService(
             reflectionOptions: l.reflectionOptions ?? null,
             ctaType: l.ctaType ?? null,
             ctaLabel: l.ctaLabel ?? null,
+            ctaUrl: l.ctaUrl ?? (l.ctaConfig as any)?.url ?? null,
             ctaTargetProgramId: l.ctaTargetProgramId ?? null,
             ctaConfig: l.ctaConfig ?? null,
             isCompleted: prog?.isCompleted ?? false,
