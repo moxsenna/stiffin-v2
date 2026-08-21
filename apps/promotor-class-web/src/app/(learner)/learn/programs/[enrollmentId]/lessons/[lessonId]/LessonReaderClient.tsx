@@ -165,7 +165,19 @@ export function LessonReaderClient() {
         res = await completeLessonCommand(enrollmentId, lessonId);
       }
 
-      const targetUrl = (res?.learningStatus === 'COMPLETED' || res?.progressPercent === 100)
+      const allLessons = (program?.modules || []).flatMap((m: any) => m.lessons || []);
+      const completedCount = allLessons.filter((l: any) => l.isCompleted || l.id === lessonId).length;
+      const isAllDone = allLessons.length > 0 && completedCount >= allLessons.length;
+
+      const isCompleted =
+        res?.learningStatus === 'COMPLETED' ||
+        res?.progressPercent === 100 ||
+        res?.isComplete ||
+        (res as any)?.enrollment?.learningStatus === 'COMPLETED' ||
+        (res as any)?.enrollment?.progressPercent === 100 ||
+        isAllDone;
+
+      const targetUrl = isCompleted
         ? `/learn/programs/${enrollmentId}/completed`
         : `/learn/programs/${enrollmentId}`;
 

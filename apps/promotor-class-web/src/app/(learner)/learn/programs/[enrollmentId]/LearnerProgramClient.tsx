@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { LearnerShell } from '@/components/layout/LearnerShell';
 import { getActiveLearnerContactId } from '@/lib/session';
 import { getEnrollmentByIdQuery } from '@/modules/enrollments/queries';
@@ -12,6 +12,7 @@ import { Enrollment, Program } from '@promotor/contracts';
 
 export function LearnerProgramClient() {
   const params = useParams();
+  const router = useRouter();
   const enrollmentId = params.enrollmentId as string;
 
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
@@ -29,6 +30,11 @@ export function LearnerProgramClient() {
           const activeContactId = getActiveLearnerContactId();
           if (activeContactId && enr.contactId && enr.contactId !== activeContactId) {
             setAccessDenied(true);
+            return;
+          }
+
+          if (enr.progressPercent === 100 || enr.learningStatus === 'COMPLETED') {
+            router.push(`/learn/programs/${enrollmentId}/completed`);
             return;
           }
 
