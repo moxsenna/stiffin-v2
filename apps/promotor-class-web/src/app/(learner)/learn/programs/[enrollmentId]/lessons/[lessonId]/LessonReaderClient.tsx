@@ -181,7 +181,11 @@ export function LessonReaderClient() {
         ? `/learn/programs/${enrollmentId}/completed`
         : `/learn/programs/${enrollmentId}`;
 
-      router.push(targetUrl);
+      if (typeof window !== 'undefined') {
+        window.location.href = targetUrl;
+      } else {
+        router.push(targetUrl);
+      }
     } catch (err: unknown) {
       console.error('[LessonReaderClient] handleComplete failed:', err);
       setErrorMsg((err as Error).message || 'Gagal menyelesaikan pelajaran');

@@ -34,7 +34,11 @@ export function LearnerProgramClient() {
           }
 
           if (enr.progressPercent === 100 || enr.learningStatus === 'COMPLETED') {
-            router.push(`/learn/programs/${enrollmentId}/completed`);
+            if (typeof window !== 'undefined') {
+              window.location.href = `/learn/programs/${enrollmentId}/completed`;
+            } else {
+              router.push(`/learn/programs/${enrollmentId}/completed`);
+            }
             return;
           }
 
