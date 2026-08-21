@@ -7,6 +7,7 @@ import { LearnerShell } from '@/components/layout/LearnerShell';
 import { getActiveLearnerContactId } from '@/lib/session';
 import { getEnrollmentByIdQuery } from '@/modules/enrollments/queries';
 import { getProgramByIdQuery } from '@/modules/programs/queries';
+import { getEnrollmentFullDetailsQuery } from '@/modules/learning/queries';
 import { Enrollment, Program } from '@promotor/contracts';
 
 export function LearnerProgramClient() {
@@ -18,21 +19,67 @@ export function LearnerProgramClient() {
   const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
-    getEnrollmentByIdQuery(enrollmentId).then(enr => {
-      if (!enr) return;
+    async function loadData() {
+      try {
+        const details = await getEnrollmentFullDetailsQuery(enrollmentId);
+        if (details?.enrollment && details?.program) {
+          const enr: any = details.enrollment;
+          const prog: any = details.program;
 
-      // Ownership Verification Check
-      const activeContactId = getActiveLearnerContactId();
-      if (enr.contactId !== activeContactId) {
-        setAccessDenied(true);
-        return;
+          const activeContactId = getActiveLearnerContactId();
+          if (activeContactId && enr.contactId && enr.contactId !== activeContactId) {
+            setAccessDenied(true);
+            return;
+          }
+
+          setEnrollment({
+            ...enr,
+            lessonProgress: (prog.modules || []).reduce((acc: any, m: any) => {
+              for (const l of m.lessons || []) {
+                acc[l.id] = {
+                  completed: l.isCompleted,
+                  completedAt: l.completedAt || '',
+                  reflectionAnswer: l.reflection?.responseText || undefined,
+                };
+              }
+              return acc;
+            }, {}),
+          } as any);
+
+          setProgram({
+            ...prog,
+            modules: (prog.modules || []).map((m: any) => ({
+              ...m,
+              lessons: (m.lessons || []).map((l: any) => ({
+                ...l,
+                videoYoutubeUrl: l.videoUrl || l.videoYoutubeUrl,
+                hasReflection: !!l.reflectionType,
+                hasCta: !!l.ctaType,
+              })),
+            })),
+          } as any);
+          return;
+        }
+      } catch (err) {
+        console.warn('[LearnerProgramClient] getEnrollmentFullDetailsQuery fallback:', err);
       }
 
-      setEnrollment(enr);
-      getProgramByIdQuery(enr.programId).then(prog => {
-        if (prog) setProgram(prog);
+      // Fallback
+      getEnrollmentByIdQuery(enrollmentId).then(enr => {
+        if (!enr) return;
+        const activeContactId = getActiveLearnerContactId();
+        if (activeContactId && enr.contactId !== activeContactId) {
+          setAccessDenied(true);
+          return;
+        }
+        setEnrollment(enr);
+        getProgramByIdQuery(enr.programId).then(prog => {
+          if (prog) setProgram(prog);
+        });
       });
-    });
+    }
+
+    loadData();
   }, [enrollmentId]);
 
   if (accessDenied) {
