@@ -308,7 +308,10 @@ export function LessonReaderClient() {
               href={lesson.ctaUrl || (lesson.ctaConfig as any)?.url || '#'}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => handleCtaClick(lesson.ctaUrl || (lesson.ctaConfig as any)?.url || '#')}
+              onClick={(e) => {
+                e.preventDefault();
+                handleCtaClick(lesson.ctaUrl || (lesson.ctaConfig as any)?.url || '#');
+              }}
               className="touch-target-primary"
               style={{
                 width: '100%',
