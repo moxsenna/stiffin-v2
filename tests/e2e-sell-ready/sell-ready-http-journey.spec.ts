@@ -78,7 +78,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     const reflectionCheckbox1 = page.locator('input[type="checkbox"]').first();
     await reflectionCheckbox1.check();
     await page.locator('input[placeholder*="membuka wawasan"]').fill('Tuliskan 1 pemahaman kunci yang paling Anda rasakan:');
-    await page.locator('button[type="submit"]:has-text("Simpan Perubahan Materi")').click();
+    await page.locator('button[type="submit"]').click();
 
     // Back on program detail page
     await expect(page).toHaveURL(new RegExp(`/app/programs/${programId}`), { timeout: 15000 });
@@ -110,7 +110,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     await ctaCheckbox2.check();
     await page.locator('input[placeholder*="Konsultasi via WhatsApp"]').fill('Konsultasi via WhatsApp');
     await page.locator('input[placeholder*="wa.me"]').fill('https://wa.me/6281234567890');
-    await page.locator('button[type="submit"]:has-text("Simpan Perubahan Materi")').click();
+    await page.locator('button[type="submit"]').click();
 
     // Back on program detail page
     await expect(page).toHaveURL(new RegExp(`/app/programs/${programId}`), { timeout: 15000 });
