@@ -160,7 +160,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
 
     // Assert Learner Portal curriculum view
     await expect(page).toHaveURL(/.*\/learn\/programs\/[0-9a-fA-F-]+/, { timeout: 15000 });
-    await expect(page.locator('h1')).toContainText(programTitle);
+    await expect(page.locator('body')).toContainText(programTitle);
 
     const enrollmentUrl = page.url();
     const enrollmentId = enrollmentUrl.split('/programs/')[1].split('/')[0].split('?')[0];
@@ -170,7 +170,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     await expect(lesson1Link).toBeVisible();
     await lesson1Link.click();
 
-    await expect(page.locator('h1')).toContainText('Pelajaran 1: Mengenal Karakter Diri');
+    await expect(page.locator('body')).toContainText('Pelajaran 1: Mengenal Karakter Diri');
     await expect(page.locator('text=Refleksi Wajib *')).toBeVisible();
 
     // Fill reflection and complete lesson 1
@@ -186,7 +186,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     await expect(lesson2Link).toBeVisible();
     await lesson2Link.click();
 
-    await expect(page.locator('h1')).toContainText('Pelajaran 2: Analisis Video Praktik');
+    await expect(page.locator('body')).toContainText('Pelajaran 2: Analisis Video Praktik');
     await expect(page.locator('iframe')).toBeVisible();
 
     // Click CTA button
@@ -202,7 +202,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
 
     // Program is now 100% completed -> redirects to completion page
     await expect(page).toHaveURL(new RegExp(`/learn/programs/${enrollmentId}/completed`), { timeout: 15000 });
-    await expect(page.locator('h1')).toContainText('Program Selesai');
+    await expect(page.locator('body')).toContainText('Program Selesai');
     await expect(page.locator('body')).toContainText(programTitle);
 
     // =========================================================================

@@ -184,7 +184,7 @@ export function LessonReaderClient() {
   const embedVideoUrl = getYoutubeEmbedUrl(lesson.videoYoutubeUrl ?? undefined);
 
   return (
-    <LearnerShell>
+    <LearnerShell title={lesson.title}>
       <div style={{ padding: '16px', maxWidth: '700px', margin: '0 auto' }}>
         <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
           <Link href={`/learn/programs/${enrollmentId}`}>← Kembali ke Kurikulum</Link>

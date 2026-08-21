@@ -109,7 +109,7 @@ export function LearnerProgramClient() {
   }
 
   return (
-    <LearnerShell>
+    <LearnerShell title={program.title}>
       <div style={{ padding: '16px' }}>
         <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
           <Link href="/learn">← Kembali ke Program Saya</Link>

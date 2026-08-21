@@ -64,7 +64,7 @@ export function ProgramCompletedClient() {
     : null;
 
   return (
-    <LearnerShell>
+    <LearnerShell title="Program Selesai">
       <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '6px', color: 'var(--color-primary)' }}>
           Program Selesai
