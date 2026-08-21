@@ -823,7 +823,7 @@ export function createLearningEngineService(
             videoUrl: l.videoYoutubeUrl ?? l.videoUrl ?? null,
             videoProvider: l.videoProvider ?? null,
             attachments: l.attachments ?? [],
-            reflectionType: l.reflectionType ?? null,
+            reflectionType: l.reflectionType ?? (l.reflectionPrompt ? 'long_text' : null),
             reflectionPrompt: l.reflectionPrompt ?? null,
             reflectionOptions: l.reflectionOptions ?? null,
             ctaType: l.ctaType ?? null,

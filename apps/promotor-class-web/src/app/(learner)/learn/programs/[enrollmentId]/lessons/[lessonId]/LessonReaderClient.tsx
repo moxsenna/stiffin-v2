@@ -74,7 +74,7 @@ export function LessonReaderClient() {
                 setLesson({
                   ...l,
                   videoYoutubeUrl: l.videoUrl || l.videoYoutubeUrl,
-                  hasReflection: !!l.reflectionType,
+                  hasReflection: !!l.reflectionType || !!l.reflectionPrompt || !!l.hasReflection,
                   reflectionPrompt: l.reflectionPrompt || undefined,
                   hasCta: !!l.ctaType || !!l.ctaLabel,
                   ctaLabel: l.ctaLabel || 'Konsultasi via WhatsApp',
@@ -263,7 +263,7 @@ export function LessonReaderClient() {
         )}
 
         {/* Mandatory Reflection Box */}
-        {lesson.hasReflection && (
+        {(lesson.hasReflection || lesson.reflectionPrompt || lesson.reflectionType) && (
           <div
             style={{
               backgroundColor: 'var(--color-surface)',
