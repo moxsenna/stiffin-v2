@@ -420,8 +420,8 @@ export function createApp(deps?: AppDependencies) {
 
     setCookie(c, 'promotor_learner_session', result.sessionToken, {
       httpOnly: true,
-      secure: c.env?.NODE_ENV === 'production',
-      sameSite: 'Lax',
+      secure: true,
+      sameSite: 'None',
       path: '/',
       maxAge: 30 * 24 * 3600, // 30 days
     });
