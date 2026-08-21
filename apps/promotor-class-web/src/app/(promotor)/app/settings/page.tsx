@@ -2,20 +2,28 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { getIntegrationHealthQuery } from '@/modules/promotorflow/queries';
 import { resetDemoStateCommand } from '@/modules/developer/commands';
 import { IntegrationHealth } from '@promotor/contracts';
 import { StorefrontSettingsClient } from '@/components/promotor/StorefrontSettingsClient';
 import { isReferralPrototypeEnabled } from '@/lib/feature-flags';
+import { signOut } from '@/lib/auth';
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [health, setHealth] = useState<IntegrationHealth>({ promotorFlow: 'AVAILABLE' });
   const isDev = process.env.NODE_ENV === 'development';
 
   useEffect(() => {
     getIntegrationHealthQuery().then(setHealth);
   }, []);
+
+  const handleLogout = async () => {
+    await signOut();
+    router.push('/login');
+  };
 
   const handleResetDemo = async () => {
     if (confirm('Apakah Anda yakin ingin meriset seluruh data demo ke kondisi awal (seeds)?')) {
@@ -134,8 +142,6 @@ export default function SettingsPage() {
                   backgroundColor: 'var(--color-status-danger-bg)',
                   color: 'var(--color-status-danger)',
                   borderRadius: '12px',
-                  fontWeight: 750,
-                  cursor: 'pointer',
                   fontSize: '13.5px',
                 }}
               >
@@ -143,6 +149,38 @@ export default function SettingsPage() {
               </button>
             </div>
           )}
+
+          {/* Logout Action Card */}
+          <div
+            style={{
+              padding: '20px',
+              backgroundColor: 'var(--color-surface)',
+              borderRadius: '18px',
+              border: '1px solid var(--color-divider)',
+              boxShadow: 'var(--shadow-sm)',
+            }}
+          >
+            <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '4px' }}>Akun & Sesi</h3>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '14px' }}>
+              Keluar dari sesi PromotorClass pada perangkat ini.
+            </p>
+            <button
+              onClick={handleLogout}
+              className="touch-target-primary"
+              style={{
+                padding: '0 20px',
+                border: '1px solid var(--color-divider)',
+                backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-status-danger)',
+                borderRadius: '12px',
+                fontWeight: 750,
+                cursor: 'pointer',
+                fontSize: '13.5px',
+              }}
+            >
+              Keluar dari Akun
+            </button>
+          </div>
         </div>
       </div>
     </PromotorShell>
