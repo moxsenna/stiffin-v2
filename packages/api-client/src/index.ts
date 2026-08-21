@@ -60,7 +60,7 @@ import type {
 
 export interface ApiClientConfig {
   baseUrl: string;
-  authToken?: string;
+  authToken?: string | (() => string | undefined);
   credentials?: RequestCredentials;
 }
 
@@ -80,7 +80,7 @@ export class ApiError extends Error {
 
 export class ApiClient {
   private baseUrl: string;
-  private authToken?: string;
+  private authToken?: string | (() => string | undefined);
   private credentials?: RequestCredentials;
 
   constructor(config: ApiClientConfig) {
@@ -147,8 +147,9 @@ export class ApiClient {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    if (this.authToken) {
-      headers['Authorization'] = `Bearer ${this.authToken}`;
+    const token = typeof this.authToken === 'function' ? this.authToken() : this.authToken;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
     return headers;
   }

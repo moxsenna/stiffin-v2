@@ -26,6 +26,7 @@ export class HttpEnrollmentRepository implements EnrollmentRepositoryPort {
     return {
       contactId: res.contactId,
       organizationId: res.organizationId,
+      sessionToken: res.sessionToken,
     };
   }
 

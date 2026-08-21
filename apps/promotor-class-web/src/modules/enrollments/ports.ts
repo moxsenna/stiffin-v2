@@ -19,6 +19,7 @@ export interface PublicRegistrationResponse {
 export interface RedeemTokenResponse {
   contactId: string;
   organizationId: string;
+  sessionToken?: string;
 }
 
 export interface EnrollmentRepositoryPort {
