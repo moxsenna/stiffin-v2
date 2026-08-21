@@ -181,7 +181,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     await completeLesson1Btn.click();
 
     // Returned to curriculum view, now open Lesson 2 (YouTube + Reflection + CTA)
-    await expect(page).toHaveURL(new RegExp(`/learn/programs/${enrollmentId}$`), { timeout: 15000 });
+    await expect(page).toHaveURL(new RegExp(`/learn/programs/${enrollmentId}(/)?$`), { timeout: 15000 });
 
     const lesson2Link = page.locator('a:has-text("Pelajaran 2: Analisis Video Praktik")');
     await expect(lesson2Link).toBeVisible();

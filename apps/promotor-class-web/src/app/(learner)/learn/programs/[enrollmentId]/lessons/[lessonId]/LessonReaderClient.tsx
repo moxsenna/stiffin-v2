@@ -158,19 +158,23 @@ export function LessonReaderClient() {
     setIsSubmitting(true);
 
     try {
-      let res;
+      let res: any;
       if (reflectionAnswer.trim()) {
         res = await submitReflectionCommand(enrollmentId, lessonId, { responseText: reflectionAnswer });
       } else {
         res = await completeLessonCommand(enrollmentId, lessonId);
       }
 
-      if (res.learningStatus === 'COMPLETED' || res.progressPercent === 100) {
-        window.location.href = `/learn/programs/${enrollmentId}/completed`;
-      } else {
-        window.location.href = `/learn/programs/${enrollmentId}`;
+      const targetUrl = (res?.learningStatus === 'COMPLETED' || res?.progressPercent === 100)
+        ? `/learn/programs/${enrollmentId}/completed`
+        : `/learn/programs/${enrollmentId}`;
+
+      router.push(targetUrl);
+      if (typeof window !== 'undefined') {
+        window.location.href = targetUrl;
       }
     } catch (err: unknown) {
+      console.error('[LessonReaderClient] handleComplete failed:', err);
       setErrorMsg((err as Error).message || 'Gagal menyelesaikan pelajaran');
     } finally {
       setIsSubmitting(false);
