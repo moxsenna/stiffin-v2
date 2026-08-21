@@ -120,7 +120,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     // =========================================================================
     const publishBtn = page.locator('button:has-text("Terbitkan")');
     await publishBtn.click();
-    await expect(page.locator('text=Terbit di Storefront')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Terbit di Storefront', { exact: true })).toBeVisible({ timeout: 15000 });
     await expect(page.locator('button:has-text("Ubah ke Draf")')).toBeVisible();
 
     // Open Share Modal to obtain canonical public URL
@@ -134,7 +134,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     // Reload authoring page and verify persistence of all authored elements
     await page.reload();
     await expect(page.locator('h1')).toContainText(programTitle);
-    await expect(page.locator('text=Terbit di Storefront')).toBeVisible();
+    await expect(page.getByText('Terbit di Storefront', { exact: true })).toBeVisible();
     await expect(page.locator('body')).toContainText('Bab 1: Pondasi Karakter Diri');
     await expect(page.locator('body')).toContainText('Pelajaran 1: Mengenal Karakter Diri');
     await expect(page.locator('body')).toContainText('Pelajaran 2: Analisis Video Praktik');
@@ -297,7 +297,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     await completeBookingBtn.click();
 
     // Assert stage is COMPLETED and D+7 Aftercare is provisioned exactly once
-    await expect(page.locator('text=COMPLETED')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('COMPLETED', { exact: true })).toBeVisible({ timeout: 15000 });
     await expect(page.locator('text=Tanya pemahaman & perkembangan hasil tes')).toBeVisible({ timeout: 15000 });
     await expect(page.locator('body')).toContainText('Aftercare D+7');
 
@@ -346,7 +346,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     // Assert Program & Learner persistence
     await page.goto(`http://localhost:3001/app/programs/${programId}`);
     await expect(page.locator('h1')).toContainText(programTitle);
-    await expect(page.locator('text=Terbit di Storefront')).toBeVisible();
+    await expect(page.getByText('Terbit di Storefront', { exact: true })).toBeVisible();
 
     await page.goto('http://localhost:3001/app/learners');
     await expect(page.locator('body')).toContainText(testName);
@@ -369,7 +369,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     // Assert Contact & Aftercare persistence
     await page.goto(`http://localhost:3000/app/contacts/${contactId}`);
     await expect(page.locator('h1')).toContainText(testName);
-    await expect(page.locator('text=COMPLETED')).toBeVisible();
+    await expect(page.getByText('COMPLETED', { exact: true })).toBeVisible();
     await expect(page.locator('text=Tanya pemahaman & perkembangan hasil tes')).toBeVisible();
   });
 });
