@@ -512,9 +512,15 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
       if (!prog) throw new Error('Program not found');
 
       await db.transaction(async (tx) => {
+        const updateValues: Record<string, any> = { updatedAt: sql`now()` };
+        for (const [key, val] of Object.entries(lessonPatch)) {
+          if (val !== undefined) {
+            updateValues[key] = val;
+          }
+        }
         await tx
           .update(lessons)
-          .set({ ...lessonPatch, updatedAt: sql`now()` })
+          .set(updateValues)
           .where(and(eq(lessons.id, lessonId), eq(lessons.moduleId, moduleId)));
 
         if (attachments !== undefined) {
