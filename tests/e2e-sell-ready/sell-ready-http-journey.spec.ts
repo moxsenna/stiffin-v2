@@ -12,6 +12,9 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
 
   test('Mandatory Customer Journey: Auth -> Authoring (Text+YouTube+Reflection+CTA) -> Publishing -> Public Registration -> Learner Portal -> Reflection -> CTA -> Intelligence -> Flow NextAction -> WhatsApp -> Booking -> D+7 Aftercare -> M17 Duplicate Prevention -> Persistence', async ({ page }) => {
     test.setTimeout(120000);
+    page.on('console', msg => console.log(`[BROWSER CONSOLE ${msg.type()}]:`, msg.text()));
+    page.on('pageerror', err => console.log(`[BROWSER PAGEERROR]:`, err));
+
     const uniqueStamp = Date.now();
     const programTitle = `Program Edukasi STIFIn ${uniqueStamp}`;
     const programSubtitle = `Subjudul Materi Edukasi ${uniqueStamp}`;

@@ -170,9 +170,6 @@ export function LessonReaderClient() {
         : `/learn/programs/${enrollmentId}`;
 
       router.push(targetUrl);
-      if (typeof window !== 'undefined') {
-        window.location.href = targetUrl;
-      }
     } catch (err: unknown) {
       console.error('[LessonReaderClient] handleComplete failed:', err);
       setErrorMsg((err as Error).message || 'Gagal menyelesaikan pelajaran');
