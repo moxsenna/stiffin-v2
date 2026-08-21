@@ -19,16 +19,13 @@ export const learnerAuthMiddleware: MiddlewareHandler<AppEnv> = async (c, next) 
   const authHeader = c.req.header('Authorization');
   const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
 
-  const primaryToken = (bearerToken?.startsWith('lsess_') ? bearerToken : cookieToken) || bearerToken || cookieToken;
-  if (!primaryToken) {
+  const rawToken = cookieToken || bearerToken;
+  if (!rawToken) {
     throw new DomainError('UNAUTHORIZED', 'Sesi belajar tidak ditemukan. Silakan masuk kembali.');
   }
 
   // 2. Validate session in database (active, non-expired, non-revoked)
-  let validation = await sessionService.validateSession(primaryToken);
-  if (!validation.isValid && cookieToken && bearerToken && primaryToken !== bearerToken) {
-    validation = await sessionService.validateSession(bearerToken);
-  }
+  const validation = await sessionService.validateSession(rawToken);
   if (!validation.isValid || !validation.session) {
     throw new DomainError('UNAUTHORIZED', 'Sesi belajar tidak valid atau telah kedaluwarsa');
   }

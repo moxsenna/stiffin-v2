@@ -38,10 +38,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
       // Atomically redeem token to establish secure HttpOnly session cookie
       if (res.accessToken) {
         try {
-          const redeemRes = await enrollmentRepo.redeemToken(res.accessToken);
-          if (typeof window !== 'undefined' && (redeemRes as any)?.sessionToken) {
-            localStorage.setItem('promotor_learner_token', (redeemRes as any).sessionToken);
-          }
+          await enrollmentRepo.redeemToken(res.accessToken);
         } catch (redeemErr) {
           console.warn('[RegistrationSection] Token auto-redemption notice:', redeemErr);
         }

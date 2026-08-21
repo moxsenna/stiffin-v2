@@ -68,7 +68,7 @@ function getApiClient(): PromotorClassContentApiClient {
     authToken: () => {
       if (typeof window !== 'undefined') {
         if (window.location.pathname.startsWith('/learn')) {
-          return localStorage.getItem('promotor_learner_token') || undefined;
+          return undefined;
         }
         return localStorage.getItem('promotor_session_token') || undefined;
       }
