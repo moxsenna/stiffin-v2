@@ -430,6 +430,7 @@ export function createApp(deps?: AppDependencies) {
       contactId: result.contactId,
       organizationId: result.organizationId,
       expiresAt: result.session.expiresAt.toISOString(),
+      sessionToken: result.sessionToken,
     }, 200);
   };
 
