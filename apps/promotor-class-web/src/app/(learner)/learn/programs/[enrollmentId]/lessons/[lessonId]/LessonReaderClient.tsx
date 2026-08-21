@@ -166,9 +166,9 @@ export function LessonReaderClient() {
       }
 
       if (res.learningStatus === 'COMPLETED' || res.progressPercent === 100) {
-        router.push(`/learn/programs/${enrollmentId}/completed`);
+        window.location.href = `/learn/programs/${enrollmentId}/completed`;
       } else {
-        router.push(`/learn/programs/${enrollmentId}`);
+        window.location.href = `/learn/programs/${enrollmentId}`;
       }
     } catch (err: unknown) {
       setErrorMsg((err as Error).message || 'Gagal menyelesaikan pelajaran');
