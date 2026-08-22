@@ -8,6 +8,7 @@ import type { DbHandle } from '../db/client';
 export type CreateBookingInput = Omit<NewBookingRow, 'id' | 'organizationId' | 'createdAt' | 'updatedAt'>;
 
 export interface ListBookingsOrgOptions {
+  contactId?: string;
   status?: string;
   from?: string;
   to?: string;
@@ -52,7 +53,7 @@ export function createBookingRepository(db: DbHandle): BookingRepository {
 
       // Tenant parent verification (fail-closed): Service must be active in tenant
       const [service] = await db
-        .select({ id: services.id })
+        .select({ id: services.id, name: services.name })
         .from(services)
         .where(
           and(
@@ -68,20 +69,31 @@ export function createBookingRepository(db: DbHandle): BookingRepository {
       }
 
       const now = new Date().toISOString();
-      const finalIdempotencyKey = idempotencyKey !== undefined ? idempotencyKey : (input.idempotencyKey ?? null);
-
       const rows = await db
         .insert(bookings)
         .values({
-          ...input,
+          id: sql`gen_random_uuid()`,
           organizationId: ctx.organizationId,
-          idempotencyKey: finalIdempotencyKey,
+          contactId: input.contactId,
+          serviceId: input.serviceId,
+          amount: input.amount,
+          startAt: input.startAt,
+          endAt: input.endAt ?? null,
+          locationType: input.locationType ?? 'ONLINE',
+          locationText: input.locationText ?? null,
+          status: input.status ?? 'PENDING',
+          paymentStatus: input.paymentStatus ?? 'UNPAID',
+          notes: input.notes ?? null,
+          idempotencyKey: idempotencyKey ?? null,
           createdAt: now,
           updatedAt: now,
         })
         .returning();
 
-      return rows[0];
+      return {
+        ...rows[0],
+        serviceTitle: service ? (service as any).name : undefined,
+      } as any;
     },
 
     async findById(ctx, id) {
@@ -89,8 +101,12 @@ export function createBookingRepository(db: DbHandle): BookingRepository {
         throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const rows = await db
-        .select()
+        .select({
+          booking: bookings,
+          serviceName: services.name,
+        })
         .from(bookings)
+        .leftJoin(services, eq(bookings.serviceId, services.id))
         .where(
           and(
             eq(bookings.organizationId, ctx.organizationId),
@@ -98,7 +114,12 @@ export function createBookingRepository(db: DbHandle): BookingRepository {
           )
         )
         .limit(1);
-      return rows[0] ?? null;
+
+      if (!rows[0]) return null;
+      return {
+        ...rows[0].booking,
+        serviceTitle: rows[0].serviceName ?? 'Sesi Konsultasi',
+      } as any;
     },
 
     async listByOrg(ctx, opts = {}) {
@@ -106,6 +127,10 @@ export function createBookingRepository(db: DbHandle): BookingRepository {
         throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
       const conditions = [eq(bookings.organizationId, ctx.organizationId)];
+
+      if (opts.contactId) {
+        conditions.push(eq(bookings.contactId, opts.contactId));
+      }
 
       if (opts.status) {
         conditions.push(eq(bookings.status, opts.status));
@@ -120,20 +145,33 @@ export function createBookingRepository(db: DbHandle): BookingRepository {
         conditions.push(lte(bookings.startAt, opts.to));
       }
 
-      return db
-        .select()
+      const rows = await db
+        .select({
+          booking: bookings,
+          serviceName: services.name,
+        })
         .from(bookings)
+        .leftJoin(services, eq(bookings.serviceId, services.id))
         .where(and(...conditions))
         .orderBy(asc(bookings.startAt));
+
+      return rows.map((r) => ({
+        ...r.booking,
+        serviceTitle: r.serviceName ?? 'Sesi Konsultasi',
+      })) as any;
     },
 
     async listByContact(ctx, contactId) {
       if (!isOrganizationContext(ctx)) {
         throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
-      return db
-        .select()
+      const rows = await db
+        .select({
+          booking: bookings,
+          serviceName: services.name,
+        })
         .from(bookings)
+        .leftJoin(services, eq(bookings.serviceId, services.id))
         .where(
           and(
             eq(bookings.organizationId, ctx.organizationId),
@@ -141,6 +179,11 @@ export function createBookingRepository(db: DbHandle): BookingRepository {
           )
         )
         .orderBy(desc(bookings.startAt));
+
+      return rows.map((r) => ({
+        ...r.booking,
+        serviceTitle: r.serviceName ?? 'Sesi Konsultasi',
+      })) as any;
     },
 
     async lockById(ctx, id) {

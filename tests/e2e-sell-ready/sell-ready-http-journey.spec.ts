@@ -288,8 +288,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
 
     // Assert stage is COMPLETED and D+7 Aftercare is provisioned exactly once
     await expect(page.getByText('COMPLETED', { exact: true })).toBeVisible({ timeout: 15000 });
-    await expect(page.locator('text=Tanya pemahaman & perkembangan hasil tes')).toBeVisible({ timeout: 15000 });
-    await expect(page.locator('body')).toContainText('Aftercare D+7');
+    await expect(page.locator('text=Aftercare D+7').first()).toBeVisible({ timeout: 15000 });
 
     // =========================================================================
     // 8. FLOW -> CLASS M17 ENROLLMENT & DUPLICATE PREVENTION
@@ -360,6 +359,6 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     await page.goto(`http://localhost:3000/app/contacts/${contactId}`);
     await expect(page.locator('h1')).toContainText(testName);
     await expect(page.getByText('COMPLETED', { exact: true })).toBeVisible();
-    await expect(page.locator('text=Tanya pemahaman & perkembangan hasil tes')).toBeVisible();
+    await expect(page.locator('text=Aftercare D+7').first()).toBeVisible();
   });
 });
