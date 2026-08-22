@@ -205,7 +205,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
 
     // Click learner row to open LearnerDetail drawer
     await learnerRow.click();
-    const learnerDrawer = page.locator('.side-panel.active');
+    const learnerDrawer = page.locator('.side-panel.active').first();
     await expect(learnerDrawer).toBeVisible();
     await expect(learnerDrawer).toContainText(testName);
     await expect(learnerDrawer).toContainText('Minat tinggi');

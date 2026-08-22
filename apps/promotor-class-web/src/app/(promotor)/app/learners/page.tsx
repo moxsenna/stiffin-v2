@@ -194,7 +194,7 @@ export default function LearnersPage() {
 
         {/* Side Panel Drawer for Desktop / Full view */}
         {selectedContact && (
-          <div className="side-panel active">
+          <div data-testid="learner-drawer-container">
             <LearnerDetail
               contact={selectedContact}
               enrollment={getEnrollmentForContact(selectedContact.id)}
