@@ -65,9 +65,9 @@ function LoginForm() {
           width: '100%',
           maxWidth: '400px',
           backgroundColor: 'var(--color-surface)',
-          borderRadius: '20px',
+          borderRadius: 'var(--border-radius-xl)',
           border: '1px solid var(--color-divider)',
-          padding: '32px 24px',
+          padding: '36px 28px',
           boxShadow: 'var(--shadow-md)',
         }}
       >
@@ -77,21 +77,24 @@ function LoginForm() {
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
+              width: '52px',
+              height: '52px',
+              borderRadius: '14px',
               backgroundColor: 'var(--color-primary-light)',
               color: 'var(--color-primary)',
-              fontSize: '24px',
-              marginBottom: '12px',
+              marginBottom: '16px',
+              border: '1px solid var(--color-primary-border)',
             }}
           >
-            📖
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            </svg>
           </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '4px' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '6px', color: 'var(--color-text-main)' }}>
             Masuk ke PromotorClass
           </h1>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: 0 }}>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.5 }}>
             Platform edukasi dan storefront materi STIFIn
           </p>
         </div>
@@ -99,22 +102,32 @@ function LoginForm() {
         {errorMessage && (
           <div
             style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '10px',
               padding: '12px 14px',
-              borderRadius: '10px',
-              backgroundColor: '#FEE2E2',
-              color: '#991B1B',
+              borderRadius: 'var(--border-radius-sm)',
+              backgroundColor: 'var(--color-status-danger-bg)',
+              border: '1px solid var(--color-status-danger-border)',
+              color: 'var(--color-status-danger)',
               fontSize: '13px',
               fontWeight: 600,
               marginBottom: '20px',
+              lineHeight: 1.4,
             }}
           >
-            ⚠️ {errorMessage}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '1px' }}>
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>{errorMessage}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px', color: 'var(--color-text-main)' }}>
               Email Promotor
             </label>
             <input
@@ -126,8 +139,9 @@ function LoginForm() {
               placeholder="promotor@stifin.id"
               style={{
                 width: '100%',
-                padding: '11px 14px',
-                borderRadius: '10px',
+                minHeight: '44px',
+                padding: '10px 14px',
+                borderRadius: 'var(--border-radius-sm)',
                 border: '1px solid var(--color-divider)',
                 fontSize: '14px',
                 outline: 'none',
@@ -137,7 +151,7 @@ function LoginForm() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px', color: 'var(--color-text-main)' }}>
               Kata Sandi
             </label>
             <input
@@ -149,8 +163,9 @@ function LoginForm() {
               placeholder="••••••••"
               style={{
                 width: '100%',
-                padding: '11px 14px',
-                borderRadius: '10px',
+                minHeight: '44px',
+                padding: '10px 14px',
+                borderRadius: 'var(--border-radius-sm)',
                 border: '1px solid var(--color-divider)',
                 fontSize: '14px',
                 outline: 'none',
@@ -165,15 +180,15 @@ function LoginForm() {
             className="touch-target-primary"
             style={{
               width: '100%',
-              padding: '12px',
-              borderRadius: '12px',
-              backgroundColor: isLoading ? 'var(--color-divider)' : 'var(--color-primary)',
+              minHeight: '48px',
+              borderRadius: 'var(--border-radius-md)',
+              backgroundColor: isLoading ? 'var(--color-text-subtle)' : 'var(--color-primary)',
               color: '#FFF',
-              fontSize: '14px',
+              fontSize: '14.5px',
               fontWeight: 780,
               border: 0,
               cursor: isLoading ? 'not-allowed' : 'pointer',
-              marginTop: '8px',
+              marginTop: '6px',
               boxShadow: 'var(--shadow-sm)',
             }}
           >
@@ -181,7 +196,7 @@ function LoginForm() {
           </button>
         </form>
 
-        <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '12px', color: 'var(--color-text-subtle)' }}>
+        <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '12px', color: 'var(--color-text-subtle)', lineHeight: 1.5 }}>
           Butuh bantuan akses akun? Hubungi administrator cabang Anda.
         </div>
       </div>
@@ -194,7 +209,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-canvas)' }}>
-          <div style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>Memuat halaman masuk...</div>
+          <div style={{ color: 'var(--color-text-muted)', fontSize: '13.5px', fontWeight: 600 }}>Memuat halaman masuk...</div>
         </div>
       }
     >

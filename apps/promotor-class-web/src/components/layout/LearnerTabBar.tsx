@@ -19,12 +19,10 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
       setResolvedSlug(explicitWorkspaceSlug);
       return;
     }
-    // Resolve dynamically from session or last public workspace
     const slug = resolveWorkspaceSlug(explicitWorkspaceSlug);
     setResolvedSlug(slug);
   }, [explicitWorkspaceSlug, pathname]);
 
-  // Determine active tab cleanly based on locked active-tab routing
   let activeTab: 'beranda' | 'katalog' | 'belajar' | 'profil' = 'beranda';
 
   if (pathname === '/learn/profile' || pathname === '/learn/referral') {
@@ -32,14 +30,11 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
   } else if (pathname === '/learn' || pathname.startsWith('/learn/programs')) {
     activeTab = 'belajar';
   } else if (pathname.endsWith('/catalog') || (pathname.startsWith('/p/') && pathname.split('/').length >= 4)) {
-    // /p/[workspace]/catalog OR /p/[workspace]/[programSlug]
     activeTab = 'katalog';
   } else if (pathname.startsWith('/p/')) {
-    // /p/[workspace]
     activeTab = 'beranda';
   }
 
-  // Fallback target for storefront & catalog if slug is not yet known
   const berandaHref = resolvedSlug ? `/p/${resolvedSlug}` : '/learn';
   const catalogHref = resolvedSlug ? `/p/${resolvedSlug}/catalog` : '/learn';
 
@@ -55,18 +50,18 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
           className="mobile-bottom-nav__item"
           style={{
             color: activeTab === 'beranda' ? 'var(--color-primary)' : 'var(--color-text-muted)',
-            fontWeight: activeTab === 'beranda' ? 700 : 500,
+            fontWeight: activeTab === 'beranda' ? 750 : 500,
           }}
         >
           {activeTab === 'beranda' && <div className="mobile-bottom-nav__indicator" />}
           <div className="mobile-bottom-nav__icon-wrapper">
             <svg
-              width="24"
-              height="24"
+              width="22"
+              height="22"
               viewBox="0 0 24 24"
-              fill={activeTab === 'beranda' ? 'var(--color-primary-light, rgba(40,99,68,0.12))' : 'none'}
+              fill={activeTab === 'beranda' ? 'var(--color-primary-light)' : 'none'}
               stroke="currentColor"
-              strokeWidth={activeTab === 'beranda' ? '2.2' : '1.8'}
+              strokeWidth={activeTab === 'beranda' ? '2.3' : '1.8'}
               strokeLinecap="round"
               strokeLinejoin="round"
             >
@@ -83,52 +78,53 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
           className="mobile-bottom-nav__item"
           style={{
             color: activeTab === 'katalog' ? 'var(--color-primary)' : 'var(--color-text-muted)',
-            fontWeight: activeTab === 'katalog' ? 700 : 500,
+            fontWeight: activeTab === 'katalog' ? 750 : 500,
           }}
         >
           {activeTab === 'katalog' && <div className="mobile-bottom-nav__indicator" />}
           <div className="mobile-bottom-nav__icon-wrapper">
             <svg
-              width="24"
-              height="24"
+              width="22"
+              height="22"
               viewBox="0 0 24 24"
-              fill={activeTab === 'katalog' ? 'var(--color-primary-light, rgba(40,99,68,0.12))' : 'none'}
+              fill={activeTab === 'katalog' ? 'var(--color-primary-light)' : 'none'}
               stroke="currentColor"
-              strokeWidth={activeTab === 'katalog' ? '2.2' : '1.8'}
+              strokeWidth={activeTab === 'katalog' ? '2.3' : '1.8'}
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <rect x="3" y="3" width="7" height="7" rx="1.5" />
-              <rect x="14" y="3" width="7" height="7" rx="1.5" />
-              <rect x="14" y="14" width="7" height="7" rx="1.5" />
-              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+              <rect x="3" y="3" width="7" height="7" rx="2" />
+              <rect x="14" y="3" width="7" height="7" rx="2" />
+              <rect x="14" y="14" width="7" height="7" rx="2" />
+              <rect x="3" y="14" width="7" height="7" rx="2" />
             </svg>
           </div>
           <span className="mobile-bottom-nav__label">Katalog</span>
         </Link>
 
-        {/* Tab 3: Belajar / Program Saya */}
+        {/* Tab 3: Belajar */}
         <Link
           href="/learn"
           className="mobile-bottom-nav__item"
           style={{
             color: activeTab === 'belajar' ? 'var(--color-primary)' : 'var(--color-text-muted)',
-            fontWeight: activeTab === 'belajar' ? 700 : 500,
+            fontWeight: activeTab === 'belajar' ? 750 : 500,
           }}
         >
           {activeTab === 'belajar' && <div className="mobile-bottom-nav__indicator" />}
           <div className="mobile-bottom-nav__icon-wrapper">
             <svg
-              width="24"
-              height="24"
+              width="22"
+              height="22"
               viewBox="0 0 24 24"
-              fill={activeTab === 'belajar' ? 'var(--color-primary-light, rgba(40,99,68,0.12))' : 'none'}
+              fill={activeTab === 'belajar' ? 'var(--color-primary-light)' : 'none'}
               stroke="currentColor"
-              strokeWidth={activeTab === 'belajar' ? '2.2' : '1.8'}
+              strokeWidth={activeTab === 'belajar' ? '2.3' : '1.8'}
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <polygon points="5 3 19 12 5 21 5 3" />
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
             </svg>
           </div>
           <span className="mobile-bottom-nav__label">Belajar</span>
@@ -140,18 +136,18 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
           className="mobile-bottom-nav__item"
           style={{
             color: activeTab === 'profil' ? 'var(--color-primary)' : 'var(--color-text-muted)',
-            fontWeight: activeTab === 'profil' ? 700 : 500,
+            fontWeight: activeTab === 'profil' ? 750 : 500,
           }}
         >
           {activeTab === 'profil' && <div className="mobile-bottom-nav__indicator" />}
           <div className="mobile-bottom-nav__icon-wrapper">
             <svg
-              width="24"
-              height="24"
+              width="22"
+              height="22"
               viewBox="0 0 24 24"
-              fill={activeTab === 'profil' ? 'var(--color-primary-light, rgba(40,99,68,0.12))' : 'none'}
+              fill={activeTab === 'profil' ? 'var(--color-primary-light)' : 'none'}
               stroke="currentColor"
-              strokeWidth={activeTab === 'profil' ? '2.2' : '1.8'}
+              strokeWidth={activeTab === 'profil' ? '2.3' : '1.8'}
               strokeLinecap="round"
               strokeLinejoin="round"
             >

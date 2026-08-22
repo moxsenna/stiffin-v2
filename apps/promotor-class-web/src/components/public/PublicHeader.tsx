@@ -16,24 +16,24 @@ export function PublicHeader({
   tagline = '',
   onPrimaryClick,
 }: PublicHeaderProps) {
-  const avatarLetter = displayName ? displayName.charAt(0).toUpperCase() : 'R';
+  const avatarLetter = displayName ? displayName.charAt(0).toUpperCase() : 'P';
 
   return (
     <header
       style={{
         position: 'sticky',
         top: 0,
-        zIndex: 30,
-        backgroundColor: 'rgba(247, 247, 245, 0.94)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        zIndex: 100,
+        backgroundColor: 'rgba(247, 247, 244, 0.92)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
         borderBottom: '1px solid var(--color-divider)',
       }}
     >
       <div
         className="container"
         style={{
-          height: '68px',
+          height: '64px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -54,42 +54,49 @@ export function PublicHeader({
             style={{
               width: '38px',
               height: '38px',
-              borderRadius: '50%',
+              borderRadius: '10px',
               backgroundColor: 'var(--color-primary)',
               color: '#FFFFFF',
-              display: 'grid',
-              placeItems: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               fontWeight: 800,
               fontSize: '15px',
               flexShrink: 0,
+              boxShadow: 'var(--shadow-xs)',
             }}
           >
             {avatarLetter}
           </div>
-          <div>
-            <span style={{ display: 'block', fontSize: '14px', fontWeight: 760, lineHeight: 1.2 }}>
-              {displayName}
+          <div style={{ minWidth: 0 }}>
+            <span style={{ display: 'block', fontSize: '14px', fontWeight: 780, lineHeight: 1.25, letterSpacing: '-0.01em', color: 'var(--color-text-main)' }}>
+              {displayName || 'Ruang Belajar STIFIn'}
             </span>
-            <span
-              style={{
-                display: 'block',
-                fontSize: '11px',
-                color: 'var(--color-text-muted)',
-                marginTop: '2px',
-              }}
-            >
-              {tagline}
-            </span>
+            {tagline && (
+              <span
+                style={{
+                  display: 'block',
+                  fontSize: '11px',
+                  color: 'var(--color-text-muted)',
+                  marginTop: '1px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {tagline}
+              </span>
+            )}
           </div>
         </Link>
 
-        <nav className="desktop-only" style={{ alignItems: 'center', gap: '8px' }}>
+        <nav className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <a
             href="#programs"
             style={{
-              padding: '8px 12px',
-              borderRadius: '10px',
-              color: 'var(--color-text-muted)',
+              padding: '8px 14px',
+              borderRadius: 'var(--border-radius-sm)',
+              color: 'var(--color-text-body)',
               fontWeight: 650,
               fontSize: '13px',
               textDecoration: 'none',
@@ -100,46 +107,49 @@ export function PublicHeader({
           <a
             href="#about"
             style={{
-              padding: '8px 12px',
-              borderRadius: '10px',
-              color: 'var(--color-text-muted)',
+              padding: '8px 14px',
+              borderRadius: 'var(--border-radius-sm)',
+              color: 'var(--color-text-body)',
               fontWeight: 650,
               fontSize: '13px',
               textDecoration: 'none',
             }}
           >
-            Tentang
+            Tentang Promotor
           </a>
           {onPrimaryClick ? (
             <button
               onClick={onPrimaryClick}
+              className="touch-target"
               style={{
-                border: 0,
                 backgroundColor: 'var(--color-primary)',
                 color: '#FFFFFF',
-                fontWeight: 780,
+                fontWeight: 750,
                 fontSize: '13px',
-                padding: '8px 16px',
-                borderRadius: '12px',
+                padding: '8px 18px',
+                borderRadius: 'var(--border-radius-md)',
                 cursor: 'pointer',
+                boxShadow: 'var(--shadow-xs)',
               }}
             >
-              Mulai belajar
+              Mulai Belajar
             </button>
           ) : (
             <a
               href="#programs"
+              className="touch-target"
               style={{
                 backgroundColor: 'var(--color-primary)',
                 color: '#FFFFFF',
-                fontWeight: 780,
+                fontWeight: 750,
                 fontSize: '13px',
-                padding: '8px 16px',
-                borderRadius: '12px',
+                padding: '8px 18px',
+                borderRadius: 'var(--border-radius-md)',
                 textDecoration: 'none',
+                boxShadow: 'var(--shadow-xs)',
               }}
             >
-              Mulai belajar
+              Mulai Belajar
             </a>
           )}
         </nav>

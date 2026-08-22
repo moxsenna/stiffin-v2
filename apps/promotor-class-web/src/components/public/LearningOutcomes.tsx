@@ -16,29 +16,20 @@ export function LearningOutcomes({ outcomes }: LearningOutcomesProps) {
       className="container"
       style={{
         borderTop: '1px solid var(--color-divider)',
-        paddingTop: '54px',
-        paddingBottom: '54px',
+        paddingTop: '48px',
+        paddingBottom: '48px',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-        gap: '40px',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: '36px',
       }}
     >
       <div>
-        <div
-          style={{
-            fontSize: '12px',
-            fontWeight: 820,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color: 'var(--color-primary)',
-            marginBottom: '12px',
-          }}
-        >
-          Hasil yang diharapkan
-        </div>
-        <h2 style={{ fontSize: '28px', letterSpacing: '-0.03em', fontWeight: 750, margin: 0 }}>
-          Apa yang akan Anda bawa pulang
+        <h2 style={{ fontSize: '26px', letterSpacing: '-0.03em', fontWeight: 850, margin: 0, color: 'var(--color-text-main)' }}>
+          Apa yang Akan Anda Bawa Pulang
         </h2>
+        <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginTop: '8px', lineHeight: 1.6 }}>
+          Manfaat nyata dan keterampilan praktis yang dapat langsung diterapkan dalam mendampingi anak dan keluarga.
+        </p>
       </div>
 
       <div
@@ -53,18 +44,38 @@ export function LearningOutcomes({ outcomes }: LearningOutcomesProps) {
             key={idx}
             style={{
               borderTop: '1px solid var(--color-divider)',
-              paddingTop: '14px',
+              paddingTop: '16px',
             }}
           >
-            <b style={{ display: 'block', marginBottom: '6px', fontSize: '15px', color: '#191918' }}>
-              {item.title}
-            </b>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <div
+                style={{
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--color-primary-light)',
+                  color: 'var(--color-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <b style={{ fontSize: '15px', fontWeight: 780, color: 'var(--color-text-main)' }}>
+                {item.title}
+              </b>
+            </div>
             <p
               style={{
-                fontSize: '13px',
-                color: 'var(--color-text-muted)',
-                lineHeight: 1.55,
+                fontSize: '13.5px',
+                color: 'var(--color-text-body)',
+                lineHeight: 1.6,
                 margin: 0,
+                paddingLeft: '30px',
               }}
             >
               {item.description}

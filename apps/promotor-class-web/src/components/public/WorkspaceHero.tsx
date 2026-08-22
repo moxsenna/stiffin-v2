@@ -12,48 +12,25 @@ interface WorkspaceHeroProps {
 
 export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
   return (
-    <section className="container" style={{ paddingTop: '48px', paddingBottom: '32px' }}>
+    <section className="container" style={{ paddingTop: '40px', paddingBottom: '36px' }}>
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '40px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '36px',
           alignItems: 'center',
         }}
       >
         {/* Left Headline Column */}
         <div>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontSize: '12px',
-              fontWeight: 820,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              color: 'var(--color-primary)',
-              marginBottom: '16px',
-            }}
-          >
-            <span
-              style={{
-                width: '7px',
-                height: '7px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--color-primary)',
-              }}
-            />
-            Ruang belajar {profile.displayName.split(' ')[0]}
-          </div>
-
           <h1
             style={{
-              fontSize: 'clamp(32px, 4.5vw, 56px)',
-              lineHeight: 1.04,
-              letterSpacing: '-0.04em',
+              fontSize: 'clamp(32px, 4.2vw, 52px)',
+              lineHeight: 1.08,
+              letterSpacing: '-0.035em',
               marginBottom: '18px',
-              fontWeight: 800,
+              fontWeight: 850,
+              color: 'var(--color-text-main)',
             }}
           >
             {profile.headline}
@@ -63,97 +40,99 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
             style={{
               fontSize: '16px',
               lineHeight: 1.65,
-              color: '#4f4e4a',
-              maxWidth: '650px',
-              marginBottom: '24px',
+              color: 'var(--color-text-body)',
+              maxWidth: '600px',
+              marginBottom: '28px',
             }}
           >
-            Materi singkat untuk membantu orang tua mengenali cara belajar anak, mengurangi konflik sehari-hari, dan mendampingi dengan lebih tenang.
+            Materi singkat dan terstruktur untuk membantu orang tua mengenali potensi genetik anak, mengurangi konflik komunikasi di rumah, dan mendampingi tumbuh kembang dengan tenang.
           </p>
 
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
             <a
               href="#programs"
+              className="touch-target-primary"
               style={{
-                minHeight: '46px',
-                borderRadius: '13px',
-                padding: '0 20px',
+                borderRadius: 'var(--border-radius-md)',
+                padding: '0 22px',
                 backgroundColor: 'var(--color-primary)',
                 color: '#FFFFFF',
                 fontWeight: 780,
-                fontSize: '14px',
+                fontSize: '14.5px',
                 textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                boxShadow: 'var(--shadow-sm)',
               }}
             >
-              Lihat program
+              Lihat Program Edukasi
             </a>
             <a
               href="#about"
+              className="touch-target-primary"
               style={{
-                minHeight: '46px',
-                borderRadius: '13px',
+                borderRadius: 'var(--border-radius-md)',
                 padding: '0 20px',
                 border: '1px solid var(--color-divider)',
-                backgroundColor: '#FFFFFF',
-                color: '#191918',
-                fontWeight: 760,
+                backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-text-main)',
+                fontWeight: 700,
                 fontSize: '14px',
                 textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                boxShadow: 'var(--shadow-xs)',
               }}
             >
-              Kenal {profile.displayName.split(' ')[0]}
+              Profil {profile.displayName.split(' ')[0]}
             </a>
           </div>
 
           <div
             style={{
-              marginTop: '20px',
               display: 'flex',
-              gap: '16px',
+              gap: '18px',
               flexWrap: 'wrap',
               color: 'var(--color-text-muted)',
-              fontSize: '12px',
+              fontSize: '12.5px',
             }}
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <i style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#aaa79f', display: 'inline-block' }} />
-              Materi praktis
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Materi praktis & aplikatif
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <i style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#aaa79f', display: 'inline-block' }} />
-              Bisa dipelajari kapan saja
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Akses fleksibel kapan saja
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <i style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#aaa79f', display: 'inline-block' }} />
-              Mulai dari program gratis
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Tersedia modul gratis
             </span>
           </div>
         </div>
 
-        {/* Right Featured Art Card with Generated WebP Photo */}
+        {/* Right Featured Art Card */}
         {featuredItem && (
           <Link
             href={`/p/${profile.workspaceSlug}/${featuredItem.program.programSlug}`}
-            style={{ textDecoration: 'none', color: 'inherit' }}
+            style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
           >
             <div
               style={{
-                minHeight: '380px',
+                minHeight: '360px',
                 position: 'relative',
-                borderRadius: '24px',
+                borderRadius: 'var(--border-radius-xl)',
                 overflow: 'hidden',
-                border: '1px solid #dbe5dd',
+                border: '1px solid var(--color-divider)',
                 boxShadow: 'var(--shadow-md)',
                 padding: '28px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
+                backgroundColor: 'var(--color-surface)',
               }}
             >
               <img
@@ -173,7 +152,7 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                   position: 'absolute',
                   inset: 0,
                   background:
-                    'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0.85) 100%)',
+                    'linear-gradient(180deg, rgba(15,20,17,0.72) 0%, rgba(15,20,17,0.3) 45%, rgba(15,20,17,0.88) 100%)',
                   zIndex: 1,
                 }}
               />
@@ -181,16 +160,16 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
               <div style={{ position: 'relative', zIndex: 2 }}>
                 <span
                   style={{
-                    display: 'inline-block',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
                     fontSize: '11px',
-                    fontWeight: 820,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+                    fontWeight: 780,
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
                     backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255, 255, 255, 0.5)',
-                    padding: '6px 12px',
-                    borderRadius: '999px',
+                    border: '1px solid rgba(255, 255, 255, 0.6)',
+                    padding: '5px 12px',
+                    borderRadius: 'var(--border-radius-full)',
                     marginBottom: '14px',
                     color: 'var(--color-primary)',
                   }}
@@ -200,12 +179,12 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
 
                 <div
                   style={{
-                    fontSize: '34px',
-                    lineHeight: 1.02,
-                    letterSpacing: '-0.04em',
+                    fontSize: '28px',
+                    lineHeight: 1.1,
+                    letterSpacing: '-0.03em',
                     fontWeight: 850,
                     color: '#FFFFFF',
-                    marginBottom: '12px',
+                    marginBottom: '10px',
                     textShadow: '0 2px 6px rgba(0,0,0,0.4)',
                   }}
                 >
@@ -214,9 +193,9 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
 
                 <p
                   style={{
-                    fontSize: '13px',
-                    color: '#e2ece5',
-                    maxWidth: '300px',
+                    fontSize: '13.5px',
+                    color: '#E6EFE9',
+                    maxWidth: '320px',
                     lineHeight: 1.5,
                     margin: 0,
                   }}
@@ -235,6 +214,7 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                   color: '#FFFFFF',
                   zIndex: 2,
                   position: 'relative',
+                  paddingTop: '20px',
                 }}
               >
                 <img

@@ -22,7 +22,15 @@ export function LearnerShell({
   workspaceSlug,
 }: LearnerShellProps) {
   return (
-    <div className="page-wrapper-with-bottom-nav" style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-canvas)' }}>
+    <div
+      className="page-wrapper-with-bottom-nav"
+      style={{
+        minHeight: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: 'var(--color-canvas)',
+      }}
+    >
       {/* Mobile Top App Header */}
       <MobileAppHeader
         title={title}
@@ -37,9 +45,10 @@ export function LearnerShell({
       <main
         style={{
           flex: 1,
-          maxWidth: '800px',
+          maxWidth: '820px',
           width: '100%',
           margin: '0 auto',
+          padding: '0 16px',
         }}
       >
         {children}

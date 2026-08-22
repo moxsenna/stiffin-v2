@@ -13,20 +13,20 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
   const { program, presentation, isRegistrationAllowed, registrationStatusNotice } = detail;
 
   let priceMain = 'Gratis';
-  let priceSub = 'akses seluruh materi';
+  let priceSub = 'Akses penuh materi';
   if (program.programType === 'aftersales') {
     priceMain = 'Khusus Peserta Tes';
-    priceSub = 'akses bagi alumni tes STIFIn';
+    priceSub = 'Khusus alumni tes STIFIn';
   } else if (program.pricing === 'one_time' && program.priceAmount) {
     priceMain = `Rp${program.priceAmount.toLocaleString('id-ID')}`;
-    priceSub = 'pembayaran sekali';
+    priceSub = 'Pembayaran satu kali';
   }
 
   const moduleCount = program.modules?.length || 0;
   const lessonCount = program.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0;
 
   return (
-    <section className="container" style={{ paddingTop: '28px', paddingBottom: '44px' }}>
+    <section className="container" style={{ paddingTop: '28px', paddingBottom: '40px' }}>
       <div
         style={{
           display: 'grid',
@@ -39,35 +39,21 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
         <div>
           <ProgramCover
             title={program.title}
-            publicLabel={presentation.heroEyebrow}
             variant={presentation.coverVariant}
             aspectRatio="16 / 10"
           />
         </div>
 
         {/* Copy Column */}
-        <div style={{ paddingTop: '4px' }}>
-          <span
-            style={{
-              display: 'inline-block',
-              fontSize: '11px',
-              fontWeight: 850,
-              textTransform: 'uppercase',
-              letterSpacing: '0.07em',
-              color: 'var(--color-primary)',
-              marginBottom: '12px',
-            }}
-          >
-            {presentation.heroEyebrow}
-          </span>
-
+        <div style={{ paddingTop: '2px' }}>
           <h1
             style={{
-              fontSize: 'clamp(30px, 4vw, 48px)',
-              letterSpacing: '-0.04em',
-              lineHeight: 1.05,
+              fontSize: 'clamp(28px, 4vw, 44px)',
+              letterSpacing: '-0.035em',
+              lineHeight: 1.1,
               marginBottom: '14px',
-              fontWeight: 800,
+              fontWeight: 850,
+              color: 'var(--color-text-main)',
             }}
           >
             {program.title}
@@ -75,9 +61,9 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
 
           <p
             style={{
-              fontSize: '16px',
+              fontSize: '15.5px',
               lineHeight: 1.65,
-              color: '#55544f',
+              color: 'var(--color-text-body)',
               marginBottom: '20px',
             }}
           >
@@ -92,8 +78,12 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
               margin: '16px 0 20px',
             }}
           >
-            <div style={{ fontSize: '28px', fontWeight: 850, color: '#191918' }}>{priceMain}</div>
-            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{priceSub}</div>
+            <div style={{ fontSize: '28px', fontWeight: 850, color: 'var(--color-text-main)' }}>
+              {priceMain}
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+              {priceSub}
+            </div>
           </div>
 
           {/* Metadata Row */}
@@ -108,20 +98,22 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
             }}
           >
             <div>
-              <strong style={{ fontSize: '13px', display: 'block', fontWeight: 800 }}>
+              <strong style={{ fontSize: '13.5px', display: 'block', fontWeight: 800, color: 'var(--color-text-main)' }}>
                 {presentation.durationLabel}
               </strong>
-              <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>ritme belajar</span>
+              <span style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>ritme belajar</span>
             </div>
             <div style={{ borderLeft: '1px solid var(--color-divider)', paddingLeft: '12px' }}>
-              <strong style={{ fontSize: '13px', display: 'block', fontWeight: 800 }}>
+              <strong style={{ fontSize: '13.5px', display: 'block', fontWeight: 800, color: 'var(--color-text-main)' }}>
                 {lessonCount > 0 ? `${lessonCount} materi` : `${moduleCount} modul`}
               </strong>
-              <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>video + refleksi</span>
+              <span style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>video & refleksi</span>
             </div>
             <div style={{ borderLeft: '1px solid var(--color-divider)', paddingLeft: '12px' }}>
-              <strong style={{ fontSize: '13px', display: 'block', fontWeight: 800 }}>Mandiri</strong>
-              <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>akses kapan saja</span>
+              <strong style={{ fontSize: '13.5px', display: 'block', fontWeight: 800, color: 'var(--color-text-main)' }}>
+                Mandiri
+              </strong>
+              <span style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>akses kapan saja</span>
             </div>
           </div>
 
@@ -129,35 +121,34 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
             {isRegistrationAllowed ? (
               <button
                 onClick={onStartClick}
+                className="touch-target-primary"
                 style={{
-                  minHeight: '46px',
-                  borderRadius: '13px',
-                  padding: '0 20px',
+                  borderRadius: 'var(--border-radius-md)',
+                  padding: '0 24px',
                   backgroundColor: 'var(--color-primary)',
                   color: '#FFFFFF',
                   fontWeight: 780,
-                  fontSize: '14px',
+                  fontSize: '14.5px',
                   border: 0,
                   cursor: 'pointer',
+                  boxShadow: 'var(--shadow-sm)',
                 }}
               >
-                Mulai belajar gratis
+                Mulai Belajar Sekarang
               </button>
             ) : (
               <a
                 href="#register"
+                className="touch-target-primary"
                 style={{
-                  minHeight: '46px',
-                  borderRadius: '13px',
-                  padding: '0 20px',
+                  borderRadius: 'var(--border-radius-md)',
+                  padding: '0 22px',
                   backgroundColor: 'var(--color-text-muted)',
                   color: '#FFFFFF',
                   fontWeight: 780,
                   fontSize: '14px',
                   border: 0,
                   textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
                 }}
               >
                 {program.programType === 'aftersales' ? 'Akses Peserta Tes STIFIn' : 'Informasi Pendaftaran'}
@@ -166,21 +157,20 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
 
             <a
               href="#curriculum"
+              className="touch-target-primary"
               style={{
-                minHeight: '46px',
-                borderRadius: '13px',
+                borderRadius: 'var(--border-radius-md)',
                 padding: '0 20px',
                 border: '1px solid var(--color-divider)',
-                backgroundColor: '#FFFFFF',
-                color: '#191918',
-                fontWeight: 760,
+                backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-text-main)',
+                fontWeight: 700,
                 fontSize: '14px',
                 textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
+                boxShadow: 'var(--shadow-xs)',
               }}
             >
-              Lihat isi program
+              Lihat Isi Kurikulum
             </a>
           </div>
 
