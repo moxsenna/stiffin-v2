@@ -95,7 +95,13 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
           storage: 'database',
           modelName: MODEL_NAMES.rateLimit,
           window: 60,
-          max: 50,
+          max: 100,
+          customRules: {
+            '/sign-in/email': {
+              window: 60,
+              max: 100,
+            },
+          },
         },
     advanced: {
       database: { generateId: 'uuid' },
