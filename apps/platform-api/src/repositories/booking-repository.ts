@@ -69,22 +69,15 @@ export function createBookingRepository(db: DbHandle): BookingRepository {
       }
 
       const now = new Date().toISOString();
+      const finalIdempotencyKey = idempotencyKey !== undefined ? idempotencyKey : (input.idempotencyKey ?? null);
+
       const rows = await db
         .insert(bookings)
         .values({
           id: sql`gen_random_uuid()`,
+          ...input,
           organizationId: ctx.organizationId,
-          contactId: input.contactId,
-          serviceId: input.serviceId,
-          amount: input.amount,
-          startAt: input.startAt,
-          endAt: input.endAt ?? null,
-          locationType: input.locationType ?? 'ONLINE',
-          locationText: input.locationText ?? null,
-          status: input.status ?? 'PENDING',
-          paymentStatus: input.paymentStatus ?? 'UNPAID',
-          notes: input.notes ?? null,
-          idempotencyKey: idempotencyKey ?? null,
+          idempotencyKey: finalIdempotencyKey,
           createdAt: now,
           updatedAt: now,
         })
