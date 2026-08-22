@@ -90,7 +90,13 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
     },
     rateLimit: options?.disableRateLimit
       ? { enabled: false } // test-only — never activated through Worker env
-      : { enabled: true, storage: 'database', modelName: MODEL_NAMES.rateLimit },
+      : {
+          enabled: true,
+          storage: 'database',
+          modelName: MODEL_NAMES.rateLimit,
+          window: 60,
+          max: 50,
+        },
     advanced: {
       database: { generateId: 'uuid' },
       defaultCookieAttributes: {
