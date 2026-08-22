@@ -52,16 +52,17 @@ export class HttpContactRepository implements ContactRepositoryPort {
   }
 
   private mapToFlowContact(c: any): FlowContact {
-    const contact = c.contact ?? c;
+    const payload = c.context ?? c.contactFlow ?? c;
+    const contact = payload.contact ?? payload;
     return {
-      id: contact.id,
-      organizationId: contact.organizationId,
-      name: contact.name,
-      phoneE164: contact.phoneE164,
-      classification: c.classification ?? (contact.classification || 'PROSPECT'),
-      stage: c.stage ?? (contact.stage || 'NEW'),
-      notes: c.notes ?? contact.notes ?? undefined,
-      sourceChannel: c.sourceChannel ?? contact.sourceChannel ?? undefined,
+      id: contact.id ?? payload.contactId,
+      organizationId: contact.organizationId ?? payload.organizationId,
+      name: contact.name ?? '',
+      phoneE164: contact.phoneE164 ?? '',
+      classification: payload.classification ?? contact.classification ?? 'PROSPECT',
+      stage: payload.stage ?? contact.stage ?? 'NEW',
+      notes: payload.notes ?? contact.notes ?? payload.interest ?? undefined,
+      sourceChannel: payload.sourceChannel ?? contact.sourceChannel ?? undefined,
       createdAt: contact.createdAt ?? new Date().toISOString(),
       updatedAt: contact.updatedAt ?? new Date().toISOString(),
     };
