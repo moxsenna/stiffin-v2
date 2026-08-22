@@ -129,18 +129,18 @@ export default function ContactDetailPage() {
   const handleConfirmWaSent = async (scheduleNextDays?: number) => {
     if (!primaryAction || !activeWaModal) return;
     await messagingCommands.confirmWhatsAppSent({
-      contactId: contact.id,
+      contactId: contact?.id || contactId,
       actionId: primaryAction.id,
       messageText: activeWaModal.draft,
       scheduleNextFollowUpDays: scheduleNextDays,
     });
     setActiveWaModal(null);
-    loadData();
+    await loadData();
   };
 
   const handleCreateNewBooking = async () => {
     await bookingCommands.createBooking({
-      contactId: contact.id,
+      contactId: contact?.id || contactId,
       serviceId: 'srv_tes_personal',
       serviceTitle: 'Tes STIFIn Personal',
       startAt: clock.addDays(clock.now(), 2).toISOString(),
@@ -150,19 +150,19 @@ export default function ContactDetailPage() {
       amount: 600000,
     });
     setShowBookingModal(false);
-    loadData();
+    await loadData();
   };
 
   const handleConfirmBooking = async () => {
     if (!activeBooking) return;
     await bookingCommands.confirmBooking(activeBooking.id);
-    loadData();
+    await loadData();
   };
 
   const handleMarkPaid = async () => {
     if (!activeBooking) return;
     await bookingCommands.changePaymentStatus(activeBooking.id, 'PAID');
-    loadData();
+    await loadData();
   };
 
   const handleOpenEnrollModal = async () => {
@@ -213,13 +213,13 @@ export default function ContactDetailPage() {
   const handleCompleteActiveBooking = async () => {
     if (!activeBooking) return;
     await bookingCommands.completeBooking(activeBooking.id);
-    loadData();
+    await loadData();
   };
 
   const handleSaveNotes = async () => {
     await contactCommands.updateContactIdentity(contactId, { notes: notesText });
     setIsEditingNotes(false);
-    loadData();
+    await loadData();
   };
 
   return (

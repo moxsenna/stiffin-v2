@@ -273,7 +273,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     await createBookingBtn.click();
 
     // Booking created -> verify status and transitions
-    await expect(page.locator('text=Tes STIFIn Personal')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=Tes STIFIn Personal').first()).toBeVisible({ timeout: 15000 });
 
     // Mark paid if UNPAID
     const markPaidBtn = page.locator('button:has-text("Tandai Lunas")');
