@@ -312,7 +312,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     await expect(enrollActions.first()).toBeVisible();
 
     // Find the program created by the test in the modal
-    const testProgRow = page.locator(`div:has-text("${programTitle}")`).first();
+    const testProgRow = page.locator(`[data-testid="eligible-program-row"]:has-text("${programTitle}")`);
     await expect(testProgRow).toBeVisible();
     await expect(testProgRow.locator('button')).toContainText('Terdaftar');
 

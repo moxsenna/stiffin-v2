@@ -714,6 +714,7 @@ export default function ContactDetailPage() {
                   return (
                     <div
                       key={prog.programId}
+                      data-testid="eligible-program-row"
                       style={{
                         padding: '10px 12px',
                         borderRadius: '8px',
