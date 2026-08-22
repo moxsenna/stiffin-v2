@@ -161,7 +161,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                   boxShadow: 'var(--shadow-sm)',
                 }}
               >
-                Buka & Mulai Belajar →
+                Mulai belajar sekarang →
               </Link>
             </div>
           ) : isRegistrationAllowed ? (
