@@ -275,6 +275,12 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     // Booking created -> verify status and transitions
     await expect(page.locator('text=Tes STIFIn Personal').first()).toBeVisible({ timeout: 15000 });
 
+    // Confirm Booking (PENDING -> CONFIRMED)
+    const confirmBookingBtn = page.locator('button:has-text("Konfirmasi Booking")');
+    await expect(confirmBookingBtn).toBeVisible();
+    await confirmBookingBtn.click();
+    await expect(page.getByText('CONFIRMED', { exact: true })).toBeVisible({ timeout: 15000 });
+
     // Mark paid if UNPAID
     const markPaidBtn = page.locator('button:has-text("Tandai Lunas")');
     await expect(markPaidBtn).toBeVisible();
