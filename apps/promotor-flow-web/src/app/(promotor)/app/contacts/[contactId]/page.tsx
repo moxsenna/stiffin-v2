@@ -139,12 +139,14 @@ export default function ContactDetailPage() {
   };
 
   const handleCreateNewBooking = async () => {
+    const start = clock.addDays(clock.now(), 2);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
     await bookingCommands.createBooking({
       contactId: contact?.id || contactId,
       serviceId: 'srv_tes_personal',
       serviceTitle: 'Tes STIFIn Personal',
-      startAt: clock.addDays(clock.now(), 2).toISOString(),
-      endAt: clock.addDays(clock.now(), 2).toISOString(),
+      startAt: start.toISOString(),
+      endAt: end.toISOString(),
       locationType: 'ON_SITE',
       paymentStatus: 'UNPAID',
       amount: 600000,

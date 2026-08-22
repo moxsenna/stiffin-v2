@@ -48,11 +48,16 @@ export class HttpBookingRepository implements BookingRepositoryPort {
       }
     }
 
+    const endAt =
+      booking.endAt && new Date(booking.endAt).getTime() > new Date(booking.startAt).getTime()
+        ? booking.endAt
+        : new Date(new Date(booking.startAt).getTime() + 60 * 60 * 1000).toISOString();
+
     const res = await this.api.createBooking({
       contactId: booking.contactId,
       serviceId,
       startAt: booking.startAt,
-      endAt: booking.endAt,
+      endAt,
       locationType: booking.locationType as any,
       notes: booking.notes,
     });
