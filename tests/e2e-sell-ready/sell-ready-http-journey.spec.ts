@@ -251,10 +251,13 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
 
     // WhatsApp Action: Trigger draft and explicit human confirmation
     await waActionBtn.click();
-    const waSheet = page.locator('text=Kirim Pesan WhatsApp');
+    const waSheet = page.locator('text=Kirim WhatsApp').first();
     await expect(waSheet).toBeVisible();
 
-    const confirmWaSentBtn = page.locator('button:has-text("Tandai Terkirim")');
+    const openWaInsideSheetBtn = page.locator('button:has-text("Buka WhatsApp")').last();
+    await openWaInsideSheetBtn.click();
+
+    const confirmWaSentBtn = page.locator('button:has-text("Ya, Sudah Dikirim")');
     await expect(confirmWaSentBtn).toBeVisible();
     await confirmWaSentBtn.click();
 
