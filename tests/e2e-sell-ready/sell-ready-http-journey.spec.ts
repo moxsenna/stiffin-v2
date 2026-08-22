@@ -121,7 +121,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     await page.reload();
     await expect(page.locator('h1')).toContainText(programTitle);
     await expect(page.getByText('Terbit di Storefront', { exact: true })).toBeVisible();
-    await expect(page.locator('body')).toContainText('Bab 1: Pondasi Karakter Diri');
+    await expect(page.locator('body')).toContainText('Modul 1: Pengenalan');
     await expect(page.locator('body')).toContainText('Pelajaran 1: Mengenal Karakter Diri');
     await expect(page.locator('body')).toContainText('Pelajaran 2: Analisis Video Praktik');
     await expect(page.locator('text=🎥 Video YouTube').first()).toBeVisible();
