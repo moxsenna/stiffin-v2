@@ -127,8 +127,8 @@ export function LessonEditorClient() {
   if (initialLoading) {
     return (
       <PromotorShell>
-        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-          Memuat data editor pelajaran...
+        <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '14px', fontWeight: 600 }}>
+          Memuat editor pelajaran...
         </div>
       </PromotorShell>
     );
@@ -136,17 +136,17 @@ export function LessonEditorClient() {
 
   return (
     <PromotorShell>
-      <div style={{ padding: '20px 16px', maxWidth: '760px', margin: '0 auto' }}>
+      <div style={{ padding: '24px 20px', maxWidth: '780px', margin: '0 auto' }}>
         <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '14px' }}>
-          <Link href={`/app/programs/${programId}`} style={{ textDecoration: 'none', color: 'var(--color-text-muted)', fontWeight: 600 }}>
+          <Link href={`/app/programs/${programId}`} style={{ textDecoration: 'none', color: 'var(--color-text-muted)', fontWeight: 650 }}>
             ← Kembali ke Kurikulum Program
           </Link>
         </div>
 
-        <h1 style={{ fontSize: '22px', fontWeight: 750, marginBottom: '6px' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 850, letterSpacing: '-0.025em', marginBottom: '6px', color: 'var(--color-text-main)' }}>
           Editor Materi Pelajaran
         </h1>
-        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
+        <div style={{ fontSize: '13.5px', color: 'var(--color-text-muted)', marginBottom: '22px' }}>
           Atur konten materi, video, lembar refleksi pengunci, dan arahan aksi untuk peserta.
         </div>
 
@@ -154,17 +154,17 @@ export function LessonEditorClient() {
           <div
             role="alert"
             style={{
-              backgroundColor: '#FEF2F2',
-              border: '1px solid #F87171',
-              borderRadius: '12px',
+              backgroundColor: 'var(--color-status-danger-bg)',
+              border: '1px solid var(--color-status-danger-border)',
+              borderRadius: 'var(--border-radius-md)',
               padding: '14px 16px',
               marginBottom: '20px',
-              color: '#991B1B',
-              fontSize: '14px',
+              color: 'var(--color-status-danger)',
+              fontSize: '13.5px',
               lineHeight: 1.5,
             }}
           >
-            <div style={{ fontWeight: 750, marginBottom: '4px' }}>⚠️ Gagal Menyimpan</div>
+            <div style={{ fontWeight: 780, marginBottom: '2px' }}>Gagal Menyimpan</div>
             <div>{errorMessage}</div>
           </div>
         )}
@@ -177,13 +177,14 @@ export function LessonEditorClient() {
             gap: '18px',
             backgroundColor: 'var(--color-surface)',
             padding: '24px',
-            borderRadius: '16px',
+            borderRadius: 'var(--border-radius-lg)',
             border: '1px solid var(--color-divider)',
+            boxShadow: 'var(--shadow-xs)',
           }}
         >
           {/* Judul Pelajaran */}
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
               Judul Pelajaran *
             </label>
             <input
@@ -196,7 +197,7 @@ export function LessonEditorClient() {
               style={{
                 width: '100%',
                 padding: '10px 14px',
-                borderRadius: '10px',
+                borderRadius: 'var(--border-radius-sm)',
                 border: '1px solid var(--color-divider)',
                 fontSize: '14px',
                 outline: 'none',
@@ -206,7 +207,7 @@ export function LessonEditorClient() {
 
           {/* Video URL */}
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
               Tautan Video YouTube (Unlisted / Publik)
             </label>
             <input
@@ -217,20 +218,20 @@ export function LessonEditorClient() {
               style={{
                 width: '100%',
                 padding: '10px 14px',
-                borderRadius: '10px',
+                borderRadius: 'var(--border-radius-sm)',
                 border: '1px solid var(--color-divider)',
                 fontSize: '14px',
                 outline: 'none',
               }}
             />
-            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+            <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
               Dukungan native untuk YouTube unlisted / publik. Kosongkan jika materi berbasis teks murni.
             </div>
           </div>
 
           {/* Materi Teks */}
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
               Materi Teks / Panduan Belajar
             </label>
             <textarea
@@ -241,7 +242,7 @@ export function LessonEditorClient() {
               style={{
                 width: '100%',
                 padding: '12px 14px',
-                borderRadius: '10px',
+                borderRadius: 'var(--border-radius-sm)',
                 border: '1px solid var(--color-divider)',
                 fontSize: '14px',
                 lineHeight: 1.6,
@@ -252,7 +253,7 @@ export function LessonEditorClient() {
 
           {/* Reflection Setup */}
           <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '16px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 750, cursor: 'pointer', color: 'var(--color-text-main)' }}>
               <input
                 type="checkbox"
                 checked={hasReflection}
@@ -264,7 +265,7 @@ export function LessonEditorClient() {
 
             {hasReflection && (
               <div style={{ marginTop: '10px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 650, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
                   Pertanyaan Panduan Refleksi
                 </label>
                 <input
@@ -275,9 +276,9 @@ export function LessonEditorClient() {
                   style={{
                     width: '100%',
                     padding: '10px 14px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--border-radius-sm)',
                     border: '1px solid var(--color-divider)',
-                    fontSize: '13px',
+                    fontSize: '13.5px',
                     outline: 'none',
                   }}
                 />
@@ -287,7 +288,7 @@ export function LessonEditorClient() {
 
           {/* CTA Setup */}
           <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '16px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 750, cursor: 'pointer', color: 'var(--color-text-main)' }}>
               <input
                 type="checkbox"
                 checked={hasCta}
@@ -300,7 +301,7 @@ export function LessonEditorClient() {
             {hasCta && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 650, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
                     Label Tombol CTA
                   </label>
                   <input
@@ -311,7 +312,7 @@ export function LessonEditorClient() {
                     style={{
                       width: '100%',
                       padding: '8px 12px',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--border-radius-sm)',
                       border: '1px solid var(--color-divider)',
                       fontSize: '13px',
                       outline: 'none',
@@ -320,7 +321,7 @@ export function LessonEditorClient() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 650, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
                     URL Tujuan (e.g. WhatsApp Link / External Page)
                   </label>
                   <input
@@ -331,7 +332,7 @@ export function LessonEditorClient() {
                     style={{
                       width: '100%',
                       padding: '8px 12px',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--border-radius-sm)',
                       border: '1px solid var(--color-divider)',
                       fontSize: '13px',
                       outline: 'none',
@@ -350,8 +351,8 @@ export function LessonEditorClient() {
               backgroundColor: 'var(--color-primary)',
               color: '#FFF',
               fontWeight: 780,
-              fontSize: '14px',
-              borderRadius: '12px',
+              fontSize: '14.5px',
+              borderRadius: 'var(--border-radius-md)',
               marginTop: '10px',
               border: 0,
               cursor: loading ? 'not-allowed' : 'pointer',
@@ -360,16 +361,10 @@ export function LessonEditorClient() {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
+              boxShadow: 'var(--shadow-sm)',
             }}
           >
-            {loading ? (
-              <>
-                <span>⏳</span>
-                <span>Menyimpan Perubahan Pelajaran...</span>
-              </>
-            ) : (
-              <span>Simpan Pelajaran & Perbarui Kurikulum</span>
-            )}
+            {loading ? 'Menyimpan Perubahan Pelajaran...' : 'Simpan Pelajaran & Perbarui Kurikulum'}
           </button>
         </form>
       </div>

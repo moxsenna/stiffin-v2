@@ -3,22 +3,18 @@ const path = require('path');
 
 const origSymlink = fs.symlink;
 const origSymlinkSync = fs.symlinkSync;
-const origPromisesSymlink = fs.promises ? fs.promises.symlink : null;
 
 function safeCopy(target, dest) {
   try {
     const resolvedTarget = path.isAbsolute(target) ? target : path.resolve(path.dirname(dest), target);
+    if (!fs.existsSync(resolvedTarget)) return;
     const stat = fs.statSync(resolvedTarget);
     if (stat.isDirectory()) {
-      try {
-        fs.mkdirSync(dest, { recursive: true });
-        fs.cpSync(resolvedTarget, dest, { recursive: true });
-      } catch {}
+      fs.mkdirSync(dest, { recursive: true });
+      fs.cpSync(resolvedTarget, dest, { recursive: true, force: true });
     } else {
-      try {
-        fs.mkdirSync(path.dirname(dest), { recursive: true });
-        fs.copyFileSync(resolvedTarget, dest);
-      } catch {}
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.copyFileSync(resolvedTarget, dest);
     }
   } catch (e) {
     // ignore
@@ -29,13 +25,11 @@ fs.symlinkSync = function (target, dest, type) {
   try {
     const resolvedTarget = path.isAbsolute(target) ? target : path.resolve(path.dirname(dest), target);
     const isDir = fs.existsSync(resolvedTarget) && fs.statSync(resolvedTarget).isDirectory();
-    return origSymlinkSync(target, dest, type || (isDir ? 'junction' : 'file'));
+    // On Windows, directory junctions do NOT require privileges
+    const symlinkType = type || (isDir ? 'junction' : 'file');
+    return origSymlinkSync(target, dest, symlinkType);
   } catch (err) {
-    if (err.code === 'EPERM' || err.code === 'EEXIST') {
-      safeCopy(target, dest);
-      return;
-    }
-    throw err;
+    safeCopy(target, dest);
   }
 };
 
@@ -48,7 +42,8 @@ fs.symlink = function (target, dest, type, cb) {
     fs.symlinkSync(target, dest, type);
     if (cb) cb(null);
   } catch (err) {
-    if (cb) cb(err);
+    safeCopy(target, dest);
+    if (cb) cb(null);
   }
 };
 
@@ -57,11 +52,27 @@ if (fs.promises) {
     try {
       fs.symlinkSync(target, dest, type);
     } catch (err) {
-      if (err.code === 'EPERM' || err.code === 'EEXIST') {
-        safeCopy(target, dest);
-        return;
-      }
-      throw err;
+      safeCopy(target, dest);
     }
   };
 }
+
+// Ensure standalone sync on exit
+process.on('exit', () => {
+  try {
+    const cwd = process.cwd();
+    const dotNext = path.join(cwd, '.next');
+    const standaloneAppDotNext = path.join(dotNext, 'standalone', 'apps', 'promotor-class-web', '.next');
+    if (fs.existsSync(dotNext) && fs.existsSync(path.join(dotNext, 'standalone'))) {
+      fs.mkdirSync(standaloneAppDotNext, { recursive: true });
+      const itemsToCopy = ['BUILD_ID', 'prerender-manifest.json', 'routes-manifest.json', 'app-build-manifest.json', 'build-manifest.json', 'server'];
+      for (const item of itemsToCopy) {
+        const src = path.join(dotNext, item);
+        const dst = path.join(standaloneAppDotNext, item);
+        if (fs.existsSync(src) && !fs.existsSync(dst)) {
+          safeCopy(src, dst);
+        }
+      }
+    }
+  } catch (e) {}
+});

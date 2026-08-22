@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { DemoScenarioPreset } from '@/modules/promotorclass/ports';
 import { clock } from '@/lib/container';
+import { SettingsIcon } from '@/components/foundation/icons';
 
 export interface DevControlsOverlayProps {
   currentPreset: DemoScenarioPreset;
@@ -45,7 +46,7 @@ export const DevControlsOverlay: React.FC<DevControlsOverlayProps> = ({
     <div
       style={{
         position: 'fixed',
-        bottom: '70px',
+        bottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
         right: '12px',
         zIndex: 150,
       }}
@@ -53,48 +54,54 @@ export const DevControlsOverlay: React.FC<DevControlsOverlayProps> = ({
       {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}
+          className="touch-target"
           style={{
-            height: '28px',
-            padding: '0 10px',
-            borderRadius: '14px',
+            height: '32px',
+            padding: '0 12px',
+            borderRadius: 'var(--radius-full)',
             backgroundColor: '#191918',
             color: '#FFFFFF',
-            font: '600 11px Inter, sans-serif',
+            fontWeight: 700,
+            fontSize: '11.5px',
             border: 'none',
-            opacity: 0.85,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            opacity: 0.9,
+            boxShadow: 'var(--shadow-md)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
           }}
         >
-          ⚙ Dev Controls
+          <SettingsIcon size={14} color="#FFFFFF" />
+          <span>Dev Controls</span>
         </button>
       ) : (
         <div
           style={{
-            width: '280px',
+            width: '290px',
             backgroundColor: '#191918',
             color: '#FFFFFF',
-            borderRadius: '10px',
-            padding: '14px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+            borderRadius: 'var(--radius-md)',
+            padding: '16px',
+            boxShadow: 'var(--shadow-lg)',
             display: 'flex',
             flexDirection: 'column',
             gap: '12px',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ font: '600 12px Inter, sans-serif', color: '#9C9A94', textTransform: 'uppercase' }}>
-              DEV / DEMO CONTROLS
+            <span style={{ fontWeight: 800, fontSize: '12px', color: '#9C9A94', letterSpacing: '0.02em' }}>
+              Dev & Demo Controls
             </span>
             <button
               onClick={() => setIsOpen(false)}
-              style={{ background: 'none', border: 'none', color: '#9C9A94', fontSize: '14px' }}
+              style={{ background: 'none', border: 'none', color: '#9C9A94', fontSize: '14px', padding: '2px' }}
             >
               ✕
             </button>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ font: '500 12px Inter, sans-serif' }}>Integration Scenario:</span>
+            <span style={{ fontWeight: 650, fontSize: '12px' }}>Skenario Integrasi Class:</span>
             <div style={{ display: 'flex', gap: '4px' }}>
               {(['FLOW_ONLY', 'BUNDLE_AVAILABLE', 'BUNDLE_CLASS_UNAVAILABLE'] as DemoScenarioPreset[]).map((p) => (
                 <button
@@ -105,12 +112,12 @@ export const DevControlsOverlay: React.FC<DevControlsOverlayProps> = ({
                   }}
                   style={{
                     flex: 1,
-                    padding: '4px 2px',
+                    padding: '6px 2px',
                     fontSize: '10px',
-                    fontWeight: 600,
-                    borderRadius: '4px',
-                    border: currentPreset === p ? '1px solid #167A68' : '1px solid #333',
-                    backgroundColor: currentPreset === p ? '#167A68' : '#2A2A28',
+                    fontWeight: 700,
+                    borderRadius: 'var(--radius-xs)',
+                    border: currentPreset === p ? '1px solid var(--color-primary)' : '1px solid #333',
+                    backgroundColor: currentPreset === p ? 'var(--color-primary)' : '#2A2A28',
                     color: '#FFF',
                   }}
                 >
@@ -121,7 +128,7 @@ export const DevControlsOverlay: React.FC<DevControlsOverlayProps> = ({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ font: '500 12px Inter, sans-serif' }}>
+            <span style={{ fontWeight: 650, fontSize: '12px' }}>
               Simulasi Tanggal: {clock.formatDayDate()} ({daysAdvanced >= 0 ? `+${daysAdvanced}` : daysAdvanced} hari)
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
@@ -129,9 +136,10 @@ export const DevControlsOverlay: React.FC<DevControlsOverlayProps> = ({
                 onClick={() => handleAdvanceDays(1)}
                 style={{
                   flex: 1,
-                  padding: '4px',
+                  padding: '6px',
                   fontSize: '11px',
-                  borderRadius: '4px',
+                  fontWeight: 650,
+                  borderRadius: 'var(--radius-xs)',
                   backgroundColor: '#2A2A28',
                   color: '#FFF',
                   border: '1px solid #444',
@@ -143,22 +151,24 @@ export const DevControlsOverlay: React.FC<DevControlsOverlayProps> = ({
                 onClick={() => handleAdvanceDays(7)}
                 style={{
                   flex: 1,
-                  padding: '4px',
+                  padding: '6px',
                   fontSize: '11px',
-                  borderRadius: '4px',
+                  fontWeight: 650,
+                  borderRadius: 'var(--radius-xs)',
                   backgroundColor: '#2A2A28',
                   color: '#FFF',
                   border: '1px solid #444',
                 }}
               >
-                +7 Hari (Aftercare)
+                +7 Hari
               </button>
               <button
                 onClick={handleResetClock}
                 style={{
-                  padding: '4px 8px',
+                  padding: '6px 10px',
                   fontSize: '11px',
-                  borderRadius: '4px',
+                  fontWeight: 650,
+                  borderRadius: 'var(--radius-xs)',
                   backgroundColor: '#2A2A28',
                   color: '#9C9A94',
                   border: '1px solid #444',
@@ -176,12 +186,13 @@ export const DevControlsOverlay: React.FC<DevControlsOverlayProps> = ({
             }}
             style={{
               width: '100%',
-              padding: '6px',
-              borderRadius: '6px',
-              backgroundColor: '#B42318',
+              padding: '8px',
+              borderRadius: 'var(--radius-xs)',
+              backgroundColor: 'var(--color-danger)',
               color: '#FFF',
               border: 'none',
-              font: '600 12px Inter, sans-serif',
+              fontWeight: 780,
+              fontSize: '12px',
             }}
           >
             Reset Demo State

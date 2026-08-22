@@ -29,77 +29,101 @@ export default function CalendarPage() {
 
   return (
     <AppShell showBottomNav={true}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 0' }}>
-        <h1 style={{ font: '700 24px/29px Inter, sans-serif', color: '#191918' }}>Kalender</h1>
+      <div style={{ padding: '20px 16px 0' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 850, letterSpacing: '-0.03em', color: 'var(--color-text-primary)' }}>
+          Kalender Agenda
+        </h1>
+        <div style={{ fontSize: '13.5px', color: 'var(--color-text-secondary)', marginTop: '2px', marginBottom: '16px' }}>
+          Jadwal sesi tes biometrik & konsultasi STIFIn
+        </div>
       </div>
 
-      <div style={{ font: '450 13px/18px Inter, sans-serif', color: '#71706B', padding: '6px 16px 16px' }}>
-        Agenda Layanan & Booking STIFIn
-      </div>
-
-      <div style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid #E8E7E3' }}>
+      <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {bookings.length > 0 ? (
           bookings.map(({ booking, contactName }) => (
             <div
               key={booking.id}
               onClick={() => router.push(`/app/contacts/${booking.contactId}`)}
               style={{
-                display: 'flex',
-                gap: '14px',
-                padding: '14px 16px',
-                borderBottom: '1px solid #E8E7E3',
+                backgroundColor: 'var(--color-surface)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid var(--color-divider)',
+                padding: '16px',
+                boxShadow: 'var(--shadow-xs)',
                 cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                transition: 'transform var(--duration-fast) var(--ease-spring)',
               }}
             >
+              {/* Date Box */}
               <div
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  minWidth: '54px',
-                  padding: '8px 4px',
-                  backgroundColor: '#F7F7F5',
-                  borderRadius: '8px',
-                  border: '1px solid #E8E7E3',
+                  minWidth: '58px',
+                  padding: '10px 6px',
+                  backgroundColor: 'var(--color-canvas)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--color-divider)',
                 }}
               >
-                <span style={{ font: '600 12px Inter, sans-serif', color: '#71706B', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '11px', fontWeight: 780, color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>
                   {clock.formatDayDate(booking.startAt).split(',')[0]}
                 </span>
-                <span style={{ font: '700 16px Inter, sans-serif', color: '#167A68' }}>
+                <span className="tabular-nums" style={{ fontSize: '16px', fontWeight: 850, color: 'var(--color-primary)', marginTop: '2px' }}>
                   {clock.formatTime(booking.startAt)}
                 </span>
               </div>
 
+              {/* Booking Info */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ font: '600 15px Inter, sans-serif', color: '#191918' }}>{booking.serviceTitle}</div>
-                <div style={{ font: '400 13.5px Inter, sans-serif', color: '#71706B', paddingTop: '2px' }}>
-                  Klien: <strong>{contactName}</strong>
+                <div style={{ fontWeight: 800, fontSize: '15px', color: 'var(--color-text-primary)' }}>
+                  {booking.serviceTitle}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '4px' }}>
+                <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
+                  Klien: <strong style={{ color: 'var(--color-text-primary)' }}>{contactName}</strong>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
                   <span
                     style={{
-                      font: '500 12px Inter, sans-serif',
-                      color: booking.paymentStatus === 'PAID' ? '#067647' : '#B54708',
-                      backgroundColor: booking.paymentStatus === 'PAID' ? '#ECFDF3' : '#FFFAEB',
+                      fontSize: '11px',
+                      fontWeight: 780,
+                      color: booking.paymentStatus === 'PAID' ? 'var(--color-success)' : 'var(--color-warning)',
+                      backgroundColor: booking.paymentStatus === 'PAID' ? 'var(--color-success-soft)' : 'var(--color-warning-soft)',
                       padding: '2px 8px',
-                      borderRadius: '4px',
+                      borderRadius: 'var(--radius-full)',
                     }}
                   >
-                    {booking.paymentStatus === 'PAID' ? 'Lunas (PAID)' : 'DP belum dibayar'}
+                    {booking.paymentStatus === 'PAID' ? 'Lunas (PAID)' : 'DP Belum Bayar'}
                   </span>
-                  <span style={{ font: '400 12px Inter, sans-serif', color: '#9C9A94' }}>
-                    {booking.locationType === 'HOME_VISIT' ? 'Home Visit' : 'On Site'}
+                  <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>
+                    · {booking.locationType === 'HOME_VISIT' ? 'Home Visit' : 'On Site'}
                   </span>
                 </div>
               </div>
 
-              <ChevronRightIcon size={16} color="#C6C4BE" />
+              <ChevronRightIcon size={16} color="var(--color-text-tertiary)" />
             </div>
           ))
         ) : (
-          <div style={{ padding: '32px 16px', textAlign: 'center', color: '#71706B' }}>Belum ada agenda booking.</div>
+          <div
+            style={{
+              padding: '36px 16px',
+              textAlign: 'center',
+              backgroundColor: 'var(--color-surface)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--color-divider)',
+              color: 'var(--color-text-secondary)',
+              fontSize: '13.5px',
+              boxShadow: 'var(--shadow-xs)',
+            }}
+          >
+            Belum ada agenda konsultasi terjadwal.
+          </div>
         )}
       </div>
     </AppShell>

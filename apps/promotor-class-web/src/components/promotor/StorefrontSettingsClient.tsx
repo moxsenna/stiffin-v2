@@ -13,7 +13,7 @@ interface StorefrontSettingsClientProps {
 }
 
 const PRESET_AVATARS = [
-  { label: 'Foto Profil Bawaan (Default)', url: '/images/promoter_profile_rina.webp' },
+  { label: 'Foto Profil Bawaan', url: '/images/promoter_profile_rina.webp' },
   { label: 'Logo Minimalis Hijau', url: '/images/og-card.png' },
 ];
 
@@ -75,7 +75,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
 
   if (isLoading || !profile) {
     return (
-      <div style={{ padding: '32px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+      <div style={{ padding: '48px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '14px', fontWeight: 600 }}>
         Memuat data storefront...
       </div>
     );
@@ -101,10 +101,10 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
             backgroundColor: 'var(--color-primary)',
             color: '#FFF',
             padding: '14px 22px',
-            borderRadius: '14px',
+            borderRadius: 'var(--border-radius-md)',
             fontSize: '14px',
-            fontWeight: 750,
-            boxShadow: 'var(--shadow-md)',
+            fontWeight: 780,
+            boxShadow: 'var(--shadow-lg)',
           }}
         >
           ✓ Pengaturan Storefront berhasil disimpan!
@@ -115,10 +115,10 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
       <div
         style={{
           backgroundColor: 'var(--color-surface)',
-          borderRadius: '18px',
+          borderRadius: 'var(--border-radius-lg)',
           border: '1px solid var(--color-divider)',
-          padding: '20px',
-          boxShadow: 'var(--shadow-sm)',
+          padding: '22px',
+          boxShadow: 'var(--shadow-xs)',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
@@ -129,18 +129,18 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                   width: '8px',
                   height: '8px',
                   borderRadius: '50%',
-                  backgroundColor: '#10B981',
+                  backgroundColor: 'var(--color-status-success)',
                   display: 'inline-block',
                 }}
               />
-              <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--color-status-success)', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '11.5px', fontWeight: 780, color: 'var(--color-status-success)' }}>
                 Storefront Publik Aktif
               </span>
             </div>
-            <h2 style={{ fontSize: '18px', fontWeight: 800, margin: 0 }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 850, margin: 0, color: 'var(--color-text-main)', letterSpacing: '-0.01em' }}>
               Pengaturan & Branding Storefront
             </h2>
-            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
               Alamat publik: <code style={{ color: 'var(--color-primary)', fontWeight: 700 }}>{publicStorefrontUrl}</code>
             </div>
           </div>
@@ -152,17 +152,19 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                 navigator.clipboard.writeText(publicStorefrontUrl);
                 alert('Tautan storefront berhasil disalin ke clipboard!');
               }}
+              className="touch-target"
               style={{
                 padding: '8px 14px',
-                borderRadius: '10px',
+                borderRadius: 'var(--border-radius-sm)',
                 border: '1px solid var(--color-divider)',
                 backgroundColor: 'var(--color-surface)',
                 fontSize: '13px',
-                fontWeight: 700,
+                fontWeight: 750,
                 cursor: 'pointer',
+                boxShadow: 'var(--shadow-xs)',
               }}
             >
-              Salin Link 🔗
+              Salin Tautan
             </button>
 
             <Link
@@ -171,7 +173,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
               rel="noopener noreferrer"
               style={{
                 padding: '8px 16px',
-                borderRadius: '10px',
+                borderRadius: 'var(--border-radius-sm)',
                 backgroundColor: 'var(--color-primary-light)',
                 color: 'var(--color-primary)',
                 fontSize: '13px',
@@ -180,6 +182,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '4px',
+                border: '1px solid var(--color-primary-border)',
               }}
             >
               Buka Storefront Publik ↗
@@ -191,8 +194,8 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
       {/* Realtime Live Preview Card */}
       <div
         style={{
-          backgroundColor: '#286344',
-          borderRadius: '18px',
+          backgroundColor: 'var(--color-primary)',
+          borderRadius: 'var(--border-radius-lg)',
           padding: '24px',
           color: '#FFFFFF',
           boxShadow: 'var(--shadow-md)',
@@ -200,8 +203,8 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
           overflow: 'hidden',
         }}
       >
-        <div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#B8D4C5', marginBottom: '12px' }}>
-          ✨ LIVE PREVIEW HEADER STOREFRONT PUBLIK
+        <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--color-primary-light)', marginBottom: '14px' }}>
+          Pratinjau Header Storefront Publik
         </div>
 
         <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -213,7 +216,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
               height: '68px',
               borderRadius: '50%',
               objectFit: 'cover',
-              border: '3px solid #FFF',
+              border: '2px solid #FFFFFF',
               boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
             }}
           />
@@ -226,7 +229,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
               {profile.tagline || 'Tagline Storefront'} · {profile.roleLabel || 'Promotor STIFIn'}
             </div>
             <div style={{ fontSize: '13.5px', color: '#FFF', fontWeight: 700, lineHeight: 1.3 }}>
-              &quot;{profile.headline || 'Headline Utama Landing Page'}&quot;
+              &ldquo;{profile.headline || 'Headline Utama Landing Page'}&rdquo;
             </div>
             <div style={{ fontSize: '12px', color: '#B8D4C5', marginTop: '6px' }}>
               {programs.length} program aktif · Wilayah: {profile.city || 'Indonesia'}
@@ -241,17 +244,20 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
-            borderRadius: '18px',
+            borderRadius: 'var(--border-radius-lg)',
             border: '1px solid var(--color-divider)',
             padding: '22px',
+            boxShadow: 'var(--shadow-xs)',
           }}
         >
-          <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '16px' }}>1. Foto Profil / Logo & Identitas Promotor</h3>
+          <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '16px', color: 'var(--color-text-main)' }}>
+            1. Foto Profil & Identitas Promotor
+          </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '8px' }}>
-                Pilih Foto Profil Bawaan atau Masukkan URL Gambar Eksternal
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '8px', color: 'var(--color-text-main)' }}>
+                Foto Profil / Avatar
               </label>
 
               <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
@@ -264,7 +270,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                     borderRadius: '50%',
                     objectFit: 'cover',
                     border: '3px solid var(--color-primary-border)',
-                    boxShadow: 'var(--shadow-sm)',
+                    boxShadow: 'var(--shadow-xs)',
                   }}
                 />
 
@@ -280,7 +286,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                         }}
                         style={{
                           padding: '6px 12px',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--border-radius-sm)',
                           border: profile.avatarUrl === p.url && !customAvatarUrl ? '2px solid var(--color-primary)' : '1px solid var(--color-divider)',
                           backgroundColor: profile.avatarUrl === p.url && !customAvatarUrl ? 'var(--color-primary-light)' : 'var(--color-surface)',
                           color: 'var(--color-text-main)',
@@ -303,7 +309,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                       style={{
                         width: '100%',
                         padding: '8px 12px',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--border-radius-sm)',
                         border: '1px solid var(--color-divider)',
                         fontSize: '13px',
                         outline: 'none',
@@ -316,7 +322,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
                   Nama Tampilan Promotor *
                 </label>
                 <input
@@ -328,7 +334,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                   style={{
                     width: '100%',
                     padding: '10px 14px',
-                    borderRadius: '10px',
+                    borderRadius: 'var(--border-radius-sm)',
                     border: '1px solid var(--color-divider)',
                     fontSize: '14px',
                     outline: 'none',
@@ -337,7 +343,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
                   Peran / Gelar (Role Label)
                 </label>
                 <input
@@ -348,7 +354,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                   style={{
                     width: '100%',
                     padding: '10px 14px',
-                    borderRadius: '10px',
+                    borderRadius: 'var(--border-radius-sm)',
                     border: '1px solid var(--color-divider)',
                     fontSize: '14px',
                     outline: 'none',
@@ -358,7 +364,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
                 Tagline / Subtitle Utama *
               </label>
               <input
@@ -370,7 +376,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  borderRadius: '10px',
+                  borderRadius: 'var(--border-radius-sm)',
                   border: '1px solid var(--color-divider)',
                   fontSize: '14px',
                   outline: 'none',
@@ -384,17 +390,20 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
-            borderRadius: '18px',
+            borderRadius: 'var(--border-radius-lg)',
             border: '1px solid var(--color-divider)',
             padding: '22px',
+            boxShadow: 'var(--shadow-xs)',
           }}
         >
-          <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '14px' }}>2. Copywriting Landing Page & Narasi Bio</h3>
+          <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '14px', color: 'var(--color-text-main)' }}>
+            2. Copywriting Landing Page & Narasi Bio
+          </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
-                Headline Utama Hero (Big Title)
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
+                Headline Utama Hero
               </label>
               <input
                 type="text"
@@ -404,7 +413,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  borderRadius: '10px',
+                  borderRadius: 'var(--border-radius-sm)',
                   border: '1px solid var(--color-divider)',
                   fontSize: '14px',
                   outline: 'none',
@@ -413,7 +422,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
                 Narasi Profil Pendampingan (Bio)
               </label>
               <textarea
@@ -424,7 +433,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  borderRadius: '10px',
+                  borderRadius: 'var(--border-radius-sm)',
                   border: '1px solid var(--color-divider)',
                   fontSize: '14px',
                   outline: 'none',
@@ -439,16 +448,19 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
-            borderRadius: '18px',
+            borderRadius: 'var(--border-radius-lg)',
             border: '1px solid var(--color-divider)',
             padding: '22px',
+            boxShadow: 'var(--shadow-xs)',
           }}
         >
-          <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '14px' }}>3. Kontak & Wilayah Layanan</h3>
+          <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '14px', color: 'var(--color-text-main)' }}>
+            3. Kontak & Wilayah Layanan
+          </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
                 Nomor WhatsApp Promotor (Format E.164)
               </label>
               <input
@@ -459,7 +471,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  borderRadius: '10px',
+                  borderRadius: 'var(--border-radius-sm)',
                   border: '1px solid var(--color-divider)',
                   fontSize: '14px',
                   outline: 'none',
@@ -471,16 +483,16 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                     href={waTestUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ fontSize: '12px', color: '#10B981', fontWeight: 750, textDecoration: 'none' }}
+                    style={{ fontSize: '12px', color: 'var(--color-status-success)', fontWeight: 750, textDecoration: 'none' }}
                   >
-                    Uji Coba Tautan WhatsApp 💬 ↗
+                    Uji Coba Tautan WhatsApp ↗
                   </a>
                 </div>
               )}
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
                 Wilayah Layanan / Kota
               </label>
               <input
@@ -491,7 +503,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  borderRadius: '10px',
+                  borderRadius: 'var(--border-radius-sm)',
                   border: '1px solid var(--color-divider)',
                   fontSize: '14px',
                   outline: 'none',
@@ -512,11 +524,11 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
               backgroundColor: isSaving ? 'var(--color-divider)' : 'var(--color-primary)',
               color: '#FFF',
               fontWeight: 780,
-              borderRadius: '14px',
+              borderRadius: 'var(--border-radius-md)',
               border: 0,
               cursor: isSaving ? 'not-allowed' : 'pointer',
-              fontSize: '15px',
-              boxShadow: 'var(--shadow-md)',
+              fontSize: '14.5px',
+              boxShadow: 'var(--shadow-sm)',
             }}
           >
             {isSaving ? 'Menyimpan...' : 'Simpan Pengaturan Storefront'}
@@ -529,19 +541,20 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
             className="touch-target-primary"
             style={{
               padding: '0 22px',
-              backgroundColor: 'var(--color-surface-hover)',
+              backgroundColor: 'var(--color-surface)',
               color: 'var(--color-text-main)',
               fontWeight: 750,
-              borderRadius: '14px',
+              borderRadius: 'var(--border-radius-md)',
               border: '1px solid var(--color-divider)',
               textDecoration: 'none',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '14px',
+              boxShadow: 'var(--shadow-xs)',
             }}
           >
-            Lihat Tampilan di Storefront Publik ↗
+            Lihat di Storefront Publik ↗
           </Link>
         </div>
       </form>

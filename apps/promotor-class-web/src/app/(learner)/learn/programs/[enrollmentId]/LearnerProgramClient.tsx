@@ -95,19 +95,19 @@ export function LearnerProgramClient() {
     }
 
     loadData();
-  }, [enrollmentId]);
+  }, [enrollmentId, router]);
 
   if (accessDenied) {
     return (
       <LearnerShell>
-        <div style={{ padding: '40px', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-status-danger)', marginBottom: '8px' }}>
+        <div style={{ padding: '48px 16px', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-status-danger)', marginBottom: '8px' }}>
             Akses Ditolak
           </h2>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+          <p style={{ fontSize: '13.5px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
             Anda tidak memiliki hak akses ke program pembelajaran ini.
           </p>
-          <Link href="/learn" style={{ fontWeight: 600, color: 'var(--color-primary)' }}>
+          <Link href="/learn" style={{ fontWeight: 750, color: 'var(--color-primary)' }}>
             ← Kembali ke Program Saya
           </Link>
         </div>
@@ -118,36 +118,46 @@ export function LearnerProgramClient() {
   if (!enrollment || !program) {
     return (
       <LearnerShell>
-        <div style={{ padding: '40px', textAlign: 'center' }}>Memuat program...</div>
+        <div style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '14px', fontWeight: 600 }}>
+          Memuat kurikulum program...
+        </div>
       </LearnerShell>
     );
   }
 
   return (
-    <LearnerShell title={program.title}>
-      <div style={{ padding: '16px' }}>
-        <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
-          <Link href="/learn">← Kembali ke Program Saya</Link>
-        </div>
-
-        <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '4px' }}>{program.title}</h1>
-        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
-          {program.subtitle}
+    <LearnerShell title={program.title} showBack={true} backHref="/learn">
+      <div style={{ padding: '20px 0' }}>
+        <div style={{ marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 850, letterSpacing: '-0.025em', marginBottom: '6px', color: 'var(--color-text-main)' }}>
+            {program.title}
+          </h1>
+          <div style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.55 }}>
+            {program.subtitle}
+          </div>
         </div>
 
         {/* Modules & Lessons List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {program.modules.map(mod => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {program.modules.map((mod, idx) => (
             <div
               key={mod.id}
               style={{
                 backgroundColor: 'var(--color-surface)',
-                borderRadius: 'var(--border-radius-md)',
+                borderRadius: 'var(--border-radius-lg)',
                 border: '1px solid var(--color-divider)',
-                padding: '16px',
+                padding: '20px',
+                boxShadow: 'var(--shadow-xs)',
               }}
             >
-              <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '12px' }}>{mod.title}</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main)' }}>
+                  Modul {idx + 1}: {mod.title}
+                </h3>
+                <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>
+                  {mod.lessons.length} sesi
+                </span>
+              </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {mod.lessons.map(les => {
@@ -165,26 +175,32 @@ export function LearnerProgramClient() {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
+                        gap: '12px',
                         color: 'inherit',
                         textDecoration: 'none',
+                        border: '1px solid var(--color-divider)',
+                        transition: 'background-color var(--duration-fast) ease',
                       }}
                     >
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: '13px' }}>{les.title}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                          {les.videoYoutubeUrl ? 'Video' : 'Teks'} {les.hasReflection ? '· Refleksi' : ''}
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: '13.5px', color: 'var(--color-text-main)' }}>
+                          {les.title}
+                        </div>
+                        <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                          {les.videoYoutubeUrl ? 'Video' : 'Teks'} {les.hasReflection ? '· Refleksi Mandiri' : ''}
                         </div>
                       </div>
 
                       <span
                         style={{
-                          fontSize: '11px',
-                          fontWeight: 600,
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          backgroundColor: isCompleted ? 'var(--color-status-success-bg)' : '#FFF',
+                          fontSize: '11.5px',
+                          fontWeight: 750,
+                          padding: '3px 10px',
+                          borderRadius: 'var(--border-radius-full)',
+                          backgroundColor: isCompleted ? 'var(--color-status-success-bg)' : 'var(--color-surface)',
                           color: isCompleted ? 'var(--color-status-success)' : 'var(--color-primary)',
-                          border: '1px solid var(--color-divider)',
+                          border: isCompleted ? '1px solid var(--color-status-success-border)' : '1px solid var(--color-divider)',
+                          whiteSpace: 'nowrap',
                         }}
                       >
                         {isCompleted ? '✓ Selesai' : 'Mulai →'}

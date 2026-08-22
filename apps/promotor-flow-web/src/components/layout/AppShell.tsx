@@ -17,19 +17,21 @@ export const AppShell: React.FC<AppShellProps> = ({ children, showBottomNav = tr
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
-    getSession().then((sess) => {
-      if (!sess && getApiMode() === 'http') {
-        router.push(`/login?returnTo=${encodeURIComponent(pathname)}`);
-        return;
-      }
-      setIsCheckingAuth(false);
-    }).catch(() => {
-      if (getApiMode() === 'http') {
-        router.push(`/login?returnTo=${encodeURIComponent(pathname)}`);
-      } else {
+    getSession()
+      .then((sess) => {
+        if (!sess && getApiMode() === 'http') {
+          router.push(`/login?returnTo=${encodeURIComponent(pathname)}`);
+          return;
+        }
         setIsCheckingAuth(false);
-      }
-    });
+      })
+      .catch(() => {
+        if (getApiMode() === 'http') {
+          router.push(`/login?returnTo=${encodeURIComponent(pathname)}`);
+        } else {
+          setIsCheckingAuth(false);
+        }
+      });
   }, [pathname, router]);
 
   if (isCheckingAuth && getApiMode() === 'http') {
@@ -37,13 +39,13 @@ export const AppShell: React.FC<AppShellProps> = ({ children, showBottomNav = tr
       <div
         style={{
           minHeight: '100vh',
-          backgroundColor: '#F7F7F5',
+          backgroundColor: 'var(--color-canvas)',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
         }}
       >
-        <div style={{ font: '400 13px Inter, sans-serif', color: '#71706B' }}>
+        <div style={{ fontSize: '13.5px', color: 'var(--color-text-tertiary)', fontWeight: 600 }}>
           Memuat sesi promotor...
         </div>
       </div>
@@ -54,7 +56,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children, showBottomNav = tr
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#F7F7F5',
+        backgroundColor: 'var(--color-canvas)',
         display: 'flex',
         justifyContent: 'center',
       }}
@@ -64,17 +66,17 @@ export const AppShell: React.FC<AppShellProps> = ({ children, showBottomNav = tr
           width: '100%',
           maxWidth: '480px',
           minHeight: '100vh',
-          backgroundColor: '#F7F7F5',
+          backgroundColor: 'var(--color-canvas)',
           display: 'flex',
           flexDirection: 'column',
           position: 'relative',
-          boxShadow: '0 0 20px rgba(0,0,0,0.03)',
+          boxShadow: 'var(--shadow-sm)',
         }}
       >
         <main
           style={{
             flex: 1,
-            paddingBottom: showBottomNav ? '70px' : '20px',
+            paddingBottom: showBottomNav ? 'calc(74px + env(safe-area-inset-bottom, 0px))' : '24px',
             overflowY: 'auto',
           }}
         >

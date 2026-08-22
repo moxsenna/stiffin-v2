@@ -25,38 +25,41 @@ export function LearnerDetail({
   const primaryReason = signal?.primaryReason || 'Memulai pembelajaran';
   const rawQuote = signal?.rawReflectionQuote;
 
-  const getMinatStyle = (status: string) => {
-    switch (status) {
-      case 'Minat tinggi':
-        return { bg: 'var(--color-status-success-bg)', text: 'var(--color-status-success)' };
-      case 'Minat sedang':
-        return { bg: 'var(--color-status-warning-bg)', text: 'var(--color-status-warning)' };
-      default:
-        return { bg: '#F0F0ED', text: 'var(--color-text-muted)' };
-    }
-  };
+  const isHigh = signalLevel === 'Minat tinggi';
+  const isMedium = signalLevel === 'Minat sedang';
 
-  const minatStyle = getMinatStyle(signalLevel);
   const programTitle = program?.title || 'Program Belajar';
-  const defaultDraftMessage = `Halo ${contact.name}, saya promotor Anda dari program "${programTitle}". Saya memperhatikan Anda telah ${primaryReason.toLowerCase()}. Bagaimana perkembangan belajar Anda saat ini?`;
+  const defaultDraftMessage = `Halo ${contact.name}, salam dari Promotor STIFIn untuk materi "${programTitle}". Saya memperhatikan Anda telah ${primaryReason.toLowerCase()}. Bagaimana perkembangan belajar Anda saat ini?`;
 
   return (
-    <div className="side-panel active" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', minHeight: '100%', boxSizing: 'border-box' }}>
       {/* Header Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-text-main)' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 850, color: 'var(--color-text-main)', letterSpacing: '-0.02em' }}>
             {contact.name}
           </h2>
-          <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+          <div style={{ fontSize: '12.5px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
             {formatPhoneDisplay(contact.phoneE164)}
           </div>
         </div>
         {onClose && (
           <button
             onClick={onClose}
+            aria-label="Tutup panel"
             className="touch-target"
-            style={{ padding: '4px 8px', fontSize: '14px', color: 'var(--color-text-muted)' }}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--color-surface-hover)',
+              border: '1px solid var(--color-divider)',
+              fontSize: '14px',
+              color: 'var(--color-text-muted)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
             ✕
           </button>
@@ -66,32 +69,33 @@ export function LearnerDetail({
       {/* Status & Reason Card */}
       <div
         style={{
-          padding: '14px',
+          padding: '16px',
           borderRadius: 'var(--border-radius-md)',
-          backgroundColor: minatStyle.bg,
-          border: '1px solid var(--color-divider)',
+          backgroundColor: isHigh ? 'var(--color-status-success-bg)' : isMedium ? 'var(--color-status-warning-bg)' : 'var(--color-canvas)',
+          border: isHigh ? '1px solid var(--color-status-success-border)' : isMedium ? '1px solid var(--color-status-warning-border)' : '1px solid var(--color-divider)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
           <span
             style={{
-              fontSize: '12px',
-              fontWeight: 700,
-              color: minatStyle.text,
+              fontSize: '11.5px',
+              fontWeight: 780,
+              color: isHigh ? 'var(--color-status-success)' : isMedium ? 'var(--color-status-warning)' : 'var(--color-text-muted)',
               padding: '2px 8px',
-              borderRadius: 'var(--border-radius-sm)',
-              backgroundColor: '#FFF',
+              borderRadius: 'var(--border-radius-xs)',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid var(--color-divider)',
             }}
           >
             {signalLevel}
           </span>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-main)' }}>
-            Alasan: {primaryReason}
+          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-main)' }}>
+            {primaryReason}
           </span>
         </div>
         {signal?.intentScore !== undefined && (
-          <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }} className="tabular-nums">
-            Skor indikator lanjutan: {signal.intentScore}/100
+          <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted)', marginTop: '4px' }} className="tabular-nums">
+            Skor Intent: {signal.intentScore}/100
           </div>
         )}
       </div>
@@ -100,13 +104,14 @@ export function LearnerDetail({
       {rawQuote && (
         <div
           style={{
-            padding: '12px',
+            padding: '14px 16px',
             borderRadius: 'var(--border-radius-sm)',
             backgroundColor: 'var(--color-canvas)',
-            borderLeft: '3px solid var(--color-primary)',
+            border: '1px solid var(--color-divider)',
             fontSize: '13px',
             fontStyle: 'italic',
-            color: 'var(--color-text-main)',
+            color: 'var(--color-text-body)',
+            lineHeight: 1.55,
           }}
         >
           &ldquo;{rawQuote}&rdquo;
@@ -115,19 +120,30 @@ export function LearnerDetail({
 
       {/* Enrollment Progress */}
       {enrollment && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div
+          style={{
+            padding: '16px',
+            borderRadius: 'var(--border-radius-md)',
+            backgroundColor: 'var(--color-surface)',
+            border: '1px solid var(--color-divider)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-            <span style={{ fontWeight: 600 }}>Progres Pembelajaran</span>
-            <span className="tabular-nums" style={{ color: 'var(--color-primary)', fontWeight: 700 }}>
+            <span style={{ fontWeight: 700, color: 'var(--color-text-main)' }}>Progres Pembelajaran</span>
+            <span className="tabular-nums" style={{ color: 'var(--color-primary)', fontWeight: 800 }}>
               {enrollment.progressPercent}%
             </span>
           </div>
 
           <div
             style={{
-              height: '8px',
+              height: '7px',
               borderRadius: '4px',
-              backgroundColor: 'var(--color-divider)',
+              backgroundColor: 'var(--color-canvas)',
+              border: '1px solid var(--color-divider)',
               overflow: 'hidden',
             }}
           >
@@ -142,7 +158,7 @@ export function LearnerDetail({
           </div>
 
           <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-            Program: {program?.title || 'Program Belajar'}
+            Program: <strong>{program?.title || 'Program Belajar'}</strong>
           </div>
         </div>
       )}
@@ -154,13 +170,15 @@ export function LearnerDetail({
         style={{
           width: '100%',
           backgroundColor: 'var(--color-primary)',
-          color: '#FFF',
-          fontWeight: 600,
+          color: '#FFFFFF',
+          fontWeight: 780,
+          fontSize: '14px',
           borderRadius: 'var(--border-radius-md)',
-          marginTop: '10px',
+          marginTop: 'auto',
+          boxShadow: 'var(--shadow-sm)',
         }}
       >
-        Buat Draf WhatsApp
+        Buat Draf Pesan WhatsApp
       </button>
     </div>
   );

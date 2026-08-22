@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { formatPhoneDisplay } from '@promotor/platform-core';
+import { CheckIcon, ClockIcon } from '@/components/foundation/icons';
 
 interface AvailableSlot {
   startAt: string;
@@ -65,7 +66,7 @@ export default function PublicBookingPage() {
     try {
       const now = new Date();
       const from = now.toISOString();
-      const to = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(); // 14 days out
+      const to = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
       const res = await fetch(
         `${baseUrl}/api/v1/public/${encodeURIComponent(slug)}/slots?serviceId=${encodeURIComponent(
@@ -81,7 +82,6 @@ export default function PublicBookingPage() {
       const data = await res.json();
       setService(data.service);
       setSlots(data.slots || []);
-      // If previous slot is no longer in list, deselect
       setSelectedSlot((prev) => {
         if (prev && !data.slots.some((s: AvailableSlot) => s.startAt === prev.startAt)) {
           return null;
@@ -142,7 +142,6 @@ export default function PublicBookingPage() {
       });
 
       if (res.status === 409) {
-        // Race recovery: slot is already booked
         setSlotUnavailableNotice(
           'Slot waktu ini baru saja dipesan oleh orang lain. Silakan pilih slot lain yang masih tersedia di bawah.'
         );
@@ -176,231 +175,394 @@ export default function PublicBookingPage() {
 
   if (bookingSuccess) {
     return (
-      <div style={{ maxWidth: '540px', margin: '40px auto', padding: '24px', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E8E7E3', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', fontFamily: 'Inter, sans-serif' }}>
-        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <div style={{ width: '56px', height: '56px', backgroundColor: '#ECFDF3', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#027A48" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-canvas)', padding: '40px 16px', display: 'flex', justifyContent: 'center' }}>
+        <div
+          style={{
+            width: '100%',
+            maxWidth: '520px',
+            backgroundColor: 'var(--color-surface)',
+            borderRadius: 'var(--radius-xl)',
+            border: '1px solid var(--color-divider)',
+            padding: '36px 24px',
+            boxShadow: 'var(--shadow-md)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+          }}
+        >
+          <div style={{ textAlign: 'center' }}>
+            <div
+              style={{
+                width: '60px',
+                height: '60px',
+                backgroundColor: 'var(--color-success-soft)',
+                border: '1px solid var(--color-success-border)',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+                color: 'var(--color-success)',
+              }}
+            >
+              <CheckIcon size={30} color="var(--color-success)" />
+            </div>
+            <h1 style={{ fontSize: '22px', fontWeight: 850, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>
+              Booking Berhasil Terkirim!
+            </h1>
+            <p style={{ fontSize: '13.5px', color: 'var(--color-text-secondary)', marginTop: '6px', lineHeight: 1.5 }}>
+              Terima kasih, <strong>{name}</strong>. Permintaan jadwal sesi konsultasi Anda telah kami catat.
+            </p>
           </div>
-          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#191918', margin: 0 }}>Booking Berhasil Terkirim!</h2>
-          <p style={{ fontSize: '14px', color: '#71706B', marginTop: '6px' }}>
-            Terima kasih, {name}. Permintaan konsultasi Anda telah kami terima.
-          </p>
-        </div>
 
-        <div style={{ backgroundColor: '#FAFAF9', borderRadius: '8px', padding: '16px', border: '1px solid #E8E7E3', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px', color: '#71706B' }}>Layanan:</span>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#191918' }}>{bookingSuccess.serviceTitle}</span>
+          <div
+            style={{
+              backgroundColor: 'var(--color-canvas)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '20px',
+              border: '1px solid var(--color-divider)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>Layanan:</span>
+              <span style={{ fontSize: '13.5px', fontWeight: 780, color: 'var(--color-text-primary)' }}>{bookingSuccess.serviceTitle}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>Jadwal Waktu:</span>
+              <span className="tabular-nums" style={{ fontSize: '13px', fontWeight: 780, color: 'var(--color-text-primary)' }}>
+                {new Date(bookingSuccess.startAt).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>Nomor WhatsApp:</span>
+              <span className="tabular-nums" style={{ fontSize: '13px', fontWeight: 780, color: 'var(--color-text-primary)' }}>
+                {formatPhoneDisplay(phoneRaw)}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed var(--color-border-strong)', paddingTop: '10px', marginTop: '2px' }}>
+              <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>Estimasi Biaya:</span>
+              <span className="tabular-nums" style={{ fontSize: '15px', fontWeight: 850, color: 'var(--color-primary)' }}>
+                {bookingSuccess.amount > 0 ? `Rp ${bookingSuccess.amount.toLocaleString('id-ID')}` : 'Gratis'}
+              </span>
+            </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px', color: '#71706B' }}>Waktu:</span>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#191918' }}>
-              {new Date(bookingSuccess.startAt).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })}
-            </span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px', color: '#71706B' }}>Nomor WhatsApp:</span>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#191918' }}>{formatPhoneDisplay(phoneRaw)}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #D5D3CE', paddingTop: '8px', marginTop: '4px' }}>
-            <span style={{ fontSize: '13px', color: '#71706B' }}>Estimasi Biaya:</span>
-            <span style={{ fontSize: '14px', fontWeight: 700, color: '#167A68' }}>
-              {bookingSuccess.amount > 0 ? `Rp ${bookingSuccess.amount.toLocaleString('id-ID')}` : 'Gratis'}
-            </span>
-          </div>
-        </div>
 
-        <div style={{ marginTop: '20px', padding: '12px', backgroundColor: '#F0FDF9', borderRadius: '8px', border: '1px solid #B2E5D9', fontSize: '13px', color: '#0E5C4E', lineHeight: '1.5' }}>
-          <strong>Langkah Selanjutnya:</strong> Promotor kami akan segera menghubungi nomor WhatsApp Anda untuk konfirmasi jadwal dan instruksi pembayaran jika berlaku.
+          <div
+            style={{
+              padding: '16px',
+              backgroundColor: 'var(--color-primary-light)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--color-primary-border)',
+              fontSize: '13px',
+              color: 'var(--color-primary-hover)',
+              lineHeight: 1.5,
+            }}
+          >
+            <strong>Langkah Selanjutnya:</strong> Promotor kami akan segera menghubungi nomor WhatsApp Anda untuk konfirmasi persiapan sesi dan lokasi.
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: '640px', margin: '30px auto', padding: '24px', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E8E7E3', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ borderBottom: '1px solid #E8E7E3', paddingBottom: '16px', marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#191918', margin: 0 }}>Jadwal Konsultasi STIFIn</h1>
-        {service ? (
-          <div style={{ marginTop: '8px' }}>
-            <div style={{ fontSize: '16px', fontWeight: 600, color: '#167A68' }}>{service.name}</div>
-            <div style={{ fontSize: '13px', color: '#71706B', marginTop: '2px' }}>
-              Durasi: {service.durationMinutes} Menit • Biaya: {service.priceAmount > 0 ? `Rp ${service.priceAmount.toLocaleString('id-ID')}` : 'Gratis'}
-            </div>
-            {service.description && (
-              <p style={{ fontSize: '13.5px', color: '#4E4D49', marginTop: '6px', lineHeight: '1.4' }}>{service.description}</p>
-            )}
-          </div>
-        ) : (
-          <p style={{ fontSize: '13.5px', color: '#71706B', marginTop: '4px' }}>
-            Pilih slot waktu dan isi data kontak Anda untuk menjadwalkan sesi konsultasi.
-          </p>
-        )}
-      </div>
-
-      {slotUnavailableNotice && (
-        <div style={{ padding: '12px 14px', borderRadius: '8px', backgroundColor: '#FEF3F2', border: '1px solid #FECDCA', color: '#B42318', fontSize: '13.5px', marginBottom: '16px', fontWeight: 500 }}>
-          {slotUnavailableNotice}
-        </div>
-      )}
-
-      {errorMessage && (
-        <div style={{ padding: '12px 14px', borderRadius: '8px', backgroundColor: '#FEF3F2', border: '1px solid #FECDCA', color: '#B42318', fontSize: '13.5px', marginBottom: '16px' }}>
-          {errorMessage}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {/* Step 1: Slot Selection */}
-        <div>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: '#191918', marginBottom: '10px' }}>
-            1. Pilih Jadwal Waktu Konsultasi
-          </div>
-
-          {loadingSlots ? (
-            <div style={{ padding: '24px', textAlign: 'center', color: '#71706B', fontSize: '13.5px' }}>
-              Memuat slot ketersediaan...
-            </div>
-          ) : Object.keys(slotsByDate).length === 0 ? (
-            <div style={{ padding: '20px', borderRadius: '8px', backgroundColor: '#FAFAF9', border: '1px solid #E8E7E3', textAlign: 'center', color: '#71706B', fontSize: '13.5px' }}>
-              Belum ada slot waktu yang tersedia dalam 14 hari ke depan. Silakan hubungi promotor langsung.
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-canvas)', padding: '24px 16px', display: 'flex', justifyContent: 'center' }}>
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '580px',
+          backgroundColor: 'var(--color-surface)',
+          borderRadius: 'var(--radius-xl)',
+          border: '1px solid var(--color-divider)',
+          padding: '28px 24px',
+          boxShadow: 'var(--shadow-sm)',
+        }}
+      >
+        <div style={{ borderBottom: '1px solid var(--color-divider)', paddingBottom: '18px', marginBottom: '20px' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 850, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>
+            Jadwal Konsultasi STIFIn
+          </h1>
+          {service ? (
+            <div style={{ marginTop: '10px' }}>
+              <div style={{ fontSize: '16.5px', fontWeight: 800, color: 'var(--color-primary)' }}>
+                {service.name}
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
+                Durasi: {service.durationMinutes} Menit · Biaya:{' '}
+                <strong style={{ color: 'var(--color-text-primary)' }}>
+                  {service.priceAmount > 0 ? `Rp ${service.priceAmount.toLocaleString('id-ID')}` : 'Gratis'}
+                </strong>
+              </div>
+              {service.description && (
+                <p style={{ fontSize: '13.5px', color: 'var(--color-text-secondary)', marginTop: '8px', lineHeight: 1.5 }}>
+                  {service.description}
+                </p>
+              )}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '280px', overflowY: 'auto', paddingRight: '4px' }}>
-              {Object.entries(slotsByDate).map(([dateStr, dateSlots]) => (
-                <div key={dateStr}>
-                  <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#71706B', marginBottom: '6px', textTransform: 'uppercase' }}>
-                    {new Date(dateStr).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px' }}>
-                    {dateSlots.map((slot) => {
-                      const isSelected = selectedSlot?.startAt === slot.startAt;
-                      return (
-                        <button
-                          type="button"
-                          key={slot.startAt}
-                          onClick={() => handleSlotSelect(slot)}
-                          style={{
-                            padding: '8px 10px',
-                            borderRadius: '6px',
-                            border: isSelected ? '2px solid #167A68' : '1px solid #D5D3CE',
-                            backgroundColor: isSelected ? '#EAF5F2' : '#FFFFFF',
-                            color: isSelected ? '#167A68' : '#191918',
-                            fontSize: '13px',
-                            fontWeight: isSelected ? 600 : 400,
-                            cursor: 'pointer',
-                            textAlign: 'center',
-                          }}
-                        >
-                          {slot.localDisplay}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p style={{ fontSize: '13.5px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
+              Pilih slot waktu dan isi data kontak Anda untuk menjadwalkan sesi konsultasi.
+            </p>
           )}
         </div>
 
-        {/* Step 2: Contact Details */}
-        <div style={{ borderTop: '1px solid #E8E7E3', paddingTop: '16px' }}>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: '#191918', marginBottom: '12px' }}>
-            2. Informasi Kontak
+        {slotUnavailableNotice && (
+          <div
+            role="alert"
+            style={{
+              padding: '12px 14px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'var(--color-danger-soft)',
+              border: '1px solid var(--color-danger-border)',
+              color: 'var(--color-danger)',
+              fontSize: '13.5px',
+              marginBottom: '16px',
+              fontWeight: 600,
+            }}
+          >
+            {slotUnavailableNotice}
           </div>
+        )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#4E4D49', marginBottom: '4px' }}>
-                Nama Lengkap *
-              </label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="cth: Budi Santoso"
-                style={{ width: '100%', height: '40px', padding: '0 12px', borderRadius: '6px', border: '1px solid #D5D3CE', fontSize: '14px', boxSizing: 'border-box' }}
-              />
+        {errorMessage && (
+          <div
+            role="alert"
+            style={{
+              padding: '12px 14px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'var(--color-danger-soft)',
+              border: '1px solid var(--color-danger-border)',
+              color: 'var(--color-danger)',
+              fontSize: '13.5px',
+              marginBottom: '16px',
+              fontWeight: 600,
+            }}
+          >
+            {errorMessage}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+          {/* Step 1: Slot Selection */}
+          <div>
+            <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: '10px' }}>
+              1. Pilih Jadwal Waktu Konsultasi
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#4E4D49', marginBottom: '4px' }}>
-                Nomor WhatsApp *
-              </label>
-              <input
-                type="tel"
-                required
-                value={phoneRaw}
-                onChange={(e) => setPhoneRaw(e.target.value)}
-                placeholder="cth: 081234567890"
-                style={{ width: '100%', height: '40px', padding: '0 12px', borderRadius: '6px', border: '1px solid #D5D3CE', fontSize: '14px', boxSizing: 'border-box' }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#4E4D49', marginBottom: '4px' }}>
-                Email (Opsional)
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="cth: budi@example.com"
-                style={{ width: '100%', height: '40px', padding: '0 12px', borderRadius: '6px', border: '1px solid #D5D3CE', fontSize: '14px', boxSizing: 'border-box' }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#4E4D49', marginBottom: '4px' }}>
-                Tipe Sesi Konsultasi
-              </label>
-              <select
-                value={locationType}
-                onChange={(e) => setLocationType(e.target.value as any)}
-                style={{ width: '100%', height: '40px', padding: '0 12px', borderRadius: '6px', border: '1px solid #D5D3CE', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#FFFFFF' }}
+            {loadingSlots ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--color-text-tertiary)', fontSize: '13.5px' }}>
+                Memuat slot ketersediaan...
+              </div>
+            ) : Object.keys(slotsByDate).length === 0 ? (
+              <div
+                style={{
+                  padding: '24px 16px',
+                  borderRadius: 'var(--radius-md)',
+                  backgroundColor: 'var(--color-canvas)',
+                  border: '1px solid var(--color-divider)',
+                  textAlign: 'center',
+                  color: 'var(--color-text-secondary)',
+                  fontSize: '13.5px',
+                }}
               >
-                <option value="ONLINE">Online (Zoom / Google Meet)</option>
-                <option value="ON_SITE">On-Site (Kantor / Tempat Promotor)</option>
-                <option value="HOME_VISIT">Home Visit (Kunjungan ke Rumah)</option>
-              </select>
+                Belum ada slot waktu yang tersedia dalam 14 hari ke depan. Silakan hubungi promotor langsung.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' }}>
+                {Object.entries(slotsByDate).map(([dateStr, dateSlots]) => (
+                  <div key={dateStr}>
+                    <div style={{ fontSize: '12.5px', fontWeight: 780, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>
+                      {new Date(dateStr).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px' }}>
+                      {dateSlots.map((slot) => {
+                        const isSelected = selectedSlot?.startAt === slot.startAt;
+                        return (
+                          <button
+                            type="button"
+                            key={slot.startAt}
+                            onClick={() => handleSlotSelect(slot)}
+                            className="touch-target"
+                            style={{
+                              padding: '8px 10px',
+                              borderRadius: 'var(--radius-sm)',
+                              border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-border-strong)',
+                              backgroundColor: isSelected ? 'var(--color-primary-light)' : 'var(--color-surface)',
+                              color: isSelected ? 'var(--color-primary)' : 'var(--color-text-primary)',
+                              fontSize: '13px',
+                              fontWeight: isSelected ? 780 : 550,
+                              textAlign: 'center',
+                              transition: 'all var(--duration-fast) ease',
+                            }}
+                          >
+                            {slot.localDisplay}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Step 2: Contact Details */}
+          <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '18px' }}>
+            <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: '14px' }}>
+              2. Informasi Kontak Peserta
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#4E4D49', marginBottom: '4px' }}>
-                Catatan / Harapan Sesi (Opsional)
-              </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="cth: Ingin konsultasi tes minat bakat untuk anak usia 10 tahun..."
-                rows={3}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #D5D3CE', fontSize: '13.5px', boxSizing: 'border-box', fontFamily: 'inherit' }}
-              />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, color: 'var(--color-text-primary)', marginBottom: '6px' }}>
+                  Nama Lengkap *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Contoh: Budi Santoso"
+                  style={{
+                    width: '100%',
+                    height: '44px',
+                    padding: '0 14px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border-strong)',
+                    fontSize: '14px',
+                    color: 'var(--color-text-primary)',
+                    backgroundColor: 'var(--color-canvas)',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, color: 'var(--color-text-primary)', marginBottom: '6px' }}>
+                  Nomor WhatsApp *
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={phoneRaw}
+                  onChange={(e) => setPhoneRaw(e.target.value)}
+                  placeholder="0812 3456 7890"
+                  style={{
+                    width: '100%',
+                    height: '44px',
+                    padding: '0 14px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border-strong)',
+                    fontSize: '14px',
+                    color: 'var(--color-text-primary)',
+                    backgroundColor: 'var(--color-canvas)',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, color: 'var(--color-text-primary)', marginBottom: '6px' }}>
+                  Email (Opsional)
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="budi@example.com"
+                  style={{
+                    width: '100%',
+                    height: '44px',
+                    padding: '0 14px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border-strong)',
+                    fontSize: '14px',
+                    color: 'var(--color-text-primary)',
+                    backgroundColor: 'var(--color-canvas)',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, color: 'var(--color-text-primary)', marginBottom: '6px' }}>
+                  Tipe Sesi Konsultasi
+                </label>
+                <select
+                  value={locationType}
+                  onChange={(e) => setLocationType(e.target.value as any)}
+                  style={{
+                    width: '100%',
+                    height: '44px',
+                    padding: '0 14px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border-strong)',
+                    fontSize: '14px',
+                    color: 'var(--color-text-primary)',
+                    backgroundColor: 'var(--color-canvas)',
+                    outline: 'none',
+                  }}
+                >
+                  <option value="ONLINE">Online (Zoom / Google Meet)</option>
+                  <option value="ON_SITE">On-Site (Kantor / Tempat Promotor)</option>
+                  <option value="HOME_VISIT">Home Visit (Kunjungan ke Rumah)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, color: 'var(--color-text-primary)', marginBottom: '6px' }}>
+                  Catatan / Harapan Sesi (Opsional)
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Contoh: Ingin konsultasi tes minat bakat untuk anak usia 10 tahun..."
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border-strong)',
+                    fontSize: '14px',
+                    lineHeight: 1.5,
+                    color: 'var(--color-text-primary)',
+                    backgroundColor: 'var(--color-canvas)',
+                    resize: 'vertical',
+                    outline: 'none',
+                  }}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <button
-          type="submit"
-          disabled={submitting || !selectedSlot}
-          style={{
-            height: '46px',
-            backgroundColor: submitting || !selectedSlot ? '#87BDB2' : '#167A68',
-            color: '#FFFFFF',
-            borderRadius: '8px',
-            border: 'none',
-            fontSize: '15px',
-            fontWeight: 600,
-            cursor: submitting || !selectedSlot ? 'not-allowed' : 'pointer',
-            transition: 'background-color 0.2s',
-          }}
-        >
-          {submitting ? 'Memproses Booking...' : selectedSlot ? `Konfirmasi Booking (${selectedSlot.localDisplay})` : 'Pilih Slot Waktu Terlebih Dahulu'}
-        </button>
-      </form>
+          <button
+            type="submit"
+            disabled={submitting || !selectedSlot}
+            className="touch-target-primary"
+            style={{
+              width: '100%',
+              backgroundColor: submitting || !selectedSlot ? 'var(--color-border-strong)' : 'var(--color-primary)',
+              color: '#FFFFFF',
+              borderRadius: 'var(--radius-md)',
+              border: 'none',
+              fontSize: '15px',
+              fontWeight: 780,
+              cursor: submitting || !selectedSlot ? 'not-allowed' : 'pointer',
+              boxShadow: 'var(--shadow-sm)',
+              marginTop: '8px',
+            }}
+          >
+            {submitting
+              ? 'Memproses Booking...'
+              : selectedSlot
+              ? `Konfirmasi Booking (${selectedSlot.localDisplay}) →`
+              : 'Pilih Slot Waktu Terlebih Dahulu'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

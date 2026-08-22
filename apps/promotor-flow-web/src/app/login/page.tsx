@@ -3,6 +3,7 @@
 import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn, getSession, sanitizeReturnTo } from '@/lib/auth';
+import { LightningIcon } from '@/components/foundation/icons';
 
 function LoginForm() {
   const router = useRouter();
@@ -28,7 +29,6 @@ function LoginForm() {
         return;
       }
 
-      // Verify session and entitlements
       const session = await getSession();
       if (!session) {
         setErrorMessage('Sesi masuk tidak dapat diverifikasi.');
@@ -53,7 +53,7 @@ function LoginForm() {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#F7F7F5',
+        backgroundColor: 'var(--color-canvas)',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
@@ -64,11 +64,11 @@ function LoginForm() {
         style={{
           width: '100%',
           maxWidth: '400px',
-          backgroundColor: '#FFFFFF',
-          borderRadius: '16px',
-          border: '1px solid #E8E7E3',
-          padding: '32px 24px',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
+          backgroundColor: 'var(--color-surface)',
+          borderRadius: 'var(--radius-xl)',
+          border: '1px solid var(--color-divider)',
+          padding: '36px 28px',
+          boxShadow: 'var(--shadow-md)',
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
@@ -77,43 +77,47 @@ function LoginForm() {
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              backgroundColor: '#eef5f1',
-              color: '#167A68',
-              fontSize: '22px',
-              marginBottom: '12px',
+              width: '52px',
+              height: '52px',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'var(--color-primary)',
+              color: '#FFFFFF',
+              marginBottom: '16px',
+              boxShadow: 'var(--shadow-sm)',
             }}
           >
-            ⚡
+            <LightningIcon size={26} color="#FFFFFF" />
           </div>
-          <h1 style={{ font: '700 22px/28px Inter, sans-serif', color: '#191918', marginBottom: '4px' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 850, letterSpacing: '-0.03em', color: 'var(--color-text-primary)', marginBottom: '4px' }}>
             Masuk ke PromotorFlow
           </h1>
-          <p style={{ font: '400 13px/18px Inter, sans-serif', color: '#71706B', margin: 0 }}>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.5 }}>
             Sistem eksekusi pipeline harian promotor STIFIn
           </p>
         </div>
 
         {errorMessage && (
           <div
+            role="alert"
             style={{
               padding: '12px 14px',
-              borderRadius: '8px',
-              backgroundColor: '#FEE2E2',
-              color: '#991B1B',
-              font: '500 13px/18px Inter, sans-serif',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'var(--color-danger-soft)',
+              border: '1px solid var(--color-danger-border)',
+              color: 'var(--color-danger)',
+              fontSize: '13px',
+              fontWeight: 600,
               marginBottom: '20px',
+              lineHeight: 1.45,
             }}
           >
-            ⚠️ {errorMessage}
+            {errorMessage}
           </div>
         )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
-            <label style={{ display: 'block', font: '600 13px Inter, sans-serif', color: '#191918', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, color: 'var(--color-text-primary)', marginBottom: '6px' }}>
               Email Promotor
             </label>
             <input
@@ -125,18 +129,20 @@ function LoginForm() {
               placeholder="promotor@stifin.id"
               style={{
                 width: '100%',
-                padding: '11px 14px',
-                borderRadius: '8px',
-                border: '1px solid #D5D3CE',
+                height: '44px',
+                padding: '0 14px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--color-border-strong)',
                 fontSize: '14px',
+                color: 'var(--color-text-primary)',
                 outline: 'none',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: 'var(--color-canvas)',
               }}
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', font: '600 13px Inter, sans-serif', color: '#191918', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, color: 'var(--color-text-primary)', marginBottom: '6px' }}>
               Kata Sandi
             </label>
             <input
@@ -148,12 +154,14 @@ function LoginForm() {
               placeholder="••••••••"
               style={{
                 width: '100%',
-                padding: '11px 14px',
-                borderRadius: '8px',
-                border: '1px solid #D5D3CE',
+                height: '44px',
+                padding: '0 14px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--color-border-strong)',
                 fontSize: '14px',
+                color: 'var(--color-text-primary)',
                 outline: 'none',
-                backgroundColor: '#FFFFFF',
+                backgroundColor: 'var(--color-canvas)',
               }}
             />
           </div>
@@ -161,23 +169,25 @@ function LoginForm() {
           <button
             type="submit"
             disabled={isLoading}
+            className="touch-target-primary"
             style={{
               width: '100%',
-              padding: '12px',
-              borderRadius: '8px',
-              backgroundColor: isLoading ? '#D5D3CE' : '#167A68',
+              backgroundColor: isLoading ? 'var(--color-border-strong)' : 'var(--color-primary)',
               color: '#FFFFFF',
-              font: '600 14px Inter, sans-serif',
+              borderRadius: 'var(--radius-md)',
               border: 0,
+              fontWeight: 780,
+              fontSize: '14.5px',
               cursor: isLoading ? 'not-allowed' : 'pointer',
-              marginTop: '8px',
+              marginTop: '6px',
+              boxShadow: 'var(--shadow-sm)',
             }}
           >
-            {isLoading ? 'Memverifikasi...' : 'Masuk'}
+            {isLoading ? 'Memverifikasi...' : 'Masuk →'}
           </button>
         </form>
 
-        <div style={{ marginTop: '24px', textAlign: 'center', font: '400 12px/16px Inter, sans-serif', color: '#9C9A94' }}>
+        <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '12px', color: 'var(--color-text-tertiary)', lineHeight: 1.5 }}>
           Butuh bantuan akses akun? Hubungi administrator cabang Anda.
         </div>
       </div>
@@ -189,8 +199,8 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F7F7F5' }}>
-          <div style={{ color: '#71706B', fontSize: '14px' }}>Memuat halaman masuk...</div>
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-canvas)' }}>
+          <div style={{ color: 'var(--color-text-tertiary)', fontSize: '14px', fontWeight: 600 }}>Memuat halaman masuk...</div>
         </div>
       }
     >

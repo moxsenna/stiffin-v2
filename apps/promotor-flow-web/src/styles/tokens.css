@@ -1,31 +1,63 @@
 :root {
-  --color-canvas: #F7F7F5;
+  /* Canvas & Neutral Ink Surfaces */
+  --color-canvas: #F8F8F6;
   --color-surface: #FFFFFF;
-  --color-text-primary: #191918;
-  --color-text-secondary: #71706B;
-  --color-text-tertiary: #9C9A94;
-  --color-divider: #E8E7E3;
-  --color-border-strong: #D5D3CE;
-  
-  --color-primary: #167A68;
-  --color-primary-hover: #126556;
-  --color-primary-soft: #EAF5F2;
+  --color-surface-hover: #F2F2EE;
+  --color-surface-active: #E8E8E2;
 
-  --color-danger: #B42318;
-  --color-danger-soft: #FEF3F2;
-  --color-warning: #B54708;
-  --color-warning-soft: #FFFAEB;
-  --color-success: #067647;
-  --color-success-soft: #ECFDF3;
+  /* Typography Colors */
+  --color-text-primary: #141615;
+  --color-text-secondary: #4A4D4A;
+  --color-text-tertiary: #737873;
+  --color-text-subtle: #9EA39E;
 
+  /* Borders & Dividers */
+  --color-divider: #E8E8E3;
+  --color-border-strong: #D5D5CE;
+
+  /* Brand Palette - Deep Forest Teal */
+  --color-primary: #125E51;
+  --color-primary-hover: #0D473D;
+  --color-primary-light: #EBF5F3;
+  --color-primary-border: #BCE2DB;
+
+  /* Semantic Status Feedback */
+  --color-danger: #DC2626;
+  --color-danger-soft: #FEF2F2;
+  --color-danger-border: #FECACA;
+
+  --color-warning: #D97706;
+  --color-warning-soft: #FFFBEB;
+  --color-warning-border: #FDE68A;
+
+  --color-success: #16A34A;
+  --color-success-soft: #F0FDF4;
+  --color-success-border: #BBF7D0;
+
+  --color-info: #2563EB;
+  --color-info-soft: #EFF6FF;
+  --color-info-border: #BFDBFE;
+
+  /* Typography System */
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-sheet: 16px;
+  /* Elevation Shadows */
+  --shadow-xs: 0 1px 2px rgba(20, 22, 21, 0.04);
+  --shadow-sm: 0 2px 4px rgba(20, 22, 21, 0.06), 0 1px 2px rgba(20, 22, 21, 0.04);
+  --shadow-md: 0 4px 12px rgba(20, 22, 21, 0.08), 0 2px 4px rgba(20, 22, 21, 0.04);
+  --shadow-lg: 0 12px 24px rgba(20, 22, 21, 0.12), 0 4px 8px rgba(20, 22, 21, 0.04);
+  --shadow-sheet: 0 -8px 32px rgba(20, 22, 21, 0.14);
+
+  /* Geometry & Border Radius */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-sheet: 20px;
   --radius-full: 9999px;
 
+  /* Spacing Scale */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -34,4 +66,14 @@
   --space-6: 24px;
   --space-8: 32px;
   --space-10: 40px;
+
+  /* Motion & Spring Timings */
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+
+  /* Touch Ergonomics */
+  --touch-target-min: 44px;
+  --touch-target-primary: 48px;
 }

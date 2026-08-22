@@ -5,20 +5,29 @@
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 html, body {
-  height: 100%;
+  min-height: 100%;
   background-color: var(--color-canvas);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
+  text-rendering: optimizeLegibility;
+}
+
+/* Custom Text Selection */
+::selection {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 a {
   color: var(--color-primary);
   text-decoration: none;
+  transition: color var(--duration-fast) ease;
 }
 
 a:hover {
@@ -28,13 +37,23 @@ a:hover {
 button, input, select, textarea {
   font-family: inherit;
   font-size: inherit;
+  color: inherit;
 }
 
 button {
   cursor: pointer;
+  background: none;
+  border: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Scrollbar customization for dense mobile feel */
+input, textarea, select {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Scrollbar Customization */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -46,5 +65,80 @@ button {
 
 ::-webkit-scrollbar-thumb {
   background: var(--color-border-strong);
-  border-radius: 3px;
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary);
+}
+
+/* Tabular numbers helper */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Touch Target Helpers */
+.touch-target {
+  min-height: var(--touch-target-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.touch-target-primary {
+  min-height: var(--touch-target-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--duration-fast) var(--ease-spring), opacity var(--duration-fast) ease;
+}
+
+.touch-target-primary:active {
+  transform: scale(0.985);
+}
+
+/* Bottom Sheet & Modal Primitives */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(20, 22, 21, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+.sheet-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.bottom-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 501;
+  background-color: var(--color-surface);
+  border-top-left-radius: var(--radius-sheet);
+  border-top-right-radius: var(--radius-sheet);
+  box-shadow: var(--shadow-sheet);
+  border-top: 1px solid var(--color-divider);
+  padding: 24px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+  max-width: 520px;
+  margin: 0 auto;
+  transform: translateY(100%);
+  transition: transform var(--duration-normal) var(--ease-spring);
+}
+
+.bottom-sheet.active {
+  transform: translateY(0);
+}
+
+/* Safe area padding helper */
+.pb-safe {
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
 }

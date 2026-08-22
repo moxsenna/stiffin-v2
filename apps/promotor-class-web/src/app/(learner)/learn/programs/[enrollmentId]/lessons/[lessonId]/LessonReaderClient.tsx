@@ -127,14 +127,14 @@ export function LessonReaderClient() {
   if (accessDenied) {
     return (
       <LearnerShell>
-        <div style={{ padding: '40px', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-status-danger)', marginBottom: '8px' }}>
+        <div style={{ padding: '48px 16px', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-status-danger)', marginBottom: '8px' }}>
             Akses Ditolak
           </h2>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+          <p style={{ fontSize: '13.5px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
             Anda tidak memiliki hak akses ke pelajaran ini.
           </p>
-          <Link href="/learn" style={{ fontWeight: 600, color: 'var(--color-primary)' }}>
+          <Link href="/learn" style={{ fontWeight: 750, color: 'var(--color-primary)' }}>
             ← Kembali ke Program Saya
           </Link>
         </div>
@@ -145,7 +145,9 @@ export function LessonReaderClient() {
   if (!enrollment || !program || !lesson) {
     return (
       <LearnerShell>
-        <div style={{ padding: '40px', textAlign: 'center' }}>Memuat pelajaran...</div>
+        <div style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '14px', fontWeight: 600 }}>
+          Memuat sesi materi...
+        </div>
       </LearnerShell>
     );
   }
@@ -204,13 +206,11 @@ export function LessonReaderClient() {
   const embedVideoUrl = getYoutubeEmbedUrl(lesson.videoYoutubeUrl ?? undefined);
 
   return (
-    <LearnerShell title={lesson.title}>
-      <div style={{ padding: '16px', maxWidth: '700px', margin: '0 auto' }}>
-        <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
-          <Link href={`/learn/programs/${enrollmentId}`}>← Kembali ke Kurikulum</Link>
-        </div>
-
-        <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '16px' }}>{lesson.title}</h1>
+    <LearnerShell title={lesson.title} showBack={true} backHref={`/learn/programs/${enrollmentId}`}>
+      <div style={{ padding: '20px 0', maxWidth: '720px', margin: '0 auto' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 850, letterSpacing: '-0.025em', marginBottom: '18px', color: 'var(--color-text-main)' }}>
+          {lesson.title}
+        </h1>
 
         {/* Embedded YouTube Player */}
         {embedVideoUrl && (
@@ -220,9 +220,11 @@ export function LessonReaderClient() {
               paddingBottom: '56.25%',
               height: 0,
               overflow: 'hidden',
-              borderRadius: 'var(--border-radius-md)',
-              marginBottom: '16px',
-              backgroundColor: '#000',
+              borderRadius: 'var(--border-radius-lg)',
+              marginBottom: '20px',
+              backgroundColor: '#0F1411',
+              boxShadow: 'var(--shadow-md)',
+              border: '1px solid var(--color-divider)',
             }}
           >
             <iframe
@@ -238,12 +240,14 @@ export function LessonReaderClient() {
           <div
             style={{
               backgroundColor: 'var(--color-surface)',
-              padding: '16px',
-              borderRadius: 'var(--border-radius-md)',
+              padding: '22px',
+              borderRadius: 'var(--border-radius-lg)',
               border: '1px solid var(--color-divider)',
-              fontSize: '14px',
-              lineHeight: 1.6,
-              marginBottom: '20px',
+              fontSize: '15px',
+              lineHeight: 1.7,
+              color: 'var(--color-text-body)',
+              marginBottom: '22px',
+              boxShadow: 'var(--shadow-xs)',
             }}
           >
             {lesson.textContent}
@@ -252,28 +256,32 @@ export function LessonReaderClient() {
 
         {/* Attachments */}
         {lesson.attachments && lesson.attachments.length > 0 && (
-          <div style={{ marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Lampiran Berkas / Panduan</h3>
+          <div style={{ marginBottom: '22px' }}>
+            <h3 style={{ fontSize: '14.5px', fontWeight: 780, marginBottom: '10px', color: 'var(--color-text-main)' }}>
+              Lampiran Panduan / Lembar Kerja
+            </h3>
             {lesson.attachments.map(att => (
               <a
                 key={att.id}
                 href={att.url}
                 download
                 style={{
-                  padding: '10px 14px',
+                  padding: '12px 16px',
                   backgroundColor: 'var(--color-surface)',
                   borderRadius: 'var(--border-radius-sm)',
                   border: '1px solid var(--color-divider)',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  fontSize: '13px',
+                  alignItems: 'center',
+                  fontSize: '13.5px',
                   color: 'inherit',
                   textDecoration: 'none',
-                  marginBottom: '6px',
+                  marginBottom: '8px',
+                  boxShadow: 'var(--shadow-xs)',
                 }}
               >
-                <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{att.name}</span>
-                <span style={{ color: 'var(--color-text-subtle)' }} className="tabular-nums">
+                <span style={{ color: 'var(--color-primary)', fontWeight: 700 }}>{att.name}</span>
+                <span style={{ color: 'var(--color-text-subtle)', fontSize: '12px' }} className="tabular-nums">
                   {att.sizeFormatted || 'Download'}
                 </span>
               </a>
@@ -285,42 +293,48 @@ export function LessonReaderClient() {
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
-            padding: '16px',
-            borderRadius: 'var(--border-radius-md)',
-            border: '2px solid var(--color-primary-border)',
-            marginBottom: '20px',
+            padding: '22px',
+            borderRadius: 'var(--border-radius-lg)',
+            border: '1.5px solid var(--color-primary-border)',
+            marginBottom: '22px',
+            boxShadow: 'var(--shadow-xs)',
           }}
         >
-          <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '6px' }}>
-            Refleksi Wajib *
-          </h3>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-main)', marginBottom: '10px' }}>
-            {lesson.reflectionPrompt || 'Tuliskan pemikiran dan hasil pengamatan Anda:'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--color-primary)', backgroundColor: 'var(--color-primary-light)', padding: '2px 8px', borderRadius: '4px' }}>
+              Refleksi Wajib
+            </span>
+          </div>
+          <p style={{ fontSize: '14px', fontWeight: 650, color: 'var(--color-text-main)', marginBottom: '12px', lineHeight: 1.5 }}>
+            {lesson.reflectionPrompt || 'Tuliskan poin penting dan pengamatan Anda dari materi ini:'}
           </p>
 
           <textarea
             rows={4}
             value={reflectionAnswer}
             onChange={e => setReflectionAnswer(e.target.value)}
-            placeholder="Tuliskan refleksi Anda di sini..."
+            placeholder="Tuliskan jawaban atau refleksi Anda di sini..."
             style={{
               width: '100%',
-              padding: '10px',
+              padding: '12px 14px',
               borderRadius: 'var(--border-radius-sm)',
               border: '1px solid var(--color-divider)',
-              fontSize: '13px',
+              fontSize: '14px',
+              lineHeight: 1.5,
+              outline: 'none',
+              backgroundColor: 'var(--color-surface)',
             }}
           />
           {isButtonDisabled && (
-            <div style={{ fontSize: '11px', color: 'var(--color-status-warning)', marginTop: '4px' }}>
-              * Anda wajib mengisi refleksi di atas untuk membuka tombol Selesai.
+            <div style={{ fontSize: '12px', color: 'var(--color-status-warning)', marginTop: '6px', fontWeight: 600 }}>
+              * Mohon isi refleksi di atas untuk menyelesaikan materi ini.
             </div>
           )}
         </div>
 
         {/* Call to Action Button with Explicit Event Tracking */}
         {(lesson.hasCta || lesson.ctaLabel) && (lesson.ctaUrl || (lesson.ctaConfig as any)?.url || lesson.ctaLabel) && (
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '22px' }}>
             <a
               href={lesson.ctaUrl || (lesson.ctaConfig as any)?.url || '#'}
               target="_blank"
@@ -334,20 +348,39 @@ export function LessonReaderClient() {
                 width: '100%',
                 backgroundColor: '#25D366',
                 color: '#FFF',
-                fontWeight: 700,
+                fontWeight: 780,
+                fontSize: '14px',
                 borderRadius: 'var(--border-radius-md)',
                 textAlign: 'center',
                 textDecoration: 'none',
-                display: 'block',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: 'var(--shadow-sm)',
               }}
             >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.634.056-1.528-.276-1.157-.428-2.023-1.428-2.614-2.228-.06-.081-.462-.614-.462-1.17 0-.555.289-.828.391-.938.102-.11.222-.138.297-.138.074 0 .148.002.212.006.069.004.16.027.247.234.089.213.308.751.336.806.028.055.046.12.009.193-.036.073-.056.12-.11.184-.056.064-.117.142-.167.193-.056.055-.114.116-.049.227.065.111.288.475.617.768.424.377.781.493.892.548.111.055.176.046.241-.028.065-.074.278-.324.352-.435.074-.111.148-.093.247-.056.1.037.63.297.738.351.108.055.18.083.207.129.028.046.028.67-.116 1.075z" />
+              </svg>
               {lesson.ctaLabel || 'Konsultasi via WhatsApp'}
             </a>
           </div>
         )}
 
         {errorMsg && (
-          <div style={{ color: 'var(--color-status-danger)', fontSize: '13px', marginBottom: '10px' }}>
+          <div
+            style={{
+              color: 'var(--color-status-danger)',
+              backgroundColor: 'var(--color-status-danger-bg)',
+              border: '1px solid var(--color-status-danger-border)',
+              padding: '10px 14px',
+              borderRadius: 'var(--border-radius-sm)',
+              fontSize: '13px',
+              fontWeight: 600,
+              marginBottom: '16px',
+            }}
+          >
             {errorMsg}
           </div>
         )}
@@ -360,13 +393,15 @@ export function LessonReaderClient() {
           style={{
             width: '100%',
             backgroundColor: isButtonDisabled ? 'var(--color-divider)' : 'var(--color-primary)',
-            color: isButtonDisabled ? 'var(--color-text-subtle)' : '#FFF',
-            fontWeight: 700,
+            color: isButtonDisabled ? 'var(--color-text-subtle)' : '#FFFFFF',
+            fontWeight: 780,
+            fontSize: '14.5px',
             borderRadius: 'var(--border-radius-md)',
             cursor: isButtonDisabled ? 'not-allowed' : 'pointer',
+            boxShadow: isButtonDisabled ? 'none' : 'var(--shadow-sm)',
           }}
         >
-          {isSubmitting ? 'Menyimpan...' : 'Tandai Selesai & Lanjut'}
+          {isSubmitting ? 'Menyimpan progres...' : 'Tandai Selesai & Lanjut →'}
         </button>
       </div>
     </LearnerShell>

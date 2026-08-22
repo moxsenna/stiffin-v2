@@ -13,7 +13,7 @@ import {
   addLessonCommand,
   deleteLessonCommand,
 } from '@/modules/programs/commands';
-import { Program, Module, Lesson } from '@promotor/contracts';
+import { Program } from '@promotor/contracts';
 
 export function ProgramDetailClient() {
   const params = useParams();
@@ -73,8 +73,7 @@ export function ProgramDetailClient() {
     return (
       <PromotorShell>
         <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-          <div style={{ fontSize: '24px', marginBottom: '8px' }}>⏳</div>
-          <div style={{ fontWeight: 600 }}>Memuat detail kurikulum program...</div>
+          <div style={{ fontWeight: 650, fontSize: '14px' }}>Memuat detail kurikulum program...</div>
         </div>
       </PromotorShell>
     );
@@ -83,23 +82,22 @@ export function ProgramDetailClient() {
   if (loadError || !program) {
     return (
       <PromotorShell>
-        <div style={{ padding: '40px 20px', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ backgroundColor: 'var(--color-surface)', borderRadius: '16px', border: '1px solid var(--color-divider)', padding: '32px 24px' }}>
-            <div style={{ fontSize: '32px', marginBottom: '12px' }}>📁</div>
-            <h1 style={{ fontSize: '18px', fontWeight: 750, marginBottom: '8px' }}>Program Tidak Ditemukan</h1>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
+        <div style={{ padding: '48px 20px', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ backgroundColor: 'var(--color-surface)', borderRadius: 'var(--border-radius-lg)', border: '1px solid var(--color-divider)', padding: '36px 24px' }}>
+            <h1 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '8px', color: 'var(--color-text-main)' }}>Program Tidak Ditemukan</h1>
+            <p style={{ fontSize: '13.5px', color: 'var(--color-text-muted)', marginBottom: '24px', lineHeight: 1.5 }}>
               {loadError || 'Program dengan identitas tersebut tidak ditemukan atau belum dibuat.'}
             </p>
             <Link
               href="/app/programs"
               style={{
                 display: 'inline-block',
-                padding: '10px 20px',
+                padding: '10px 22px',
                 backgroundColor: 'var(--color-primary)',
                 color: '#FFF',
-                borderRadius: '10px',
-                fontSize: '13px',
-                fontWeight: 700,
+                borderRadius: 'var(--border-radius-md)',
+                fontSize: '13.5px',
+                fontWeight: 750,
                 textDecoration: 'none',
               }}
             >
@@ -139,7 +137,7 @@ export function ProgramDetailClient() {
     try {
       const updated = await reorderModulesCommand(program.id, newModules.map(m => m.id));
       setProgram(updated);
-      showToast('Urutan modul berhasil diperbarui!');
+      showToast('Urutan bab berhasil diperbarui!');
     } catch (err: any) {
       showToast(`Gagal mengubah urutan: ${err?.message || 'Terjadi kesalahan'}`);
     }
@@ -223,7 +221,7 @@ export function ProgramDetailClient() {
 
   return (
     <PromotorShell>
-      <div style={{ padding: '20px 16px', maxWidth: '840px', margin: '0 auto' }}>
+      <div style={{ padding: '24px 20px', maxWidth: '880px', margin: '0 auto' }}>
         {/* Toast Notification */}
         {toastMessage && (
           <div
@@ -235,10 +233,10 @@ export function ProgramDetailClient() {
               backgroundColor: 'var(--color-primary)',
               color: '#FFF',
               padding: '12px 20px',
-              borderRadius: '12px',
-              fontSize: '13px',
-              fontWeight: 700,
-              boxShadow: 'var(--shadow-md)',
+              borderRadius: 'var(--border-radius-md)',
+              fontSize: '13.5px',
+              fontWeight: 780,
+              boxShadow: 'var(--shadow-lg)',
             }}
           >
             ✓ {toastMessage}
@@ -249,7 +247,7 @@ export function ProgramDetailClient() {
         <div style={{ marginBottom: '16px' }}>
           <Link
             href="/app/programs"
-            style={{ fontSize: '13px', color: 'var(--color-text-muted)', textDecoration: 'none', fontWeight: 600 }}
+            style={{ fontSize: '13px', color: 'var(--color-text-muted)', textDecoration: 'none', fontWeight: 650 }}
           >
             ← Kembali ke Daftar Program
           </Link>
@@ -259,24 +257,26 @@ export function ProgramDetailClient() {
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
-            borderRadius: '16px',
+            borderRadius: 'var(--border-radius-lg)',
             border: '1px solid var(--color-divider)',
-            padding: '20px',
+            padding: '24px',
             marginBottom: '24px',
+            boxShadow: 'var(--shadow-xs)',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px' }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
-                <h1 style={{ fontSize: '22px', fontWeight: 750 }}>{program.title}</h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                <h1 style={{ fontSize: '22px', fontWeight: 850, letterSpacing: '-0.025em', color: 'var(--color-text-main)' }}>{program.title}</h1>
                 <span
                   style={{
                     fontSize: '11px',
-                    padding: '3px 10px',
-                    borderRadius: '20px',
-                    backgroundColor: program.status === 'published' ? 'var(--color-status-success-bg)' : '#F0F0ED',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: program.status === 'published' ? 'var(--color-status-success-bg)' : 'var(--color-canvas)',
                     color: program.status === 'published' ? 'var(--color-status-success)' : 'var(--color-text-muted)',
-                    fontWeight: 750,
+                    border: program.status === 'published' ? '1px solid var(--color-status-success-border)' : '1px solid var(--color-divider)',
+                    fontWeight: 780,
                   }}
                 >
                   {program.status === 'published' ? 'Terbit di Storefront' : 'Draf (Tersembunyi)'}
@@ -284,34 +284,37 @@ export function ProgramDetailClient() {
                 <span
                   style={{
                     fontSize: '11px',
-                    padding: '3px 10px',
-                    borderRadius: '20px',
-                    backgroundColor: program.programType === 'lead_magnet' ? '#eef5f1' : '#FFF8EB',
-                    color: program.programType === 'lead_magnet' ? '#286344' : '#C07000',
-                    fontWeight: 750,
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: program.programType === 'lead_magnet' ? 'var(--color-primary-light)' : 'var(--color-status-warning-bg)',
+                    color: program.programType === 'lead_magnet' ? 'var(--color-primary)' : 'var(--color-status-warning)',
+                    border: '1px solid var(--color-divider)',
+                    fontWeight: 780,
                   }}
                 >
                   {program.programType === 'lead_magnet' ? 'Gratis (Lead Magnet)' : program.programType === 'aftersales' ? 'Khusus Peserta Tes' : 'Berbayar'}
                 </span>
               </div>
-              <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+              <p style={{ fontSize: '14px', color: 'var(--color-text-body)', lineHeight: 1.55 }}>
                 {program.subtitle || program.description}
               </p>
             </div>
 
             {/* Quick Actions */}
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               <button
                 onClick={handleToggleStatus}
+                className="touch-target"
                 style={{
                   padding: '8px 14px',
-                  borderRadius: '10px',
+                  borderRadius: 'var(--border-radius-sm)',
                   border: '1px solid var(--color-divider)',
                   backgroundColor: 'var(--color-surface)',
                   fontSize: '13px',
-                  fontWeight: 700,
+                  fontWeight: 750,
                   color: 'var(--color-text-main)',
                   cursor: 'pointer',
+                  boxShadow: 'var(--shadow-xs)',
                 }}
               >
                 {program.status === 'published' ? 'Ubah ke Draf' : 'Terbitkan'}
@@ -321,15 +324,16 @@ export function ProgramDetailClient() {
                 onClick={() => setShowShareModal(true)}
                 className="touch-target-primary"
                 style={{
-                  padding: '0 16px',
+                  padding: '0 18px',
                   backgroundColor: 'var(--color-primary)',
                   color: '#FFF',
-                  borderRadius: '10px',
-                  fontWeight: 700,
-                  fontSize: '13px',
+                  borderRadius: 'var(--border-radius-sm)',
+                  fontWeight: 780,
+                  fontSize: '13.5px',
+                  boxShadow: 'var(--shadow-sm)',
                 }}
               >
-                Bagikan Tautan 🔗
+                Bagikan Tautan
               </button>
             </div>
           </div>
@@ -338,8 +342,8 @@ export function ProgramDetailClient() {
             style={{
               display: 'flex',
               gap: '16px',
-              marginTop: '16px',
-              paddingTop: '14px',
+              marginTop: '18px',
+              paddingTop: '16px',
               borderTop: '1px solid var(--color-divider)',
               fontSize: '13px',
               color: 'var(--color-text-muted)',
@@ -353,33 +357,35 @@ export function ProgramDetailClient() {
               <strong>{totalLessons}</strong> Materi Pelajaran
             </div>
             <div>·</div>
-            <Link href={`/p/${program.workspaceSlug}/${program.programSlug}`} target="_blank" style={{ color: 'var(--color-primary)', fontWeight: 700 }}>
-              Preview Halaman Landing ↗
+            <Link href={`/p/${program.workspaceSlug}/${program.programSlug}`} target="_blank" style={{ color: 'var(--color-primary)', fontWeight: 750 }}>
+              Pratinjau Halaman Landing ↗
             </Link>
           </div>
         </div>
 
         {/* Curriculum Header & Action Bar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h2 style={{ fontSize: '18px', fontWeight: 750 }}>Struktur Kurikulum & Materi</h2>
-            <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-              Susun bab (modul) dan sesi pelajaran yang akan diakses oleh peserta.
+            <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text-main)', letterSpacing: '-0.01em' }}>Struktur Kurikulum & Materi</h2>
+            <div style={{ fontSize: '12.5px', color: 'var(--color-text-muted)' }}>
+              Susun bab (modul) dan sesi materi pembelajaran untuk peserta.
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '10px' }}>
             <button
               onClick={() => setIsReorderMode(!isReorderMode)}
+              className="touch-target"
               style={{
                 padding: '8px 14px',
                 border: '1px solid var(--color-divider)',
-                borderRadius: '10px',
+                borderRadius: 'var(--border-radius-sm)',
                 backgroundColor: isReorderMode ? 'var(--color-primary-light)' : 'var(--color-surface)',
                 color: isReorderMode ? 'var(--color-primary)' : 'var(--color-text-main)',
-                fontWeight: 700,
+                fontWeight: 750,
                 fontSize: '13px',
                 cursor: 'pointer',
+                boxShadow: 'var(--shadow-xs)',
               }}
             >
               {isReorderMode ? 'Selesai Urutkan' : 'Atur Urutan Bab'}
@@ -387,15 +393,17 @@ export function ProgramDetailClient() {
 
             <button
               onClick={() => setShowAddModuleModal(true)}
+              className="touch-target"
               style={{
                 padding: '8px 16px',
                 backgroundColor: 'var(--color-primary)',
                 color: '#FFF',
-                borderRadius: '10px',
-                fontWeight: 750,
+                borderRadius: 'var(--border-radius-sm)',
+                fontWeight: 780,
                 fontSize: '13px',
                 border: 0,
                 cursor: 'pointer',
+                boxShadow: 'var(--shadow-sm)',
               }}
             >
               + Tambah Bab Baru
@@ -404,16 +412,16 @@ export function ProgramDetailClient() {
         </div>
 
         {/* Modules & Lessons List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           {program.modules.map((mod, modIdx) => (
             <div
               key={mod.id}
               style={{
                 backgroundColor: 'var(--color-surface)',
-                borderRadius: '16px',
+                borderRadius: 'var(--border-radius-lg)',
                 border: '1px solid var(--color-divider)',
                 padding: '20px',
-                boxShadow: 'var(--shadow-sm)',
+                boxShadow: 'var(--shadow-xs)',
               }}
             >
               {/* Module Title Row */}
@@ -431,11 +439,12 @@ export function ProgramDetailClient() {
                       justifyContent: 'center',
                       fontSize: '13px',
                       fontWeight: 800,
+                      border: '1px solid var(--color-primary-border)',
                     }}
                   >
                     {modIdx + 1}
                   </div>
-                  <h3 style={{ fontSize: '16px', fontWeight: 750 }}>{mod.title}</h3>
+                  <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main)' }}>{mod.title}</h3>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -444,14 +453,14 @@ export function ProgramDetailClient() {
                       <button
                         onClick={() => handleMoveModule(modIdx, 'up')}
                         disabled={modIdx === 0}
-                        style={{ padding: '4px 8px', border: '1px solid var(--color-divider)', borderRadius: '4px', cursor: 'pointer' }}
+                        style={{ padding: '6px 10px', border: '1px solid var(--color-divider)', borderRadius: '6px', cursor: 'pointer', backgroundColor: 'var(--color-surface)' }}
                       >
                         ▲
                       </button>
                       <button
                         onClick={() => handleMoveModule(modIdx, 'down')}
                         disabled={modIdx === program.modules.length - 1}
-                        style={{ padding: '4px 8px', border: '1px solid var(--color-divider)', borderRadius: '4px', cursor: 'pointer' }}
+                        style={{ padding: '6px 10px', border: '1px solid var(--color-divider)', borderRadius: '6px', cursor: 'pointer', backgroundColor: 'var(--color-surface)' }}
                       >
                         ▼
                       </button>
@@ -462,12 +471,12 @@ export function ProgramDetailClient() {
                         onClick={() => setActiveModuleIdForLesson(mod.id)}
                         style={{
                           fontSize: '12px',
-                          fontWeight: 700,
+                          fontWeight: 750,
                           color: 'var(--color-primary)',
                           backgroundColor: 'var(--color-primary-light)',
                           padding: '6px 12px',
-                          borderRadius: '8px',
-                          border: 0,
+                          borderRadius: 'var(--border-radius-sm)',
+                          border: '1px solid var(--color-primary-border)',
                           cursor: 'pointer',
                         }}
                       >
@@ -475,9 +484,17 @@ export function ProgramDetailClient() {
                       </button>
                       <button
                         onClick={() => handleDeleteModule(mod.id, mod.title)}
-                        style={{ fontSize: '12px', color: 'var(--color-text-subtle)', padding: '4px' }}
+                        style={{
+                          fontSize: '12px',
+                          color: 'var(--color-status-danger)',
+                          padding: '6px 10px',
+                          borderRadius: 'var(--border-radius-sm)',
+                          border: '1px solid var(--color-divider)',
+                          backgroundColor: 'var(--color-surface)',
+                          cursor: 'pointer',
+                        }}
                       >
-                        🗑️
+                        Hapus
                       </button>
                     </>
                   )}
@@ -488,25 +505,25 @@ export function ProgramDetailClient() {
               {mod.lessons.length === 0 ? (
                 <div
                   style={{
-                    padding: '16px',
+                    padding: '18px',
                     textAlign: 'center',
                     backgroundColor: 'var(--color-canvas)',
-                    borderRadius: '10px',
-                    fontSize: '12px',
+                    borderRadius: 'var(--border-radius-sm)',
+                    fontSize: '12.5px',
                     color: 'var(--color-text-muted)',
                   }}
                 >
                   Belum ada pelajaran di bab ini. Klik <strong>+ Tambah Pelajaran</strong> di atas.
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {mod.lessons.map((les, lesIdx) => (
                     <div
                       key={les.id}
                       style={{
                         padding: '12px 16px',
                         backgroundColor: 'var(--color-canvas)',
-                        borderRadius: '12px',
+                        borderRadius: 'var(--border-radius-sm)',
                         border: '1px solid var(--color-divider)',
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -514,15 +531,15 @@ export function ProgramDetailClient() {
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ fontSize: '12px', color: 'var(--color-text-subtle)', fontWeight: 700 }} className="tabular-nums">
+                        <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 700 }} className="tabular-nums">
                           {modIdx + 1}.{lesIdx + 1}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 750, fontSize: '14px', marginBottom: '2px' }}>{les.title}</div>
+                          <div style={{ fontWeight: 750, fontSize: '14px', marginBottom: '2px', color: 'var(--color-text-main)' }}>{les.title}</div>
                           <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', display: 'flex', gap: '8px' }}>
-                            <span>{les.videoYoutubeUrl ? '🎥 Video YouTube' : '📄 Teks Materi'}</span>
-                            {les.hasReflection && <span>· 📝 Refleksi</span>}
-                            {les.hasCta && <span>· 🔗 Tombol CTA</span>}
+                            <span>{les.videoYoutubeUrl ? 'Video' : 'Teks'}</span>
+                            {les.hasReflection && <span>· Refleksi</span>}
+                            {les.hasCta && <span>· Tombol CTA</span>}
                           </div>
                         </div>
                       </div>
@@ -532,13 +549,13 @@ export function ProgramDetailClient() {
                           href={`/app/programs/${program.id}/lessons/${les.id}`}
                           style={{ fontSize: '13px', fontWeight: 750, color: 'var(--color-primary)', textDecoration: 'none' }}
                         >
-                          Edit Content →
+                          Edit Materi →
                         </Link>
                         <button
                           onClick={() => handleDeleteLesson(mod.id, les.id, les.title)}
-                          style={{ fontSize: '12px', color: 'var(--color-text-subtle)', cursor: 'pointer' }}
+                          style={{ fontSize: '12px', color: 'var(--color-status-danger)', cursor: 'pointer', background: 'none', border: 0 }}
                         >
-                          🗑️
+                          Hapus
                         </button>
                       </div>
                     </div>
@@ -559,7 +576,8 @@ export function ProgramDetailClient() {
               right: 0,
               bottom: 0,
               zIndex: 3000,
-              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              backgroundColor: 'rgba(18, 20, 18, 0.45)',
+              backdropFilter: 'blur(4px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -568,22 +586,23 @@ export function ProgramDetailClient() {
           >
             <div
               style={{
-                backgroundColor: '#FFFFFF',
-                borderRadius: '20px',
-                padding: '24px',
+                backgroundColor: 'var(--color-surface)',
+                borderRadius: 'var(--border-radius-xl)',
+                padding: '28px',
                 maxWidth: '480px',
                 width: '100%',
                 boxShadow: 'var(--shadow-sheet)',
+                border: '1px solid var(--color-divider)',
               }}
             >
-              <h3 style={{ fontSize: '18px', fontWeight: 750, marginBottom: '6px' }}>Tambah Bab / Modul Baru</h3>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '18px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '6px', color: 'var(--color-text-main)' }}>Tambah Bab / Modul Baru</h3>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
                 Masukkan judul bab untuk mengelompokkan topik-topik pelajaran.
               </p>
 
               <form onSubmit={handleCreateModule} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
                     Judul Bab / Modul *
                   </label>
                   <input
@@ -595,7 +614,7 @@ export function ProgramDetailClient() {
                     style={{
                       width: '100%',
                       padding: '10px 14px',
-                      borderRadius: '10px',
+                      borderRadius: 'var(--border-radius-sm)',
                       border: '1px solid var(--color-divider)',
                       fontSize: '14px',
                       outline: 'none',
@@ -610,11 +629,11 @@ export function ProgramDetailClient() {
                     style={{
                       flex: 1,
                       minHeight: '44px',
-                      borderRadius: '10px',
+                      borderRadius: 'var(--border-radius-sm)',
                       border: '1px solid var(--color-divider)',
-                      backgroundColor: '#FFFFFF',
+                      backgroundColor: 'var(--color-surface)',
                       fontWeight: 700,
-                      fontSize: '14px',
+                      fontSize: '13.5px',
                     }}
                   >
                     Batal
@@ -624,11 +643,11 @@ export function ProgramDetailClient() {
                     style={{
                       flex: 1,
                       minHeight: '44px',
-                      borderRadius: '10px',
+                      borderRadius: 'var(--border-radius-sm)',
                       backgroundColor: 'var(--color-primary)',
                       color: '#FFF',
-                      fontWeight: 750,
-                      fontSize: '14px',
+                      fontWeight: 780,
+                      fontSize: '13.5px',
                       border: 0,
                     }}
                   >
@@ -650,7 +669,8 @@ export function ProgramDetailClient() {
               right: 0,
               bottom: 0,
               zIndex: 3000,
-              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              backgroundColor: 'rgba(18, 20, 18, 0.45)',
+              backdropFilter: 'blur(4px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -659,24 +679,25 @@ export function ProgramDetailClient() {
           >
             <div
               style={{
-                backgroundColor: '#FFFFFF',
-                borderRadius: '20px',
-                padding: '24px',
+                backgroundColor: 'var(--color-surface)',
+                borderRadius: 'var(--border-radius-xl)',
+                padding: '28px',
                 maxWidth: '560px',
                 width: '100%',
                 maxHeight: '90vh',
                 overflowY: 'auto',
                 boxShadow: 'var(--shadow-sheet)',
+                border: '1px solid var(--color-divider)',
               }}
             >
-              <h3 style={{ fontSize: '18px', fontWeight: 750, marginBottom: '6px' }}>Tambah Sesi Pelajaran Baru</h3>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '18px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '6px', color: 'var(--color-text-main)' }}>Tambah Sesi Pelajaran Baru</h3>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
                 Isi materi pembelajaran, video, dan pertanyaan refleksi peserta.
               </p>
 
               <form onSubmit={handleCreateLesson} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
                     Judul Pelajaran *
                   </label>
                   <input
@@ -688,7 +709,7 @@ export function ProgramDetailClient() {
                     style={{
                       width: '100%',
                       padding: '10px 14px',
-                      borderRadius: '10px',
+                      borderRadius: 'var(--border-radius-sm)',
                       border: '1px solid var(--color-divider)',
                       fontSize: '14px',
                       outline: 'none',
@@ -697,35 +718,35 @@ export function ProgramDetailClient() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
-                    Tipe Format Materi
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
+                    Format Materi
                   </label>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600 }}>
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 650, cursor: 'pointer' }}>
                       <input
                         type="radio"
                         name="matType"
                         checked={lessonForm.materialType === 'video'}
                         onChange={() => setLessonForm({ ...lessonForm, materialType: 'video' })}
                       />
-                      🎥 Video YouTube + Teks
+                      Video YouTube + Teks
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 650, cursor: 'pointer' }}>
                       <input
                         type="radio"
                         name="matType"
                         checked={lessonForm.materialType === 'text'}
                         onChange={() => setLessonForm({ ...lessonForm, materialType: 'text' })}
                       />
-                      📄 Teks & Gambar Saja
+                      Teks Saja
                     </label>
                   </div>
                 </div>
 
                 {lessonForm.materialType === 'video' && (
                   <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
-                      Link / URL Video YouTube
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
+                      Tautan Video YouTube
                     </label>
                     <input
                       type="url"
@@ -735,7 +756,7 @@ export function ProgramDetailClient() {
                       style={{
                         width: '100%',
                         padding: '10px 14px',
-                        borderRadius: '10px',
+                        borderRadius: 'var(--border-radius-sm)',
                         border: '1px solid var(--color-divider)',
                         fontSize: '14px',
                         outline: 'none',
@@ -745,8 +766,8 @@ export function ProgramDetailClient() {
                 )}
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
-                    Teks Ringkasan / Instruksi Materi
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
+                    Teks Ringkasan / Materi
                   </label>
                   <textarea
                     rows={3}
@@ -756,7 +777,7 @@ export function ProgramDetailClient() {
                     style={{
                       width: '100%',
                       padding: '10px 14px',
-                      borderRadius: '10px',
+                      borderRadius: 'var(--border-radius-sm)',
                       border: '1px solid var(--color-divider)',
                       fontSize: '14px',
                       outline: 'none',
@@ -766,8 +787,8 @@ export function ProgramDetailClient() {
                 </div>
 
                 {/* Reflection Toggle */}
-                <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '12px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+                <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '14px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 750, cursor: 'pointer' }}>
                     <input
                       type="checkbox"
                       checked={lessonForm.hasReflection}
@@ -777,7 +798,7 @@ export function ProgramDetailClient() {
                   </label>
 
                   {lessonForm.hasReflection && (
-                    <div style={{ marginTop: '8px' }}>
+                    <div style={{ marginTop: '10px' }}>
                       <input
                         type="text"
                         value={lessonForm.reflectionPrompt}
@@ -785,10 +806,10 @@ export function ProgramDetailClient() {
                         placeholder="Pertanyaan refleksi untuk peserta..."
                         style={{
                           width: '100%',
-                          padding: '8px 12px',
-                          borderRadius: '8px',
+                          padding: '10px 14px',
+                          borderRadius: 'var(--border-radius-sm)',
                           border: '1px solid var(--color-divider)',
-                          fontSize: '13px',
+                          fontSize: '13.5px',
                           outline: 'none',
                         }}
                       />
@@ -803,11 +824,11 @@ export function ProgramDetailClient() {
                     style={{
                       flex: 1,
                       minHeight: '44px',
-                      borderRadius: '10px',
+                      borderRadius: 'var(--border-radius-sm)',
                       border: '1px solid var(--color-divider)',
-                      backgroundColor: '#FFFFFF',
+                      backgroundColor: 'var(--color-surface)',
                       fontWeight: 700,
-                      fontSize: '14px',
+                      fontSize: '13.5px',
                     }}
                   >
                     Batal
@@ -817,11 +838,11 @@ export function ProgramDetailClient() {
                     style={{
                       flex: 1,
                       minHeight: '44px',
-                      borderRadius: '10px',
+                      borderRadius: 'var(--border-radius-sm)',
                       backgroundColor: 'var(--color-primary)',
                       color: '#FFF',
-                      fontWeight: 750,
-                      fontSize: '14px',
+                      fontWeight: 780,
+                      fontSize: '13.5px',
                       border: 0,
                     }}
                   >
@@ -838,8 +859,10 @@ export function ProgramDetailClient() {
           <>
             <div className="sheet-overlay active" onClick={() => setShowShareModal(false)} />
             <div className="bottom-sheet active">
-              <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px' }}>Bagikan Program</h3>
-              <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
+              <h3 style={{ fontSize: '17px', fontWeight: 800, marginBottom: '8px', color: 'var(--color-text-main)', letterSpacing: '-0.02em' }}>
+                Bagikan Program
+              </h3>
+              <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '14px' }}>
                 Tautan publik pendaftaran program untuk calon peserta:
               </div>
 
@@ -849,15 +872,16 @@ export function ProgramDetailClient() {
                 value={publicUrl}
                 style={{
                   width: '100%',
-                  padding: '10px',
+                  padding: '12px 14px',
                   borderRadius: 'var(--border-radius-sm)',
                   border: '1px solid var(--color-divider)',
-                  fontSize: '13px',
-                  marginBottom: '16px',
+                  fontSize: '13.5px',
+                  marginBottom: '18px',
+                  backgroundColor: 'var(--color-canvas)',
                 }}
               />
 
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <div style={{ display: 'flex', gap: '12px' }}>
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(publicUrl);
@@ -869,7 +893,9 @@ export function ProgramDetailClient() {
                     flex: 1,
                     border: '1px solid var(--color-divider)',
                     borderRadius: 'var(--border-radius-md)',
-                    fontWeight: 600,
+                    fontWeight: 750,
+                    fontSize: '13.5px',
+                    backgroundColor: 'var(--color-surface)',
                   }}
                 >
                   Salin Tautan
@@ -885,12 +911,17 @@ export function ProgramDetailClient() {
                     backgroundColor: '#25D366',
                     color: '#FFF',
                     borderRadius: 'var(--border-radius-md)',
-                    fontWeight: 700,
+                    fontWeight: 780,
+                    fontSize: '13.5px',
                     textAlign: 'center',
                     textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
                   }}
                 >
-                  Bagikan ke WhatsApp
+                  Bagikan WhatsApp
                 </a>
               </div>
             </div>

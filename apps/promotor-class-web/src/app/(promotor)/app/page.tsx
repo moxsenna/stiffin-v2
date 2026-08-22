@@ -39,7 +39,6 @@ export default function PromotorHomePage() {
   const contactMap = new Map(contacts.map(c => [c.id, c]));
   const selectedContact = selectedContactId ? contactMap.get(selectedContactId) : null;
 
-  // Resolve dynamic activity timeline from real persistent reflections
   const activityItems = reflections.map(refl => {
     const contact = contactMap.get(refl.contactId);
     const learnerName = contact ? contact.name : 'Peserta';
@@ -54,143 +53,191 @@ export default function PromotorHomePage() {
 
   return (
     <PromotorShell>
-      <div style={{ padding: '16px' }}>
+      <div style={{ padding: '24px 20px', maxWidth: '960px', margin: '0 auto' }}>
         {/* Header Bar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '2px' }}>Beranda Promotor</h1>
-            <p style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-              {signals.length} peserta aktif memerlukan perhatian
+            <h1 style={{ fontSize: '22px', fontWeight: 850, letterSpacing: '-0.025em', marginBottom: '4px', color: 'var(--color-text-main)' }}>
+              Beranda Promotor
+            </h1>
+            <p style={{ fontSize: '13.5px', color: 'var(--color-text-muted)', margin: 0 }}>
+              {signals.length} peserta dengan sinyal intent tinggi memerlukan perhatian
             </p>
           </div>
 
-          {/* Dev capability guard: Only render dev tools toggle in development environment */}
           {isDevelopmentEnv && (
             <button
               onClick={() => setIsDevMode(!isDevMode)}
-              style={{ fontSize: '11px', color: 'var(--color-text-subtle)', textDecoration: 'underline' }}
+              style={{ fontSize: '12px', color: 'var(--color-text-muted)', textDecoration: 'underline', padding: '4px 8px' }}
             >
-              {isDevMode ? 'Sembunyikan Dev Tools' : 'Dev Tools'}
+              {isDevMode ? 'Tutup Dev QA' : 'Mode Dev QA'}
             </button>
           )}
         </div>
 
-        {/* Development Only Tools */}
+        {/* Development Mode Inspector */}
         {isDevelopmentEnv && isDevMode && (
           <div
             style={{
-              padding: '12px',
+              padding: '14px 18px',
               backgroundColor: 'var(--color-surface)',
               borderRadius: 'var(--border-radius-md)',
               border: '1px dashed var(--color-divider)',
-              marginBottom: '16px',
-              fontSize: '12px',
+              marginBottom: '20px',
+              fontSize: '12.5px',
             }}
           >
-            <div style={{ fontWeight: 600, marginBottom: '4px' }}>Mode QA / Simulator Integrasi</div>
+            <div style={{ fontWeight: 750, marginBottom: '4px' }}>Simulator Integrasi QA</div>
             <div style={{ color: 'var(--color-text-muted)' }}>
-              Status Koneksi PromotorFlow: <strong>Sistem Berjalan Normal (AVAILABLE)</strong>
+              Status Koneksi PromotorFlow: <strong style={{ color: 'var(--color-status-success)' }}>Tersedia (AVAILABLE)</strong>
             </div>
           </div>
         )}
 
         {/* Work Queue Section */}
-        <div style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px', color: 'var(--color-text-main)' }}>
-            Perlu Perhatian ({signals.length})
-          </h2>
+        <div style={{ marginBottom: '32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main)', letterSpacing: '-0.01em' }}>
+              Antrean Follow-up ({signals.length})
+            </h2>
+          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {signals.map(sig => {
-              const contact = contactMap.get(sig.contactId);
-              if (!contact) return null;
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {signals.length === 0 ? (
+              <div
+                style={{
+                  backgroundColor: 'var(--color-surface)',
+                  borderRadius: 'var(--border-radius-lg)',
+                  border: '1px solid var(--color-divider)',
+                  padding: '32px 20px',
+                  textAlign: 'center',
+                  color: 'var(--color-text-muted)',
+                  fontSize: '13.5px',
+                }}
+              >
+                Belum ada sinyal follow-up mendesak saat ini.
+              </div>
+            ) : (
+              signals.map(sig => {
+                const contact = contactMap.get(sig.contactId);
+                if (!contact) return null;
 
-              return (
-                <div
-                  key={sig.id}
-                  onClick={() => setSelectedContactId(sig.contactId)}
-                  style={{
-                    backgroundColor: 'var(--color-surface)',
-                    padding: '14px',
-                    borderRadius: 'var(--border-radius-md)',
-                    border: '1px solid var(--color-divider)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '2px' }}>
-                      {contact.name}
+                const isHot = sig.signalLevel === 'Minat tinggi';
+
+                return (
+                  <div
+                    key={sig.id}
+                    onClick={() => setSelectedContactId(sig.contactId)}
+                    style={{
+                      backgroundColor: 'var(--color-surface)',
+                      padding: '16px 20px',
+                      borderRadius: 'var(--border-radius-lg)',
+                      border: '1px solid var(--color-divider)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      boxShadow: 'var(--shadow-xs)',
+                      transition: 'transform var(--duration-fast) var(--ease-spring), border-color var(--duration-fast) ease',
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
+                        <span style={{ fontWeight: 800, fontSize: '15px', color: 'var(--color-text-main)' }}>
+                          {contact.name}
+                        </span>
+                        <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                          {formatPhoneDisplay(contact.phoneE164)}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--color-text-body)' }}>
+                        <strong>{sig.primaryReason}</strong>
+                      </div>
                     </div>
-                    <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '6px' }}>
-                      {formatPhoneDisplay(contact.phoneE164)}
-                    </div>
-                    <div style={{ fontSize: '12px', color: 'var(--color-text-main)' }}>
-                      <strong>{sig.primaryReason}</strong>
+
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <span
+                        style={{
+                          fontSize: '11.5px',
+                          fontWeight: 780,
+                          padding: '3px 10px',
+                          borderRadius: 'var(--border-radius-full)',
+                          backgroundColor: isHot ? 'var(--color-status-success-bg)' : 'var(--color-canvas)',
+                          color: isHot ? 'var(--color-status-success)' : 'var(--color-text-muted)',
+                          border: isHot ? '1px solid var(--color-status-success-border)' : '1px solid var(--color-divider)',
+                        }}
+                      >
+                        {sig.signalLevel}
+                      </span>
+                      <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted)', marginTop: '4px', fontWeight: 600 }} className="tabular-nums">
+                        Skor Intent: {sig.intentScore}/100
+                      </div>
                     </div>
                   </div>
-
-                  <div style={{ textAlign: 'right' }}>
-                    <span
-                      style={{
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        padding: '3px 8px',
-                        borderRadius: 'var(--border-radius-full)',
-                        backgroundColor: sig.signalLevel === 'Minat tinggi' ? 'var(--color-primary-light)' : 'var(--color-canvas)',
-                        color: sig.signalLevel === 'Minat tinggi' ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                      }}
-                    >
-                      {sig.signalLevel}
-                    </span>
-                    <div style={{ fontSize: '11px', color: 'var(--color-text-subtle)', marginTop: '4px' }} className="tabular-nums">
-                      Skor: {sig.intentScore}/100
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
         {/* Dynamic Activity Log */}
         <div>
-          <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px' }}>Aktivitas Pembelajaran Terbaru</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {activityItems.map(act => (
+          <h2 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '14px', color: 'var(--color-text-main)', letterSpacing: '-0.01em' }}>
+            Aktivitas Pembelajaran Terbaru
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {activityItems.length === 0 ? (
               <div
-                key={act.id}
                 style={{
-                  padding: '10px 12px',
                   backgroundColor: 'var(--color-surface)',
-                  borderRadius: 'var(--border-radius-sm)',
+                  borderRadius: 'var(--border-radius-md)',
                   border: '1px solid var(--color-divider)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: '12px',
+                  padding: '24px',
+                  textAlign: 'center',
+                  color: 'var(--color-text-muted)',
+                  fontSize: '13px',
                 }}
               >
-                <span>{act.summary}</span>
-                <span style={{ color: 'var(--color-text-subtle)' }} className="tabular-nums">
-                  {act.timeAgo}
-                </span>
+                Belum ada aktivitas pembelajaran baru.
               </div>
-            ))}
+            ) : (
+              activityItems.map(act => (
+                <div
+                  key={act.id}
+                  style={{
+                    padding: '12px 16px',
+                    backgroundColor: 'var(--color-surface)',
+                    borderRadius: 'var(--border-radius-md)',
+                    border: '1px solid var(--color-divider)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    fontSize: '13px',
+                    boxShadow: 'var(--shadow-xs)',
+                  }}
+                >
+                  <span style={{ color: 'var(--color-text-body)', fontWeight: 550 }}>{act.summary}</span>
+                  <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }} className="tabular-nums">
+                    {act.timeAgo}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
         {/* Participant Detail Drawer */}
         {selectedContact && (
-          <LearnerDetail
-            contact={selectedContact}
-            onClose={() => setSelectedContactId(null)}
-            onOpenWhatsAppDraft={c => {
-              setSelectedContactId(null);
-              setWhatsAppDraftContact(c);
-            }}
-          />
+          <div className="side-panel active" style={{ zIndex: 1200 }}>
+            <LearnerDetail
+              contact={selectedContact}
+              onClose={() => setSelectedContactId(null)}
+              onOpenWhatsAppDraft={c => {
+                setSelectedContactId(null);
+                setWhatsAppDraftContact(c);
+              }}
+            />
+          </div>
         )}
 
         {/* WhatsApp Draft Sheet */}

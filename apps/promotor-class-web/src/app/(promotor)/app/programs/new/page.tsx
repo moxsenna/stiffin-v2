@@ -45,7 +45,6 @@ function NewProgramForm() {
     }
   }, [templateId]);
 
-  // Update default eyebrow when programType changes
   const handleProgramTypeChange = (type: 'lead_magnet' | 'aftersales' | 'paid') => {
     setProgramType(type);
     if (type === 'lead_magnet') {
@@ -123,18 +122,18 @@ function NewProgramForm() {
   };
 
   return (
-    <div style={{ padding: '20px 16px', maxWidth: '720px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '20px' }}>
+    <div style={{ padding: '24px 20px', maxWidth: '760px', margin: '0 auto' }}>
+      <div style={{ marginBottom: '24px' }}>
         <Link
           href="/app/programs"
-          style={{ fontSize: '13px', color: 'var(--color-text-muted)', textDecoration: 'none', fontWeight: 600 }}
+          style={{ fontSize: '13px', color: 'var(--color-text-muted)', textDecoration: 'none', fontWeight: 650 }}
         >
           ← Kembali ke Daftar Program
         </Link>
-        <h1 style={{ fontSize: '22px', fontWeight: 750, marginTop: '8px', marginBottom: '4px' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 850, letterSpacing: '-0.025em', marginTop: '8px', marginBottom: '4px', color: 'var(--color-text-main)' }}>
           Buat Program & Kelas Baru
         </h1>
-        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+        <div style={{ fontSize: '13.5px', color: 'var(--color-text-muted)' }}>
           Isi informasi program yang akan ditampilkan pada katalog dan storefront publik.
         </div>
       </div>
@@ -144,19 +143,18 @@ function NewProgramForm() {
         <div
           role="alert"
           style={{
-            backgroundColor: '#FEF2F2',
-            border: '1px solid #F87171',
-            borderRadius: '12px',
+            backgroundColor: 'var(--color-status-danger-bg)',
+            border: '1px solid var(--color-status-danger-border)',
+            borderRadius: 'var(--border-radius-md)',
             padding: '14px 16px',
             marginBottom: '20px',
-            color: '#991B1B',
-            fontSize: '14px',
+            color: 'var(--color-status-danger)',
+            fontSize: '13.5px',
             lineHeight: 1.5,
           }}
         >
-          <div style={{ fontWeight: 750, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>⚠️</span>
-            <span>Gagal Menyimpan Program</span>
+          <div style={{ fontWeight: 780, marginBottom: '2px' }}>
+            Gagal Menyimpan Program
           </div>
           <div>{errorMessage}</div>
         </div>
@@ -167,16 +165,17 @@ function NewProgramForm() {
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
-            borderRadius: '16px',
+            borderRadius: 'var(--border-radius-lg)',
             border: '1px solid var(--color-divider)',
-            padding: '20px',
+            padding: '22px',
+            boxShadow: 'var(--shadow-xs)',
           }}
         >
-          <h2 style={{ fontSize: '16px', fontWeight: 750, marginBottom: '14px' }}>1. Informasi Utama Program</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '16px', color: 'var(--color-text-main)' }}>1. Informasi Utama Program</h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
                 Judul Program *
               </label>
               <input
@@ -191,21 +190,21 @@ function NewProgramForm() {
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  borderRadius: '10px',
-                  border: titleError ? '2px solid #EF4444' : '1px solid var(--color-divider)',
+                  borderRadius: 'var(--border-radius-sm)',
+                  border: titleError ? '2px solid var(--color-status-danger)' : '1px solid var(--color-divider)',
                   fontSize: '14px',
                   outline: 'none',
                 }}
               />
               {titleError && (
-                <div style={{ fontSize: '12px', color: '#EF4444', marginTop: '4px', fontWeight: 600 }}>
+                <div style={{ fontSize: '12px', color: 'var(--color-status-danger)', marginTop: '4px', fontWeight: 600 }}>
                   Judul program tidak boleh kosong.
                 </div>
               )}
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
                 Subjudul / Tagline Singkat
               </label>
               <input
@@ -216,7 +215,7 @@ function NewProgramForm() {
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  borderRadius: '10px',
+                  borderRadius: 'var(--border-radius-sm)',
                   border: '1px solid var(--color-divider)',
                   fontSize: '14px',
                   outline: 'none',
@@ -225,7 +224,7 @@ function NewProgramForm() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
                 Deskripsi Lengkap Program
               </label>
               <textarea
@@ -236,7 +235,7 @@ function NewProgramForm() {
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  borderRadius: '10px',
+                  borderRadius: 'var(--border-radius-sm)',
                   border: '1px solid var(--color-divider)',
                   fontSize: '14px',
                   outline: 'none',
@@ -251,12 +250,13 @@ function NewProgramForm() {
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
-            borderRadius: '16px',
+            borderRadius: 'var(--border-radius-lg)',
             border: '1px solid var(--color-divider)',
-            padding: '20px',
+            padding: '22px',
+            boxShadow: 'var(--shadow-xs)',
           }}
         >
-          <h2 style={{ fontSize: '16px', fontWeight: 750, marginBottom: '14px' }}>2. Tipe Akses & Kategori Program</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '16px', color: 'var(--color-text-main)' }}>2. Tipe Akses & Kategori Program</h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
@@ -265,7 +265,7 @@ function NewProgramForm() {
                 onClick={() => handleProgramTypeChange('lead_magnet')}
                 style={{
                   padding: '14px',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--border-radius-sm)',
                   border:
                     programType === 'lead_magnet'
                       ? '2px solid var(--color-primary)'
@@ -275,7 +275,7 @@ function NewProgramForm() {
                   cursor: 'pointer',
                 }}
               >
-                <div style={{ fontWeight: 750, fontSize: '14px', color: 'var(--color-primary)', marginBottom: '4px' }}>
+                <div style={{ fontWeight: 780, fontSize: '14px', color: 'var(--color-primary)', marginBottom: '4px' }}>
                   Gratis (Lead Magnet)
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
@@ -288,7 +288,7 @@ function NewProgramForm() {
                 onClick={() => handleProgramTypeChange('aftersales')}
                 style={{
                   padding: '14px',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--border-radius-sm)',
                   border:
                     programType === 'aftersales'
                       ? '2px solid var(--color-status-warning)'
@@ -300,7 +300,7 @@ function NewProgramForm() {
               >
                 <div
                   style={{
-                    fontWeight: 750,
+                    fontWeight: 780,
                     fontSize: '14px',
                     color: 'var(--color-status-warning)',
                     marginBottom: '4px',
@@ -318,13 +318,13 @@ function NewProgramForm() {
                 onClick={() => handleProgramTypeChange('paid')}
                 style={{
                   padding: '14px',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--border-radius-sm)',
                   border: programType === 'paid' ? '2px solid #4F46E5' : '1px solid var(--color-divider)',
                   backgroundColor: programType === 'paid' ? '#EEF2FF' : 'var(--color-canvas)',
                   cursor: 'pointer',
                 }}
               >
-                <div style={{ fontWeight: 750, fontSize: '14px', color: '#4F46E5', marginBottom: '4px' }}>
+                <div style={{ fontWeight: 780, fontSize: '14px', color: '#4F46E5', marginBottom: '4px' }}>
                   Program Berbayar
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
@@ -335,7 +335,7 @@ function NewProgramForm() {
 
             {programType === 'paid' && (
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
                   Harga Investasi Program (Rp) *
                 </label>
                 <input
@@ -348,7 +348,7 @@ function NewProgramForm() {
                   style={{
                     width: '100%',
                     padding: '10px 14px',
-                    borderRadius: '10px',
+                    borderRadius: 'var(--border-radius-sm)',
                     border: '1px solid var(--color-divider)',
                     fontSize: '14px',
                     outline: 'none',
@@ -359,42 +359,23 @@ function NewProgramForm() {
           </div>
         </div>
 
-        {/* Section 3: Visual Cover & Presets (Non-blocking) */}
+        {/* Section 3: Visual Cover & Presets */}
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
-            borderRadius: '16px',
+            borderRadius: 'var(--border-radius-lg)',
             border: '1px solid var(--color-divider)',
-            padding: '20px',
+            padding: '22px',
+            boxShadow: 'var(--shadow-xs)',
           }}
         >
-          <h2 style={{ fontSize: '16px', fontWeight: 750, marginBottom: '14px' }}>3. Visual Cover & Label Storefront</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '16px', color: 'var(--color-text-main)' }}>3. Visual Cover & Durasi</h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
-                  Label Publik (Eyebrow Tag)
-                </label>
-                <input
-                  type="text"
-                  value={heroEyebrow}
-                  onChange={(e) => setHeroEyebrow(e.target.value)}
-                  placeholder="Contoh: Program Gratis / Khusus Peserta Tes"
-                  style={{
-                    width: '100%',
-                    padding: '10px 14px',
-                    borderRadius: '10px',
-                    border: '1px solid var(--color-divider)',
-                    fontSize: '14px',
-                    outline: 'none',
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
-                  Durasi Program Label
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
+                  Label Durasi Belajar
                 </label>
                 <input
                   type="text"
@@ -404,7 +385,7 @@ function NewProgramForm() {
                   style={{
                     width: '100%',
                     padding: '10px 14px',
-                    borderRadius: '10px',
+                    borderRadius: 'var(--border-radius-sm)',
                     border: '1px solid var(--color-divider)',
                     fontSize: '14px',
                     outline: 'none',
@@ -415,25 +396,25 @@ function NewProgramForm() {
 
             {/* Cover Preset Selector */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '8px' }}>
-                Pilihan Cover Standar (Preset V0.1)
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '8px', color: 'var(--color-text-main)' }}>
+                Pilihan Cover Standar
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '14px' }}>
                 <div
                   onClick={() => setCoverVariant('cover-a')}
                   style={{
                     padding: '12px',
-                    borderRadius: '10px',
+                    borderRadius: 'var(--border-radius-sm)',
                     border: coverVariant === 'cover-a' ? '2px solid var(--color-primary)' : '1px solid var(--color-divider)',
                     backgroundColor: coverVariant === 'cover-a' ? 'var(--color-primary-light)' : 'var(--color-canvas)',
                     cursor: 'pointer',
                   }}
                 >
-                  <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--color-primary)', marginBottom: '2px' }}>
-                    🎨 Preset A (Gaya Belajar)
+                  <div style={{ fontWeight: 750, fontSize: '13px', color: 'var(--color-primary)', marginBottom: '2px' }}>
+                    Preset A (Gaya Belajar)
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                    Nuansa Hijau STIFIn (Rekomendasi Lead Magnet)
+                  <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>
+                    Nuansa Hijau STIFIn
                   </div>
                 </div>
 
@@ -441,17 +422,17 @@ function NewProgramForm() {
                   onClick={() => setCoverVariant('cover-b')}
                   style={{
                     padding: '12px',
-                    borderRadius: '10px',
+                    borderRadius: 'var(--border-radius-sm)',
                     border: coverVariant === 'cover-b' ? '2px solid var(--color-status-warning)' : '1px solid var(--color-divider)',
                     backgroundColor: coverVariant === 'cover-b' ? 'var(--color-status-warning-bg)' : 'var(--color-canvas)',
                     cursor: 'pointer',
                   }}
                 >
-                  <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--color-status-warning)', marginBottom: '2px' }}>
-                    🎨 Preset B (Pendampingan)
+                  <div style={{ fontWeight: 750, fontSize: '13px', color: 'var(--color-status-warning)', marginBottom: '2px' }}>
+                    Preset B (Komunikasi)
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                    Nuansa Hangat (Rekomendasi Aftersales)
+                  <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>
+                    Nuansa Hangat Keemasan
                   </div>
                 </div>
 
@@ -459,50 +440,28 @@ function NewProgramForm() {
                   onClick={() => setCoverVariant('cover-c')}
                   style={{
                     padding: '12px',
-                    borderRadius: '10px',
+                    borderRadius: 'var(--border-radius-sm)',
                     border: coverVariant === 'cover-c' ? '2px solid #4F46E5' : '1px solid var(--color-divider)',
                     backgroundColor: coverVariant === 'cover-c' ? '#EEF2FF' : 'var(--color-canvas)',
                     cursor: 'pointer',
                   }}
                 >
-                  <div style={{ fontWeight: 700, fontSize: '13px', color: '#4F46E5', marginBottom: '2px' }}>
-                    🎨 Preset C (Parenting & Spesialisasi)
+                  <div style={{ fontWeight: 750, fontSize: '13px', color: '#4F46E5', marginBottom: '2px' }}>
+                    Preset C (Parenting)
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                    Nuansa Modern (Rekomendasi Berbayar)
+                  <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>
+                    Nuansa Biru Tenang
                   </div>
                 </div>
               </div>
 
-              {/* Optional Custom Image URL */}
-              <div style={{ marginTop: '10px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
-                  URL Gambar Kustom (Opsional)
-                </label>
-                <input
-                  type="url"
-                  value={coverImageUrl}
-                  onChange={(e) => setCoverImageUrl(e.target.value)}
-                  placeholder="https://example.com/cover-image.webp (Kosongkan untuk menggunakan Preset)"
-                  style={{
-                    width: '100%',
-                    padding: '10px 14px',
-                    borderRadius: '10px',
-                    border: '1px solid var(--color-divider)',
-                    fontSize: '13px',
-                    outline: 'none',
-                  }}
-                />
-              </div>
-
-              {/* Live Preview */}
-              <div style={{ marginTop: '16px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-subtle)', marginBottom: '8px' }}>
-                  Pratinjau Visual Cover Storefront:
+              {/* Cover Realtime Preview */}
+              <div style={{ maxWidth: '360px', margin: '0 auto' }}>
+                <div style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '6px', textAlign: 'center' }}>
+                  Pratinjau Cover
                 </div>
                 <ProgramCover
-                  title={title || 'Judul Program'}
-                  publicLabel={heroEyebrow}
+                  title={title || 'Judul Program Anda'}
                   variant={coverVariant}
                   imageUrl={coverImageUrl || undefined}
                 />
@@ -511,34 +470,29 @@ function NewProgramForm() {
           </div>
         </div>
 
-        {/* Section 4: Hasil yang Diharapkan (Learning Outcomes) */}
+        {/* Section 4: Learning Outcomes (Apa yang Dipelajari) */}
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
-            borderRadius: '16px',
+            borderRadius: 'var(--border-radius-lg)',
             border: '1px solid var(--color-divider)',
-            padding: '20px',
+            padding: '22px',
+            boxShadow: 'var(--shadow-xs)',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <div>
-              <h2 style={{ fontSize: '16px', fontWeight: 750, marginBottom: '2px' }}>4. Hasil yang Diharapkan (Outcomes)</h2>
-              <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                Poin manfaat yang akan dilihat peserta di landing page deskripsi program.
-              </div>
-            </div>
-
+            <h2 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main)' }}>4. Poin Pembelajaran (Outcomes)</h2>
             <button
               type="button"
               onClick={handleAddOutcome}
               style={{
-                fontSize: '13px',
-                fontWeight: 700,
+                fontSize: '12.5px',
+                fontWeight: 750,
                 color: 'var(--color-primary)',
                 backgroundColor: 'var(--color-primary-light)',
+                border: '1px solid var(--color-primary-border)',
                 padding: '6px 12px',
-                borderRadius: '8px',
-                border: 0,
+                borderRadius: 'var(--border-radius-sm)',
                 cursor: 'pointer',
               }}
             >
@@ -547,68 +501,53 @@ function NewProgramForm() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {outcomes.map((out, idx) => (
+            {outcomes.map((outcome, idx) => (
               <div
                 key={idx}
                 style={{
-                  padding: '12px',
+                  padding: '14px',
                   backgroundColor: 'var(--color-canvas)',
-                  borderRadius: '10px',
+                  borderRadius: 'var(--border-radius-sm)',
                   border: '1px solid var(--color-divider)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 750, color: 'var(--color-text-subtle)' }}>
-                    Poin #{idx + 1}
-                  </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '12.5px', fontWeight: 750, color: 'var(--color-text-main)' }}>Poin {idx + 1}</span>
                   {outcomes.length > 1 && (
                     <button
                       type="button"
                       onClick={() => handleRemoveOutcome(idx)}
-                      style={{
-                        fontSize: '12px',
-                        color: 'var(--color-status-danger)',
-                        fontWeight: 600,
-                        border: 0,
-                        background: 'none',
-                        cursor: 'pointer',
-                      }}
+                      style={{ fontSize: '12px', color: 'var(--color-status-danger)', background: 'none', border: 0, cursor: 'pointer' }}
                     >
                       Hapus
                     </button>
                   )}
                 </div>
-
                 <input
                   type="text"
-                  placeholder="Judul Hasil (Contoh: Mengenali Pola Belajar)"
-                  value={out.title}
+                  placeholder="Judul poin (misal: Mengenali Tanda Stres Anak)"
+                  value={outcome.title}
                   onChange={(e) => handleOutcomeChange(idx, 'title', e.target.value)}
                   style={{
                     width: '100%',
                     padding: '8px 12px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--border-radius-xs)',
                     border: '1px solid var(--color-divider)',
                     fontSize: '13px',
-                    outline: 'none',
+                    marginBottom: '8px',
                   }}
                 />
-
                 <input
                   type="text"
-                  placeholder="Deskripsi singkat (Contoh: Memahami sinyal ketika anak menolak belajar)"
-                  value={out.description}
+                  placeholder="Penjelasan singkat manfaat materi..."
+                  value={outcome.description}
                   onChange={(e) => handleOutcomeChange(idx, 'description', e.target.value)}
                   style={{
                     width: '100%',
                     padding: '8px 12px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--border-radius-xs)',
                     border: '1px solid var(--color-divider)',
                     fontSize: '13px',
-                    outline: 'none',
                   }}
                 />
               </div>
@@ -616,36 +555,50 @@ function NewProgramForm() {
           </div>
         </div>
 
-        {/* Submit Action */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="touch-target-primary"
-          style={{
-            backgroundColor: 'var(--color-primary)',
-            color: '#FFF',
-            fontWeight: 780,
-            fontSize: '15px',
-            borderRadius: '14px',
-            border: 0,
-            cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.7 : 1,
-            boxShadow: 'var(--shadow-md)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-          }}
-        >
-          {loading ? (
-            <>
-              <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>⏳</span>
-              <span>Menyimpan & Menyiapkan Kurikulum...</span>
-            </>
-          ) : (
-            <span>Simpan & Mulai Susun Kurikulum →</span>
-          )}
-        </button>
+        {/* Submit Actions */}
+        <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+          <Link
+            href="/app/programs"
+            className="touch-target-primary"
+            style={{
+              flex: 1,
+              border: '1px solid var(--color-divider)',
+              backgroundColor: 'var(--color-surface)',
+              color: 'var(--color-text-main)',
+              fontWeight: 750,
+              fontSize: '14px',
+              borderRadius: 'var(--border-radius-md)',
+              textAlign: 'center',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 'var(--shadow-xs)',
+            }}
+          >
+            Batal
+          </Link>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="touch-target-primary"
+            style={{
+              flex: 2,
+              backgroundColor: 'var(--color-primary)',
+              color: '#FFFFFF',
+              fontWeight: 780,
+              fontSize: '14.5px',
+              borderRadius: 'var(--border-radius-md)',
+              border: 0,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.7 : 1,
+              boxShadow: 'var(--shadow-sm)',
+            }}
+          >
+            {loading ? 'Menyimpan Program...' : 'Simpan & Lanjutkan ke Kurikulum →'}
+          </button>
+        </div>
       </form>
     </div>
   );
@@ -654,7 +607,7 @@ function NewProgramForm() {
 export default function NewProgramPage() {
   return (
     <PromotorShell>
-      <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Memuat formulir...</div>}>
+      <Suspense fallback={<div style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--color-text-muted)' }}>Memuat form...</div>}>
         <NewProgramForm />
       </Suspense>
     </PromotorShell>

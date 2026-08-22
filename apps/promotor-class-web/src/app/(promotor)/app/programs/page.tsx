@@ -23,15 +23,15 @@ export default function ProgramsPage() {
 
   return (
     <PromotorShell>
-      <div style={{ padding: '20px 16px', maxWidth: '840px', margin: '0 auto' }}>
+      <div style={{ padding: '24px 20px', maxWidth: '880px', margin: '0 auto' }}>
         {/* Top Page Header */}
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <h1 style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.025em', marginBottom: '2px' }}>
+              <h1 style={{ fontSize: '22px', fontWeight: 850, letterSpacing: '-0.025em', marginBottom: '4px', color: 'var(--color-text-main)' }}>
                 Daftar Program & E-Course
               </h1>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: 0 }}>
+              <p style={{ fontSize: '13.5px', color: 'var(--color-text-muted)', margin: 0 }}>
                 Kelola materi edukasi, program gratis, dan kelas berbayar Anda
               </p>
             </div>
@@ -41,20 +41,21 @@ export default function ProgramsPage() {
                 href="/app/settings"
                 style={{
                   fontSize: '13px',
-                  fontWeight: 750,
+                  fontWeight: 700,
                   color: 'var(--color-text-main)',
                   backgroundColor: 'var(--color-surface)',
                   border: '1px solid var(--color-divider)',
                   padding: '8px 14px',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--border-radius-sm)',
                   textDecoration: 'none',
                   whiteSpace: 'nowrap',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '4px',
+                  gap: '6px',
+                  boxShadow: 'var(--shadow-xs)',
                 }}
               >
-                ⚙️ Pengaturan Storefront
+                Pengaturan Storefront
               </Link>
 
               <Link
@@ -66,8 +67,9 @@ export default function ProgramsPage() {
                   fontWeight: 750,
                   color: 'var(--color-primary)',
                   backgroundColor: 'var(--color-primary-light)',
+                  border: '1px solid var(--color-primary-border)',
                   padding: '8px 14px',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--border-radius-sm)',
                   textDecoration: 'none',
                   whiteSpace: 'nowrap',
                   display: 'inline-flex',
@@ -75,7 +77,7 @@ export default function ProgramsPage() {
                   gap: '4px',
                 }}
               >
-                Preview Storefront ↗
+                Pratinjau Storefront ↗
               </Link>
             </div>
           </div>
@@ -83,8 +85,8 @@ export default function ProgramsPage() {
 
         {/* Action Row */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', maxWidth: '480px' }}>
-            Program gratis (lead magnet), khusus peserta tes, dan berbayar ({programs.length} program aktif).
+          <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+            Total {programs.length} program aktif terdaftar di workspace.
           </div>
 
           <Link
@@ -94,7 +96,7 @@ export default function ProgramsPage() {
               padding: '0 20px',
               backgroundColor: 'var(--color-primary)',
               color: '#FFF',
-              borderRadius: '12px',
+              borderRadius: 'var(--border-radius-md)',
               fontWeight: 780,
               fontSize: '13.5px',
               textDecoration: 'none',
@@ -114,16 +116,15 @@ export default function ProgramsPage() {
           {programs.length === 0 ? (
             <div
               style={{
-                padding: '32px 16px',
+                padding: '40px 20px',
                 textAlign: 'center',
                 backgroundColor: 'var(--color-surface)',
-                borderRadius: '16px',
+                borderRadius: 'var(--border-radius-lg)',
                 border: '1px dashed var(--color-divider)',
               }}
             >
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>📖</div>
-              <h3 style={{ fontSize: '16px', fontWeight: 750, marginBottom: '4px' }}>Belum ada program</h3>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '4px', color: 'var(--color-text-main)' }}>Belum ada program</h3>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '18px' }}>
                 Buat program pertama Anda untuk mulai menerima peserta di storefront.
               </p>
               <Link
@@ -132,14 +133,14 @@ export default function ProgramsPage() {
                   padding: '10px 20px',
                   backgroundColor: 'var(--color-primary)',
                   color: '#FFF',
-                  borderRadius: '10px',
+                  borderRadius: 'var(--border-radius-md)',
                   fontWeight: 750,
-                  fontSize: '13px',
+                  fontSize: '13.5px',
                   textDecoration: 'none',
                   display: 'inline-block',
                 }}
               >
-                + Buat Program Pertama Anda
+                + Buat Program Pertama
               </Link>
             </div>
           ) : (
@@ -148,26 +149,27 @@ export default function ProgramsPage() {
                 key={prog.id}
                 style={{
                   backgroundColor: 'var(--color-surface)',
-                  borderRadius: '16px',
+                  borderRadius: 'var(--border-radius-lg)',
                   border: '1px solid var(--color-divider)',
                   padding: '20px',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '14px',
-                  boxShadow: 'var(--shadow-sm)',
+                  boxShadow: 'var(--shadow-xs)',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '16px', fontWeight: 780 }}>{prog.title}</span>
+                      <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-main)' }}>{prog.title}</span>
                       <span
                         style={{
                           fontSize: '11px',
                           padding: '2px 8px',
-                          borderRadius: '6px',
-                          backgroundColor: prog.status === 'published' ? 'var(--color-status-success-bg)' : '#F0F0ED',
+                          borderRadius: '4px',
+                          backgroundColor: prog.status === 'published' ? 'var(--color-status-success-bg)' : 'var(--color-canvas)',
                           color: prog.status === 'published' ? 'var(--color-status-success)' : 'var(--color-text-muted)',
+                          border: prog.status === 'published' ? '1px solid var(--color-status-success-border)' : '1px solid var(--color-divider)',
                           fontWeight: 750,
                         }}
                       >
@@ -177,16 +179,17 @@ export default function ProgramsPage() {
                         style={{
                           fontSize: '11px',
                           padding: '2px 8px',
-                          borderRadius: '6px',
-                          backgroundColor: prog.programType === 'lead_magnet' ? '#eef5f1' : prog.programType === 'aftersales' ? '#FFF8EB' : '#eef2ff',
-                          color: prog.programType === 'lead_magnet' ? '#286344' : prog.programType === 'aftersales' ? '#C07000' : '#3730a3',
+                          borderRadius: '4px',
+                          backgroundColor: prog.programType === 'lead_magnet' ? 'var(--color-primary-light)' : prog.programType === 'aftersales' ? 'var(--color-status-warning-bg)' : '#eef2ff',
+                          color: prog.programType === 'lead_magnet' ? 'var(--color-primary)' : prog.programType === 'aftersales' ? 'var(--color-status-warning)' : '#3730a3',
+                          border: '1px solid var(--color-divider)',
                           fontWeight: 750,
                         }}
                       >
                         {prog.programType === 'lead_magnet' ? 'Gratis (Lead Magnet)' : prog.programType === 'aftersales' ? 'Khusus Peserta Tes' : 'Berbayar'}
                       </span>
                     </div>
-                    <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                    <div style={{ fontSize: '13.5px', color: 'var(--color-text-body)', lineHeight: 1.5 }}>
                       {prog.subtitle || prog.description}
                     </div>
                   </div>
@@ -197,17 +200,17 @@ export default function ProgramsPage() {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    paddingTop: '12px',
+                    paddingTop: '14px',
                     borderTop: '1px solid var(--color-divider)',
                     flexWrap: 'wrap',
                     gap: '10px',
                   }}
                 >
-                  <div style={{ fontSize: '12px', color: 'var(--color-text-subtle)', fontWeight: 600 }}>
+                  <div style={{ fontSize: '12.5px', color: 'var(--color-text-muted)', fontWeight: 600 }}>
                     {prog.modules.length} Bab · {prog.modules.reduce((acc, m) => acc + m.lessons.length, 0)} Sesi Pelajaran
                   </div>
 
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
                     <Link
                       href={`/p/${workspaceSlug}/${prog.programSlug}`}
                       target="_blank"
@@ -215,7 +218,7 @@ export default function ProgramsPage() {
                         fontSize: '13px',
                         color: 'var(--color-text-muted)',
                         textDecoration: 'none',
-                        fontWeight: 600,
+                        fontWeight: 650,
                       }}
                     >
                       Lihat Landing ↗

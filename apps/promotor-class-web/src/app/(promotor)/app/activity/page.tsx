@@ -25,39 +25,62 @@ export default function ActivityPage() {
 
   return (
     <PromotorShell>
-      <div style={{ padding: '16px' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '4px' }}>Aktivitas Pembelajaran</h1>
-        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
-          Jejak refleksi & penuntusan materi peserta secara terperinci
+      <div style={{ padding: '24px 20px', maxWidth: '860px', margin: '0 auto' }}>
+        <div style={{ marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 850, letterSpacing: '-0.025em', marginBottom: '4px', color: 'var(--color-text-main)' }}>
+            Aktivitas Pembelajaran
+          </h1>
+          <div style={{ fontSize: '13.5px', color: 'var(--color-text-muted)' }}>
+            Jejak refleksi mandiri & progres materi peserta secara terperinci
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {reflections.map(refl => {
-            const contact = contactMap.get(refl.contactId);
-            const name = contact ? contact.name : 'Peserta';
+          {reflections.length === 0 ? (
+            <div
+              style={{
+                backgroundColor: 'var(--color-surface)',
+                borderRadius: 'var(--border-radius-md)',
+                border: '1px solid var(--color-divider)',
+                padding: '36px 20px',
+                textAlign: 'center',
+                color: 'var(--color-text-muted)',
+                fontSize: '13.5px',
+              }}
+            >
+              Belum ada data refleksi pembelajaran masuk.
+            </div>
+          ) : (
+            reflections.map(refl => {
+              const contact = contactMap.get(refl.contactId);
+              const name = contact ? contact.name : 'Peserta';
 
-            return (
-              <div
-                key={refl.id}
-                style={{
-                  backgroundColor: 'var(--color-surface)',
-                  padding: '14px',
-                  borderRadius: 'var(--border-radius-md)',
-                  border: '1px solid var(--color-divider)',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 700, fontSize: '13px' }}>{name}</span>
-                  <span style={{ fontSize: '11px', color: 'var(--color-text-subtle)' }} className="tabular-nums">
-                    {formatTimeAgo(refl.submittedAt)}
-                  </span>
+              return (
+                <div
+                  key={refl.id}
+                  style={{
+                    backgroundColor: 'var(--color-surface)',
+                    padding: '16px 20px',
+                    borderRadius: 'var(--border-radius-md)',
+                    border: '1px solid var(--color-divider)',
+                    boxShadow: 'var(--shadow-xs)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontWeight: 800, fontSize: '14.5px', color: 'var(--color-text-main)' }}>
+                      {name}
+                    </span>
+                    <span style={{ fontSize: '11.5px', color: 'var(--color-text-muted)', fontWeight: 600 }} className="tabular-nums">
+                      {formatTimeAgo(refl.submittedAt)}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '13.5px', color: 'var(--color-text-body)', fontStyle: 'italic', lineHeight: 1.6, margin: 0 }}>
+                    &ldquo;{refl.answerText}&rdquo;
+                  </p>
                 </div>
-                <p style={{ fontSize: '13px', color: 'var(--color-text-main)', fontStyle: 'italic' }}>
-                  &ldquo;{refl.answerText}&rdquo;
-                </p>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
     </PromotorShell>

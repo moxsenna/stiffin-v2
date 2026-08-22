@@ -17,6 +17,7 @@ import { WeeklyAvailabilityRule } from '@/modules/availability/ports';
 import { formatPhoneDisplay } from '@promotor/platform-core';
 import { signOut, getSession, UserSession } from '@/lib/auth';
 import { getApiMode } from '@/adapters';
+import { ChevronLeftIcon } from '@/components/foundation/icons';
 
 const DAY_NAMES = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
@@ -37,7 +38,6 @@ export default function SettingsPage() {
       if (res.scenarioPreset) setScenarioPreset(res.scenarioPreset);
     });
     availabilityQueries.getWeeklyRules().then((rules) => {
-      // Ensure all 7 days exist in local state
       const initialized = [1, 2, 3, 4, 5, 6, 0].map((d) => {
         const found = rules.find((r) => r.dayOfWeek === d);
         return (
@@ -69,7 +69,6 @@ export default function SettingsPage() {
     setSavingAvailability(true);
     setSaveFeedback(null);
     try {
-      // Validate time order
       for (const r of weeklyRules) {
         if (r.isActive && r.startTime >= r.endTime) {
           alert(`Jam mulai (${r.startTime}) harus lebih awal dari jam selesai (${r.endTime}) pada hari ${DAY_NAMES[r.dayOfWeek]}`);
@@ -118,210 +117,296 @@ export default function SettingsPage() {
 
   return (
     <AppShell showBottomNav={true}>
-      <div style={{ padding: '12px 16px 8px' }}>
-        <h1 style={{ font: '700 24px/29px Inter, sans-serif', color: '#191918' }}>Pengaturan</h1>
-        <div style={{ font: '400 13.5px Inter, sans-serif', color: '#71706B', paddingTop: '2px' }}>
-          Profil promotor, jadwal ketersediaan konsultasi, dan sesi akun.
+      <div style={{ padding: '16px 16px 0' }}>
+        <button
+          onClick={() => router.push('/app/more')}
+          className="touch-target"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            color: 'var(--color-text-secondary)',
+            fontWeight: 650,
+            fontSize: '13px',
+            marginBottom: '8px',
+          }}
+        >
+          <ChevronLeftIcon size={16} />
+          <span>Kembali ke Lainnya</span>
+        </button>
+
+        <h1 style={{ fontSize: '24px', fontWeight: 850, letterSpacing: '-0.03em', color: 'var(--color-text-primary)' }}>
+          Pengaturan & Profil
+        </h1>
+        <div style={{ fontSize: '13.5px', color: 'var(--color-text-secondary)', marginTop: '2px', marginBottom: '16px' }}>
+          Profil promotor, jadwal jam kerja, dan sesi akun
         </div>
       </div>
 
-      <div style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid #E8E7E3', marginTop: '12px', padding: '16px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ padding: '0 16px 32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* Profile Card */}
+        <div
+          style={{
+            backgroundColor: 'var(--color-surface)',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid var(--color-divider)',
+            padding: '20px',
+            boxShadow: 'var(--shadow-xs)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+          }}
+        >
           <div>
-            <div style={{ font: '600 12px Inter, sans-serif', color: '#71706B', textTransform: 'uppercase' }}>PROMOTOR</div>
-            <div style={{ font: '600 16px Inter, sans-serif', color: '#191918', paddingTop: '2px' }}>
-              {session?.user?.name || settings.promotorName || 'Promotor'}
+            <div style={{ fontSize: '12px', fontWeight: 750, color: 'var(--color-text-tertiary)' }}>
+              Identitas Promotor
             </div>
-            <div style={{ font: '400 14px Inter, sans-serif', color: '#71706B' }}>
+            <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-primary)', marginTop: '2px' }}>
+              {session?.user?.name || settings.promotorName || 'Promotor STIFIn'}
+            </div>
+            <div style={{ fontSize: '13.5px', color: 'var(--color-text-secondary)' }}>
               {session?.user?.email || (settings.promotorPhoneE164 ? formatPhoneDisplay(settings.promotorPhoneE164) : 'Belum tersedia')}
             </div>
           </div>
 
-          <div style={{ borderTop: '1px solid #E8E7E3', paddingTop: '12px' }}>
-            <div style={{ font: '600 12px Inter, sans-serif', color: '#71706B', textTransform: 'uppercase' }}>ORGANISASI</div>
-            <div style={{ font: '600 15px Inter, sans-serif', color: '#191918', paddingTop: '2px' }}>
-              {session?.organization?.name || settings.organizationName || 'Belum tersedia'}
+          <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '12px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 750, color: 'var(--color-text-tertiary)' }}>
+              Organisasi / Cabang
+            </div>
+            <div style={{ fontSize: '15px', fontWeight: 750, color: 'var(--color-text-primary)', marginTop: '2px' }}>
+              {session?.organization?.name || settings.organizationName || 'STIFIn Brain Consulting'}
+            </div>
+          </div>
+        </div>
+
+        {/* Availability Schedule Card */}
+        <div
+          style={{
+            backgroundColor: 'var(--color-surface)',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid var(--color-divider)',
+            padding: '20px',
+            boxShadow: 'var(--shadow-xs)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '14px',
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-primary)' }}>
+              Jadwal Ketersediaan Mingguan
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
+              Atur jam kerja untuk booking konsultasi storefront publik.
             </div>
           </div>
 
-          {/* Availability Schedule Section */}
-          <div style={{ borderTop: '1px solid #E8E7E3', paddingTop: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <div>
-                <div style={{ font: '600 14px Inter, sans-serif', color: '#191918' }}>Jadwal Ketersediaan Mingguan</div>
-                <div style={{ font: '400 12.5px Inter, sans-serif', color: '#71706B' }}>
-                  Atur hari dan jam kerja untuk booking konsultasi storefront.
+          {saveFeedback && (
+            <div
+              style={{
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--color-success-soft)',
+                border: '1px solid var(--color-success-border)',
+                color: 'var(--color-success)',
+                fontWeight: 700,
+                fontSize: '13px',
+              }}
+            >
+              ✓ {saveFeedback}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {weeklyRules.map((r) => (
+              <div
+                key={r.dayOfWeek}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 12px',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--color-divider)',
+                  backgroundColor: r.isActive ? 'var(--color-canvas)' : 'var(--color-surface-hover)',
+                  transition: 'background-color var(--duration-fast) ease',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '90px' }}>
+                  <input
+                    type="checkbox"
+                    checked={r.isActive}
+                    onChange={() => handleRuleToggle(r.dayOfWeek)}
+                    style={{ width: '17px', height: '17px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
+                    id={`day-${r.dayOfWeek}`}
+                  />
+                  <label
+                    htmlFor={`day-${r.dayOfWeek}`}
+                    style={{
+                      fontWeight: r.isActive ? 780 : 500,
+                      fontSize: '13.5px',
+                      color: r.isActive ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {DAY_NAMES[r.dayOfWeek]}
+                  </label>
                 </div>
+
+                {r.isActive ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <input
+                      type="time"
+                      value={r.startTime}
+                      onChange={(e) => handleRuleTimeChange(r.dayOfWeek, 'startTime', e.target.value)}
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: 'var(--radius-xs)',
+                        border: '1px solid var(--color-border-strong)',
+                        fontSize: '13px',
+                        fontWeight: 650,
+                        backgroundColor: 'var(--color-surface)',
+                        color: 'var(--color-text-primary)',
+                      }}
+                    />
+                    <span style={{ color: 'var(--color-text-tertiary)', fontSize: '12px' }}>—</span>
+                    <input
+                      type="time"
+                      value={r.endTime}
+                      onChange={(e) => handleRuleTimeChange(r.dayOfWeek, 'endTime', e.target.value)}
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: 'var(--radius-xs)',
+                        border: '1px solid var(--color-border-strong)',
+                        fontSize: '13px',
+                        fontWeight: 650,
+                        backgroundColor: 'var(--color-surface)',
+                        color: 'var(--color-text-primary)',
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <span style={{ fontSize: '12.5px', color: 'var(--color-text-tertiary)', fontStyle: 'italic' }}>
+                    Tutup / Libur
+                  </span>
+                )}
               </div>
+            ))}
+          </div>
+
+          <button
+            onClick={handleSaveAvailability}
+            disabled={savingAvailability}
+            className="touch-target-primary"
+            style={{
+              width: '100%',
+              backgroundColor: savingAvailability ? 'var(--color-border-strong)' : 'var(--color-primary)',
+              color: '#FFFFFF',
+              borderRadius: 'var(--radius-md)',
+              border: 'none',
+              fontWeight: 780,
+              fontSize: '14px',
+              cursor: savingAvailability ? 'not-allowed' : 'pointer',
+              boxShadow: 'var(--shadow-sm)',
+            }}
+          >
+            {savingAvailability ? 'Menyimpan...' : 'Simpan Jadwal Ketersediaan'}
+          </button>
+        </div>
+
+        {/* Account Logout Card */}
+        <div
+          style={{
+            backgroundColor: 'var(--color-surface)',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid var(--color-divider)',
+            padding: '20px',
+            boxShadow: 'var(--shadow-xs)',
+          }}
+        >
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="touch-target-primary"
+            style={{
+              width: '100%',
+              backgroundColor: 'var(--color-danger-soft)',
+              color: 'var(--color-danger)',
+              border: '1px solid var(--color-danger-border)',
+              borderRadius: 'var(--radius-md)',
+              fontWeight: 780,
+              fontSize: '14px',
+              cursor: loggingOut ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {loggingOut ? 'Memproses Keluar...' : 'Keluar dari Akun (Logout)'}
+          </button>
+        </div>
+
+        {/* Dev-Only Controls section */}
+        {isMockDevMode && (
+          <div
+            style={{
+              backgroundColor: 'var(--color-surface)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--color-warning-border)',
+              padding: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+            }}
+          >
+            <div style={{ fontWeight: 800, fontSize: '14px', color: 'var(--color-warning)' }}>
+              Dev Controls (Demo Scenario)
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+              Pilih skenario integrasi PromotorClass untuk menguji perilaku outage dan degraded mode:
             </div>
 
-            {saveFeedback && (
-              <div style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: '#ECFDF3', color: '#027A48', font: '500 13px Inter, sans-serif', marginBottom: '12px' }}>
-                {saveFeedback}
-              </div>
-            )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
-              {weeklyRules.map((r) => (
-                <div
-                  key={r.dayOfWeek}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { key: 'FLOW_ONLY', label: 'FLOW_ONLY (PromotorFlow Standalone)' },
+                { key: 'BUNDLE_AVAILABLE', label: 'BUNDLE_AVAILABLE (Integrasi Class Aktif)' },
+                { key: 'BUNDLE_CLASS_UNAVAILABLE', label: 'BUNDLE_CLASS_UNAVAILABLE (Class Outage)' },
+              ].map((sc) => (
+                <button
+                  key={sc.key}
+                  onClick={() => handleScenarioChange(sc.key as any)}
+                  className="touch-target"
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid #E8E7E3',
-                    backgroundColor: r.isActive ? '#FAFAF9' : '#F4F3EF',
+                    padding: '10px 14px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: scenarioPreset === sc.key ? '1.5px solid var(--color-primary)' : '1px solid var(--color-divider)',
+                    backgroundColor: scenarioPreset === sc.key ? 'var(--color-primary-light)' : 'var(--color-surface)',
+                    color: scenarioPreset === sc.key ? 'var(--color-primary)' : 'var(--color-text-primary)',
+                    fontWeight: scenarioPreset === sc.key ? 780 : 500,
+                    fontSize: '13px',
+                    textAlign: 'left',
+                    justifyContent: 'flex-start',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '100px' }}>
-                    <input
-                      type="checkbox"
-                      checked={r.isActive}
-                      onChange={() => handleRuleToggle(r.dayOfWeek)}
-                      style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#167A68' }}
-                      id={`day-${r.dayOfWeek}`}
-                    />
-                    <label
-                      htmlFor={`day-${r.dayOfWeek}`}
-                      style={{
-                        font: r.isActive ? '600 13.5px Inter, sans-serif' : '400 13.5px Inter, sans-serif',
-                        color: r.isActive ? '#191918' : '#71706B',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {DAY_NAMES[r.dayOfWeek]}
-                    </label>
-                  </div>
-
-                  {r.isActive ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <input
-                        type="time"
-                        value={r.startTime}
-                        onChange={(e) => handleRuleTimeChange(r.dayOfWeek, 'startTime', e.target.value)}
-                        style={{
-                          padding: '4px 8px',
-                          borderRadius: '6px',
-                          border: '1px solid #D5D3CE',
-                          font: '500 13px Inter, sans-serif',
-                          backgroundColor: '#FFFFFF',
-                        }}
-                      />
-                      <span style={{ color: '#71706B', font: '400 12px Inter, sans-serif' }}>s/d</span>
-                      <input
-                        type="time"
-                        value={r.endTime}
-                        onChange={(e) => handleRuleTimeChange(r.dayOfWeek, 'endTime', e.target.value)}
-                        style={{
-                          padding: '4px 8px',
-                          borderRadius: '6px',
-                          border: '1px solid #D5D3CE',
-                          font: '500 13px Inter, sans-serif',
-                          backgroundColor: '#FFFFFF',
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <span style={{ font: '400 12.5px Inter, sans-serif', color: '#8F8E8A' }}>Tutup / Libur</span>
-                  )}
-                </div>
+                  {sc.label}
+                </button>
               ))}
             </div>
 
             <button
-              onClick={handleSaveAvailability}
-              disabled={savingAvailability}
+              onClick={handleReset}
+              className="touch-target"
               style={{
-                marginTop: '16px',
-                width: '100%',
-                height: '42px',
-                backgroundColor: savingAvailability ? '#87BDB2' : '#167A68',
+                backgroundColor: 'var(--color-danger)',
                 color: '#FFFFFF',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-sm)',
                 border: 'none',
-                font: '600 14px Inter, sans-serif',
-                cursor: savingAvailability ? 'not-allowed' : 'pointer',
+                fontWeight: 780,
+                fontSize: '13.5px',
+                marginTop: '4px',
               }}
             >
-              {savingAvailability ? 'Menyimpan...' : 'Simpan Jadwal Ketersediaan'}
+              Reset Demo State
             </button>
           </div>
-
-          {/* Account Logout Action */}
-          <div style={{ borderTop: '1px solid #E8E7E3', paddingTop: '16px' }}>
-            <button
-              onClick={handleLogout}
-              disabled={loggingOut}
-              style={{
-                width: '100%',
-                height: '42px',
-                backgroundColor: '#FFF1F0',
-                color: '#D92D20',
-                border: '1px solid #FDA29B',
-                borderRadius: '8px',
-                font: '600 14px Inter, sans-serif',
-                cursor: loggingOut ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {loggingOut ? 'Memproses Keluar...' : 'Keluar dari Akun (Logout)'}
-            </button>
-          </div>
-
-          {/* Dev-Only Controls section */}
-          {isMockDevMode && (
-            <div style={{ borderTop: '1px solid #E8E7E3', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ font: '600 12px Inter, sans-serif', color: '#B54708', textTransform: 'uppercase' }}>
-                DEV CONTROLS (DEMO SCENARIO)
-              </div>
-              <div style={{ font: '400 13px Inter, sans-serif', color: '#71706B' }}>
-                Pilih skenario integrasi PromotorClass untuk menguji perilaku entitlement dan outage:
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {[
-                  { key: 'FLOW_ONLY', label: 'FLOW_ONLY (PromotorFlow Standalone)' },
-                  { key: 'BUNDLE_AVAILABLE', label: 'BUNDLE_AVAILABLE (Integrasi Class Aktif)' },
-                  { key: 'BUNDLE_CLASS_UNAVAILABLE', label: 'BUNDLE_CLASS_UNAVAILABLE (Class Outage)' },
-                ].map((sc) => (
-                  <button
-                    key={sc.key}
-                    onClick={() => handleScenarioChange(sc.key as any)}
-                    style={{
-                      height: '38px',
-                      padding: '0 12px',
-                      borderRadius: '6px',
-                      border: scenarioPreset === sc.key ? '2px solid #167A68' : '1px solid #D5D3CE',
-                      backgroundColor: scenarioPreset === sc.key ? '#EAF5F2' : '#FFFFFF',
-                      color: scenarioPreset === sc.key ? '#167A68' : '#191918',
-                      font: '500 13px Inter, sans-serif',
-                      textAlign: 'left',
-                    }}
-                  >
-                    {sc.label}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={handleReset}
-                style={{
-                  height: '42px',
-                  backgroundColor: '#B42318',
-                  color: '#FFFFFF',
-                  borderRadius: '8px',
-                  border: 'none',
-                  font: '600 14px Inter, sans-serif',
-                  cursor: 'pointer',
-                  marginTop: '8px',
-                }}
-              >
-                Reset Demo State
-              </button>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </AppShell>
   );

@@ -56,14 +56,14 @@ export function LearnerProfileClient() {
     }
   };
 
-  const completedCount = enrollments.filter(e => e.status === 'selesai').length;
-  const inProgressCount = enrollments.filter(e => e.status !== 'selesai').length;
+  const completedCount = enrollments.filter(e => e.status === 'selesai' || e.progressPercent === 100).length;
+  const inProgressCount = enrollments.filter(e => e.status !== 'selesai' && e.progressPercent < 100).length;
 
   if (loading) {
     return (
       <LearnerShell title="Profil Saya">
-        <div style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-          Memuat profil...
+        <div style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '14px', fontWeight: 600 }}>
+          Memuat profil learner...
         </div>
       </LearnerShell>
     );
@@ -74,13 +74,14 @@ export function LearnerProfileClient() {
 
     return (
       <LearnerShell title="Profil Saya">
-        <div style={{ padding: '40px 16px', textAlign: 'center' }}>
+        <div style={{ padding: '48px 16px', textAlign: 'center', maxWidth: '480px', margin: '0 auto' }}>
           <div
             style={{
-              width: '64px',
-              height: '64px',
+              width: '60px',
+              height: '60px',
               borderRadius: '50%',
               backgroundColor: 'var(--color-surface-hover)',
+              border: '1px solid var(--color-divider)',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -88,16 +89,16 @@ export function LearnerProfileClient() {
               color: 'var(--color-text-muted)',
             }}
           >
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="8" r="4" />
               <path d="M20 21a8 8 0 0 0-16 0" />
             </svg>
           </div>
-          <h2 style={{ fontSize: '18px', fontWeight: 750, marginBottom: '8px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '8px', color: 'var(--color-text-main)' }}>
             Sesi Belajar Belum Aktif
           </h2>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '24px', lineHeight: 1.6 }}>
-            Halaman ini menyimpan profil dan riwayat program belajar Anda. Jika Anda calon peserta atau baru pertama kali datang, silakan buka Katalog Program untuk memilih e-course gratis atau program pendampingan STIFIn.
+          <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '28px', lineHeight: 1.6 }}>
+            Halaman ini menyimpan profil dan riwayat program belajar Anda. Silakan buka Katalog Program untuk mendaftar materi yang tersedia.
           </p>
 
           {targetWorkspace ? (
@@ -108,12 +109,14 @@ export function LearnerProfileClient() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '12px 24px',
+                padding: '0 24px',
                 backgroundColor: 'var(--color-primary)',
                 color: '#FFF',
-                fontWeight: 700,
-                borderRadius: '12px',
+                fontWeight: 780,
+                fontSize: '14px',
+                borderRadius: 'var(--border-radius-md)',
                 textDecoration: 'none',
+                boxShadow: 'var(--shadow-sm)',
               }}
             >
               Lihat Katalog Program →
@@ -130,18 +133,19 @@ export function LearnerProfileClient() {
 
   return (
     <LearnerShell title="Profil Saya" workspaceSlug={session.workspaceSlug}>
-      <div style={{ padding: '20px 16px' }}>
+      <div style={{ padding: '20px 0' }}>
         {/* Profile Info Card */}
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
-            borderRadius: '16px',
+            borderRadius: 'var(--border-radius-lg)',
             border: '1px solid var(--color-divider)',
             padding: '24px',
             marginBottom: '20px',
             display: 'flex',
             alignItems: 'center',
             gap: '16px',
+            boxShadow: 'var(--shadow-xs)',
           }}
         >
           <div
@@ -155,21 +159,22 @@ export function LearnerProfileClient() {
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '22px',
-              fontWeight: 750,
+              fontWeight: 850,
               flexShrink: 0,
+              border: '1px solid var(--color-primary-border)',
             }}
           >
             {contact.name.charAt(0).toUpperCase()}
           </div>
-          <div>
-            <h2 style={{ fontSize: '18px', fontWeight: 750, marginBottom: '2px' }}>
+          <div style={{ minWidth: 0 }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text-main)', letterSpacing: '-0.02em', marginBottom: '2px' }}>
               {contact.name}
             </h2>
             <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
               WhatsApp: {contact.phoneE164}
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 650, marginTop: '4px' }}>
-              Promotor: {session.workspaceSlug}
+            <div style={{ fontSize: '11.5px', color: 'var(--color-primary)', fontWeight: 700, marginTop: '4px' }}>
+              Ruang Belajar: {session.workspaceSlug}
             </div>
           </div>
         </div>
@@ -186,16 +191,17 @@ export function LearnerProfileClient() {
           <div
             style={{
               backgroundColor: 'var(--color-surface)',
-              borderRadius: '14px',
+              borderRadius: 'var(--border-radius-md)',
               border: '1px solid var(--color-divider)',
-              padding: '16px',
+              padding: '18px',
               textAlign: 'center',
+              boxShadow: 'var(--shadow-xs)',
             }}
           >
-            <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-primary)' }} className="tabular-nums">
+            <div style={{ fontSize: '26px', fontWeight: 850, color: 'var(--color-primary)' }} className="tabular-nums">
               {inProgressCount}
             </div>
-            <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px', fontWeight: 600 }}>
               Sedang Berjalan
             </div>
           </div>
@@ -203,34 +209,35 @@ export function LearnerProfileClient() {
           <div
             style={{
               backgroundColor: 'var(--color-surface)',
-              borderRadius: '14px',
+              borderRadius: 'var(--border-radius-md)',
               border: '1px solid var(--color-divider)',
-              padding: '16px',
+              padding: '18px',
               textAlign: 'center',
+              boxShadow: 'var(--shadow-xs)',
             }}
           >
-            <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-status-success)' }} className="tabular-nums">
+            <div style={{ fontSize: '26px', fontWeight: 850, color: 'var(--color-status-success)' }} className="tabular-nums">
               {completedCount}
             </div>
-            <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px', fontWeight: 600 }}>
               Program Selesai
             </div>
           </div>
         </div>
 
         {/* Enrolled Programs List */}
-        <div style={{ marginBottom: '32px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: 750, marginBottom: '12px' }}>
-            Riwayat Learning Access
+        <div style={{ marginBottom: '28px' }}>
+          <h3 style={{ fontSize: '15.5px', fontWeight: 800, marginBottom: '14px', color: 'var(--color-text-main)' }}>
+            Riwayat Akses Pembelajaran
           </h3>
           {enrollments.length === 0 ? (
             <div
               style={{
                 backgroundColor: 'var(--color-surface)',
-                borderRadius: '12px',
+                borderRadius: 'var(--border-radius-md)',
                 border: '1px solid var(--color-divider)',
-                padding: '20px',
-                fontSize: '13px',
+                padding: '24px',
+                fontSize: '13.5px',
                 color: 'var(--color-text-muted)',
                 textAlign: 'center',
               }}
@@ -249,27 +256,28 @@ export function LearnerProfileClient() {
                     href={`/learn/programs/${enr.id}`}
                     style={{
                       backgroundColor: 'var(--color-surface)',
-                      borderRadius: '12px',
+                      borderRadius: 'var(--border-radius-md)',
                       border: '1px solid var(--color-divider)',
-                      padding: '14px 16px',
+                      padding: '14px 18px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       textDecoration: 'none',
                       color: 'var(--color-text-main)',
+                      boxShadow: 'var(--shadow-xs)',
                     }}
                   >
                     <div>
-                      <div style={{ fontSize: '14px', fontWeight: 700 }}>{prog.title}</div>
+                      <div style={{ fontSize: '14px', fontWeight: 750 }}>{prog.title}</div>
                       <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
                         Progres: {enr.progressPercent}%
                       </div>
                     </div>
                     <div
                       style={{
-                        fontSize: '12px',
+                        fontSize: '13px',
                         color: 'var(--color-primary)',
-                        fontWeight: 700,
+                        fontWeight: 750,
                       }}
                     >
                       Buka →
@@ -291,12 +299,12 @@ export function LearnerProfileClient() {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 backgroundColor: 'var(--color-surface)',
-                border: '1px solid #BFDBFE',
-                borderRadius: '14px',
-                padding: '16px',
+                border: '1px solid var(--color-status-info-border)',
+                borderRadius: 'var(--border-radius-lg)',
+                padding: '18px',
                 textDecoration: 'none',
                 color: 'var(--color-text-main)',
-                boxShadow: 'var(--shadow-sm)',
+                boxShadow: 'var(--shadow-xs)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -305,26 +313,31 @@ export function LearnerProfileClient() {
                     width: '40px',
                     height: '40px',
                     borderRadius: '10px',
-                    backgroundColor: '#EFF6FF',
-                    color: '#2563EB',
+                    backgroundColor: 'var(--color-status-info-bg)',
+                    color: 'var(--color-status-info)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '20px',
                   }}
                 >
-                  🎁
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 12 20 22 4 22 4 12" />
+                    <rect x="2" y="7" width="20" height="5" />
+                    <line x1="12" y1="22" x2="12" y2="7" />
+                    <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+                    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+                  </svg>
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: 750, color: '#1E40AF' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 780, color: 'var(--color-status-info)' }}>
                     Referral & Reward
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                    Ajak teman belajar STIFIn & dapatkan voucher reward
+                    Ajak rekan belajar STIFIn & dapatkan voucher reward
                   </div>
                 </div>
               </div>
-              <span style={{ fontSize: '13px', fontWeight: 750, color: '#2563EB' }}>
+              <span style={{ fontSize: '13px', fontWeight: 780, color: 'var(--color-status-info)' }}>
                 Lihat →
               </span>
             </Link>
@@ -335,14 +348,14 @@ export function LearnerProfileClient() {
         <div>
           <button
             onClick={handleLogout}
+            className="touch-target-primary"
             style={{
               width: '100%',
-              minHeight: '48px',
-              borderRadius: '12px',
-              border: '1px solid #F8B4B4',
-              backgroundColor: '#FDF2F2',
-              color: '#9B1C1C',
-              fontWeight: 700,
+              borderRadius: 'var(--border-radius-md)',
+              border: '1px solid var(--color-status-danger-border)',
+              backgroundColor: 'var(--color-status-danger-bg)',
+              color: 'var(--color-status-danger)',
+              fontWeight: 780,
               fontSize: '14px',
               cursor: 'pointer',
             }}

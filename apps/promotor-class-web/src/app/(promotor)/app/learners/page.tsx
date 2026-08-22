@@ -75,29 +75,32 @@ export default function LearnersPage() {
 
   return (
     <PromotorShell>
-      <div style={{ padding: '16px' }}>
-        <div style={{ marginBottom: '16px' }}>
-          <h1 style={{ fontSize: '20px', fontWeight: 700 }}>Daftar Peserta & Follow-up</h1>
-          <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-            Filter berdasarkan tingkat minat & lihat detail refleksi
+      <div style={{ padding: '24px 20px', maxWidth: '960px', margin: '0 auto' }}>
+        <div style={{ marginBottom: '20px' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 850, letterSpacing: '-0.025em', marginBottom: '4px', color: 'var(--color-text-main)' }}>
+            Daftar Peserta & Follow-up
+          </h1>
+          <div style={{ fontSize: '13.5px', color: 'var(--color-text-muted)' }}>
+            Filter berdasarkan tingkat minat & lihat catatan refleksi peserta
           </div>
         </div>
 
         {/* Filter Pills */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
           {(['semua', 'Minat tinggi', 'Minat sedang', 'Minat rendah'] as const).map(filterVal => (
             <button
               key={filterVal}
               onClick={() => setSelectedFilter(filterVal)}
               className="touch-target"
               style={{
-                padding: '4px 12px',
+                padding: '6px 14px',
                 borderRadius: 'var(--border-radius-full)',
-                fontSize: '12px',
-                fontWeight: 600,
+                fontSize: '12.5px',
+                fontWeight: 750,
                 backgroundColor: selectedFilter === filterVal ? 'var(--color-primary)' : 'var(--color-surface)',
-                color: selectedFilter === filterVal ? '#FFF' : 'var(--color-text-main)',
+                color: selectedFilter === filterVal ? '#FFF' : 'var(--color-text-body)',
                 border: '1px solid var(--color-divider)',
+                boxShadow: 'var(--shadow-xs)',
               }}
             >
               {filterVal === 'semua' ? 'Semua Peserta' : filterVal}
@@ -106,9 +109,19 @@ export default function LearnersPage() {
         </div>
 
         {/* Learners List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {filteredContacts.length === 0 ? (
-            <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '14px', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-divider)' }}>
+            <div
+              style={{
+                padding: '40px 20px',
+                textAlign: 'center',
+                color: 'var(--color-text-muted)',
+                fontSize: '14px',
+                backgroundColor: 'var(--color-surface)',
+                borderRadius: 'var(--border-radius-lg)',
+                border: '1px solid var(--color-divider)',
+              }}
+            >
               Belum ada peserta pembelajaran yang terdaftar.
             </div>
           ) : (
@@ -130,59 +143,69 @@ export default function LearnersPage() {
                 sig?.primaryReason ||
                 (prog ? `Terdaftar pada ${prog.title}` : 'Peserta terdaftar');
 
+              const isHigh = effectiveSignalLevel === 'Minat tinggi';
+              const isMedium = effectiveSignalLevel === 'Minat sedang';
+
               return (
                 <div
                   key={contact.id}
                   data-testid="learner-item"
                   onClick={() => setSelectedContact(contact)}
                   style={{
-                    padding: '14px 16px',
+                    padding: '16px 20px',
                     backgroundColor: isSelected ? 'var(--color-primary-light)' : 'var(--color-surface)',
-                    borderRadius: 'var(--border-radius-sm)',
+                    borderRadius: 'var(--border-radius-lg)',
                     border: '1px solid var(--color-divider)',
                     cursor: 'pointer',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
+                    boxShadow: 'var(--shadow-xs)',
+                    transition: 'transform var(--duration-fast) var(--ease-spring)',
                   }}
                 >
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 700 }}>{contact.name}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
+                      <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--color-text-main)' }}>
+                        {contact.name}
+                      </span>
                       <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
                         {formatPhoneDisplay(contact.phoneE164)}
                       </span>
                     </div>
-                    <div style={{ fontSize: '12px', color: 'var(--color-text-subtle)' }}>
+                    <div style={{ fontSize: '12.5px', color: 'var(--color-text-body)' }}>
                       Alasan: {reasonDisplay}
                     </div>
                   </div>
 
-                  <div style={{ textAlign: 'right' }}>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <span
                       style={{
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        padding: '2px 8px',
-                        borderRadius: 'var(--border-radius-sm)',
-                        backgroundColor:
-                          effectiveSignalLevel === 'Minat tinggi'
-                            ? 'var(--color-status-success-bg)'
-                            : effectiveSignalLevel === 'Minat sedang'
-                            ? 'var(--color-status-warning-bg)'
-                            : 'var(--color-canvas)',
-                        color:
-                          effectiveSignalLevel === 'Minat tinggi'
-                            ? 'var(--color-status-success)'
-                            : effectiveSignalLevel === 'Minat sedang'
-                            ? 'var(--color-status-warning)'
-                            : 'var(--color-text-muted)',
+                        fontSize: '11.5px',
+                        fontWeight: 780,
+                        padding: '3px 10px',
+                        borderRadius: 'var(--border-radius-full)',
+                        backgroundColor: isHigh
+                          ? 'var(--color-status-success-bg)'
+                          : isMedium
+                          ? 'var(--color-status-warning-bg)'
+                          : 'var(--color-canvas)',
+                        color: isHigh
+                          ? 'var(--color-status-success)'
+                          : isMedium
+                          ? 'var(--color-status-warning)'
+                          : 'var(--color-text-muted)',
+                        border: isHigh
+                          ? '1px solid var(--color-status-success-border)'
+                          : isMedium
+                          ? '1px solid var(--color-status-warning-border)'
+                          : '1px solid var(--color-divider)',
                       }}
                     >
                       {effectiveSignalLevel}
                     </span>
                     {enr && (
-                      <div style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 600, marginTop: '2px' }}>
+                      <div style={{ fontSize: '11.5px', color: 'var(--color-primary)', fontWeight: 700, marginTop: '3px' }} className="tabular-nums">
                         Progres: {enr.progressPercent}%
                       </div>
                     )}
@@ -195,7 +218,7 @@ export default function LearnersPage() {
 
         {/* Side Panel Drawer for Desktop / Full view */}
         {selectedContact && (
-          <div data-testid="learner-drawer-container">
+          <div data-testid="learner-drawer-container" className="side-panel active" style={{ zIndex: 1200 }}>
             <LearnerDetail
               contact={selectedContact}
               enrollment={getEnrollmentForContact(selectedContact.id)}
