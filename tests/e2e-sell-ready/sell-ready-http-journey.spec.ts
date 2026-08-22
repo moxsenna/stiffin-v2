@@ -52,32 +52,14 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     const programUrl = page.url();
     const programId = programUrl.split('/programs/')[1].split('/')[0].split('?')[0];
 
-    // Add Module
-    const addModuleBtn = page.locator('button:has-text("+ Tambah Bab Baru"), button:has-text("Tambah Bab")').first();
-    await addModuleBtn.click();
-
-    const moduleInput = page.locator('input[placeholder*="Modul 2"], input[placeholder*="modul"], input[placeholder*="Modul"]').first();
-    await moduleInput.fill('Bab 1: Pondasi Karakter Diri');
-    const saveModuleBtn = page.locator('button:has-text("Simpan Bab"), button:has-text("Simpan Modul"), button:has-text("Simpan")').first();
-    await saveModuleBtn.click();
-    await expect(page.locator('body')).toContainText('Bab 1: Pondasi Karakter Diri');
-
-    // Add Lesson 1: Text Lesson with Reflection
-    const addLessonBtn1 = page.locator('button:has-text("+ Tambah Pelajaran"), button:has-text("Tambah Pelajaran")').first();
-    await addLessonBtn1.click();
-
-    await page.locator('input[placeholder*="Sesi 1"]').fill('Pelajaran 1: Mengenal Karakter Diri');
-    await page.locator('label:has-text("Teks & Gambar Saja") input[type="radio"]').check();
-    await page.locator('textarea[placeholder*="Tuliskan poin utama"]').fill('Uraian materi pengenalan potensi genetik dan karakter.');
-    await page.locator('button:has-text("Simpan Pelajaran")').click();
-    await expect(page.locator('body')).toContainText('Pelajaran 1: Mengenal Karakter Diri');
-
-    // Edit Lesson 1 Content to configure reflection prompt
+    // Configure Lesson 1: Text Lesson with Reflection (editing initial starter lesson)
     const editLesson1Link = page.locator('a:has-text("Edit Content →")').first();
     await editLesson1Link.click();
     await expect(page.locator('h1')).toContainText('Editor Materi Pelajaran');
 
-    // Configure text lesson details and reflection
+    // Configure text lesson title, details and reflection
+    const titleInput1 = page.locator('input[placeholder*="Otak Kanan"], input[value*="Pelajaran 1"]').first();
+    await titleInput1.fill('Pelajaran 1: Mengenal Karakter Diri');
     await page.locator('textarea[placeholder*="Tuliskan uraian materi"]').fill('Materi lengkap tentang mengenali kekuatan karakter personal dan biometrik.');
     const reflectionCheckbox1 = page.locator('input[type="checkbox"]').first();
     await reflectionCheckbox1.check();
