@@ -58,7 +58,8 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     await expect(page.locator('h1')).toContainText('Editor Materi Pelajaran');
 
     // Configure text lesson title, details and reflection
-    const titleInput1 = page.locator('input[placeholder*="Otak Kanan"], input[value*="Pelajaran 1"]').first();
+    const titleInput1 = page.locator('[data-testid="lesson-title-input"], input[placeholder*="Otak Kanan"]').first();
+    await expect(titleInput1).toBeVisible();
     await titleInput1.fill('Pelajaran 1: Mengenal Karakter Diri');
     await page.locator('textarea[placeholder*="Tuliskan uraian materi"]').fill('Materi lengkap tentang mengenali kekuatan karakter personal dan biometrik.');
     const reflectionCheckbox1 = page.locator('input[type="checkbox"]').first();

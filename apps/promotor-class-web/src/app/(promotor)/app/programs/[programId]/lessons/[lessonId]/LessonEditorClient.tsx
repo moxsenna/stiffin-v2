@@ -189,6 +189,7 @@ export function LessonEditorClient() {
             <input
               type="text"
               required
+              data-testid="lesson-title-input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Contoh: Mengenali Cara Kerja Otak Kanan"
