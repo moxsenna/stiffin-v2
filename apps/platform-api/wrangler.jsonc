@@ -9,11 +9,6 @@
   "observability": {
     "enabled": true
   },
-  "triggers": {
-    "crons": [
-      "*/15 * * * *"
-    ]
-  },
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
