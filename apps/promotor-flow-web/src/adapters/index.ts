@@ -25,6 +25,8 @@ import { MockMessagingRepository } from './mock/messaging-repository';
 import { MockAvailabilityRepository } from './mock/availability-repository';
 import { mockStateStore } from './mock/mock-state-store';
 import { mockClock } from './mock/mock-clock';
+import { systemClock } from './system-clock';
+import { ClockPort } from '@/modules/clock/ports';
 
 import { HttpContactRepository } from './http/contact-repository';
 import { HttpLifecycleRepository } from './http/lifecycle-repository';
@@ -205,6 +207,10 @@ export function getAvailabilityRepository(): AvailabilityRepositoryPort {
         : new MockAvailabilityRepository();
   }
   return availabilityRepoInstance;
+}
+
+export function getClock(): ClockPort {
+  return getApiMode() === 'http' ? systemClock : mockClock;
 }
 
 export function resetAdapterInstances(): void {

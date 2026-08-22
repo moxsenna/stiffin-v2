@@ -182,18 +182,67 @@ export function createApp(deps?: AppDependencies) {
     '/api/*',
     cors({
       origin: (origin, c) => {
-        const env = c.env;
-        const allowed = [
-          'http://localhost:3000',
-          'http://localhost:3001',
-          'http://localhost:5173',
-          'https://promotor-class-staging.moxsenna.workers.dev',
-          'https://promotor-flow-staging.moxsenna.workers.dev',
-          'https://stiffin-promotor-class.moxsenna.workers.dev',
-          'https://stiffin-promotor-flow.moxsenna.workers.dev',
-          ...(env.BETTER_AUTH_TRUSTED_ORIGINS ?? '').split(',').map((s: string) => s.trim()).filter(Boolean),
-        ];
-        return origin && allowed.includes(origin) ? origin : (origin || '');
+        if (!origin) return null;
+        const env = c.env || {};
+        const rawEnv = env.APP_ENV || env.ENVIRONMENT || env.NODE_ENV;
+        const isDevelopment = rawEnv === 'development' || rawEnv === 'test';
+        const isStaging = rawEnv === 'staging';
+        const isProduction = rawEnv === 'production';
+
+        const trustedConfigOrigins = (env.BETTER_AUTH_TRUSTED_ORIGINS ?? '')
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter(Boolean);
+
+        let allowed: string[] = [];
+        if (isProduction) {
+          // Production: exclude localhost, 127.0.0.1, or staging origins even if accidentally configured
+          const prodTrusted = trustedConfigOrigins.filter(
+            (o: string) =>
+              !o.includes('localhost') &&
+              !o.includes('127.0.0.1') &&
+              !o.includes('staging')
+          );
+          allowed = [
+            'https://stiffin-promotor-class.moxsenna.workers.dev',
+            'https://stiffin-promotor-flow.moxsenna.workers.dev',
+            ...prodTrusted,
+          ];
+        } else if (isStaging) {
+          // Staging: exclude localhost or 127.0.0.1
+          const stagingTrusted = trustedConfigOrigins.filter(
+            (o: string) => !o.includes('localhost') && !o.includes('127.0.0.1')
+          );
+          allowed = [
+            'https://promotor-class-staging.moxsenna.workers.dev',
+            'https://promotor-flow-staging.moxsenna.workers.dev',
+            ...stagingTrusted,
+          ];
+        } else if (isDevelopment) {
+          // Development / Test
+          allowed = [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'http://localhost:5173',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:3001',
+            'http://127.0.0.1:5173',
+            'https://promotor-class-staging.moxsenna.workers.dev',
+            'https://promotor-flow-staging.moxsenna.workers.dev',
+            'https://stiffin-promotor-class.moxsenna.workers.dev',
+            'https://stiffin-promotor-flow.moxsenna.workers.dev',
+            ...trustedConfigOrigins,
+          ];
+        } else {
+          // Missing or unknown APP_ENV: Fail-closed safe default.
+          // Only allow exact production origins, never localhost or arbitrary origins.
+          allowed = [
+            'https://stiffin-promotor-class.moxsenna.workers.dev',
+            'https://stiffin-promotor-flow.moxsenna.workers.dev',
+          ];
+        }
+
+        return allowed.includes(origin) ? origin : null;
       },
       credentials: true,
       allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
@@ -371,8 +420,8 @@ export function createApp(deps?: AppDependencies) {
 
     setCookie(c, 'promotor_learner_session', result.sessionToken, {
       httpOnly: true,
-      secure: c.env?.NODE_ENV === 'production',
-      sameSite: 'Lax',
+      secure: true,
+      sameSite: 'None',
       path: '/',
       maxAge: 30 * 24 * 3600, // 30 days
     });

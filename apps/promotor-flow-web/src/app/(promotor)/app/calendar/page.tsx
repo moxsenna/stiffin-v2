@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { ChevronRightIcon, CalendarIcon } from '@/components/foundation/icons';
-import { bookingQueries, contactQueries, clock, store } from '@/lib/container';
+import { bookingQueries, contactQueries, clock } from '@/lib/container';
 import { FlowBooking } from '@promotor/promotor-flow-fixtures';
 
 export default function CalendarPage() {
@@ -25,8 +25,6 @@ export default function CalendarPage() {
 
   useEffect(() => {
     loadData();
-    const unsubscribe = store.subscribe(() => loadData());
-    return () => unsubscribe();
   }, [loadData]);
 
   return (

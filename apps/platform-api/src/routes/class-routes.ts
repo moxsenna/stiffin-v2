@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { eq, and, desc, isNull, sql } from 'drizzle-orm';
 import type { AppEnv } from '../app';
 import { DomainError } from '../core/errors';
 import {
@@ -8,6 +9,14 @@ import {
 import { createEnrollmentService } from '../services/class/enrollment-service';
 import { createPromotorClassAdapter } from '../services/class/promotor-class-adapter';
 import { createLearningEngineService } from '../services/class/learning-engine-service';
+import { createEntitlementRepository } from '../repositories/entitlement-repository';
+import { contacts } from '../db/schema/contacts';
+import { reflectionResponses } from '../db/schema/reflection-responses';
+import { learningEvents } from '../db/schema/learning-events';
+import { enrollments } from '../db/schema/enrollments';
+import { programs } from '../db/schema/programs';
+import { learningSignals } from '../db/schema/learning-signals';
+import { integrationOutbox } from '../db/schema/integration-outbox';
 import type { OrganizationContext } from '../core/organization-context';
 import type { AuthenticatedActor } from '../auth/types';
 
@@ -105,14 +114,101 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
     return c.json({ programs }, 200);
   });
 
-  // 6. List Learning Signals (B5 Operator Intelligence)
+  // 6. Integration Health for PromotorFlow (derived from entitlements & outbox failure state)
+  app.get('/api/v1/class/integration/health', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const ent = await createEntitlementRepository(db).getForOrg({ organizationId: ctx.organizationId });
+    if (!ent || !ent.promotorFlow) {
+      return c.json({ promotorFlow: 'UNAVAILABLE' }, 200);
+    }
+    const recentFailed = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(integrationOutbox)
+      .where(
+        and(
+          eq(integrationOutbox.organizationId, ctx.organizationId),
+          eq(integrationOutbox.status, 'FAILED')
+        )
+      );
+    const failCount = recentFailed[0]?.count ?? 0;
+    const isDegraded = failCount >= 5;
+    return c.json({ promotorFlow: isDegraded ? 'UNAVAILABLE' : 'AVAILABLE' }, 200);
+  });
+
+  // 7. List Learning Signals (B5 Operator Intelligence)
   app.get('/api/v1/class/signals', async (c) => {
     const { ctx, db } = getRequestContext(c);
     const status = c.req.query('status') as 'ACTIVE' | 'RESOLVED' | 'DISMISSED' | undefined;
-    const learningService = createLearningEngineService(db);
 
-    const signals = await learningService.listSignals(ctx.organizationId, status || undefined);
-    return c.json({ signals }, 200);
+    const rows = await db
+      .select({
+        id: learningSignals.id,
+        organizationId: learningSignals.organizationId,
+        contactId: learningSignals.contactId,
+        contactName: contacts.name,
+        contactPhone: contacts.phoneE164,
+        programId: learningSignals.programId,
+        programTitle: programs.title,
+        enrollmentId: learningSignals.enrollmentId,
+        sourceEventId: learningSignals.sourceEventId,
+        type: learningSignals.type,
+        priority: learningSignals.priority,
+        reason: learningSignals.reason,
+        recommendedActionType: learningSignals.recommendedActionType,
+        recommendedActionReason: learningSignals.recommendedActionReason,
+        status: learningSignals.status,
+        metadata: learningSignals.metadata,
+        createdAt: learningSignals.createdAt,
+        resolvedAt: learningSignals.resolvedAt,
+        intentScore: enrollments.intentScore,
+        intentLabel: enrollments.intentLabel,
+      })
+      .from(learningSignals)
+      .leftJoin(contacts, eq(learningSignals.contactId, contacts.id))
+      .leftJoin(programs, eq(learningSignals.programId, programs.id))
+      .leftJoin(enrollments, eq(learningSignals.enrollmentId, enrollments.id))
+      .where(
+        and(
+          eq(learningSignals.organizationId, ctx.organizationId),
+          status ? eq(learningSignals.status, status) : undefined
+        )
+      )
+      .orderBy(desc(learningSignals.createdAt));
+
+    return c.json({
+      signals: rows.map((r: any) => {
+        const intentLabel = r.intentLabel ? String(r.intentLabel).toUpperCase() : null;
+        const signalLevel =
+          intentLabel === 'HOT'
+            ? 'Minat tinggi'
+            : intentLabel === 'WARM'
+            ? 'Minat sedang'
+            : intentLabel === 'COLD'
+            ? 'Minat rendah'
+            : 'Belum dievaluasi';
+
+        return {
+          id: r.id,
+          organizationId: r.organizationId,
+          contactId: r.contactId,
+          contactName: r.contactName || '',
+          contactPhone: r.contactPhone || '',
+          programId: r.programId || '',
+          programTitle: r.programTitle || '',
+          enrollmentId: r.enrollmentId || '',
+          sourceEventId: r.sourceEventId || null,
+          signalLevel,
+          intentScore: typeof r.intentScore === 'number' ? r.intentScore : null,
+          intentLabel: intentLabel ? (intentLabel.toLowerCase() as 'cold' | 'warm' | 'hot') : null,
+          reason: r.reason,
+          primaryReason: r.recommendedActionReason || r.reason || '',
+          rawReflectionQuote: r.metadata?.rawReflectionQuote || null,
+          status: r.status,
+          evaluatedAt: r.createdAt ? new Date(r.createdAt).toISOString() : null,
+          createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : null,
+        };
+      }),
+    }, 200);
   });
 
   // 7. Update Learning Signal Status
@@ -171,6 +267,125 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
     const analytics = await learningService.getProgramAnalytics(ctx.organizationId, programId);
 
     return c.json(analytics, 200);
+  });
+
+  // 11. List Contacts for PromotorClass (Returns contacts with enrollments in Class by default)
+  app.get('/api/v1/class/contacts', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const includeAll = c.req.query('all') === 'true';
+
+    let rows;
+    if (includeAll) {
+      rows = await db
+        .select({
+          id: contacts.id,
+          organizationId: contacts.organizationId,
+          name: contacts.name,
+          phoneE164: contacts.phoneE164,
+          createdAt: contacts.createdAt,
+        })
+        .from(contacts)
+        .where(and(eq(contacts.organizationId, ctx.organizationId), isNull(contacts.deletedAt)))
+        .orderBy(desc(contacts.createdAt));
+    } else {
+      rows = await db
+        .selectDistinct({
+          id: contacts.id,
+          organizationId: contacts.organizationId,
+          name: contacts.name,
+          phoneE164: contacts.phoneE164,
+          createdAt: contacts.createdAt,
+        })
+        .from(contacts)
+        .innerJoin(enrollments, eq(contacts.id, enrollments.contactId))
+        .where(
+          and(
+            eq(contacts.organizationId, ctx.organizationId),
+            eq(enrollments.organizationId, ctx.organizationId),
+            isNull(contacts.deletedAt)
+          )
+        )
+        .orderBy(desc(contacts.createdAt));
+    }
+
+    return c.json({
+      contacts: rows.map((r: any) => ({
+        ...r,
+        createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
+      })),
+    }, 200);
+  });
+
+  // 12. List Reflections for PromotorClass
+  app.get('/api/v1/class/reflections', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const rows = await db
+      .select({
+        id: reflectionResponses.id,
+        organizationId: reflectionResponses.organizationId,
+        enrollmentId: reflectionResponses.enrollmentId,
+        lessonId: reflectionResponses.lessonId,
+        contactId: enrollments.contactId,
+        contactName: contacts.name,
+        contactPhone: contacts.phoneE164,
+        programId: enrollments.programId,
+        programTitle: programs.title,
+        responseText: reflectionResponses.responseText,
+        selectedOptions: reflectionResponses.selectedOptions,
+        submittedAt: reflectionResponses.submittedAt,
+      })
+      .from(reflectionResponses)
+      .innerJoin(enrollments, eq(reflectionResponses.enrollmentId, enrollments.id))
+      .innerJoin(contacts, eq(enrollments.contactId, contacts.id))
+      .innerJoin(programs, eq(enrollments.programId, programs.id))
+      .where(eq(reflectionResponses.organizationId, ctx.organizationId))
+      .orderBy(desc(reflectionResponses.submittedAt));
+
+    return c.json({
+      reflections: rows.map((r: any) => ({
+        id: r.id,
+        organizationId: r.organizationId,
+        enrollmentId: r.enrollmentId,
+        lessonId: r.lessonId,
+        contactId: r.contactId,
+        contactName: r.contactName,
+        contactPhone: r.contactPhone,
+        programId: r.programId,
+        programTitle: r.programTitle,
+        answerText: r.responseText || '',
+        responseText: r.responseText,
+        selectedOptions: r.selectedOptions,
+        submittedAt: r.submittedAt ? new Date(r.submittedAt).toISOString() : new Date().toISOString(),
+      })),
+    }, 200);
+  });
+
+  // 13. List Learning Activity for PromotorClass
+  app.get('/api/v1/class/activity', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const rows = await db
+      .select({
+        id: learningEvents.id,
+        organizationId: learningEvents.organizationId,
+        contactId: learningEvents.contactId,
+        contactName: contacts.name,
+        contactPhone: contacts.phoneE164,
+        eventType: learningEvents.eventType,
+        payload: learningEvents.payload,
+        occurredAt: learningEvents.occurredAt,
+      })
+      .from(learningEvents)
+      .innerJoin(contacts, eq(learningEvents.contactId, contacts.id))
+      .where(eq(learningEvents.organizationId, ctx.organizationId))
+      .orderBy(desc(learningEvents.occurredAt))
+      .limit(100);
+
+    return c.json({
+      activity: rows.map((r: any) => ({
+        ...r,
+        occurredAt: r.occurredAt ? new Date(r.occurredAt).toISOString() : new Date().toISOString(),
+      })),
+    }, 200);
   });
 }
 

@@ -53,10 +53,24 @@ export default function LearnersPage() {
     return enrollments.find(e => e.contactId === contactId);
   };
 
-  const filteredContacts = contacts.filter(c => {
-    if (selectedFilter === 'semua') return true;
+  // Class Learners = Contacts that have Class enrollment(s)
+  const enrolledContactIds = new Set(enrollments.map(e => e.contactId));
+  const learnerContacts = contacts.filter(c => enrolledContactIds.has(c.id));
+
+  const filteredContacts = learnerContacts.filter(c => {
+    const enr = getEnrollmentForContact(c.id);
     const sig = getSignalForContact(c.id);
-    return sig?.signalLevel === selectedFilter;
+    const intentLabel = ((enr as any)?.intentLabel || 'COLD').toUpperCase();
+    const effectiveSignalLevel =
+      sig?.signalLevel ||
+      (intentLabel === 'HOT'
+        ? 'Minat tinggi'
+        : intentLabel === 'WARM'
+        ? 'Minat sedang'
+        : 'Minat rendah');
+
+    if (selectedFilter === 'semua') return true;
+    return effectiveSignalLevel === selectedFilter;
   });
 
   return (
@@ -93,71 +107,95 @@ export default function LearnersPage() {
 
         {/* Learners List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {filteredContacts.map(contact => {
-            const sig = getSignalForContact(contact.id);
-            const enr = getEnrollmentForContact(contact.id);
-            const isSelected = selectedContact?.id === contact.id;
+          {filteredContacts.length === 0 ? (
+            <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '14px', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-divider)' }}>
+              Belum ada peserta pembelajaran yang terdaftar.
+            </div>
+          ) : (
+            filteredContacts.map(contact => {
+              const sig = getSignalForContact(contact.id);
+              const enr = getEnrollmentForContact(contact.id);
+              const isSelected = selectedContact?.id === contact.id;
+              const prog = enr ? programsMap.get(enr.programId) : undefined;
+              const intentLabel = ((enr as any)?.intentLabel || 'COLD').toUpperCase();
+              const effectiveSignalLevel =
+                sig?.signalLevel ||
+                (intentLabel === 'HOT'
+                  ? 'Minat tinggi'
+                  : intentLabel === 'WARM'
+                  ? 'Minat sedang'
+                  : 'Minat rendah');
 
-            return (
-              <div
-                key={contact.id}
-                onClick={() => setSelectedContact(contact)}
-                style={{
-                  padding: '14px 16px',
-                  backgroundColor: isSelected ? 'var(--color-primary-light)' : 'var(--color-surface)',
-                  borderRadius: 'var(--border-radius-sm)',
-                  border: '1px solid var(--color-divider)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 700 }}>{contact.name}</span>
-                    <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                      {formatPhoneDisplay(contact.phoneE164)}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '12px', color: 'var(--color-text-subtle)' }}>
-                    Alasan: {sig?.primaryReason || 'Memulai pembelajaran'}
-                  </div>
-                </div>
+              const reasonDisplay =
+                sig?.primaryReason ||
+                (prog ? `Terdaftar pada ${prog.title}` : 'Peserta terdaftar');
 
-                <div style={{ textAlign: 'right' }}>
-                  <span
-                    style={{
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      padding: '2px 8px',
-                      borderRadius: 'var(--border-radius-sm)',
-                      backgroundColor:
-                        sig?.signalLevel === 'Minat tinggi'
-                          ? 'var(--color-status-success-bg)'
-                          : 'var(--color-status-warning-bg)',
-                      color:
-                        sig?.signalLevel === 'Minat tinggi'
-                          ? 'var(--color-status-success)'
-                          : 'var(--color-status-warning)',
-                    }}
-                  >
-                    {sig?.signalLevel || 'Minat sedang'}
-                  </span>
-                  {enr && (
-                    <div style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 600, marginTop: '2px' }}>
-                      Progres: {enr.progressPercent}%
+              return (
+                <div
+                  key={contact.id}
+                  data-testid="learner-item"
+                  onClick={() => setSelectedContact(contact)}
+                  style={{
+                    padding: '14px 16px',
+                    backgroundColor: isSelected ? 'var(--color-primary-light)' : 'var(--color-surface)',
+                    borderRadius: 'var(--border-radius-sm)',
+                    border: '1px solid var(--color-divider)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700 }}>{contact.name}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                        {formatPhoneDisplay(contact.phoneE164)}
+                      </span>
                     </div>
-                  )}
+                    <div style={{ fontSize: '12px', color: 'var(--color-text-subtle)' }}>
+                      Alasan: {reasonDisplay}
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'right' }}>
+                    <span
+                      style={{
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        padding: '2px 8px',
+                        borderRadius: 'var(--border-radius-sm)',
+                        backgroundColor:
+                          effectiveSignalLevel === 'Minat tinggi'
+                            ? 'var(--color-status-success-bg)'
+                            : effectiveSignalLevel === 'Minat sedang'
+                            ? 'var(--color-status-warning-bg)'
+                            : 'var(--color-canvas)',
+                        color:
+                          effectiveSignalLevel === 'Minat tinggi'
+                            ? 'var(--color-status-success)'
+                            : effectiveSignalLevel === 'Minat sedang'
+                            ? 'var(--color-status-warning)'
+                            : 'var(--color-text-muted)',
+                      }}
+                    >
+                      {effectiveSignalLevel}
+                    </span>
+                    {enr && (
+                      <div style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 600, marginTop: '2px' }}>
+                        Progres: {enr.progressPercent}%
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         {/* Side Panel Drawer for Desktop / Full view */}
         {selectedContact && (
-          <div className="side-panel active">
+          <div data-testid="learner-drawer-container">
             <LearnerDetail
               contact={selectedContact}
               enrollment={getEnrollmentForContact(selectedContact.id)}

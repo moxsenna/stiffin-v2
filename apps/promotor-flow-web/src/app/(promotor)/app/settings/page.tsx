@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import {
   settingsQueries,
@@ -14,19 +15,27 @@ import { PromotorSettings } from '@/modules/settings/ports';
 import { DemoScenarioPreset } from '@/modules/promotorclass/ports';
 import { WeeklyAvailabilityRule } from '@/modules/availability/ports';
 import { formatPhoneDisplay } from '@promotor/platform-core';
+import { signOut, getSession, UserSession } from '@/lib/auth';
+import { getApiMode } from '@/adapters';
 
 const DAY_NAMES = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [settings, setSettings] = useState<PromotorSettings | null>(null);
+  const [session, setSession] = useState<UserSession | null>(null);
   const [scenarioPreset, setScenarioPreset] = useState<DemoScenarioPreset>('BUNDLE_AVAILABLE');
   const [weeklyRules, setWeeklyRules] = useState<WeeklyAvailabilityRule[]>([]);
   const [savingAvailability, setSavingAvailability] = useState(false);
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
+    getSession().then(setSession);
     settingsQueries.getSettings().then(setSettings);
-    promotorClassQueries.getIntegrationState().then((res) => setScenarioPreset(res.scenarioPreset));
+    promotorClassQueries.getIntegrationState().then((res) => {
+      if (res.scenarioPreset) setScenarioPreset(res.scenarioPreset);
+    });
     availabilityQueries.getWeeklyRules().then((rules) => {
       // Ensure all 7 days exist in local state
       const initialized = [1, 2, 3, 4, 5, 6, 0].map((d) => {
@@ -79,12 +88,22 @@ export default function SettingsPage() {
     }
   };
 
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await signOut();
+      router.replace('/login');
+    } catch {
+      router.replace('/login');
+    }
+  };
+
   const handleReset = async () => {
     await settingsCommands.resetDemo();
     const updatedSettings = await settingsQueries.getSettings();
     setSettings(updatedSettings);
     const res = await promotorClassQueries.getIntegrationState();
-    setScenarioPreset(res.scenarioPreset);
+    if (res.scenarioPreset) setScenarioPreset(res.scenarioPreset);
     alert('Demo state berhasil di-reset ke data seed awal.');
   };
 
@@ -95,12 +114,14 @@ export default function SettingsPage() {
 
   if (!settings) return null;
 
+  const isMockDevMode = getApiMode() === 'mock' && settings.isDevMode;
+
   return (
     <AppShell showBottomNav={true}>
       <div style={{ padding: '12px 16px 8px' }}>
         <h1 style={{ font: '700 24px/29px Inter, sans-serif', color: '#191918' }}>Pengaturan</h1>
         <div style={{ font: '400 13.5px Inter, sans-serif', color: '#71706B', paddingTop: '2px' }}>
-          Profil promotor, jadwal ketersediaan konsultasi, dan integrasi.
+          Profil promotor, jadwal ketersediaan konsultasi, dan sesi akun.
         </div>
       </div>
 
@@ -108,15 +129,19 @@ export default function SettingsPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
             <div style={{ font: '600 12px Inter, sans-serif', color: '#71706B', textTransform: 'uppercase' }}>PROMOTOR</div>
-            <div style={{ font: '600 16px Inter, sans-serif', color: '#191918', paddingTop: '2px' }}>{settings.promotorName}</div>
+            <div style={{ font: '600 16px Inter, sans-serif', color: '#191918', paddingTop: '2px' }}>
+              {session?.user?.name || settings.promotorName || 'Promotor'}
+            </div>
             <div style={{ font: '400 14px Inter, sans-serif', color: '#71706B' }}>
-              {formatPhoneDisplay(settings.promotorPhoneE164)}
+              {session?.user?.email || (settings.promotorPhoneE164 ? formatPhoneDisplay(settings.promotorPhoneE164) : 'Belum tersedia')}
             </div>
           </div>
 
           <div style={{ borderTop: '1px solid #E8E7E3', paddingTop: '12px' }}>
             <div style={{ font: '600 12px Inter, sans-serif', color: '#71706B', textTransform: 'uppercase' }}>ORGANISASI</div>
-            <div style={{ font: '600 15px Inter, sans-serif', color: '#191918', paddingTop: '2px' }}>{settings.organizationName}</div>
+            <div style={{ font: '600 15px Inter, sans-serif', color: '#191918', paddingTop: '2px' }}>
+              {session?.organization?.name || settings.organizationName || 'Belum tersedia'}
+            </div>
           </div>
 
           {/* Availability Schedule Section */}
@@ -224,8 +249,28 @@ export default function SettingsPage() {
             </button>
           </div>
 
+          {/* Account Logout Action */}
+          <div style={{ borderTop: '1px solid #E8E7E3', paddingTop: '16px' }}>
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              style={{
+                width: '100%',
+                height: '42px',
+                backgroundColor: '#FFF1F0',
+                color: '#D92D20',
+                border: '1px solid #FDA29B',
+                borderRadius: '8px',
+                font: '600 14px Inter, sans-serif',
+                cursor: loggingOut ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {loggingOut ? 'Memproses Keluar...' : 'Keluar dari Akun (Logout)'}
+            </button>
+          </div>
+
           {/* Dev-Only Controls section */}
-          {settings.isDevMode && (
+          {isMockDevMode && (
             <div style={{ borderTop: '1px solid #E8E7E3', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ font: '600 12px Inter, sans-serif', color: '#B54708', textTransform: 'uppercase' }}>
                 DEV CONTROLS (DEMO SCENARIO)

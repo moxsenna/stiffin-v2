@@ -79,6 +79,22 @@ export function createBookingCommands(
       return created;
     },
 
+    async confirmBooking(bookingId: string): Promise<FlowBooking> {
+      const updated = await bookingRepo.updateBooking(bookingId, {
+        status: 'CONFIRMED',
+      });
+      if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+        await activityRepo.appendActivity({
+          organizationId: updated.organizationId,
+          contactId: updated.contactId,
+          title: `Booking dikonfirmasi: ${updated.serviceTitle}`,
+          timestamp: clock.nowIso(),
+          type: 'STAGE_CHANGED',
+        });
+      }
+      return updated;
+    },
+
     async changePaymentStatus(bookingId: string, paymentStatus: PaymentStatus): Promise<FlowBooking> {
       const updated = await bookingRepo.updateBooking(bookingId, { paymentStatus });
       if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {

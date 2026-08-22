@@ -2,6 +2,7 @@ import {
   EnrollmentRepositoryPort,
   PublicRegistrationPayload,
   PublicRegistrationResponse,
+  RedeemTokenResponse,
 } from '@/modules/enrollments/ports';
 import { MockLearnerRepository, learnerRepository } from './learner-repository';
 
@@ -28,11 +29,10 @@ export class MockEnrollmentRepository implements EnrollmentRepositoryPort {
     };
   }
 
-  async redeemToken(token: string): Promise<{ contactId: string; organizationId: string; sessionToken: string }> {
+  async redeemToken(_token: string): Promise<RedeemTokenResponse> {
     return {
       contactId: 'mock_contact_id',
       organizationId: 'mock_org_id',
-      sessionToken: token,
     };
   }
 

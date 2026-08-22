@@ -3,6 +3,7 @@ import {
   EnrollmentRepositoryPort,
   PublicRegistrationPayload,
   PublicRegistrationResponse,
+  RedeemTokenResponse,
 } from '@/modules/enrollments/ports';
 
 export class HttpEnrollmentRepository implements EnrollmentRepositoryPort {
@@ -20,12 +21,11 @@ export class HttpEnrollmentRepository implements EnrollmentRepositoryPort {
     });
   }
 
-  async redeemToken(token: string): Promise<{ contactId: string; organizationId: string; sessionToken: string }> {
+  async redeemToken(token: string): Promise<RedeemTokenResponse> {
     const res = await this.client.redeemLearnerToken(token);
     return {
       contactId: res.contactId,
       organizationId: res.organizationId,
-      sessionToken: (res as any).sessionToken ?? token,
     };
   }
 
@@ -43,7 +43,6 @@ export class HttpEnrollmentRepository implements EnrollmentRepositoryPort {
   }
 
   async getEnrollmentById(id: string): Promise<any> {
-    // Return enrollment by querying learner programs or class enrollments
     const res = await this.client.listClassEnrollments();
     return res.enrollments.find((e) => e.id === id);
   }

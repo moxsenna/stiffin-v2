@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import { LearnerShell } from '@/components/layout/LearnerShell';
 import { getEnrollmentByIdQuery } from '@/modules/enrollments/queries';
 import { getProgramByIdQuery } from '@/modules/programs/queries';
+import { getEnrollmentFullDetailsQuery } from '@/modules/learning/queries';
 import { getPublicWorkspaceQuery } from '@/modules/public-storefront/queries';
 import { resolveWorkspaceSlug } from '@/lib/session';
 import { Enrollment, Program } from '@promotor/contracts';
@@ -20,12 +21,24 @@ export function ProgramCompletedClient() {
 
   useEffect(() => {
     async function loadData() {
-      const enr = await getEnrollmentByIdQuery(enrollmentId);
-      if (!enr) return;
-      setEnrollment(enr);
+      try {
+        const details = await getEnrollmentFullDetailsQuery(enrollmentId);
+        if (details?.enrollment && details?.program) {
+          setEnrollment(details.enrollment as any);
+          setProgram(details.program as any);
+        }
+      } catch (err) {
+        console.warn('[ProgramCompletedClient] getEnrollmentFullDetailsQuery fallback:', err);
+      }
 
-      const prog = await getProgramByIdQuery(enr.programId);
-      if (prog) setProgram(prog);
+      if (!enrollment) {
+        const enr = await getEnrollmentByIdQuery(enrollmentId);
+        if (enr) {
+          setEnrollment(enr);
+          const prog = await getProgramByIdQuery(enr.programId);
+          if (prog) setProgram(prog);
+        }
+      }
 
       const currentWorkspace = resolveWorkspaceSlug();
       if (currentWorkspace) {
@@ -51,7 +64,7 @@ export function ProgramCompletedClient() {
     : null;
 
   return (
-    <LearnerShell>
+    <LearnerShell title="Program Selesai">
       <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '6px', color: 'var(--color-primary)' }}>
           Program Selesai

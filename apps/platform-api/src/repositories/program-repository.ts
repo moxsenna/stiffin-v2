@@ -136,13 +136,14 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
         videoYoutubeUrl: les.videoUrl ?? undefined,
         videoExternalId: les.videoExternalId ?? undefined,
         attachments: attachmentsByLesson.get(les.id) ?? [],
-        hasReflection: !!(les.reflectionType && les.reflectionPrompt),
-        reflectionType: les.reflectionType as any,
+        hasReflection: !!(les.reflectionType || les.reflectionPrompt),
+        reflectionType: (les.reflectionType as any) ?? (les.reflectionPrompt ? 'long_text' : undefined),
         reflectionPrompt: les.reflectionPrompt ?? undefined,
         reflectionOptions: les.reflectionOptions ?? undefined,
         hasCta: !!(les.ctaType && les.ctaLabel),
         ctaType: les.ctaType as any,
         ctaLabel: les.ctaLabel ?? undefined,
+        ctaUrl: (les.ctaConfig as any)?.url ?? undefined,
         ctaTargetProgramId: les.ctaTargetProgramId ?? undefined,
         ctaConfig: les.ctaConfig ?? undefined,
       });
@@ -512,9 +513,15 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
       if (!prog) throw new Error('Program not found');
 
       await db.transaction(async (tx) => {
+        const updateValues: Record<string, any> = { updatedAt: sql`now()` };
+        for (const [key, val] of Object.entries(lessonPatch)) {
+          if (val !== undefined) {
+            updateValues[key] = val;
+          }
+        }
         await tx
           .update(lessons)
-          .set({ ...lessonPatch, updatedAt: sql`now()` })
+          .set(updateValues)
           .where(and(eq(lessons.id, lessonId), eq(lessons.moduleId, moduleId)));
 
         if (attachments !== undefined) {

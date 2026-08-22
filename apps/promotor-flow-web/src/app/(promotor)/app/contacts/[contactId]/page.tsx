@@ -17,12 +17,12 @@ import {
   messagingQueries,
   messagingCommands,
   promotorClassQueries,
-  store,
+  promotorClassCommands,
   clock,
 } from '@/lib/container';
 import { FlowContact, FlowNextAction, FlowBooking, FlowActivity, LifecycleStage } from '@promotor/promotor-flow-fixtures';
 import { formatPhoneDisplay } from '@promotor/platform-core';
-import { ProductEntitlements, LearningContext } from '@promotor/contracts';
+import { ProductEntitlements, LearningContext, ProgramSummary } from '@promotor/contracts';
 import { FlowIntegrationHealth } from '@/modules/promotorclass/ports';
 
 export default function ContactDetailPage() {
@@ -47,6 +47,12 @@ export default function ContactDetailPage() {
   const [lostReasonInput, setLostReasonInput] = useState('');
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [activeWaModal, setActiveWaModal] = useState<{ draft: string; waUrl: string } | null>(null);
+
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [eligiblePrograms, setEligiblePrograms] = useState<ProgramSummary[]>([]);
+  const [enrollLoading, setEnrollLoading] = useState(false);
+  const [enrollError, setEnrollError] = useState<string | null>(null);
+  const [enrollSuccess, setEnrollSuccess] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     if (!contactId) return;
@@ -79,8 +85,6 @@ export default function ContactDetailPage() {
 
   useEffect(() => {
     loadData();
-    const unsubscribe = store.subscribe(() => loadData());
-    return () => unsubscribe();
   }, [loadData]);
 
   if (!contact) {
@@ -125,40 +129,99 @@ export default function ContactDetailPage() {
   const handleConfirmWaSent = async (scheduleNextDays?: number) => {
     if (!primaryAction || !activeWaModal) return;
     await messagingCommands.confirmWhatsAppSent({
-      contactId: contact.id,
+      contactId: contact?.id || contactId,
       actionId: primaryAction.id,
       messageText: activeWaModal.draft,
       scheduleNextFollowUpDays: scheduleNextDays,
     });
     setActiveWaModal(null);
-    loadData();
+    await loadData();
   };
 
   const handleCreateNewBooking = async () => {
+    const start = clock.addDays(clock.now(), 2);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
     await bookingCommands.createBooking({
-      contactId: contact.id,
+      contactId: contact?.id || contactId,
       serviceId: 'srv_tes_personal',
       serviceTitle: 'Tes STIFIn Personal',
-      startAt: clock.addDays(clock.now(), 2).toISOString(),
-      endAt: clock.addDays(clock.now(), 2).toISOString(),
+      startAt: start.toISOString(),
+      endAt: end.toISOString(),
       locationType: 'ON_SITE',
       paymentStatus: 'UNPAID',
       amount: 600000,
     });
     setShowBookingModal(false);
-    loadData();
+    await loadData();
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!activeBooking) return;
+    await bookingCommands.confirmBooking(activeBooking.id);
+    await loadData();
+  };
+
+  const handleMarkPaid = async () => {
+    if (!activeBooking) return;
+    await bookingCommands.changePaymentStatus(activeBooking.id, 'PAID');
+    await loadData();
+  };
+
+  const handleOpenEnrollModal = async () => {
+    setEnrollError(null);
+    setEnrollSuccess(null);
+    setShowEnrollModal(true);
+    setEnrollLoading(true);
+    try {
+      const progs = await promotorClassQueries.listEligiblePrograms({
+        organizationId: contact?.organizationId || '',
+        contactId,
+      });
+      setEligiblePrograms(progs);
+    } catch (err: any) {
+      setEnrollError(err?.message || 'Gagal memuat daftar program.');
+    } finally {
+      setEnrollLoading(false);
+    }
+  };
+
+  const handleEnrollProgram = async (programId: string) => {
+    setEnrollError(null);
+    setEnrollSuccess(null);
+    const existing = learningContext?.activeEnrollments.find((e) => e.programId === programId);
+    if (existing) {
+      setEnrollError('Peserta sudah terdaftar dalam program ini (duplikat dicegah).');
+      return;
+    }
+
+    setEnrollLoading(true);
+    try {
+      await promotorClassCommands.enrollContact({
+        organizationId: contact?.organizationId || '',
+        contactId,
+        programId,
+        source: 'PROMOTORFLOW_MANUAL',
+        idempotencyKey: `enroll:${contactId}:${programId}`,
+      });
+      setEnrollSuccess('Peserta berhasil didaftarkan ke program!');
+      await loadData();
+    } catch (err: any) {
+      setEnrollError(err?.message || 'Gagal mendaftarkan peserta ke program.');
+    } finally {
+      setEnrollLoading(false);
+    }
   };
 
   const handleCompleteActiveBooking = async () => {
     if (!activeBooking) return;
     await bookingCommands.completeBooking(activeBooking.id);
-    loadData();
+    await loadData();
   };
 
   const handleSaveNotes = async () => {
     await contactCommands.updateContactIdentity(contactId, { notes: notesText });
     setIsEditingNotes(false);
-    loadData();
+    await loadData();
   };
 
   return (
@@ -305,34 +368,85 @@ export default function ContactDetailPage() {
         <div style={{ padding: '0 16px' }}>
           {activeBooking ? (
             <div style={{ padding: '12px', borderRadius: '8px', border: '1px solid #E8E7E3', backgroundColor: '#F7F7F5', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ font: '600 14.5px Inter, sans-serif', color: '#191918' }}>{activeBooking.serviceTitle}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ font: '600 14.5px Inter, sans-serif', color: '#191918' }}>{activeBooking.serviceTitle}</div>
+                <span
+                  style={{
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: activeBooking.status === 'CONFIRMED' ? '#ECFDF3' : '#FFFAEB',
+                    color: activeBooking.status === 'CONFIRMED' ? '#067647' : '#B54708',
+                  }}
+                >
+                  {activeBooking.status}
+                </span>
+              </div>
               <div style={{ font: '400 13px Inter, sans-serif', color: '#71706B' }}>
                 Jadwal: {clock.formatDayDate(activeBooking.startAt)} {clock.formatTime(activeBooking.startAt)}
               </div>
               <div style={{ font: '500 13px Inter, sans-serif', color: activeBooking.paymentStatus === 'PAID' ? '#067647' : '#B54708' }}>
                 Status Pembayaran: {activeBooking.paymentStatus}
               </div>
-              <button
-                onClick={handleCompleteActiveBooking}
-                style={{
-                  marginTop: '6px',
-                  height: '36px',
-                  backgroundColor: '#067647',
-                  color: '#FFFFFF',
-                  borderRadius: '6px',
-                  border: 'none',
-                  font: '600 13px Inter, sans-serif',
-                }}
-              >
-                Tandai Layanan Selesai
-              </button>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+                {activeBooking.status === 'PENDING' && (
+                  <button
+                    onClick={handleConfirmBooking}
+                    style={{
+                      flex: 1,
+                      height: '36px',
+                      backgroundColor: '#167A68',
+                      color: '#FFFFFF',
+                      borderRadius: '6px',
+                      border: 'none',
+                      font: '600 13px Inter, sans-serif',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Konfirmasi Booking
+                  </button>
+                )}
+                {activeBooking.paymentStatus === 'UNPAID' && (
+                  <button
+                    onClick={handleMarkPaid}
+                    style={{
+                      flex: 1,
+                      height: '36px',
+                      backgroundColor: '#067647',
+                      color: '#FFFFFF',
+                      borderRadius: '6px',
+                      border: 'none',
+                      font: '600 13px Inter, sans-serif',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Tandai Lunas
+                  </button>
+                )}
+                <button
+                  onClick={handleCompleteActiveBooking}
+                  style={{
+                    flex: 1,
+                    height: '36px',
+                    backgroundColor: '#067647',
+                    color: '#FFFFFF',
+                    borderRadius: '6px',
+                    border: 'none',
+                    font: '600 13px Inter, sans-serif',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Tandai Layanan Selesai
+                </button>
+              </div>
             </div>
           ) : (
             <div>
               <div style={{ font: '400 14px/20px Inter, sans-serif', color: '#71706B' }}>Belum ada booking aktif.</div>
               <button
                 onClick={handleCreateNewBooking}
-                style={{ background: 'none', border: 'none', padding: '8px 0 0', font: '500 14px Inter, sans-serif', color: '#167A68' }}
+                style={{ background: 'none', border: 'none', padding: '8px 0 0', font: '500 14px Inter, sans-serif', color: '#167A68', cursor: 'pointer' }}
               >
                 + Buat booking
               </button>
@@ -343,8 +457,16 @@ export default function ContactDetailPage() {
         {/* PromotorClass Learning Section */}
         {classState?.entitlements.promotorClass && (
           <>
-            <div style={{ font: '600 11px/16px Inter, sans-serif', letterSpacing: '.07em', color: '#9C9A94', textTransform: 'uppercase', padding: '28px 16px 8px' }}>
-              Aktivitas Belajar (PromotorClass)
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '28px 16px 8px' }}>
+              <div style={{ font: '600 11px/16px Inter, sans-serif', letterSpacing: '.07em', color: '#9C9A94', textTransform: 'uppercase' }}>
+                Aktivitas Belajar (PromotorClass)
+              </div>
+              <button
+                onClick={handleOpenEnrollModal}
+                style={{ background: 'none', border: 'none', font: '600 13px Inter, sans-serif', color: '#167A68', cursor: 'pointer' }}
+              >
+                + Daftarkan ke Kelas
+              </button>
             </div>
             <div style={{ padding: '0 16px' }}>
               {classState.integrationHealth.promotorClass === 'UNAVAILABLE' ? (
@@ -556,6 +678,95 @@ export default function ContactDetailPage() {
                 Konfirmasi Lost
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* PromotorClass Enrollment Modal */}
+      {showEnrollModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 350, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ backgroundColor: '#FFF', borderRadius: '12px', width: '100%', maxWidth: '440px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ font: '600 16px Inter, sans-serif', color: '#191918' }}>Daftarkan ke Program Kelas</div>
+            <div style={{ font: '400 13px Inter, sans-serif', color: '#71706B' }}>
+              Pilih program edukasi yang akan diberikan kepada peserta {contact.name}.
+            </div>
+
+            {enrollError && (
+              <div style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: '#FEF3F2', border: '1px solid #FECDCA', color: '#B42318', font: '500 13px Inter, sans-serif' }}>
+                {enrollError}
+              </div>
+            )}
+
+            {enrollSuccess && (
+              <div style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: '#ECFDF3', border: '1px solid #A6F4C5', color: '#067647', font: '500 13px Inter, sans-serif' }}>
+                {enrollSuccess}
+              </div>
+            )}
+
+            {enrollLoading ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#71706B', fontSize: '13px' }}>Memuat program...</div>
+            ) : eligiblePrograms.length === 0 ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#71706B', fontSize: '13px' }}>Tidak ada program kelas yang tersedia.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
+                {eligiblePrograms.map((prog) => {
+                  const isEnrolled = learningContext?.activeEnrollments.some((e) => e.programId === prog.programId);
+                  return (
+                    <div
+                      key={prog.programId}
+                      data-testid="eligible-program-row"
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid #E8E7E3',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <div>
+                        <div style={{ font: '600 13.5px Inter, sans-serif', color: '#191918' }}>{prog.title}</div>
+                        <div style={{ font: '400 12px Inter, sans-serif', color: '#71706B' }}>
+                          {prog.programType} · {prog.pricing}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleEnrollProgram(prog.programId)}
+                        disabled={enrollLoading}
+                        style={{
+                          height: '32px',
+                          padding: '0 12px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          backgroundColor: isEnrolled ? '#F0F0ED' : '#167A68',
+                          color: isEnrolled ? '#71706B' : '#FFF',
+                          font: '600 12.5px Inter, sans-serif',
+                          cursor: isEnrolled ? 'default' : 'pointer',
+                        }}
+                      >
+                        {isEnrolled ? 'Terdaftar' : 'Daftarkan'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <button
+              onClick={() => setShowEnrollModal(false)}
+              style={{
+                marginTop: '6px',
+                height: '40px',
+                border: '1px solid #D5D3CE',
+                borderRadius: '6px',
+                backgroundColor: '#FFF',
+                color: '#71706B',
+                font: '500 14px Inter, sans-serif',
+                cursor: 'pointer',
+              }}
+            >
+              Tutup
+            </button>
           </div>
         </div>
       )}

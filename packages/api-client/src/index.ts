@@ -55,11 +55,12 @@ import type {
   RecordCtaClickResponse,
   ProgramAnalyticsResponse,
   LearnersListResponse,
+  IntegrationHealth,
 } from '@promotor/contracts';
 
 export interface ApiClientConfig {
   baseUrl: string;
-  authToken?: string;
+  authToken?: string | (() => string | undefined);
   credentials?: RequestCredentials;
 }
 
@@ -79,7 +80,7 @@ export class ApiError extends Error {
 
 export class ApiClient {
   private baseUrl: string;
-  private authToken?: string;
+  private authToken?: string | (() => string | undefined);
   private credentials?: RequestCredentials;
 
   constructor(config: ApiClientConfig) {
@@ -146,8 +147,9 @@ export class ApiClient {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    if (this.authToken) {
-      headers['Authorization'] = `Bearer ${this.authToken}`;
+    const token = typeof this.authToken === 'function' ? this.authToken() : this.authToken;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
     return headers;
   }
@@ -442,9 +444,55 @@ export class PromotorClassContentApiClient {
     return this.client.get(`/api/v1/class/programs/${encodeURIComponent(programId)}/analytics`);
   }
 
-  async listEligiblePrograms(accessType?: string): Promise<{ programs: EligibleProgramDto[] }> {
-    const qs = accessType ? `?accessType=${encodeURIComponent(accessType)}` : '';
-    return this.client.get(`/api/v1/class/programs/eligible${qs}`);
+  async listClassContacts(): Promise<{ contacts: Array<{ id: string; organizationId: string; name: string; phoneE164: string; createdAt: string }> }> {
+    return this.client.get('/api/v1/class/contacts');
+  }
+
+  async listClassReflections(): Promise<{
+    reflections: Array<{
+      id: string;
+      organizationId: string;
+      enrollmentId: string;
+      lessonId: string;
+      contactId: string;
+      contactName: string;
+      contactPhone: string;
+      programId: string;
+      programTitle: string;
+      answerText: string;
+      responseText: string | null;
+      selectedOptions: unknown;
+      submittedAt: string;
+    }>;
+  }> {
+    return this.client.get('/api/v1/class/reflections');
+  }
+
+  async listClassActivity(): Promise<{
+    activity: Array<{
+      id: string;
+      organizationId: string;
+      contactId: string;
+      contactName: string;
+      contactPhone: string;
+      eventType: string;
+      payload: unknown;
+      occurredAt: string;
+    }>;
+  }> {
+    return this.client.get('/api/v1/class/activity');
+  }
+
+  async getIntegrationHealth(): Promise<{ promotorFlow: 'AVAILABLE' | 'UNAVAILABLE' }> {
+    try {
+      return await this.client.get<{ promotorFlow: 'AVAILABLE' | 'UNAVAILABLE' }>('/api/v1/class/integration/health');
+    } catch (err: any) {
+      const status = err?.status || err?.statusCode;
+      if (status === 401 || status === 403) {
+        throw err;
+      }
+      return { promotorFlow: 'UNAVAILABLE' };
+    }
   }
 }
 
@@ -734,6 +782,18 @@ export class PromotorFlowApiClient {
   async listEligiblePrograms(accessType?: string): Promise<{ programs: EligibleProgramDto[] }> {
     const qs = accessType ? `?accessType=${encodeURIComponent(accessType)}` : '';
     return this.client.get(`/api/v1/class/programs/eligible${qs}`);
+  }
+
+  async getIntegrationHealth(): Promise<{ promotorFlow: 'AVAILABLE' | 'UNAVAILABLE'; promotorClass: 'AVAILABLE' | 'UNAVAILABLE' }> {
+    try {
+      return await this.client.get<{ promotorFlow: 'AVAILABLE' | 'UNAVAILABLE'; promotorClass: 'AVAILABLE' | 'UNAVAILABLE' }>('/api/v1/flow/integration/health');
+    } catch (err: any) {
+      const status = err?.status || err?.statusCode;
+      if (status === 401 || status === 403) {
+        throw err;
+      }
+      return { promotorFlow: 'AVAILABLE', promotorClass: 'UNAVAILABLE' };
+    }
   }
 }
 

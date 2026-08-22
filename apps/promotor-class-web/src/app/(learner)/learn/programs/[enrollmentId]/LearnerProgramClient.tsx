@@ -2,15 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { LearnerShell } from '@/components/layout/LearnerShell';
 import { getActiveLearnerContactId } from '@/lib/session';
 import { getEnrollmentByIdQuery } from '@/modules/enrollments/queries';
 import { getProgramByIdQuery } from '@/modules/programs/queries';
+import { getEnrollmentFullDetailsQuery } from '@/modules/learning/queries';
 import { Enrollment, Program } from '@promotor/contracts';
 
 export function LearnerProgramClient() {
   const params = useParams();
+  const router = useRouter();
   const enrollmentId = params.enrollmentId as string;
 
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
@@ -18,21 +20,81 @@ export function LearnerProgramClient() {
   const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
-    getEnrollmentByIdQuery(enrollmentId).then(enr => {
-      if (!enr) return;
+    async function loadData() {
+      try {
+        const details = await getEnrollmentFullDetailsQuery(enrollmentId);
+        if (details?.enrollment && details?.program) {
+          const enr: any = details.enrollment;
+          const prog: any = details.program;
 
-      // Ownership Verification Check
-      const activeContactId = getActiveLearnerContactId();
-      if (enr.contactId !== activeContactId) {
-        setAccessDenied(true);
-        return;
+          const activeContactId = getActiveLearnerContactId();
+          if (activeContactId && enr.contactId && enr.contactId !== activeContactId) {
+            setAccessDenied(true);
+            return;
+          }
+
+          if (enr.progressPercent === 100 || enr.learningStatus === 'COMPLETED') {
+            if (typeof window !== 'undefined') {
+              window.location.href = `/learn/programs/${enrollmentId}/completed`;
+            } else {
+              router.push(`/learn/programs/${enrollmentId}/completed`);
+            }
+            return;
+          }
+
+          const progressMap: Record<string, any> = {};
+          for (const m of prog.modules || []) {
+            for (const l of m.lessons || []) {
+              progressMap[l.id] = {
+                completed: !!l.isCompleted,
+                completedAt: l.completedAt || '',
+                reflectionAnswer: l.reflection?.responseText || undefined,
+              };
+            }
+          }
+
+          setEnrollment({
+            ...enr,
+            lessonProgress: progressMap,
+          } as any);
+
+          setProgram({
+            ...prog,
+            modules: (prog.modules || []).map((m: any) => ({
+              ...m,
+              lessons: (m.lessons || []).map((l: any) => ({
+                ...l,
+                videoYoutubeUrl: l.videoUrl || l.videoYoutubeUrl,
+                hasReflection: !!l.reflectionType,
+                hasCta: !!l.ctaType,
+              })),
+            })),
+          } as any);
+          return;
+        }
+      } catch (err) {
+        console.warn('[LearnerProgramClient] getEnrollmentFullDetailsQuery fallback:', err);
       }
 
-      setEnrollment(enr);
-      getProgramByIdQuery(enr.programId).then(prog => {
-        if (prog) setProgram(prog);
+      // Fallback
+      getEnrollmentByIdQuery(enrollmentId).then(enr => {
+        if (!enr) return;
+        const activeContactId = getActiveLearnerContactId();
+        if (activeContactId && enr.contactId !== activeContactId) {
+          setAccessDenied(true);
+          return;
+        }
+        setEnrollment({
+          ...enr,
+          lessonProgress: enr.lessonProgress || {},
+        });
+        getProgramByIdQuery(enr.programId).then(prog => {
+          if (prog) setProgram(prog);
+        });
       });
-    });
+    }
+
+    loadData();
   }, [enrollmentId]);
 
   if (accessDenied) {
@@ -62,7 +124,7 @@ export function LearnerProgramClient() {
   }
 
   return (
-    <LearnerShell>
+    <LearnerShell title={program.title}>
       <div style={{ padding: '16px' }}>
         <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
           <Link href="/learn">← Kembali ke Program Saya</Link>
@@ -89,8 +151,8 @@ export function LearnerProgramClient() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {mod.lessons.map(les => {
-                  const lessonProgress = enrollment.lessonProgress[les.id];
-                  const isCompleted = lessonProgress?.completed;
+                  const lessonProgress = (enrollment.lessonProgress && enrollment.lessonProgress[les.id]) || undefined;
+                  const isCompleted = (les as any).isCompleted ?? lessonProgress?.completed;
 
                   return (
                     <Link

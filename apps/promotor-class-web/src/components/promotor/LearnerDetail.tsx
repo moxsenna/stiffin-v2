@@ -37,7 +37,8 @@ export function LearnerDetail({
   };
 
   const minatStyle = getMinatStyle(signalLevel);
-  const defaultDraftMessage = `Halo ${contact.name}, saya Rina dari STIFIn Parenting. Saya memperhatikan Anda telah ${primaryReason.toLowerCase()} di program "${program?.title || 'Parenting'}". Bagaimana perkembangan pendampingan anak di rumah saat ini?`;
+  const programTitle = program?.title || 'Program Belajar';
+  const defaultDraftMessage = `Halo ${contact.name}, saya promotor Anda dari program "${programTitle}". Saya memperhatikan Anda telah ${primaryReason.toLowerCase()}. Bagaimana perkembangan belajar Anda saat ini?`;
 
   return (
     <div className="side-panel active" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>

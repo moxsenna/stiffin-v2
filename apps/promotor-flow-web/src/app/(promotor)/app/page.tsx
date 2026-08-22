@@ -15,7 +15,6 @@ import {
   promotorClassCommands,
   settingsCommands,
   clock,
-  store,
 } from '@/lib/container';
 import { TodayQueue, TodayQueueItem } from '@/modules/next-actions/queries';
 import { DemoScenarioPreset } from '@/modules/promotorclass/ports';
@@ -36,15 +35,13 @@ export default function TodayPage() {
     setQueue(q);
 
     const intState = await promotorClassQueries.getIntegrationState();
-    setCurrentPreset(intState.scenarioPreset);
+    if (intState.scenarioPreset) {
+      setCurrentPreset(intState.scenarioPreset);
+    }
   }, []);
 
   useEffect(() => {
     loadData();
-    const unsubscribe = store.subscribe(() => {
-      loadData();
-    });
-    return () => unsubscribe();
   }, [loadData, tick]);
 
   const handleOpenWa = async (item: TodayQueueItem, e: React.MouseEvent) => {

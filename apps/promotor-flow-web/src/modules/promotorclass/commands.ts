@@ -4,7 +4,9 @@ import { EnrollContactInput, EnrollmentRef } from '@promotor/contracts';
 export function createPromotorClassCommands(adapter: PromotorClassAdapterPort) {
   return {
     async setDemoScenario(preset: DemoScenarioPreset): Promise<void> {
-      return adapter.setDemoScenario(preset);
+      if (adapter.setDemoScenario) {
+        return adapter.setDemoScenario(preset);
+      }
     },
 
     async enrollContact(input: EnrollContactInput): Promise<EnrollmentRef> {

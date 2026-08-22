@@ -1,5 +1,5 @@
-import { learnerRepository } from '@/adapters/mock/learner-repository';
+import { getEnrollmentRepository } from '@/adapters';
 
 export async function createEnrollmentCommand(contactId: string, programId: string) {
-  return learnerRepository.createEnrollment(contactId, programId);
+  return getEnrollmentRepository().createEnrollment(contactId, programId);
 }

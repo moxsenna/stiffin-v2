@@ -15,4 +15,8 @@ export interface PublicStorefrontRepositoryPort {
     workspaceSlug: string,
     profile: Partial<PublicWorkspaceProfile>
   ): Promise<PublicWorkspaceProfile>;
+  getStorefrontProfile(): Promise<PublicWorkspaceProfile | null>;
+  updateStorefrontProfile(
+    profile: Partial<PublicWorkspaceProfile>
+  ): Promise<PublicWorkspaceProfile>;
 }

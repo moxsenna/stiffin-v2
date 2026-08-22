@@ -1,26 +1,25 @@
 import { SettingsRepositoryPort, PromotorSettings } from '@/modules/settings/ports';
 import { PromotorFlowApiClient } from '@promotor/api-client';
+import { getSession } from '@/lib/auth';
 
 export class HttpSettingsRepository implements SettingsRepositoryPort {
-  private settings: PromotorSettings = {
-    promotorName: 'Operator',
-    promotorPhoneE164: '+6281200000000',
-    organizationName: 'Active Organization',
-    isDevMode: false,
-  };
-
-  constructor(_api: PromotorFlowApiClient) {}
+  constructor(private readonly api: PromotorFlowApiClient) {}
 
   async getSettings(): Promise<PromotorSettings> {
-    return { ...this.settings };
+    const session = await getSession();
+    return {
+      promotorName: session?.user?.name || 'Promotor',
+      promotorPhoneE164: '',
+      organizationName: session?.organization?.name || '',
+      isDevMode: false,
+    };
   }
 
-  async updateSettings(updates: Partial<PromotorSettings>): Promise<PromotorSettings> {
-    this.settings = { ...this.settings, ...updates };
-    return { ...this.settings };
+  async updateSettings(_updates: Partial<PromotorSettings>): Promise<PromotorSettings> {
+    throw new Error('Pengaturan profil hanya dapat diubah melalui portal manajemen organisasi di HTTP mode');
   }
 
   async resetDemo(): Promise<void> {
-    // In HTTP mode, live backend is the single source of truth
+    // No-op in HTTP production mode
   }
 }

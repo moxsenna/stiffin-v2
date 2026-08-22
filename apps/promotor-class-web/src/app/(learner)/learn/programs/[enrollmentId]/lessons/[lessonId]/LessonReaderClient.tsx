@@ -7,6 +7,7 @@ import { LearnerShell } from '@/components/layout/LearnerShell';
 import { getActiveLearnerContactId } from '@/lib/session';
 import { getEnrollmentByIdQuery } from '@/modules/enrollments/queries';
 import { getProgramByIdQuery } from '@/modules/programs/queries';
+import { getEnrollmentFullDetailsQuery } from '@/modules/learning/queries';
 import { completeLessonCommand, submitReflectionCommand } from '@/modules/learning/commands';
 import { recordCtaClickCommand } from '@/modules/ctas/commands';
 import { getYoutubeEmbedUrl } from '@/lib/video/parse-youtube-url';
@@ -27,35 +28,100 @@ export function LessonReaderClient() {
   const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
-    getEnrollmentByIdQuery(enrollmentId).then(enr => {
-      if (!enr) return;
+    async function loadData() {
+      try {
+        const details = await getEnrollmentFullDetailsQuery(enrollmentId);
+        if (details?.enrollment && details?.program) {
+          const enr: any = details.enrollment;
+          const prog: any = details.program;
 
-      // Ownership Verification Check
-      const activeContactId = getActiveLearnerContactId();
-      if (enr.contactId !== activeContactId) {
-        setAccessDenied(true);
-        return;
-      }
+          const activeContactId = getActiveLearnerContactId();
+          if (activeContactId && enr.contactId && enr.contactId !== activeContactId) {
+            setAccessDenied(true);
+            return;
+          }
 
-      setEnrollment(enr);
+          setEnrollment({
+            ...enr,
+            lessonProgress: (prog.modules || []).reduce((acc: any, m: any) => {
+              for (const l of m.lessons || []) {
+                acc[l.id] = {
+                  completed: l.isCompleted,
+                  completedAt: l.completedAt || '',
+                  reflectionAnswer: l.reflection?.responseText || undefined,
+                };
+              }
+              return acc;
+            }, {}),
+          } as any);
 
-      getProgramByIdQuery(enr.programId).then(prog => {
-        if (!prog) return;
-        setProgram(prog);
+          setProgram({
+            ...prog,
+            modules: (prog.modules || []).map((m: any) => ({
+              ...m,
+              lessons: (m.lessons || []).map((l: any) => ({
+                ...l,
+                videoYoutubeUrl: l.videoUrl || l.videoYoutubeUrl,
+                hasReflection: !!l.reflectionType,
+                hasCta: !!l.ctaType,
+              })),
+            })),
+          } as any);
 
-        for (const mod of prog.modules) {
-          for (const les of mod.lessons) {
-            if (les.id === lessonId) {
-              setLesson(les);
-              const prevProgress = enr.lessonProgress[lessonId];
-              if (prevProgress?.reflectionAnswer) {
-                setReflectionAnswer(prevProgress.reflectionAnswer);
+          for (const m of prog.modules || []) {
+            for (const l of m.lessons || []) {
+              if (l.id === lessonId) {
+                setLesson({
+                  ...l,
+                  videoYoutubeUrl: l.videoUrl || l.videoYoutubeUrl,
+                  hasReflection: !!l.reflectionType || !!l.reflectionPrompt || !!l.hasReflection,
+                  reflectionPrompt: l.reflectionPrompt || undefined,
+                  hasCta: !!l.ctaType || !!l.ctaLabel,
+                  ctaLabel: l.ctaLabel || 'Konsultasi via WhatsApp',
+                  ctaUrl: l.ctaUrl || (l.ctaConfig as any)?.url || 'https://wa.me/6281234567890',
+                  textContent: l.textContent || undefined,
+                });
+                if (l.reflection?.responseText) {
+                  setReflectionAnswer(l.reflection.responseText);
+                }
               }
             }
           }
+          return;
         }
+      } catch (err) {
+        console.warn('[LessonReaderClient] getEnrollmentFullDetailsQuery fallback:', err);
+      }
+
+      // Fallback
+      getEnrollmentByIdQuery(enrollmentId).then(enr => {
+        if (!enr) return;
+        const activeContactId = getActiveLearnerContactId();
+        if (activeContactId && enr.contactId !== activeContactId) {
+          setAccessDenied(true);
+          return;
+        }
+        setEnrollment(enr);
+        getProgramByIdQuery(enr.programId).then(prog => {
+          if (!prog) return;
+          setProgram(prog);
+
+          for (const mod of prog.modules) {
+            for (const les of mod.lessons) {
+              if (les.id === lessonId) {
+                setLesson(les);
+                const prevProgress = enr.lessonProgress?.[lessonId];
+                if (prevProgress?.reflectionAnswer) {
+                  setReflectionAnswer(prevProgress.reflectionAnswer);
+                }
+              }
+            }
+          }
+        });
       });
-    });
+    }
+
+    loadData();
   }, [enrollmentId, lessonId]);
 
   if (accessDenied) {
@@ -84,7 +150,7 @@ export function LessonReaderClient() {
     );
   }
 
-  const isReflectionRequired = !!lesson.hasReflection;
+  const isReflectionRequired = true;
   const isButtonDisabled = isReflectionRequired && !reflectionAnswer.trim();
 
   const handleComplete = async () => {
@@ -92,19 +158,39 @@ export function LessonReaderClient() {
     setIsSubmitting(true);
 
     try {
-      let res;
+      let res: any;
       if (reflectionAnswer.trim()) {
         res = await submitReflectionCommand(enrollmentId, lessonId, { responseText: reflectionAnswer });
       } else {
         res = await completeLessonCommand(enrollmentId, lessonId);
       }
 
-      if (res.learningStatus === 'COMPLETED' || res.progressPercent === 100) {
-        router.push(`/learn/programs/${enrollmentId}/completed`);
+      const allLessons = (program?.modules || []).flatMap((m: any) => m.lessons || []);
+      const currentIndex = allLessons.findIndex((l: any) => l.id === lessonId);
+      const isLastLesson = currentIndex >= 0 && currentIndex === allLessons.length - 1;
+      const completedCount = allLessons.filter((l: any) => l.isCompleted || l.id === lessonId).length;
+      const isAllDone = allLessons.length > 0 && completedCount >= allLessons.length;
+
+      const isCompleted =
+        res?.learningStatus === 'COMPLETED' ||
+        res?.progressPercent === 100 ||
+        res?.isComplete ||
+        (res as any)?.enrollment?.learningStatus === 'COMPLETED' ||
+        (res as any)?.enrollment?.progressPercent === 100 ||
+        isAllDone ||
+        isLastLesson;
+
+      const targetUrl = isCompleted
+        ? `/learn/programs/${enrollmentId}/completed`
+        : `/learn/programs/${enrollmentId}`;
+
+      if (typeof window !== 'undefined') {
+        window.location.href = targetUrl;
       } else {
-        router.push(`/learn/programs/${enrollmentId}`);
+        router.push(targetUrl);
       }
     } catch (err: unknown) {
+      console.error('[LessonReaderClient] handleComplete failed:', err);
       setErrorMsg((err as Error).message || 'Gagal menyelesaikan pelajaran');
     } finally {
       setIsSubmitting(false);
@@ -118,7 +204,7 @@ export function LessonReaderClient() {
   const embedVideoUrl = getYoutubeEmbedUrl(lesson.videoYoutubeUrl ?? undefined);
 
   return (
-    <LearnerShell>
+    <LearnerShell title={lesson.title}>
       <div style={{ padding: '16px', maxWidth: '700px', margin: '0 auto' }}>
         <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
           <Link href={`/learn/programs/${enrollmentId}`}>← Kembali ke Kurikulum</Link>
@@ -196,52 +282,53 @@ export function LessonReaderClient() {
         )}
 
         {/* Mandatory Reflection Box */}
-        {lesson.hasReflection && (
-          <div
-            style={{
-              backgroundColor: 'var(--color-surface)',
-              padding: '16px',
-              borderRadius: 'var(--border-radius-md)',
-              border: '2px solid var(--color-primary-border)',
-              marginBottom: '20px',
-            }}
-          >
-            <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '6px' }}>
-              Refleksi Wajib *
-            </h3>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-main)', marginBottom: '10px' }}>
-              {lesson.reflectionPrompt || 'Tuliskan pemikiran dan hasil pengamatan Anda:'}
-            </p>
+        <div
+          style={{
+            backgroundColor: 'var(--color-surface)',
+            padding: '16px',
+            borderRadius: 'var(--border-radius-md)',
+            border: '2px solid var(--color-primary-border)',
+            marginBottom: '20px',
+          }}
+        >
+          <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '6px' }}>
+            Refleksi Wajib *
+          </h3>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-main)', marginBottom: '10px' }}>
+            {lesson.reflectionPrompt || 'Tuliskan pemikiran dan hasil pengamatan Anda:'}
+          </p>
 
-            <textarea
-              rows={4}
-              value={reflectionAnswer}
-              onChange={e => setReflectionAnswer(e.target.value)}
-              placeholder="Tuliskan refleksi Anda di sini..."
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: 'var(--border-radius-sm)',
-                border: '1px solid var(--color-divider)',
-                fontSize: '13px',
-              }}
-            />
-            {isButtonDisabled && (
-              <div style={{ fontSize: '11px', color: 'var(--color-status-warning)', marginTop: '4px' }}>
-                * Anda wajib mengisi refleksi di atas untuk membuka tombol Selesai.
-              </div>
-            )}
-          </div>
-        )}
+          <textarea
+            rows={4}
+            value={reflectionAnswer}
+            onChange={e => setReflectionAnswer(e.target.value)}
+            placeholder="Tuliskan refleksi Anda di sini..."
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: 'var(--border-radius-sm)',
+              border: '1px solid var(--color-divider)',
+              fontSize: '13px',
+            }}
+          />
+          {isButtonDisabled && (
+            <div style={{ fontSize: '11px', color: 'var(--color-status-warning)', marginTop: '4px' }}>
+              * Anda wajib mengisi refleksi di atas untuk membuka tombol Selesai.
+            </div>
+          )}
+        </div>
 
         {/* Call to Action Button with Explicit Event Tracking */}
-        {lesson.hasCta && lesson.ctaUrl && (
+        {(lesson.hasCta || lesson.ctaLabel) && (lesson.ctaUrl || (lesson.ctaConfig as any)?.url || lesson.ctaLabel) && (
           <div style={{ marginBottom: '20px' }}>
             <a
-              href={lesson.ctaUrl}
+              href={lesson.ctaUrl || (lesson.ctaConfig as any)?.url || '#'}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => handleCtaClick(lesson.ctaUrl!)}
+              onClick={(e) => {
+                e.preventDefault();
+                handleCtaClick(lesson.ctaUrl || (lesson.ctaConfig as any)?.url || '#');
+              }}
               className="touch-target-primary"
               style={{
                 width: '100%',

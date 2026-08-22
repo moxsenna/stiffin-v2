@@ -18,7 +18,9 @@
     }
   ],
   "vars": {
-    "NEXT_PRIVATE_MINIMAL_MODE": "1"
+    "NEXT_PRIVATE_MINIMAL_MODE": "1",
+    "NEXT_PUBLIC_API_MODE": "http",
+    "NEXT_PUBLIC_API_URL": "https://stiffin-promotor-api.moxsenna.workers.dev"
   },
   "env": {
     "staging": {

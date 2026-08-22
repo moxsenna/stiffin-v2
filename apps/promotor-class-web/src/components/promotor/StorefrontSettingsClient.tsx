@@ -1,10 +1,9 @@
 'use client';
 /* eslint-disable @next/next/no-img-element */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getPublicWorkspaceProfileQuery } from '@/modules/public-storefront/queries';
-import { updateWorkspaceProfileCommand } from '@/modules/public-storefront/commands';
+import { getPublicStorefrontRepository } from '@/adapters';
 import { getProgramsQuery } from '@/modules/programs/queries';
 import { PublicWorkspaceProfile } from '@/modules/public-storefront/types';
 import { Program } from '@promotor/contracts';
@@ -13,67 +12,81 @@ interface StorefrontSettingsClientProps {
   programs?: Program[];
 }
 
-const DEFAULT_PROFILE: PublicWorkspaceProfile = {
-  workspaceSlug: 'rina',
-  displayName: 'Rina Prameswari',
-  tagline: 'Ruang belajar untuk orang tua',
-  headline: 'Belajar memahami anak, tanpa membuat rumah jadi ruang kelas.',
-  bio: 'Saya membantu orang tua menerjemahkan hasil tes menjadi kebiasaan yang lebih manusiawi di rumah.',
-  city: 'Surabaya',
-  roleLabel: 'Promotor STIFIn',
-  heroProgramId: 'prog_7_hari_belajar',
-  stats: {
-    programCount: '3 Program Aktif',
-    location: 'Surabaya',
-  },
-};
+const PRESET_AVATARS = [
+  { label: 'Foto Profil Bawaan (Default)', url: '/images/promoter_profile_rina.webp' },
+  { label: 'Logo Minimalis Hijau', url: '/images/og-card.png' },
+];
 
 export function StorefrontSettingsClient({ programs: initialPrograms = [] }: StorefrontSettingsClientProps) {
-  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [programs, setPrograms] = useState<Program[]>(initialPrograms);
-  const [profile, setProfile] = useState<PublicWorkspaceProfile>(DEFAULT_PROFILE);
-
+  const [profile, setProfile] = useState<PublicWorkspaceProfile | null>(null);
+  const [customAvatarUrl, setCustomAvatarUrl] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [origin, setOrigin] = useState('');
 
   useEffect(() => {
-    getProgramsQuery().then(setPrograms);
-    getPublicWorkspaceProfileQuery('rina').then(res => {
-      if (res) setProfile(res);
-    });
-  }, []);
+    if (typeof window !== 'undefined') {
+      setOrigin(window.location.origin);
+    }
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = event => {
-      if (event.target?.result) {
-        setProfile(prev => ({ ...prev, avatarUrl: event.target!.result as string }));
-      }
-    };
-    reader.readAsDataURL(file);
-  };
+    Promise.all([
+      getProgramsQuery(),
+      getPublicStorefrontRepository().getStorefrontProfile(),
+    ])
+      .then(([progData, profData]) => {
+        if (progData) setPrograms(progData);
+        if (profData) {
+          setProfile(profData);
+          if (profData.avatarUrl && !PRESET_AVATARS.some(p => p.url === profData.avatarUrl)) {
+            setCustomAvatarUrl(profData.avatarUrl);
+          }
+        }
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const handleSaveStorefront = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!profile) return;
 
-    const updated = await updateWorkspaceProfileCommand('rina', {
-      ...profile,
-      stats: {
-        programCount: `${programs.length} Program Aktif`,
-        location: profile.city || 'Surabaya',
-      },
-    });
+    setIsSaving(true);
+    try {
+      const activeAvatar = customAvatarUrl.trim() || profile.avatarUrl || PRESET_AVATARS[0].url;
+      const updated = await getPublicStorefrontRepository().updateStorefrontProfile({
+        ...profile,
+        avatarUrl: activeAvatar,
+        stats: {
+          programCount: `${programs.length} Program Aktif`,
+          location: profile.city || 'Indonesia',
+        },
+      });
 
-    setProfile(updated);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 4000);
+      setProfile(updated);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 4000);
+    } catch (err: any) {
+      alert(`Gagal menyimpan pengaturan: ${err?.message || 'Terjadi kesalahan sistem'}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading || !profile) {
+    return (
+      <div style={{ padding: '32px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+        Memuat data storefront...
+      </div>
+    );
+  }
 
   const waCleanPhone = profile.whatsappPhoneE164 ? profile.whatsappPhoneE164.replace(/[^0-9]/g, '') : '';
   const waTestUrl = waCleanPhone
     ? `https://wa.me/${waCleanPhone}?text=${encodeURIComponent(`Halo ${profile.displayName}, saya tes tautan WhatsApp storefront Anda.`)}`
     : null;
+
+  const publicStorefrontUrl = `${origin}/p/${profile.workspaceSlug}`;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -94,7 +107,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
             boxShadow: 'var(--shadow-md)',
           }}
         >
-          ✓ Pengaturan & Foto Profil Storefront berhasil disimpan!
+          ✓ Pengaturan Storefront berhasil disimpan!
         </div>
       )}
 
@@ -128,7 +141,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
               Pengaturan & Branding Storefront
             </h2>
             <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-              Alamat publik: <code style={{ color: 'var(--color-primary)', fontWeight: 700 }}>localhost:3000/p/{profile.workspaceSlug}</code>
+              Alamat publik: <code style={{ color: 'var(--color-primary)', fontWeight: 700 }}>{publicStorefrontUrl}</code>
             </div>
           </div>
 
@@ -136,7 +149,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
             <button
               type="button"
               onClick={() => {
-                navigator.clipboard.writeText(`${window.location.origin}/p/${profile.workspaceSlug}`);
+                navigator.clipboard.writeText(publicStorefrontUrl);
                 alert('Tautan storefront berhasil disalin ke clipboard!');
               }}
               style={{
@@ -175,7 +188,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
         </div>
       </div>
 
-      {/* Realtime Live Preview Card (Card Header) */}
+      {/* Realtime Live Preview Card */}
       <div
         style={{
           backgroundColor: '#286344',
@@ -193,7 +206,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
 
         <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
           <img
-            src={profile.avatarUrl || '/images/promoter_profile_rina.webp'}
+            src={customAvatarUrl || profile.avatarUrl || PRESET_AVATARS[0].url}
             alt={profile.displayName}
             style={{
               width: '68px',
@@ -210,10 +223,13 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
               {profile.displayName || 'Nama Promotor'}
             </div>
             <div style={{ fontSize: '13px', color: '#E2F0E6', fontWeight: 600, marginBottom: '6px' }}>
-              {profile.tagline || 'Tagline Storefront'} · {profile.roleLabel}
+              {profile.tagline || 'Tagline Storefront'} · {profile.roleLabel || 'Promotor STIFIn'}
             </div>
             <div style={{ fontSize: '13.5px', color: '#FFF', fontWeight: 700, lineHeight: 1.3 }}>
               &quot;{profile.headline || 'Headline Utama Landing Page'}&quot;
+            </div>
+            <div style={{ fontSize: '12px', color: '#B8D4C5', marginTop: '6px' }}>
+              {programs.length} program aktif · Wilayah: {profile.city || 'Indonesia'}
             </div>
           </div>
         </div>
@@ -233,23 +249,14 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
           <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '16px' }}>1. Foto Profil / Logo & Identitas Promotor</h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            {/* Foto Profil / Logo Picker */}
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '8px' }}>
-                Foto Profil / Logo Promotor *
+                Pilih Foto Profil Bawaan atau Masukkan URL Gambar Eksternal
               </label>
 
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-                style={{ display: 'none' }}
-              />
-
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
                 <img
-                  src={profile.avatarUrl || '/images/promoter_profile_rina.webp'}
+                  src={customAvatarUrl || profile.avatarUrl || PRESET_AVATARS[0].url}
                   alt={profile.displayName}
                   style={{
                     width: '76px',
@@ -261,39 +268,47 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                   }}
                 />
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <button
-                    type="button"
-                    onClick={() => avatarInputRef.current?.click()}
-                    style={{
-                      padding: '8px 16px',
-                      backgroundColor: 'var(--color-primary)',
-                      color: '#FFF',
-                      borderRadius: '10px',
-                      fontWeight: 750,
-                      fontSize: '13px',
-                      border: 0,
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                    }}
-                  >
-                    📸 Upload Foto Profil Baru
-                  </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: '240px' }}>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {PRESET_AVATARS.map(p => (
+                      <button
+                        key={p.url}
+                        type="button"
+                        onClick={() => {
+                          setCustomAvatarUrl('');
+                          setProfile({ ...profile, avatarUrl: p.url });
+                        }}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          border: profile.avatarUrl === p.url && !customAvatarUrl ? '2px solid var(--color-primary)' : '1px solid var(--color-divider)',
+                          backgroundColor: profile.avatarUrl === p.url && !customAvatarUrl ? 'var(--color-primary-light)' : 'var(--color-surface)',
+                          color: 'var(--color-text-main)',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
 
-                  {profile.avatarUrl && (
-                    <button
-                      type="button"
-                      onClick={() => setProfile({ ...profile, avatarUrl: undefined })}
-                      style={{ fontSize: '12px', color: 'var(--color-status-danger)', fontWeight: 600, border: 0, background: 'none', cursor: 'pointer', textAlign: 'left' }}
-                    >
-                      Hapus & Gunakan Foto Bawaan
-                    </button>
-                  )}
-
-                  <div style={{ fontSize: '11px', color: 'var(--color-text-subtle)' }}>
-                    Format PNG, JPG, WEBP (Max 5MB). Foto ini langsung tampil di profil & header storefront.
+                  <div>
+                    <input
+                      type="url"
+                      value={customAvatarUrl}
+                      onChange={e => setCustomAvatarUrl(e.target.value)}
+                      placeholder="Atau masukkan URL gambar foto/logo eksternal (https://...)"
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid var(--color-divider)',
+                        fontSize: '13px',
+                        outline: 'none',
+                      }}
+                    />
                   </div>
                 </div>
               </div>
@@ -309,7 +324,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                   required
                   value={profile.displayName}
                   onChange={e => setProfile({ ...profile, displayName: e.target.value })}
-                  placeholder="Contoh: Rina Prameswari"
+                  placeholder="Nama Promotor / Nama Brand"
                   style={{
                     width: '100%',
                     padding: '10px 14px',
@@ -385,7 +400,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                 type="text"
                 value={profile.headline || ''}
                 onChange={e => setProfile({ ...profile, headline: e.target.value })}
-                placeholder="Contoh: Belajar memahami anak, tanpa membuat rumah jadi ruang kelas."
+                placeholder="Contoh: Belajar memahami potensi diri dan keluarga secara manusiawi."
                 style={{
                   width: '100%',
                   padding: '10px 14px',
@@ -490,20 +505,21 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
         <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '6px' }}>
           <button
             type="submit"
+            disabled={isSaving}
             className="touch-target-primary"
             style={{
               padding: '0 28px',
-              backgroundColor: 'var(--color-primary)',
+              backgroundColor: isSaving ? 'var(--color-divider)' : 'var(--color-primary)',
               color: '#FFF',
               fontWeight: 780,
               borderRadius: '14px',
               border: 0,
-              cursor: 'pointer',
+              cursor: isSaving ? 'not-allowed' : 'pointer',
               fontSize: '15px',
               boxShadow: 'var(--shadow-md)',
             }}
           >
-            Simpan Pengaturan Storefront
+            {isSaving ? 'Menyimpan...' : 'Simpan Pengaturan Storefront'}
           </button>
 
           <Link

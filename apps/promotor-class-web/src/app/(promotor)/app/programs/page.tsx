@@ -4,21 +4,21 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { getProgramsQuery } from '@/modules/programs/queries';
-import { getPublicWorkspaceProfileQuery } from '@/modules/public-storefront/queries';
+import { getPublicStorefrontRepository } from '@/adapters';
 import { Program } from '@promotor/contracts';
 
 export default function ProgramsPage() {
   const [programs, setPrograms] = useState<Program[]>([]);
-  const [workspaceSlug, setWorkspaceSlug] = useState('rina');
+  const [workspaceSlug, setWorkspaceSlug] = useState('demo');
 
   useEffect(() => {
     getProgramsQuery().then(data => {
       if (data) setPrograms(data);
     });
 
-    getPublicWorkspaceProfileQuery('rina').then(profile => {
-      if (profile) setWorkspaceSlug(profile.workspaceSlug);
-    });
+    getPublicStorefrontRepository().getStorefrontProfile().then(profile => {
+      if (profile && profile.workspaceSlug) setWorkspaceSlug(profile.workspaceSlug);
+    }).catch(() => {});
   }, []);
 
   return (

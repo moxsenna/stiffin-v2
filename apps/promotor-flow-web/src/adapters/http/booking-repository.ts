@@ -26,11 +26,38 @@ export class HttpBookingRepository implements BookingRepositoryPort {
   }
 
   async createBooking(booking: Omit<FlowBooking, 'id' | 'createdAt' | 'updatedAt'>): Promise<FlowBooking> {
+    let serviceId = booking.serviceId;
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(serviceId)) {
+      try {
+        const servicesRes = await this.api.listServices();
+        const match = (servicesRes.services || []).find((s: any) => s.isActive);
+        if (match) {
+          serviceId = match.id;
+        } else {
+          const createdSrv = await this.api.createService({
+            name: booking.serviceTitle || 'Tes STIFIn Personal',
+            category: 'ASSESSMENT',
+            priceAmount: booking.amount || 600000,
+            durationMinutes: 60,
+            isActive: true,
+          });
+          serviceId = createdSrv.service?.id || (createdSrv as any).id;
+        }
+      } catch (err) {
+        console.error('Failed to resolve or create service for booking:', err);
+      }
+    }
+
+    const endAt =
+      booking.endAt && new Date(booking.endAt).getTime() > new Date(booking.startAt).getTime()
+        ? booking.endAt
+        : new Date(new Date(booking.startAt).getTime() + 60 * 60 * 1000).toISOString();
+
     const res = await this.api.createBooking({
       contactId: booking.contactId,
-      serviceId: booking.serviceId,
+      serviceId,
       startAt: booking.startAt,
-      endAt: booking.endAt,
+      endAt,
       locationType: booking.locationType as any,
       notes: booking.notes,
     });

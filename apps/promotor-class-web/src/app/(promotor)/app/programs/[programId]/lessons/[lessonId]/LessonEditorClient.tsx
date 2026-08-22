@@ -24,6 +24,7 @@ export function LessonEditorClient() {
   const [ctaLabel, setCtaLabel] = useState('Konsultasi via WhatsApp');
   const [ctaUrl, setCtaUrl] = useState('');
   const [moduleId, setModuleId] = useState('');
+  const [lessonOrder, setLessonOrder] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -42,6 +43,7 @@ export function LessonEditorClient() {
             if (les.id === lessonId) {
               found = true;
               setModuleId(mod.id);
+              setLessonOrder(les.order || 1);
               setTitle(les.title);
               setVideoYoutubeUrl(les.videoYoutubeUrl || '');
               setTextContent(les.textContent || '');
@@ -98,7 +100,7 @@ export function LessonEditorClient() {
         id: lessonId,
         moduleId,
         title: title.trim(),
-        order: 1,
+        order: lessonOrder,
         videoYoutubeUrl: trimmedVideo || undefined,
         videoProvider: trimmedVideo ? 'youtube' : undefined,
         textContent: trimmedText || undefined,
@@ -187,6 +189,7 @@ export function LessonEditorClient() {
             <input
               type="text"
               required
+              data-testid="lesson-title-input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Contoh: Mengenali Cara Kerja Otak Kanan"

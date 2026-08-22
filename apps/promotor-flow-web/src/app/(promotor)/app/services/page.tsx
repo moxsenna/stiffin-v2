@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
-import { serviceQueries, store } from '@/lib/container';
+import { serviceQueries } from '@/lib/container';
 import { FlowService } from '@promotor/promotor-flow-fixtures';
 
 export default function ServicesPage() {
@@ -15,8 +15,6 @@ export default function ServicesPage() {
 
   useEffect(() => {
     loadServices();
-    const unsubscribe = store.subscribe(() => loadServices());
-    return () => unsubscribe();
   }, [loadServices]);
 
   return (

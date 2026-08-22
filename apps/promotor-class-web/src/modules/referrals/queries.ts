@@ -1,10 +1,10 @@
-import { mockReferralRepository } from '@/adapters/mock/referral-repository';
+import { getReferralRepository } from '@/adapters';
 import { LearnerReferralSummary, PromoterReferralOverview } from './types';
 
 export async function getLearnerReferralSummaryQuery(contactId?: string): Promise<LearnerReferralSummary> {
-  return mockReferralRepository.getLearnerReferralSummary(contactId);
+  return getReferralRepository().getLearnerReferralSummary(contactId);
 }
 
 export async function getPromoterReferralOverviewQuery(workspaceSlug: string): Promise<PromoterReferralOverview> {
-  return mockReferralRepository.getPromoterReferralOverview(workspaceSlug);
+  return getReferralRepository().getPromoterReferralOverview(workspaceSlug);
 }
