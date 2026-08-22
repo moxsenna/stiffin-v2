@@ -198,7 +198,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     await expect(page.locator('text=Daftar Peserta & Follow-up')).toBeVisible({ timeout: 15000 });
 
     // Assert exact learner row
-    const learnerRow = page.locator(`div:has-text("${testName}")`).first();
+    const learnerRow = page.locator('[data-testid="learner-item"]').filter({ hasText: testName }).first();
     await expect(learnerRow).toBeVisible();
     await expect(learnerRow).toContainText('Progres: 100%');
     await expect(learnerRow).toContainText('Minat tinggi');

@@ -133,6 +133,7 @@ export default function LearnersPage() {
               return (
                 <div
                   key={contact.id}
+                  data-testid="learner-item"
                   onClick={() => setSelectedContact(contact)}
                   style={{
                     padding: '14px 16px',
