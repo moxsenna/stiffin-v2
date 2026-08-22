@@ -2,24 +2,24 @@
 name: PromotorClass
 description: Client Education OS converting learning activities into actionable business signals
 colors:
-  primary: "#286344"
-  primary-hover: "#1e4b33"
-  primary-light: "#eef5f1"
-  primary-border: "#b8d4c5"
-  canvas: "#F7F7F5"
+  primary: "#059669"
+  primary-hover: "#047857"
+  primary-light: "#ECFDF5"
+  primary-border: "#A7F3D0"
+  canvas: "#F8FAFC"
   surface: "#FFFFFF"
-  surface-hover: "#F0F0ED"
-  divider: "#D7D8D3"
-  text-main: "#20211F"
-  text-muted: "#73756F"
-  text-subtle: "#9A9C97"
+  surface-hover: "#F8FAFC"
+  divider: "#E2E8F0"
+  text-main: "#0F172A"
+  text-muted: "#64748B"
+  text-subtle: "#94A3B8"
   text-inverse: "#FFFFFF"
-  status-success: "#167A68"
-  status-success-bg: "#EAF5F2"
-  status-warning: "#C07000"
-  status-warning-bg: "#FFF8EB"
-  status-danger: "#D32F2F"
-  status-danger-bg: "#FDF2F2"
+  status-success: "#059669"
+  status-success-bg: "#ECFDF5"
+  status-warning: "#D97706"
+  status-warning-bg: "#FFFBEB"
+  status-danger: "#E11D48"
+  status-danger-bg: "#FFF1F2"
 typography:
   display:
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
@@ -32,20 +32,20 @@ typography:
     fontSize: "clamp(28px, 4vw, 40px)"
     fontWeight: 800
     lineHeight: 1.15
-    letterSpacing: "-0.04em"
+    letterSpacing: "-0.035em"
   editorial:
     fontFamily: "Georgia, serif"
     fontStyle: "italic"
     fontWeight: 500
   body:
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-    fontSize: "14px"
-    lineHeight: 1.6
+    fontSize: "14.5px"
+    lineHeight: 1.55
 rounded:
-  sm: "6px"
-  md: "10px"
+  sm: "8px"
+  md: "12px"
   lg: "16px"
-  xl: "20px"
+  xl: "22px"
   full: "9999px"
 spacing:
   xs: "4px"
@@ -70,19 +70,19 @@ components:
 
 ## Overview
 
-PromotorClass follows the **Quiet Utility** design direction with Direct-Response conversion mechanics. The interface emphasizes content, human connection, and high contrast over superficial decorative gradients or artificial complexity.
+PromotorClass follows the **Ultra-Sleek Modern SaaS** design direction (Linear/Stripe-inspired) with Direct-Response conversion mechanics. The interface emphasizes high-precision hairline borders, crisp slate typography, modern emerald accents, and multi-layered tactile shadows.
 
 ## Colors
 
-- **Primary Emerald (`#286344`)**: Anchor brand color representing growth, trust, and calm authority.
-- **Warm Canvas (`#F7F7F5`)**: Soothing off-white neutral background reducing cognitive fatigue.
-- **Surface Pure White (`#FFFFFF`)**: Card and content container surface.
-- **Charcoal Text (`#20211F`)**: High legibility body and headline color.
-- **Muted Text (`#73756F`)**: Subtitles and secondary metadata.
+- **Primary Vivid Emerald (`#059669`)**: Anchor brand color representing growth, clarity, and authority.
+- **Modern Canvas (`#F8FAFC`)**: Crisp, soothing off-white neutral background reducing cognitive fatigue.
+- **Surface Pure White (`#FFFFFF`)**: Floating card and content container surface with subtle ambient shadows.
+- **Deep Slate Text (`#0F172A`)**: High legibility body and headline color.
+- **Muted Slate Text (`#64748B`)**: Subtitles and secondary metadata.
 
 ## Typography
 
-- **System Display / Sans**: Modern, precise, crisp sans-serif with negative tracking (`-0.04em`) for headlines.
+- **System Display / Sans**: Modern, precise, crisp sans-serif with negative tracking (`-0.035em`) for headlines.
 - **Editorial Accent**: Georgia / serif italics for key phrases in headlines to add warmth, human touch, and craft distinction.
 - **Tabular Figures**: Tabular numerals on timestamps, stats, and prices.
 
@@ -93,12 +93,12 @@ PromotorClass follows the **Quiet Utility** design direction with Direct-Respons
 
 ## Elevation & Depth
 
-- **Subtle Offset Shadows**: `0 1px 2px rgba(0, 0, 0, 0.05)` (small), `0 4px 12px rgba(0, 0, 0, 0.08)` (medium), `0 12px 36px rgba(0, 0, 0, 0.05)` (cards/calculators).
+- **Multi-layered Ambient Shadows**: `0 1px 3px rgba(15, 23, 42, 0.06)` (small), `0 4px 12px -2px rgba(15, 23, 42, 0.06)` (medium), `0 12px 28px -4px rgba(15, 23, 42, 0.08)` (large).
 - Zero offset halos and harsh block shadows are strictly avoided.
 
 ## Shapes
 
-- Radius follows a consistent hierarchy: 6px (micro badges), 10px-12px (buttons & inputs), 16px-24px (major cards & simulator frames).
+- Radius follows a consistent hierarchy: 6px (micro badges), 10px-12px (buttons & inputs), 16px-22px (major cards & simulator frames).
 
 ## Components
 
