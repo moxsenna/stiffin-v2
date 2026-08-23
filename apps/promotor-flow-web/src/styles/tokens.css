@@ -1,4 +1,4 @@
-/* PromotorFlow Modern Design System Tokens — Ultra-Sleek Modern SaaS (Linear/Raycast-Inspired) */
+/* PromotorFlow Modern Design System Tokens — Hyper-Modern Electric Blue & Cyan SaaS (Linear/Raycast Vibe) */
 :root {
   /* Canvas & Neutral Ink Surfaces */
   --color-canvas: #F8FAFC;
@@ -8,9 +8,9 @@
   --color-surface-active: #F1F5F9;
   --color-surface-muted: #F8FAFC;
 
-  /* Typography Colors (Deep Slate Hierarchy) */
-  --color-text-primary: #0F172A;
-  --color-text-secondary: #334155;
+  /* Typography Colors (Deep Navy & Slate Hierarchy) */
+  --color-text-primary: #0B0F19;
+  --color-text-secondary: #1E293B;
   --color-text-tertiary: #64748B;
   --color-text-subtle: #94A3B8;
   --color-text-inverse: #FFFFFF;
@@ -20,14 +20,21 @@
   --color-border-strong: #CBD5E1;
   --color-border-subtle: #F1F5F9;
 
-  /* Brand Palette - Electric Modern Teal & Cyan */
-  --color-primary: #0D9488;
-  --color-primary-hover: #0F766E;
-  --color-primary-active: #115E59;
-  --color-primary-light: #F0FDFA;
-  --color-primary-light-hover: #CCFBF1;
-  --color-primary-border: #99F6E4;
-  --color-primary-glow: rgba(13, 148, 136, 0.16);
+  /* Brand Palette - Electric Royal Blue & Cyan */
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-primary-active: #1E40AF;
+  --color-primary-light: #EFF6FF;
+  --color-primary-light-hover: #DBEAFE;
+  --color-primary-border: #BFDBFE;
+  --color-primary-glow: rgba(37, 99, 235, 0.18);
+
+  /* Modern Accents & Gradients */
+  --color-accent-cyan: #06B6D4;
+  --color-accent-cyan-light: #ECFEFF;
+  --color-accent-cyan-border: #A5F3FC;
+  --gradient-primary: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  --gradient-brand: linear-gradient(135deg, #2563EB 0%, #06B6D4 100%);
 
   /* Semantic Status Feedback */
   --color-danger: #E11D48;
@@ -42,20 +49,21 @@
   --color-success-soft: #ECFDF5;
   --color-success-border: #A7F3D0;
 
-  --color-info: #0284C7;
-  --color-info-soft: #F0F9FF;
-  --color-info-border: #BAE6FD;
+  --color-info: #2563EB;
+  --color-info-soft: #EFF6FF;
+  --color-info-border: #BFDBFE;
 
   /* Typography System */
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  /* Multi-Layered Elevation Shadows (Modern Ambient & Tactile) */
-  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 12px 28px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-  --shadow-xl: 0 20px 40px -8px rgba(15, 23, 42, 0.12), 0 8px 16px -4px rgba(15, 23, 42, 0.04);
-  --shadow-sheet: 0 -8px 32px rgba(15, 23, 42, 0.12);
+  /* Multi-Layered Elevation Shadows (Modern Ambient & Glow) */
+  --shadow-xs: 0 1px 2px rgba(11, 15, 25, 0.04);
+  --shadow-sm: 0 1px 3px rgba(11, 15, 25, 0.06), 0 1px 2px rgba(11, 15, 25, 0.04);
+  --shadow-md: 0 4px 14px -2px rgba(11, 15, 25, 0.08), 0 2px 6px -1px rgba(11, 15, 25, 0.04);
+  --shadow-lg: 0 12px 28px -4px rgba(11, 15, 25, 0.10), 0 4px 12px -2px rgba(11, 15, 25, 0.05);
+  --shadow-xl: 0 20px 44px -8px rgba(11, 15, 25, 0.14), 0 8px 18px -4px rgba(11, 15, 25, 0.06);
+  --shadow-glow: 0 4px 20px rgba(37, 99, 235, 0.28);
+  --shadow-sheet: 0 -8px 32px rgba(11, 15, 25, 0.12);
 
   /* Geometry & Border Radius */
   --radius-xs: 6px;

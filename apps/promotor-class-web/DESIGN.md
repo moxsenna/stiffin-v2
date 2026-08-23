@@ -2,15 +2,17 @@
 name: PromotorClass
 description: Client Education OS converting learning activities into actionable business signals
 colors:
-  primary: "#059669"
-  primary-hover: "#047857"
-  primary-light: "#ECFDF5"
-  primary-border: "#A7F3D0"
+  primary: "#2563EB"
+  primary-hover: "#1D4ED8"
+  primary-light: "#EFF6FF"
+  primary-border: "#BFDBFE"
+  accent-cyan: "#06B6D4"
+  accent-cyan-light: "#ECFEFF"
   canvas: "#F8FAFC"
   surface: "#FFFFFF"
   surface-hover: "#F8FAFC"
   divider: "#E2E8F0"
-  text-main: "#0F172A"
+  text-main: "#0B0F19"
   text-muted: "#64748B"
   text-subtle: "#94A3B8"
   text-inverse: "#FFFFFF"
@@ -24,13 +26,13 @@ typography:
   display:
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
     fontSize: "clamp(36px, 5.5vw, 64px)"
-    fontWeight: 850
+    fontWeight: 900
     lineHeight: 1.05
     letterSpacing: "-0.045em"
   headline:
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
     fontSize: "clamp(28px, 4vw, 40px)"
-    fontWeight: 800
+    fontWeight: 850
     lineHeight: 1.15
     letterSpacing: "-0.035em"
   editorial:
@@ -58,66 +60,17 @@ components:
     backgroundColor: "{colors.primary}"
     textColor: "{colors.text-inverse}"
     rounded: "{rounded.md}"
-    padding: "0 24px"
-    height: "48px"
-  button-secondary:
+    boxShadow: "0 4px 14px rgba(37, 99, 235, 0.35)"
+  card:
     backgroundColor: "{colors.surface}"
-    textColor: "{colors.text-main}"
-    rounded: "{rounded.md}"
-    padding: "0 20px"
-    height: "46px"
+    borderColor: "{colors.divider}"
+    rounded: "{rounded.lg}"
+    boxShadow: "0 4px 14px -2px rgba(11, 15, 25, 0.08)"
 ---
 
-## Overview
+# PromotorClass Design System: Hyper-Modern Electric Blue & Cyan SaaS
 
-PromotorClass follows the **Ultra-Sleek Modern SaaS** design direction (Linear/Stripe-inspired) with Direct-Response conversion mechanics. The interface emphasizes high-precision hairline borders, crisp slate typography, modern emerald accents, and multi-layered tactile shadows.
-
-## Colors
-
-- **Primary Vivid Emerald (`#059669`)**: Anchor brand color representing growth, clarity, and authority.
-- **Modern Canvas (`#F8FAFC`)**: Crisp, soothing off-white neutral background reducing cognitive fatigue.
-- **Surface Pure White (`#FFFFFF`)**: Floating card and content container surface with subtle ambient shadows.
-- **Deep Slate Text (`#0F172A`)**: High legibility body and headline color.
-- **Muted Slate Text (`#64748B`)**: Subtitles and secondary metadata.
-
-## Typography
-
-- **System Display / Sans**: Modern, precise, crisp sans-serif with negative tracking (`-0.035em`) for headlines.
-- **Editorial Accent**: Georgia / serif italics for key phrases in headlines to add warmth, human touch, and craft distinction.
-- **Tabular Figures**: Tabular numerals on timestamps, stats, and prices.
-
-## Layout
-
-- **Desktop**: Max container width `1140px` with 24px edge padding. Asymmetric and 2-column grids for feature and conversion blocks.
-- **Mobile PWA Standard**: Single-column responsive layout, touch target minimum `44px` (primary actions `48px-52px`), fixed sticky action bars on sales surfaces.
-
-## Elevation & Depth
-
-- **Multi-layered Ambient Shadows**: `0 1px 3px rgba(15, 23, 42, 0.06)` (small), `0 4px 12px -2px rgba(15, 23, 42, 0.06)` (medium), `0 12px 28px -4px rgba(15, 23, 42, 0.08)` (large).
-- Zero offset halos and harsh block shadows are strictly avoided.
-
-## Shapes
-
-- Radius follows a consistent hierarchy: 6px (micro badges), 10px-12px (buttons & inputs), 16px-22px (major cards & simulator frames).
-
-## Components
-
-- **Direct-Response Hero**: Focused value proposition with dual-action CTA and social proof metrics strip.
-- **Interactive 3-Step Engine Demo**: Tabbed interactive walkthrough demonstrating the Learner -> Intent Signal -> WhatsApp loop.
-- **ROI & Conversion Calculator**: Real-time slider calculating high-intent leads and revenue uplift.
-- **Problem-Agitation Matrix**: High-contrast comparison table.
-- **Frictionless Registration Form**: WhatsApp-first instant registration box.
-
-## Do's and Don'ts
-
-### Do's
-- Lead directly with the headline without redundant kickers/eyebrows.
-- Use Georgia serif italics for intentional editorial emphasis.
-- Provide interactive live simulations to demonstrate mechanisms rather than just claiming them.
-- Keep mobile touch targets at least 44px with generous thumb clearance.
-
-### Don'ts
-- Do not use generic gradient text or rainbow halos.
-- Do not use unicode emoji as an icon system; use authored clean SVGs.
-- Do not make repeated same-size icon cards.
-- Do not require passwords for learner registrations.
+## 1. Visual World & Direction
+* **Vibe**: High-precision, ultra-sleek, dynamic SaaS engineered for modern educators & STIFIn promoters (Linear / Stripe / Vercel aesthetics).
+* **Palette**: Electric Royal Blue (`#2563EB`) paired with Electric Cyan (`#06B6D4`), cool alabaster canvas (`#F8FAFC`), deep obsidian text (`#0B0F19`), and crisp hairline borders (`#E2E8F0`).
+* **Micro-interactions**: Spring easing (`cubic-bezier(0.16, 1, 0.3, 1)`), tactile glow hover states, and dynamic status pills.

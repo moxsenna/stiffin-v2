@@ -15,6 +15,11 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  const fillTestCredentials = () => {
+    setEmail('rina@stifin.id');
+    setPassword('password123');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
@@ -58,17 +63,18 @@ function LoginForm() {
         justifyContent: 'center',
         padding: '24px 16px',
         backgroundColor: 'var(--color-canvas)',
+        backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(37, 99, 235, 0.12), transparent)',
       }}
     >
       <div
         style={{
           width: '100%',
-          maxWidth: '400px',
+          maxWidth: '420px',
           backgroundColor: 'var(--color-surface)',
           borderRadius: 'var(--border-radius-xl)',
           border: '1px solid var(--color-divider)',
-          padding: '36px 28px',
-          boxShadow: 'var(--shadow-md)',
+          padding: '40px 32px',
+          boxShadow: 'var(--shadow-xl)',
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
@@ -77,25 +83,24 @@ function LoginForm() {
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: '52px',
-              height: '52px',
-              borderRadius: '14px',
-              backgroundColor: 'var(--color-primary-light)',
-              color: 'var(--color-primary)',
+              width: '56px',
+              height: '56px',
+              borderRadius: '16px',
+              background: 'var(--gradient-brand)',
+              color: '#FFFFFF',
               marginBottom: '16px',
-              border: '1px solid var(--color-primary-border)',
+              boxShadow: 'var(--shadow-glow)',
+              fontSize: '22px',
+              fontWeight: 900,
             }}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-            </svg>
+            P
           </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '6px', color: 'var(--color-text-main)' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 900, letterSpacing: '-0.035em', marginBottom: '6px', color: 'var(--color-text-main)' }}>
             Masuk ke PromotorClass
           </h1>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.5 }}>
-            Platform edukasi dan storefront materi STIFIn
+          <p style={{ fontSize: '13.5px', color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.5 }}>
+            Client Education & Interactive Storefront OS
           </p>
         </div>
 
@@ -106,12 +111,12 @@ function LoginForm() {
               alignItems: 'flex-start',
               gap: '10px',
               padding: '12px 14px',
-              borderRadius: 'var(--border-radius-sm)',
+              borderRadius: 'var(--border-radius-md)',
               backgroundColor: 'var(--color-status-danger-bg)',
               border: '1px solid var(--color-status-danger-border)',
               color: 'var(--color-status-danger)',
               fontSize: '13px',
-              fontWeight: 600,
+              fontWeight: 650,
               marginBottom: '20px',
               lineHeight: 1.4,
             }}
@@ -125,9 +130,9 @@ function LoginForm() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px', color: 'var(--color-text-main)' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
               Email Promotor
             </label>
             <input
@@ -136,22 +141,25 @@ function LoginForm() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="promotor@stifin.id"
+              placeholder="rina@stifin.id"
               style={{
                 width: '100%',
-                minHeight: '44px',
+                minHeight: '46px',
                 padding: '10px 14px',
-                borderRadius: 'var(--border-radius-sm)',
+                borderRadius: 'var(--border-radius-md)',
                 border: '1px solid var(--color-divider)',
                 fontSize: '14px',
                 outline: 'none',
                 backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-text-main)',
+                boxSizing: 'border-box',
+                transition: 'border-color var(--duration-fast) ease',
               }}
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px', color: 'var(--color-text-main)' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
               Kata Sandi
             </label>
             <input
@@ -163,15 +171,38 @@ function LoginForm() {
               placeholder="••••••••"
               style={{
                 width: '100%',
-                minHeight: '44px',
+                minHeight: '46px',
                 padding: '10px 14px',
-                borderRadius: 'var(--border-radius-sm)',
+                borderRadius: 'var(--border-radius-md)',
                 border: '1px solid var(--color-divider)',
                 fontSize: '14px',
                 outline: 'none',
                 backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-text-main)',
+                boxSizing: 'border-box',
+                transition: 'border-color var(--duration-fast) ease',
               }}
             />
+          </div>
+
+          {/* Test Account Quick Fill Pill */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              onClick={fillTestCredentials}
+              style={{
+                fontSize: '11.5px',
+                color: 'var(--color-primary)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 700,
+                padding: 0,
+                textDecoration: 'underline',
+              }}
+            >
+              Gunakan Akun Demo (rina@stifin.id)
+            </button>
           </div>
 
           <button
@@ -182,21 +213,25 @@ function LoginForm() {
               width: '100%',
               minHeight: '48px',
               borderRadius: 'var(--border-radius-md)',
-              backgroundColor: isLoading ? 'var(--color-text-subtle)' : 'var(--color-primary)',
+              background: isLoading ? 'var(--color-text-subtle)' : 'var(--gradient-primary)',
               color: '#FFF',
               fontSize: '14.5px',
-              fontWeight: 780,
+              fontWeight: 800,
               border: 0,
               cursor: isLoading ? 'not-allowed' : 'pointer',
-              marginTop: '6px',
-              boxShadow: 'var(--shadow-sm)',
+              marginTop: '4px',
+              boxShadow: 'var(--shadow-glow)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
             }}
           >
-            {isLoading ? 'Memverifikasi...' : 'Masuk'}
+            {isLoading ? 'Memverifikasi Sesi...' : 'Masuk ke Workspace'}
           </button>
         </form>
 
-        <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '12px', color: 'var(--color-text-subtle)', lineHeight: 1.5 }}>
+        <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '12px', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
           Butuh bantuan akses akun? Hubungi administrator cabang Anda.
         </div>
       </div>

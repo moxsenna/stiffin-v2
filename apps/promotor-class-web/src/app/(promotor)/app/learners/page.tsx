@@ -17,6 +17,7 @@ export default function LearnersPage() {
   const [signals, setSignals] = useState<LearningSignal[]>([]);
   const [programsMap, setProgramsMap] = useState<Map<string, Program>>(new Map());
   const [selectedFilter, setSelectedFilter] = useState<'semua' | 'Minat tinggi' | 'Minat sedang' | 'Minat rendah'>('semua');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [draftState, setDraftState] = useState<{ isOpen: boolean; contact: Contact | null; message: string }>({
     isOpen: false,
@@ -31,12 +32,12 @@ export default function LearnersPage() {
       getLearningSignalsQuery(),
       getProgramsQuery(),
     ]).then(([conData, enrData, sigData, progData]) => {
-      setContacts(conData);
-      setEnrollments(enrData);
-      setSignals(sigData);
+      setContacts(conData || []);
+      setEnrollments(enrData || []);
+      setSignals(sigData || []);
 
       const pMap = new Map<string, Program>();
-      progData.forEach((p: Program) => pMap.set(p.id, p));
+      (progData || []).forEach((p: Program) => pMap.set(p.id, p));
       setProgramsMap(pMap);
     });
   }, []);
@@ -53,9 +54,8 @@ export default function LearnersPage() {
     return enrollments.find(e => e.contactId === contactId);
   };
 
-  // Class Learners = Contacts that have Class enrollment(s)
   const enrolledContactIds = new Set(enrollments.map(e => e.contactId));
-  const learnerContacts = contacts.filter(c => enrolledContactIds.has(c.id));
+  const learnerContacts = contacts.filter(c => enrolledContactIds.has(c.id) || signals.some(s => s.contactId === c.id));
 
   const filteredContacts = learnerContacts.filter(c => {
     const enr = getEnrollmentForContact(c.id);
@@ -69,60 +69,102 @@ export default function LearnersPage() {
         ? 'Minat sedang'
         : 'Minat rendah');
 
-    if (selectedFilter === 'semua') return true;
-    return effectiveSignalLevel === selectedFilter;
+    if (selectedFilter !== 'semua' && effectiveSignalLevel !== selectedFilter) return false;
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return c.name.toLowerCase().includes(q) || c.phoneE164.includes(q);
+    }
+
+    return true;
   });
 
   return (
     <PromotorShell>
-      <div style={{ padding: '24px 20px', maxWidth: '960px', margin: '0 auto' }}>
-        <div style={{ marginBottom: '20px' }}>
-          <h1 style={{ fontSize: '22px', fontWeight: 850, letterSpacing: '-0.025em', marginBottom: '4px', color: 'var(--color-text-main)' }}>
-            Daftar Peserta & Follow-up
-          </h1>
-          <div style={{ fontSize: '13.5px', color: 'var(--color-text-muted)' }}>
-            Filter berdasarkan tingkat minat & lihat catatan refleksi peserta
+      <div style={{ maxWidth: '1080px', margin: '0 auto' }}>
+        {/* Header Title & Search */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-primary)', backgroundColor: 'var(--color-primary-light)', border: '1px solid var(--color-primary-border)', padding: '2px 8px', borderRadius: 'var(--border-radius-full)' }}>
+                Learners CRM & Leads
+              </span>
+            </div>
+            <h1 style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '-0.035em', color: 'var(--color-text-main)', margin: '0 0 6px' }}>
+              Daftar Peserta & Progres
+            </h1>
+            <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', margin: 0, fontWeight: 500 }}>
+              Pantau kepuasan belajar dan konversi peserta menjadi klien Tes STIFIn.
+            </p>
+          </div>
+
+          <div style={{ width: '100%', maxWidth: '320px' }}>
+            <input
+              type="text"
+              placeholder="Cari nama, no HP, atau email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                minHeight: '42px',
+                padding: '8px 14px',
+                borderRadius: 'var(--border-radius-md)',
+                border: '1px solid var(--color-divider)',
+                backgroundColor: 'var(--color-surface)',
+                fontSize: '13px',
+                outline: 'none',
+                boxSizing: 'border-box',
+                boxShadow: 'var(--shadow-xs)',
+              }}
+            />
           </div>
         </div>
 
         {/* Filter Pills */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
-          {(['semua', 'Minat tinggi', 'Minat sedang', 'Minat rendah'] as const).map(filterVal => (
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+          {[
+            { id: 'semua', label: 'Semua Peserta' },
+            { id: 'Minat tinggi', label: '🔥 Minat Tinggi (Hot)' },
+            { id: 'Minat sedang', label: '⚡ Minat Sedang (Warm)' },
+            { id: 'Minat rendah', label: '❄️ Minat Rendah (Cold)' },
+          ].map((tab) => (
             <button
-              key={filterVal}
-              onClick={() => setSelectedFilter(filterVal)}
-              className="touch-target"
+              key={tab.id}
+              onClick={() => setSelectedFilter(tab.id as any)}
               style={{
-                padding: '6px 14px',
+                padding: '8px 14px',
                 borderRadius: 'var(--border-radius-full)',
+                backgroundColor: selectedFilter === tab.id ? 'var(--color-primary)' : 'var(--color-surface)',
+                color: selectedFilter === tab.id ? '#FFFFFF' : 'var(--color-text-body)',
+                border: selectedFilter === tab.id ? '1px solid var(--color-primary)' : '1px solid var(--color-divider)',
                 fontSize: '12.5px',
-                fontWeight: 750,
-                backgroundColor: selectedFilter === filterVal ? 'var(--color-primary)' : 'var(--color-surface)',
-                color: selectedFilter === filterVal ? '#FFF' : 'var(--color-text-body)',
-                border: '1px solid var(--color-divider)',
-                boxShadow: 'var(--shadow-xs)',
+                fontWeight: selectedFilter === tab.id ? 750 : 550,
+                cursor: 'pointer',
+                boxShadow: selectedFilter === tab.id ? 'var(--shadow-xs)' : 'none',
+                transition: 'all var(--duration-fast) ease',
               }}
             >
-              {filterVal === 'semua' ? 'Semua Peserta' : filterVal}
+              {tab.label}
             </button>
           ))}
         </div>
 
-        {/* Learners List */}
+        {/* Learners Grid / List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {filteredContacts.length === 0 ? (
             <div
               style={{
-                padding: '40px 20px',
+                padding: '48px 24px',
                 textAlign: 'center',
                 color: 'var(--color-text-muted)',
                 fontSize: '14px',
                 backgroundColor: 'var(--color-surface)',
-                borderRadius: 'var(--border-radius-lg)',
+                borderRadius: 'var(--border-radius-xl)',
                 border: '1px solid var(--color-divider)',
+                boxShadow: 'var(--shadow-sm)',
               }}
             >
-              Belum ada peserta pembelajaran yang terdaftar.
+              Tidak ditemukan peserta dengan kriteria filter saat ini.
             </div>
           ) : (
             filteredContacts.map(contact => {
@@ -152,29 +194,50 @@ export default function LearnersPage() {
                   data-testid="learner-item"
                   onClick={() => setSelectedContact(contact)}
                   style={{
-                    padding: '16px 20px',
+                    padding: '18px 22px',
                     backgroundColor: isSelected ? 'var(--color-primary-light)' : 'var(--color-surface)',
                     borderRadius: 'var(--border-radius-lg)',
-                    border: '1px solid var(--color-divider)',
+                    border: isSelected ? '1px solid var(--color-primary-border)' : '1px solid var(--color-divider)',
                     cursor: 'pointer',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    boxShadow: 'var(--shadow-xs)',
-                    transition: 'transform var(--duration-fast) var(--ease-spring)',
+                    gap: '16px',
+                    boxShadow: 'var(--shadow-sm)',
+                    transition: 'all var(--duration-fast) var(--ease-spring)',
                   }}
                 >
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
-                      <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--color-text-main)' }}>
-                        {contact.name}
-                      </span>
-                      <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                        {formatPhoneDisplay(contact.phoneE164)}
-                      </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0 }}>
+                    <div
+                      style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '50%',
+                        backgroundColor: isHigh ? 'var(--color-status-danger-bg)' : 'var(--color-primary-light)',
+                        color: isHigh ? 'var(--color-status-danger)' : 'var(--color-primary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 850,
+                        fontSize: '15px',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {contact.name.charAt(0)}
                     </div>
-                    <div style={{ fontSize: '12.5px', color: 'var(--color-text-body)' }}>
-                      Alasan: {reasonDisplay}
+
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
+                        <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--color-text-main)' }}>
+                          {contact.name}
+                        </span>
+                        <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                          {formatPhoneDisplay(contact.phoneE164)}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--color-text-body)' }}>
+                        {reasonDisplay}
+                      </div>
                     </div>
                   </div>
 
@@ -182,21 +245,21 @@ export default function LearnersPage() {
                     <span
                       style={{
                         fontSize: '11.5px',
-                        fontWeight: 780,
+                        fontWeight: 800,
                         padding: '3px 10px',
                         borderRadius: 'var(--border-radius-full)',
                         backgroundColor: isHigh
-                          ? 'var(--color-status-success-bg)'
+                          ? 'var(--color-status-danger-bg)'
                           : isMedium
                           ? 'var(--color-status-warning-bg)'
-                          : 'var(--color-canvas)',
+                          : 'var(--color-canvas-subtle)',
                         color: isHigh
-                          ? 'var(--color-status-success)'
+                          ? 'var(--color-status-danger)'
                           : isMedium
                           ? 'var(--color-status-warning)'
                           : 'var(--color-text-muted)',
                         border: isHigh
-                          ? '1px solid var(--color-status-success-border)'
+                          ? '1px solid var(--color-status-danger-border)'
                           : isMedium
                           ? '1px solid var(--color-status-warning-border)'
                           : '1px solid var(--color-divider)',
@@ -205,8 +268,13 @@ export default function LearnersPage() {
                       {effectiveSignalLevel}
                     </span>
                     {enr && (
-                      <div style={{ fontSize: '11.5px', color: 'var(--color-primary)', fontWeight: 700, marginTop: '3px' }} className="tabular-nums">
-                        Progres: {enr.progressPercent}%
+                      <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                        <div style={{ width: '60px', height: '5px', borderRadius: '3px', backgroundColor: 'var(--color-canvas-subtle)', overflow: 'hidden' }}>
+                          <div style={{ width: `${enr.progressPercent}%`, height: '100%', backgroundColor: 'var(--color-primary)' }} />
+                        </div>
+                        <span style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 800 }} className="tabular-nums">
+                          {enr.progressPercent}%
+                        </span>
                       </div>
                     )}
                   </div>

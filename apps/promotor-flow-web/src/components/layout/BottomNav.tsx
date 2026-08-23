@@ -162,7 +162,7 @@ export const BottomNav: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 6px 18px rgba(18, 94, 81, 0.4), 0 2px 6px rgba(18, 94, 81, 0.25)',
+            boxShadow: '0 6px 18px rgba(37, 99, 235, 0.4), 0 2px 6px rgba(37, 99, 235, 0.25)',
             border: '3px solid #FFFFFF',
             textDecoration: 'none',
             transform: isNewContact ? 'scale(1.06)' : 'none',

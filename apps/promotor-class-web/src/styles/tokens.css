@@ -1,13 +1,28 @@
-/* PromotorClass Modern Design System Tokens — Ultra-Sleek Modern SaaS (Linear/Stripe-Inspired) */
+/* PromotorClass Modern Design System Tokens — Hyper-Modern Electric Blue & Cyan SaaS (Linear/Stripe/Vercel Vibe) */
 :root {
-  /* Brand Accent Palette (Modern Vivid Emerald & Cyan Auras) */
-  --color-primary: #059669;
-  --color-primary-hover: #047857;
-  --color-primary-active: #065F46;
-  --color-primary-light: #ECFDF5;
-  --color-primary-light-hover: #D1FAE5;
-  --color-primary-border: #A7F3D0;
-  --color-primary-glow: rgba(5, 150, 105, 0.14);
+  /* Brand Accent Palette (Hyper-Modern Electric Royal Blue & Cyan) */
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-primary-active: #1E40AF;
+  --color-primary-light: #EFF6FF;
+  --color-primary-light-hover: #DBEAFE;
+  --color-primary-border: #BFDBFE;
+  --color-primary-glow: rgba(37, 99, 235, 0.18);
+
+  /* Secondary Accents */
+  --color-accent-cyan: #06B6D4;
+  --color-accent-cyan-light: #ECFEFF;
+  --color-accent-cyan-border: #A5F3FC;
+  --color-accent-indigo: #4F46E5;
+  --color-accent-indigo-light: #EEF2FF;
+  --color-accent-emerald: #10B981;
+  --color-accent-emerald-light: #ECFDF5;
+
+  /* Modern Gradients */
+  --gradient-primary: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  --gradient-brand: linear-gradient(135deg, #2563EB 0%, #06B6D4 100%);
+  --gradient-surface: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+  --gradient-card-glow: linear-gradient(180deg, rgba(37, 99, 235, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
 
   /* Modern Canvas & Surface Tokens */
   --color-canvas: #F8FAFC;
@@ -20,11 +35,12 @@
   /* Hairline Borders & High-Precision Dividers */
   --color-divider: #E2E8F0;
   --color-divider-subtle: #F1F5F9;
-  --color-border-focus: #059669;
+  --color-border-strong: #CBD5E1;
+  --color-border-focus: #2563EB;
 
-  /* Typography Colors (Deep Slate System) */
-  --color-text-main: #0F172A;
-  --color-text-body: #334155;
+  /* Typography Colors (Deep Navy & Slate System) */
+  --color-text-main: #0B0F19;
+  --color-text-body: #1E293B;
   --color-text-muted: #64748B;
   --color-text-subtle: #94A3B8;
   --color-text-inverse: #FFFFFF;
@@ -39,9 +55,9 @@
   --color-status-danger: #E11D48;
   --color-status-danger-bg: #FFF1F2;
   --color-status-danger-border: #FECDD3;
-  --color-status-info: #0284C7;
-  --color-status-info-bg: #F0F9FF;
-  --color-status-info-border: #BAE6FD;
+  --color-status-info: #2563EB;
+  --color-status-info-bg: #EFF6FF;
+  --color-status-info-border: #BFDBFE;
 
   /* Spacing System */
   --space-xxs: 2px;
@@ -65,14 +81,15 @@
   --min-touch-target: 44px;
   --primary-action-target: 48px;
 
-  /* Multi-Layered Elevation Shadows (Modern Ambient & Tactile) */
-  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 12px 28px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-  --shadow-xl: 0 20px 40px -8px rgba(15, 23, 42, 0.12), 0 8px 16px -4px rgba(15, 23, 42, 0.04);
-  --shadow-sheet: 0 -8px 32px rgba(15, 23, 42, 0.12);
-  --shadow-drawer: -12px 0 36px rgba(15, 23, 42, 0.14);
+  /* Multi-Layered Elevation Shadows (Modern Ambient & Glow) */
+  --shadow-xs: 0 1px 2px rgba(11, 15, 25, 0.04);
+  --shadow-sm: 0 1px 3px rgba(11, 15, 25, 0.06), 0 1px 2px rgba(11, 15, 25, 0.04);
+  --shadow-md: 0 4px 14px -2px rgba(11, 15, 25, 0.08), 0 2px 6px -1px rgba(11, 15, 25, 0.04);
+  --shadow-lg: 0 12px 28px -4px rgba(11, 15, 25, 0.10), 0 4px 12px -2px rgba(11, 15, 25, 0.05);
+  --shadow-xl: 0 20px 44px -8px rgba(11, 15, 25, 0.14), 0 8px 18px -4px rgba(11, 15, 25, 0.06);
+  --shadow-glow: 0 4px 20px rgba(37, 99, 235, 0.28);
+  --shadow-sheet: 0 -8px 32px rgba(11, 15, 25, 0.12);
+  --shadow-drawer: -12px 0 36px rgba(11, 15, 25, 0.14);
 
   /* Animation Timings & Spring Easing */
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
