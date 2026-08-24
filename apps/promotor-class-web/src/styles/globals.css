@@ -821,12 +821,17 @@ svg {
 .bottom-nav a,
 .bottom-nav button {
   flex: 1;
-  min-height: 52px;
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   border: 0;
   border-top: 3px solid transparent;
   margin-top: -2px; /* overlay the container's top rule like the reference */
   background: transparent;
-  padding: 13px 4px 16px;
+  padding: 9px 4px 12px;
   font: 500 10px/1 var(--font-sans);
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -834,6 +839,12 @@ svg {
   text-decoration: none;
   text-align: center;
   cursor: pointer;
+}
+
+.bottom-nav svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
 }
 
 .bottom-nav a:hover,

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { resolveWorkspaceSlug, setLastPublicWorkspaceSlug } from '@/lib/session';
+import { BerandaIcon, KatalogIcon, BelajarIcon, ProfilIcon } from './nav-icons';
 
 interface LearnerTabBarProps {
   workspaceSlug?: string;
@@ -13,7 +14,7 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
   const pathname = usePathname();
   const [resolvedSlug, setResolvedSlug] = useState<string | null>(explicitWorkspaceSlug || null);
 
-  useEffect(() =>{
+  useEffect(() => {
     if (explicitWorkspaceSlug) {
       setLastPublicWorkspaceSlug(explicitWorkspaceSlug);
       setResolvedSlug(explicitWorkspaceSlug);
@@ -39,27 +40,28 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
   const catalogHref = resolvedSlug ? `/p/${resolvedSlug}/catalog` : '/learn';
 
   const tabs = [
-    { label: 'Beranda', href: berandaHref, key: 'beranda' as const },
-    { label: 'Katalog', href: catalogHref, key: 'katalog' as const },
-    { label: 'Belajar', href: '/learn', key: 'belajar' as const },
-    { label: 'Profil', href: '/learn/profile', key: 'profil' as const },
+    { label: 'Beranda', href: berandaHref, key: 'beranda' as const, Icon: BerandaIcon },
+    { label: 'Katalog', href: catalogHref, key: 'katalog' as const, Icon: KatalogIcon },
+    { label: 'Belajar', href: '/learn', key: 'belajar' as const, Icon: BelajarIcon },
+    { label: 'Profil', href: '/learn/profile', key: 'profil' as const, Icon: ProfilIcon },
   ];
 
   return (
     <nav className="bottom-nav" aria-label="Navigasi bawah learner">
-     {tabs.map((tab) =>{
-        const active = activeTab === tab.key;
+      {tabs.map(({ label, href, key, Icon }) => {
+        const active = activeTab === key;
         return (
           <Link
-            key={tab.key}
-            href={tab.href}
+            key={key}
+            href={href}
             className={active ? 'is-active' : undefined}
             aria-current={active ? 'page' : undefined}
           >
-           {tab.label}
+            <Icon size={22} />
+            <span>{label}</span>
           </Link>
-       );
+        );
       })}
     </nav>
- );
+  );
 }

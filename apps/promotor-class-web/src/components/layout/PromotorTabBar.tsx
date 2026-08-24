@@ -3,12 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { BerandaIcon, ProgramIcon, LearnerIcon, LainnyaIcon } from './nav-icons';
 
 const TABS = [
-  { label: 'Beranda', href: '/app' },
-  { label: 'Program', href: '/app/programs' },
-  { label: 'Learner', href: '/app/learners' },
-  { label: 'Lainnya', href: '/app/more' },
+  { label: 'Beranda', href: '/app', Icon: BerandaIcon },
+  { label: 'Program', href: '/app/programs', Icon: ProgramIcon },
+  { label: 'Learner', href: '/app/learners', Icon: LearnerIcon },
+  { label: 'Lainnya', href: '/app/more', Icon: LainnyaIcon },
 ];
 
 function isTabActive(pathname: string, href: string): boolean {
@@ -30,14 +31,20 @@ export function PromotorTabBar() {
 
   return (
     <nav className="bottom-nav" aria-label="Navigasi utama">
-     {TABS.map((tab) =>{
-        const active = isTabActive(pathname, tab.href);
+      {TABS.map(({ label, href, Icon }) => {
+        const active = isTabActive(pathname, href);
         return (
-          <Link key={tab.href} href={tab.href} className={active ? 'is-active' : undefined} aria-current={active ? 'page' : undefined}>
-           {tab.label}
+          <Link
+            key={href}
+            href={href}
+            className={active ? 'is-active' : undefined}
+            aria-current={active ? 'page' : undefined}
+          >
+            <Icon size={22} />
+            <span>{label}</span>
           </Link>
-       );
+        );
       })}
     </nav>
- );
+  );
 }

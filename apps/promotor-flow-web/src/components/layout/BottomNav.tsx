@@ -3,12 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { TodayIcon, KontakIcon, KalenderIcon, LainnyaIcon } from '../foundation/nav-icons';
 
 export const FLOW_NAV_ITEMS = [
-  { label: 'Today', href: '/app' },
-  { label: 'Kontak', href: '/app/contacts' },
-  { label: 'Kalender', href: '/app/calendar' },
-  { label: 'Lainnya', href: '/app/more' },
+  { label: 'Today', href: '/app', Icon: TodayIcon },
+  { label: 'Kontak', href: '/app/contacts', Icon: KontakIcon },
+  { label: 'Kalender', href: '/app/calendar', Icon: KalenderIcon },
+  { label: 'Lainnya', href: '/app/more', Icon: LainnyaIcon },
 ];
 
 function isItemActive(pathname: string, href: string): boolean {
@@ -24,19 +25,25 @@ function isItemActive(pathname: string, href: string): boolean {
   return pathname.startsWith(href);
 }
 
-export const BottomNav: React.FC = () =>{
+export const BottomNav: React.FC = () => {
   const pathname = usePathname();
 
   return (
     <nav className="bottom-nav" aria-label="Navigasi utama">
-     {FLOW_NAV_ITEMS.map((item) =>{
-        const active = isItemActive(pathname, item.href);
+      {FLOW_NAV_ITEMS.map(({ label, href, Icon }) => {
+        const active = isItemActive(pathname, href);
         return (
-          <Link key={item.href} href={item.href} className={active ? 'is-active' : undefined} aria-current={active ? 'page' : undefined}>
-           {item.label}
+          <Link
+            key={href}
+            href={href}
+            className={active ? 'is-active' : undefined}
+            aria-current={active ? 'page' : undefined}
+          >
+            <Icon size={22} />
+            <span>{label}</span>
           </Link>
-       );
+        );
       })}
     </nav>
- );
+  );
 };
