@@ -1,107 +1,114 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
-import { ChevronRightIcon, CalendarIcon } from '@/components/foundation/icons';
+import { PageHeader, SectionHead, EmptyState, ErrorState, LoadingRows } from '@/components/ui';
 import { bookingQueries, contactQueries, clock } from '@/lib/container';
 import { FlowBooking } from '@promotor/promotor-flow-fixtures';
 
+type AgendaItem = { booking: FlowBooking; contactName: string };
+
+function dayKey(iso: string): string {
+  return clock.formatDayDate(iso);
+}
+
 export default function CalendarPage() {
   const router = useRouter();
-  const [bookings, setBookings] = useState<Array<{ booking: FlowBooking; contactName: string }>>([]);
+  const [bookings, setBookings] = useState<AgendaItem[] | null>(null);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
-    const list = await bookingQueries.getCalendarAgenda();
-    const items = await Promise.all(
-      list.map(async (bk) => {
-        const c = await contactQueries.getContactDetail(bk.contactId);
-        return { booking: bk, contactName: c ? c.name : 'Kontak' };
-      })
-    );
-    setBookings(items);
+  const loadData = useCallback(async () =>{
+    setLoadError(null);
+    try {
+      const list = await bookingQueries.getCalendarAgenda();
+      const items = await Promise.all(
+        list.map(async (bk) =>{
+          const c = await contactQueries.getContactDetail(bk.contactId);
+          return { booking: bk, contactName: c ? c.name : 'Kontak' };
+        })
+      );
+      setBookings(items);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Tidak dapat memuat agenda.');
+    }
   }, []);
 
-  useEffect(() => {
+  useEffect(() =>{
     loadData();
   }, [loadData]);
 
+  const days = bookings
+    ? Array.from(new Set(bookings.map(({ booking }) =>dayKey(booking.startAt)))).sort()
+    : [];
+
+  const visible = bookings
+    ? (selectedDay ? bookings.filter(({ booking }) =>dayKey(booking.startAt) === selectedDay) : bookings)
+    : [];
+
   return (
     <AppShell showBottomNav={true}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 0' }}>
-        <h1 style={{ font: '700 24px/29px Inter, sans-serif', color: '#191918' }}>Kalender</h1>
-      </div>
+     <PageHeader kicker="Agenda" title="Kalender" sub="Agenda layanan & booking STIFIn" />
 
-      <div style={{ font: '450 13px/18px Inter, sans-serif', color: '#71706B', padding: '6px 16px 16px' }}>
-        Agenda Layanan & Booking STIFIn
-      </div>
+     {loadError && <ErrorState title="Gagal memuat agenda" detail={loadError} onRetry={() =>loadData()} />}
 
-      <div style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid #E8E7E3' }}>
-        {bookings.length > 0 ? (
-          bookings.map(({ booking, contactName }) => (
-            <div
-              key={booking.id}
-              onClick={() => router.push(`/app/contacts/${booking.contactId}`)}
-              style={{
-                display: 'flex',
-                gap: '14px',
-                padding: '14px 16px',
-                borderBottom: '1px solid #E8E7E3',
-                cursor: 'pointer',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minWidth: '54px',
-                  padding: '8px 4px',
-                  backgroundColor: '#F7F7F5',
-                  borderRadius: '8px',
-                  border: '1px solid #E8E7E3',
-                }}
+      {!bookings && !loadError && <LoadingRows rows={4} />}
+
+      {bookings && days.length >0 && (
+        <div className="week-strip">
+         {days.map((day) =>{
+            const isSelected = selectedDay === day;
+            return (
+              <button
+                key={day}
+                type="button"
+                className={`week-day${isSelected ? ' is-selected' : ''}`}
+                onClick={() =>setSelectedDay(isSelected ? null : day)}
               >
-                <span style={{ font: '600 12px Inter, sans-serif', color: '#71706B', textTransform: 'uppercase' }}>
-                  {clock.formatDayDate(booking.startAt).split(',')[0]}
-                </span>
-                <span style={{ font: '700 16px Inter, sans-serif', color: '#167A68' }}>
-                  {clock.formatTime(booking.startAt)}
-                </span>
-              </div>
+               <div className="dow">{day.split(',')[0]}</div>
+               <div className="num" style={{ fontSize: 11, letterSpacing: 0 }}>{day.split(',')[1]?.trim() ?? ''}</div>
+               <div className="dot" />
+             </button>
+           );
+          })}
+        </div>
+     )}
 
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ font: '600 15px Inter, sans-serif', color: '#191918' }}>{booking.serviceTitle}</div>
-                <div style={{ font: '400 13.5px Inter, sans-serif', color: '#71706B', paddingTop: '2px' }}>
-                  Klien: <strong>{contactName}</strong>
+      {bookings && visible.length >0 && (
+        <>
+         <SectionHead label="Booking" count={`${visible.length}`} />
+         {visible.map(({ booking, contactName }) =>(
+            <button
+              key={booking.id}
+              type="button"
+              className="agenda-row"
+              onClick={() =>router.push(`/app/contacts/${booking.contactId}`)}
+            >
+             <div className="agenda-time">{clock.formatTime(booking.startAt)}</div>
+             <div className="agenda-body">
+               <div style={{ font: '700 14px/1.2 var(--font-sans)' }}>{contactName}</div>
+               <div className="row-meta" style={{ marginTop: 5 }}>
+                 {booking.serviceTitle} · {booking.locationType === 'HOME_VISIT' ? 'Home Visit' : 'On Site'}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '4px' }}>
-                  <span
-                    style={{
-                      font: '500 12px Inter, sans-serif',
-                      color: booking.paymentStatus === 'PAID' ? '#067647' : '#B54708',
-                      backgroundColor: booking.paymentStatus === 'PAID' ? '#ECFDF3' : '#FFFAEB',
-                      padding: '2px 8px',
-                      borderRadius: '4px',
-                    }}
-                  >
-                    {booking.paymentStatus === 'PAID' ? 'Lunas (PAID)' : 'DP belum dibayar'}
+               <div style={{ marginTop: 8 }}>
+                 <span className={`tag ${booking.paymentStatus === 'PAID' ? 'tag-neutral' : 'tag-accent'}`}>
+                   {booking.paymentStatus === 'PAID' ? 'Lunas (PAID)' : 'DP belum dibayar'}
                   </span>
-                  <span style={{ font: '400 12px Inter, sans-serif', color: '#9C9A94' }}>
-                    {booking.locationType === 'HOME_VISIT' ? 'Home Visit' : 'On Site'}
-                  </span>
-                </div>
-              </div>
+               </div>
+             </div>
+           </button>
+         ))}
+        </>
+     )}
 
-              <ChevronRightIcon size={16} color="#C6C4BE" />
-            </div>
-          ))
-        ) : (
-          <div style={{ padding: '32px 16px', textAlign: 'center', color: '#71706B' }}>Belum ada agenda booking.</div>
-        )}
-      </div>
-    </AppShell>
-  );
+      {bookings && visible.length === 0 && !loadError && (
+        <EmptyState
+          title="Belum ada agenda booking"
+          explanation="Booking dibuat dari halaman kontak atau pendaftaran publik."
+        />
+     )}
+      <div style={{ height: 24 }} />
+   </AppShell>
+ );
 }

@@ -19,7 +19,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
   const [error, setError] = useState<string | null>(null);
   const [createdEnrollmentId, setCreatedEnrollmentId] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) =>{
     e.preventDefault();
     if (!isRegistrationAllowed) return;
 
@@ -60,7 +60,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
 
   return (
     <section id="register" className="container" style={{ paddingTop: '64px', paddingBottom: '64px' }}>
-      <div
+     <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
@@ -68,21 +68,21 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
           alignItems: 'start',
         }}
       >
-        {/* Copy Column */}
+       {/* Copy Column */}
         <div>
-          <div
+         <div
             style={{
               fontSize: '12px',
               fontWeight: 820,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              color: 'var(--color-primary)',
+              color: 'var(--accent-dark)',
               marginBottom: '12px',
             }}
           >
-            Akses Ruang Belajar
+           Akses Ruang Belajar
           </div>
-          <h2
+         <h2
             style={{
               fontSize: 'clamp(26px, 3.5vw, 36px)',
               letterSpacing: '-0.04em',
@@ -91,59 +91,58 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
               lineHeight: 1.15,
             }}
           >
-            Mulai kenali dan optimalkan potensi genetik Anda sekarang.
+           Mulai kenali dan optimalkan potensi genetik Anda sekarang.
           </h2>
-          <p
+         <p
             style={{
               color: 'var(--color-text-muted)',
               fontSize: '15px',
               lineHeight: 1.65,
             }}
           >
-            Masukkan nama dan nomor WhatsApp aktif Anda. Materi pembelajaran langsung terbuka dan progres Anda tersimpan dengan rapi di aplikasi.
+           Masukkan nama dan nomor WhatsApp aktif Anda. Materi pembelajaran langsung terbuka dan progres Anda tersimpan dengan rapi di aplikasi.
           </p>
-        </div>
+       </div>
 
-        {/* Form Card Column */}
+       {/* Form Card Column */}
         <div
           style={{
             backgroundColor: '#FFFFFF',
             border: '1px solid var(--color-divider)',
-            borderRadius: '20px',
+            borderRadius: '0px',
             padding: '24px',
-            boxShadow: 'var(--shadow)',
           }}
         >
-          {createdEnrollmentId ? (
+         {createdEnrollmentId ? (
             <div
               style={{
                 border: '1px solid #cfded3',
                 backgroundColor: '#f4f8f5',
                 padding: '20px',
-                borderRadius: '14px',
+                borderRadius: '0px',
               }}
             >
-              <strong
+             <strong
                 style={{
                   display: 'block',
-                  color: 'var(--color-primary)',
+                  color: 'var(--accent-dark)',
                   marginBottom: '6px',
                   fontSize: '16px',
                 }}
               >
-                Pendaftaran Berhasil!
+               Pendaftaran Berhasil!
               </strong>
-              <p style={{ fontSize: '14px', color: '#55544f', marginBottom: '16px' }}>
-                Program telah ditambahkan ke ruang belajar Anda.
+             <p style={{ fontSize: '14px', color: '#55544f', marginBottom: '16px' }}>
+               Program telah ditambahkan ke ruang belajar Anda.
               </p>
-              <Link
+             <Link
                 href={`/learn/programs/${createdEnrollmentId}`}
                 className="touch-target-primary"
                 style={{
                   width: '100%',
                   minHeight: '48px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--color-primary)',
+                  borderRadius: '0px',
+                  backgroundColor: 'var(--accent-dark)',
                   color: '#FFFFFF',
                   fontWeight: 780,
                   fontSize: '14px',
@@ -153,15 +152,15 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                   justifyContent: 'center',
                 }}
               >
-                Mulai belajar sekarang →
+               Mulai belajar sekarang →
               </Link>
-            </div>
-          ) : isRegistrationAllowed ? (
+           </div>
+         ) : isRegistrationAllowed ? (
             <div>
-              <h3 style={{ fontSize: '20px', marginBottom: '6px', fontWeight: 750 }}>
-                Daftar & Buka Akses
+             <h3 style={{ fontSize: '20px', marginBottom: '6px', fontWeight: 750 }}>
+               Daftar & Buka Akses
               </h3>
-              <p
+             <p
                 style={{
                   fontSize: '13px',
                   color: 'var(--color-text-muted)',
@@ -169,28 +168,28 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                   marginBottom: '18px',
                 }}
               >
-                Program ini gratis untuk umum & calon peserta STIFIn. Materi langsung dapat diakses setelah mendaftar.
+               Program ini gratis untuk umum & calon peserta STIFIn. Materi langsung dapat diakses setelah mendaftar.
               </p>
 
-              {error && (
+             {error && (
                 <div
                   style={{
                     backgroundColor: '#FDF2F2',
                     border: '1px solid #F8B4B4',
                     color: '#9B1C1C',
                     padding: '10px 12px',
-                    borderRadius: '8px',
+                    borderRadius: '0px',
                     fontSize: '13px',
                     marginBottom: '14px',
                   }}
                 >
-                  {error}
+                 {error}
                 </div>
-              )}
+             )}
 
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div>
-                  <label
+               <div>
+                 <label
                     style={{
                       display: 'block',
                       fontSize: '12px',
@@ -198,28 +197,28 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                       marginBottom: '6px',
                     }}
                   >
-                    Nama lengkap
+                   Nama lengkap
                   </label>
-                  <input
+                 <input
                     required
                     type="text"
                     value={name}
-                    onChange={e => setName(e.target.value)}
+                    onChange={e =>setName(e.target.value)}
                     placeholder="Contoh: Budi Santoso"
                     style={{
                       width: '100%',
                       minHeight: '46px',
                       border: '1px solid var(--color-divider)',
-                      borderRadius: '11px',
+                      borderRadius: '0px',
                       padding: '0 14px',
                       fontSize: '14px',
                       outline: 'none',
                     }}
                   />
-                </div>
+               </div>
 
-                <div>
-                  <label
+               <div>
+                 <label
                     style={{
                       display: 'block',
                       fontSize: '12px',
@@ -227,35 +226,35 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                       marginBottom: '6px',
                     }}
                   >
-                    Nomor WhatsApp
+                   Nomor WhatsApp
                   </label>
-                  <input
+                 <input
                     required
                     type="tel"
                     inputMode="tel"
                     value={phone}
-                    onChange={e => setPhone(e.target.value)}
+                    onChange={e =>setPhone(e.target.value)}
                     placeholder="0812 3456 7890"
                     style={{
                       width: '100%',
                       minHeight: '46px',
                       border: '1px solid var(--color-divider)',
-                      borderRadius: '11px',
+                      borderRadius: '0px',
                       padding: '0 14px',
                       fontSize: '14px',
                       outline: 'none',
                     }}
                   />
-                </div>
+               </div>
 
-                <button
+               <button
                   type="submit"
                   disabled={loading}
                   style={{
                     width: '100%',
                     minHeight: '48px',
-                    borderRadius: '12px',
-                    backgroundColor: 'var(--color-primary)',
+                    borderRadius: '0px',
+                    backgroundColor: 'var(--accent-dark)',
                     color: '#FFFFFF',
                     fontWeight: 780,
                     fontSize: '14px',
@@ -265,31 +264,31 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                     opacity: loading ? 0.7 : 1,
                   }}
                 >
-                  {loading ? 'Memproses pendaftaran...' : 'Daftar & mulai belajar'}
+                 {loading ? 'Memproses pendaftaran...' : 'Daftar & mulai belajar'}
                 </button>
 
-                <div style={{ fontSize: '11px', color: '#929087', lineHeight: 1.5, marginTop: '8px' }}>
-                  Dengan mendaftar, Anda menyetujui penggunaan data untuk akses program dan komunikasi terkait pembelajaran.
+               <div style={{ fontSize: '11px', color: '#929087', lineHeight: 1.5, marginTop: '8px' }}>
+                 Dengan mendaftar, Anda menyetujui penggunaan data untuk akses program dan komunikasi terkait pembelajaran.
                 </div>
-              </form>
-            </div>
-          ) : (
+             </form>
+           </div>
+         ) : (
             <div
               style={{
                 backgroundColor: 'var(--color-surface-muted)',
                 padding: '20px',
-                borderRadius: '12px',
+                borderRadius: '0px',
                 border: '1px solid var(--color-divider)',
               }}
             >
-              <h3 style={{ fontSize: '18px', marginBottom: '8px', fontWeight: 750 }}>
-                {program.programType === 'aftersales' ? 'Khusus Peserta Tes STIFIn' : 'Program Berbayar'}
+             <h3 style={{ fontSize: '18px', marginBottom: '8px', fontWeight: 750 }}>
+               {program.programType === 'aftersales' ? 'Khusus Peserta Tes STIFIn' : 'Program Berbayar'}
               </h3>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-                {registrationStatusNotice ||
+             <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+               {registrationStatusNotice ||
                   'Pendaftaran mandiri secara umum tidak tersedia untuk materi ini.'}
               </p>
-              {detail.promoter.whatsappPhoneE164 ? (
+             {detail.promoter.whatsappPhoneE164 ? (
                 <a
                   href={`https://wa.me/${detail.promoter.whatsappPhoneE164.replace(/\+/g, '')}?text=Saya%20ingin%20tanya%20akses%20program%20ini`}
                   target="_blank"
@@ -300,8 +299,8 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                     justifyContent: 'center',
                     width: '100%',
                     minHeight: '44px',
-                    borderRadius: '10px',
-                    backgroundColor: 'var(--color-primary)',
+                    borderRadius: '0px',
+                    backgroundColor: 'var(--accent-dark)',
                     color: '#FFFFFF',
                     fontWeight: 700,
                     fontSize: '13px',
@@ -309,9 +308,9 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                     marginTop: '12px',
                   }}
                 >
-                  Hubungi Promotor via WhatsApp
+                 Hubungi Promotor via WhatsApp
                 </a>
-              ) : (
+             ) : (
                 <div
                   style={{
                     display: 'inline-flex',
@@ -319,7 +318,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                     justifyContent: 'center',
                     width: '100%',
                     minHeight: '44px',
-                    borderRadius: '10px',
+                    borderRadius: '0px',
                     backgroundColor: 'var(--color-surface)',
                     border: '1px solid var(--color-divider)',
                     color: 'var(--color-text-main)',
@@ -328,13 +327,13 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                     marginTop: '12px',
                   }}
                 >
-                  Hubungi Promotor untuk Akses
+                 Hubungi Promotor untuk Akses
                 </div>
-              )}
+             )}
             </div>
-          )}
+         )}
         </div>
-      </div>
-    </section>
-  );
+     </div>
+   </section>
+ );
 }

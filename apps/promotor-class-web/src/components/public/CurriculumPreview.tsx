@@ -23,26 +23,26 @@ export function CurriculumPreview({ modules }: CurriculumPreviewProps) {
         gap: '40px',
       }}
     >
-      <div>
-        <div
+     <div>
+       <div
           style={{
             fontSize: '12px',
             fontWeight: 820,
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
-            color: 'var(--color-primary)',
+            color: 'var(--accent-dark)',
             marginBottom: '12px',
           }}
         >
-          Isi program
+         Isi program
         </div>
-        <h2 style={{ fontSize: '28px', letterSpacing: '-0.03em', fontWeight: 750, margin: 0 }}>
-          Ringkas, bertahap, dan mudah diikuti
+       <h2 style={{ fontSize: '28px', letterSpacing: '-0.03em', fontWeight: 750, margin: 0 }}>
+         Ringkas, bertahap, dan mudah diikuti
         </h2>
-      </div>
+     </div>
 
-      <div>
-        {modules.map((mod, idx) => {
+     <div>
+       {modules.map((mod, idx) =>{
           const lessonCount = mod.lessons?.length || 0;
           return (
             <div
@@ -52,15 +52,15 @@ export function CurriculumPreview({ modules }: CurriculumPreviewProps) {
                 padding: '18px 0',
               }}
             >
-              <div style={{ fontWeight: 800, fontSize: '16px', color: '#191918' }}>
-                {String(idx + 1).padStart(2, '0')} · {mod.title}
+             <div style={{ fontWeight: 800, fontSize: '16px', color: '#191918' }}>
+               {String(idx + 1).padStart(2, '0')} · {mod.title}
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-                {lessonCount} materi
+             <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+               {lessonCount} materi
               </div>
 
-              <div style={{ marginTop: '14px', display: 'grid', gap: '8px' }}>
-                {mod.lessons.map(les => {
+             <div style={{ marginTop: '14px', display: 'grid', gap: '8px' }}>
+               {mod.lessons.map(les =>{
                   let formatLabel = 'Bacaan';
                   if (les.hasVideo && les.hasReflection) {
                     formatLabel = 'Video + Refleksi';
@@ -83,24 +83,24 @@ export function CurriculumPreview({ modules }: CurriculumPreviewProps) {
                         borderBottom: '1px dashed var(--color-divider-subtle)',
                       }}
                     >
-                      <span style={{ fontWeight: 550 }}>{les.title}</span>
-                      <span
+                     <span style={{ fontWeight: 550 }}>{les.title}</span>
+                     <span
                         style={{
                           fontSize: '12px',
                           color: 'var(--color-text-muted)',
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        {formatLabel}
+                       {formatLabel}
                       </span>
-                    </div>
-                  );
+                   </div>
+                 );
                 })}
               </div>
-            </div>
-          );
+           </div>
+         );
         })}
       </div>
-    </section>
-  );
+   </section>
+ );
 }

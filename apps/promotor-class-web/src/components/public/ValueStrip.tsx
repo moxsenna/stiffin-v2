@@ -23,7 +23,7 @@ export function ValueStrip() {
 
   return (
     <section className="container" style={{ paddingTop: '42px', paddingBottom: '42px' }}>
-      <div
+     <div
         style={{
           borderTop: '1px solid var(--color-divider)',
           borderBottom: '1px solid var(--color-divider)',
@@ -33,25 +33,25 @@ export function ValueStrip() {
           padding: '12px 0',
         }}
       >
-        {items.map((item) => (
+       {items.map((item) =>(
           <div
             key={item.num}
             style={{
               padding: '16px 12px',
             }}
           >
-            <div
+           <div
               style={{
-                color: 'var(--color-primary)',
+                color: 'var(--accent-dark)',
                 fontSize: '12px',
                 fontWeight: 850,
                 marginBottom: '10px',
               }}
             >
-              {item.num}
+             {item.num}
             </div>
-            <h3 style={{ fontSize: '16px', marginBottom: '6px', fontWeight: 750 }}>{item.title}</h3>
-            <p
+           <h3 style={{ fontSize: '16px', marginBottom: '6px', fontWeight: 750 }}>{item.title}</h3>
+           <p
               style={{
                 fontSize: '13px',
                 lineHeight: 1.55,
@@ -59,11 +59,11 @@ export function ValueStrip() {
                 margin: 0,
               }}
             >
-              {item.desc}
+             {item.desc}
             </p>
-          </div>
-        ))}
+         </div>
+       ))}
       </div>
-    </section>
-  );
+   </section>
+ );
 }

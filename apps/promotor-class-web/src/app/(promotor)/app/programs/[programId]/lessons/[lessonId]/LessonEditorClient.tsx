@@ -29,9 +29,9 @@ export function LessonEditorClient() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() => {
+  useEffect(() =>{
     getProgramByIdQuery(programId)
-      .then((prog: Program | undefined) => {
+      .then((prog: Program | undefined) =>{
         if (!prog) {
           setErrorMessage('Program tidak ditemukan.');
           return;
@@ -61,16 +61,16 @@ export function LessonEditorClient() {
           setErrorMessage('Pelajaran tidak ditemukan dalam program ini.');
         }
       })
-      .catch((err) => {
+      .catch((err) =>{
         console.error('Error loading lesson:', err);
         setErrorMessage('Gagal memuat data pelajaran.');
       })
-      .finally(() => {
+      .finally(() =>{
         setInitialLoading(false);
       });
   }, [programId, lessonId]);
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) =>{
     e.preventDefault();
     setErrorMessage(null);
 
@@ -127,36 +127,36 @@ export function LessonEditorClient() {
   if (initialLoading) {
     return (
       <PromotorShell>
-        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-          Memuat data editor pelajaran...
+       <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+         Memuat data editor pelajaran...
         </div>
-      </PromotorShell>
-    );
+     </PromotorShell>
+   );
   }
 
   return (
     <PromotorShell>
-      <div style={{ padding: '20px 16px', maxWidth: '760px', margin: '0 auto' }}>
-        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '14px' }}>
-          <Link href={`/app/programs/${programId}`} style={{ textDecoration: 'none', color: 'var(--color-text-muted)', fontWeight: 600 }}>
-            ← Kembali ke Kurikulum Program
+     <div style={{ padding: '20px 16px', maxWidth: '760px', margin: '0 auto' }}>
+       <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '14px' }}>
+         <Link href={`/app/programs/${programId}`} style={{ textDecoration: 'none', color: 'var(--color-text-muted)', fontWeight: 600 }}>
+           ← Kembali ke Kurikulum Program
           </Link>
-        </div>
+       </div>
 
-        <h1 style={{ fontSize: '22px', fontWeight: 750, marginBottom: '6px' }}>
-          Editor Materi Pelajaran
+       <h1 style={{ fontSize: '22px', fontWeight: 750, marginBottom: '6px' }}>
+         Editor Materi Pelajaran
         </h1>
-        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
-          Atur konten materi, video, lembar refleksi pengunci, dan arahan aksi untuk peserta.
+       <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
+         Atur konten materi, video, lembar refleksi pengunci, dan arahan aksi untuk peserta.
         </div>
 
-        {errorMessage && (
+       {errorMessage && (
           <div
             role="alert"
             style={{
               backgroundColor: '#FEF2F2',
               border: '1px solid #F87171',
-              borderRadius: '12px',
+              borderRadius: '0px',
               padding: '14px 16px',
               marginBottom: '20px',
               color: '#991B1B',
@@ -164,10 +164,10 @@ export function LessonEditorClient() {
               lineHeight: 1.5,
             }}
           >
-            <div style={{ fontWeight: 750, marginBottom: '4px' }}>⚠️ Gagal Menyimpan</div>
-            <div>{errorMessage}</div>
-          </div>
-        )}
+           <div style={{ fontWeight: 750, marginBottom: '4px' }}>⚠ Gagal Menyimpan</div>
+           <div>{errorMessage}</div>
+         </div>
+       )}
 
         <form
           onSubmit={handleSave}
@@ -177,181 +177,181 @@ export function LessonEditorClient() {
             gap: '18px',
             backgroundColor: 'var(--color-surface)',
             padding: '24px',
-            borderRadius: '16px',
+            borderRadius: '0px',
             border: '1px solid var(--color-divider)',
           }}
         >
-          {/* Judul Pelajaran */}
+         {/* Judul Pelajaran */}
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
-              Judul Pelajaran *
+           <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+             Judul Pelajaran *
             </label>
-            <input
+           <input
               type="text"
               required
               data-testid="lesson-title-input"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) =>setTitle(e.target.value)}
               placeholder="Contoh: Mengenali Cara Kerja Otak Kanan"
               style={{
                 width: '100%',
                 padding: '10px 14px',
-                borderRadius: '10px',
+                borderRadius: '0px',
                 border: '1px solid var(--color-divider)',
                 fontSize: '14px',
                 outline: 'none',
               }}
             />
-          </div>
+         </div>
 
-          {/* Video URL */}
+         {/* Video URL */}
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
-              Tautan Video YouTube (Unlisted / Publik)
+           <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+             Tautan Video YouTube (Unlisted / Publik)
             </label>
-            <input
+           <input
               type="url"
               value={videoYoutubeUrl}
-              onChange={(e) => setVideoYoutubeUrl(e.target.value)}
+              onChange={(e) =>setVideoYoutubeUrl(e.target.value)}
               placeholder="https://www.youtube.com/watch?v=... atau https://youtu.be/..."
               style={{
                 width: '100%',
                 padding: '10px 14px',
-                borderRadius: '10px',
+                borderRadius: '0px',
                 border: '1px solid var(--color-divider)',
                 fontSize: '14px',
                 outline: 'none',
               }}
             />
-            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-              Dukungan native untuk YouTube unlisted / publik. Kosongkan jika materi berbasis teks murni.
+           <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+             Dukungan native untuk YouTube unlisted / publik. Kosongkan jika materi berbasis teks murni.
             </div>
-          </div>
+         </div>
 
-          {/* Materi Teks */}
+         {/* Materi Teks */}
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
-              Materi Teks / Panduan Belajar
+           <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+             Materi Teks / Panduan Belajar
             </label>
-            <textarea
+           <textarea
               rows={7}
               value={textContent}
-              onChange={(e) => setTextContent(e.target.value)}
+              onChange={(e) =>setTextContent(e.target.value)}
               placeholder="Tuliskan uraian materi, rangkuman, atau poin-poin pembelajaran untuk peserta..."
               style={{
                 width: '100%',
                 padding: '12px 14px',
-                borderRadius: '10px',
+                borderRadius: '0px',
                 border: '1px solid var(--color-divider)',
                 fontSize: '14px',
                 lineHeight: 1.6,
                 outline: 'none',
               }}
             />
-          </div>
+         </div>
 
-          {/* Reflection Setup */}
+         {/* Reflection Setup */}
           <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '16px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
-              <input
+           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+             <input
                 type="checkbox"
                 checked={hasReflection}
-                onChange={(e) => setHasReflection(e.target.checked)}
+                onChange={(e) =>setHasReflection(e.target.checked)}
                 style={{ width: '16px', height: '16px' }}
               />
-              <span>Wajibkan Lembar Refleksi (Pengunci Pelajaran)</span>
-            </label>
+             <span>Wajibkan Lembar Refleksi (Pengunci Pelajaran)</span>
+           </label>
 
-            {hasReflection && (
+           {hasReflection && (
               <div style={{ marginTop: '10px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
-                  Pertanyaan Panduan Refleksi
+               <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
+                 Pertanyaan Panduan Refleksi
                 </label>
-                <input
+               <input
                   type="text"
                   value={reflectionPrompt}
-                  onChange={(e) => setReflectionPrompt(e.target.value)}
+                  onChange={(e) =>setReflectionPrompt(e.target.value)}
                   placeholder="Contoh: Tuliskan 1 hal yang paling membuka wawasan Anda..."
                   style={{
                     width: '100%',
                     padding: '10px 14px',
-                    borderRadius: '8px',
+                    borderRadius: '0px',
                     border: '1px solid var(--color-divider)',
                     fontSize: '13px',
                     outline: 'none',
                   }}
                 />
-              </div>
-            )}
+             </div>
+           )}
           </div>
 
-          {/* CTA Setup */}
+         {/* CTA Setup */}
           <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '16px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
-              <input
+           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+             <input
                 type="checkbox"
                 checked={hasCta}
-                onChange={(e) => setHasCta(e.target.checked)}
+                onChange={(e) =>setHasCta(e.target.checked)}
                 style={{ width: '16px', height: '16px' }}
               />
-              <span>Tambahkan Tombol Aksi / Call-to-Action (CTA) di Akhir Materi</span>
-            </label>
+             <span>Tambahkan Tombol Aksi / Call-to-Action (CTA) di Akhir Materi</span>
+           </label>
 
-            {hasCta && (
+           {hasCta && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
-                    Label Tombol CTA
+               <div>
+                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
+                   Label Tombol CTA
                   </label>
-                  <input
+                 <input
                     type="text"
                     value={ctaLabel}
-                    onChange={(e) => setCtaLabel(e.target.value)}
+                    onChange={(e) =>setCtaLabel(e.target.value)}
                     placeholder="Contoh: Konsultasi via WhatsApp"
                     style={{
                       width: '100%',
                       padding: '8px 12px',
-                      borderRadius: '8px',
+                      borderRadius: '0px',
                       border: '1px solid var(--color-divider)',
                       fontSize: '13px',
                       outline: 'none',
                     }}
                   />
-                </div>
+               </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
-                    URL Tujuan (e.g. WhatsApp Link / External Page)
+               <div>
+                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
+                   URL Tujuan (e.g. WhatsApp Link / External Page)
                   </label>
-                  <input
+                 <input
                     type="url"
                     value={ctaUrl}
-                    onChange={(e) => setCtaUrl(e.target.value)}
+                    onChange={(e) =>setCtaUrl(e.target.value)}
                     placeholder="https://wa.me/6281234567890"
                     style={{
                       width: '100%',
                       padding: '8px 12px',
-                      borderRadius: '8px',
+                      borderRadius: '0px',
                       border: '1px solid var(--color-divider)',
                       fontSize: '13px',
                       outline: 'none',
                     }}
                   />
-                </div>
-              </div>
-            )}
+               </div>
+             </div>
+           )}
           </div>
 
-          <button
+         <button
             type="submit"
             disabled={loading}
             className="touch-target-primary"
             style={{
-              backgroundColor: 'var(--color-primary)',
+              backgroundColor: 'var(--accent-dark)',
               color: '#FFF',
               fontWeight: 780,
               fontSize: '14px',
-              borderRadius: '12px',
+              borderRadius: '0px',
               marginTop: '10px',
               border: 0,
               cursor: loading ? 'not-allowed' : 'pointer',
@@ -362,17 +362,17 @@ export function LessonEditorClient() {
               gap: '8px',
             }}
           >
-            {loading ? (
+           {loading ? (
               <>
-                <span>⏳</span>
-                <span>Menyimpan Perubahan Pelajaran...</span>
-              </>
-            ) : (
+               <span>⏳</span>
+               <span>Menyimpan Perubahan Pelajaran...</span>
+             </>
+           ) : (
               <span>Simpan Pelajaran & Perbarui Kurikulum</span>
-            )}
+           )}
           </button>
-        </form>
-      </div>
-    </PromotorShell>
-  );
+       </form>
+     </div>
+   </PromotorShell>
+ );
 }

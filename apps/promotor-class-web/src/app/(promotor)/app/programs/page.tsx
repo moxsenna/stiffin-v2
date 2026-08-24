@@ -3,241 +3,108 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PromotorShell } from '@/components/layout/PromotorShell';
+import { PageHeader, SectionHead, EmptyState, ErrorState, LoadingRows } from '@/components/ui';
 import { getProgramsQuery } from '@/modules/programs/queries';
 import { getPublicStorefrontRepository } from '@/adapters';
 import { Program } from '@promotor/contracts';
 
 export default function ProgramsPage() {
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const [programs, setPrograms] = useState<Program[] | null>(null);
   const [workspaceSlug, setWorkspaceSlug] = useState('demo');
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    getProgramsQuery().then(data => {
+  const loadData = React.useCallback(async () =>{
+    setLoadError(null);
+    try {
+      const data = await getProgramsQuery();
       if (data) setPrograms(data);
-    });
-
-    getPublicStorefrontRepository().getStorefrontProfile().then(profile => {
+      else setPrograms([]);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Tidak dapat memuat program.');
+    }
+    getPublicStorefrontRepository().getStorefrontProfile().then(profile =>{
       if (profile && profile.workspaceSlug) setWorkspaceSlug(profile.workspaceSlug);
-    }).catch(() => {});
+    }).catch(() =>{});
   }, []);
+
+  useEffect(() =>{
+    loadData();
+  }, [loadData]);
 
   return (
     <PromotorShell>
-      <div style={{ padding: '20px 16px', maxWidth: '840px', margin: '0 auto' }}>
-        {/* Top Page Header */}
-        <div style={{ marginBottom: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-            <div>
-              <h1 style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.025em', marginBottom: '2px' }}>
-                Daftar Program & E-Course
-              </h1>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: 0 }}>
-                Kelola materi edukasi, program gratis, dan kelas berbayar Anda
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <Link
-                href="/app/settings"
-                style={{
-                  fontSize: '13px',
-                  fontWeight: 750,
-                  color: 'var(--color-text-main)',
-                  backgroundColor: 'var(--color-surface)',
-                  border: '1px solid var(--color-divider)',
-                  padding: '8px 14px',
-                  borderRadius: '12px',
-                  textDecoration: 'none',
-                  whiteSpace: 'nowrap',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                ⚙️ Pengaturan Storefront
-              </Link>
-
-              <Link
-                href={`/p/${workspaceSlug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  fontSize: '13px',
-                  fontWeight: 750,
-                  color: 'var(--color-primary)',
-                  backgroundColor: 'var(--color-primary-light)',
-                  padding: '8px 14px',
-                  borderRadius: '12px',
-                  textDecoration: 'none',
-                  whiteSpace: 'nowrap',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                Preview Storefront ↗
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', maxWidth: '480px' }}>
-            Program gratis (lead magnet), khusus peserta tes, dan berbayar ({programs.length} program aktif).
-          </div>
-
-          <Link
-            href="/app/programs/new"
-            className="touch-target-primary"
-            style={{
-              padding: '0 20px',
-              backgroundColor: 'var(--color-primary)',
-              color: '#FFF',
-              borderRadius: '12px',
-              fontWeight: 780,
-              fontSize: '13.5px',
-              textDecoration: 'none',
-              whiteSpace: 'nowrap',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              boxShadow: 'var(--shadow-sm)',
-            }}
-          >
-            + Buat Program Baru
+     <PageHeader
+        kicker="PromotorClass"
+        title="Program"
+        sub={programs ? `${programs.length} program · materi edukasi, gratis & berbayar` : 'Memuat program...'}
+        action={
+          <Link href="/app/programs/new" className="btn btn-primary btn-sm" style={{ alignSelf: 'center', whiteSpace: 'nowrap' }}>
+           + Buat Program Baru
           </Link>
-        </div>
+       }
+      />
 
-        {/* Program Items List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {programs.length === 0 ? (
-            <div
-              style={{
-                padding: '32px 16px',
-                textAlign: 'center',
-                backgroundColor: 'var(--color-surface)',
-                borderRadius: '16px',
-                border: '1px dashed var(--color-divider)',
-              }}
-            >
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>📖</div>
-              <h3 style={{ fontSize: '16px', fontWeight: 750, marginBottom: '4px' }}>Belum ada program</h3>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
-                Buat program pertama Anda untuk mulai menerima peserta di storefront.
-              </p>
-              <Link
-                href="/app/programs/new"
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: 'var(--color-primary)',
-                  color: '#FFF',
-                  borderRadius: '10px',
-                  fontWeight: 750,
-                  fontSize: '13px',
-                  textDecoration: 'none',
-                  display: 'inline-block',
-                }}
-              >
-                + Buat Program Pertama Anda
-              </Link>
-            </div>
-          ) : (
-            programs.map(prog => (
-              <div
-                key={prog.id}
-                style={{
-                  backgroundColor: 'var(--color-surface)',
-                  borderRadius: '16px',
-                  border: '1px solid var(--color-divider)',
-                  padding: '20px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '14px',
-                  boxShadow: 'var(--shadow-sm)',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '16px', fontWeight: 780 }}>{prog.title}</span>
-                      <span
-                        style={{
-                          fontSize: '11px',
-                          padding: '2px 8px',
-                          borderRadius: '6px',
-                          backgroundColor: prog.status === 'published' ? 'var(--color-status-success-bg)' : '#F0F0ED',
-                          color: prog.status === 'published' ? 'var(--color-status-success)' : 'var(--color-text-muted)',
-                          fontWeight: 750,
-                        }}
-                      >
-                        {prog.status === 'published' ? 'Terbit di Storefront' : 'Draf'}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: '11px',
-                          padding: '2px 8px',
-                          borderRadius: '6px',
-                          backgroundColor: prog.programType === 'lead_magnet' ? '#eef5f1' : prog.programType === 'aftersales' ? '#FFF8EB' : '#eef2ff',
-                          color: prog.programType === 'lead_magnet' ? '#286344' : prog.programType === 'aftersales' ? '#C07000' : '#3730a3',
-                          fontWeight: 750,
-                        }}
-                      >
-                        {prog.programType === 'lead_magnet' ? 'Gratis (Lead Magnet)' : prog.programType === 'aftersales' ? 'Khusus Peserta Tes' : 'Berbayar'}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
-                      {prog.subtitle || prog.description}
-                    </div>
-                  </div>
+     {loadError && <ErrorState title="Gagal memuat program" detail={loadError} onRetry={() =>loadData()} />}
+
+      {!programs && !loadError && (
+        <>
+         <SectionHead label="Daftar program" />
+         <LoadingRows rows={4} />
+       </>
+     )}
+
+      {programs && programs.length === 0 && !loadError && (
+        <EmptyState
+          title="Belum ada program"
+          explanation="Buat program pertama Anda untuk mulai menerima peserta di storefront."
+          action={
+            <Link href="/app/programs/new" className="btn btn-primary btn-sm">
+             + Buat Program Pertama Anda
+            </Link>
+         }
+        />
+     )}
+
+      {programs && programs.length >0 && (
+        <>
+         <SectionHead label="Daftar program" count={`${programs.length}`} />
+         {programs.map(prog =>(
+            <div key={prog.id} style={{ padding: '15px 18px', borderBottom: '1px solid var(--line)' }}>
+             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline' }}>
+               <span style={{ font: '700 15px/1.25 var(--font-sans)', letterSpacing: '-0.01em', minWidth: 0 }}>{prog.title}</span>
+               <span className={`tag ${prog.status === 'published' ? 'tag-neutral' : 'tag-outline'}`} style={{ flex: 'none' }}>
+                 {prog.status === 'published' ? 'Terbit di Storefront' : 'Draf'}
+                </span>
+             </div>
+
+             {(prog.subtitle || prog.description) && (
+                <div style={{ marginTop: 5, font: '400 12px/1.45 var(--font-sans)', color: 'var(--muted-strong)' }}>
+                 {prog.subtitle || prog.description}
                 </div>
+             )}
 
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    paddingTop: '12px',
-                    borderTop: '1px solid var(--color-divider)',
-                    flexWrap: 'wrap',
-                    gap: '10px',
-                  }}
-                >
-                  <div style={{ fontSize: '12px', color: 'var(--color-text-subtle)', fontWeight: 600 }}>
-                    {prog.modules.length} Bab · {prog.modules.reduce((acc, m) => acc + m.lessons.length, 0)} Sesi Pelajaran
-                  </div>
+              <div style={{ marginTop: 8, display: 'flex', gap: 14, flexWrap: 'wrap', font: '500 11px/1 var(--font-sans)', color: 'var(--muted)' }}>
+               <span>{prog.programType === 'lead_magnet' ? 'Gratis (Lead Magnet)' : prog.programType === 'aftersales' ? 'Khusus Peserta Tes' : 'Berbayar'}</span>
+               <span>{prog.modules.length} bab</span>
+               <span>{prog.modules.reduce((acc, m) =>acc + m.lessons.length, 0)} pelajaran</span>
+             </div>
 
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <Link
-                      href={`/p/${workspaceSlug}/${prog.programSlug}`}
-                      target="_blank"
-                      style={{
-                        fontSize: '13px',
-                        color: 'var(--color-text-muted)',
-                        textDecoration: 'none',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Lihat Landing ↗
-                    </Link>
-                    <Link
-                      href={`/app/programs/${prog.id}`}
-                      style={{
-                        fontSize: '13px',
-                        fontWeight: 780,
-                        color: 'var(--color-primary)',
-                        textDecoration: 'none',
-                      }}
-                    >
-                      Kelola Kurikulum & Materi →
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </PromotorShell>
-  );
+             <div style={{ marginTop: 12, display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+               <Link href={`/app/programs/${prog.id}`} className="btn btn-secondary btn-sm">
+                 Kelola Kurikulum & Materi
+                </Link>
+               <Link href={`/p/${workspaceSlug}/${prog.programSlug}`} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
+                 Lihat Landing ↗
+                </Link>
+             </div>
+           </div>
+         ))}
+          <div style={{ padding: 18 }}>
+           <Link href="/app/settings" className="btn btn-secondary btn-block">Pengaturan Storefront</Link>
+         </div>
+       </>
+     )}
+      <div style={{ height: 24 }} />
+   </PromotorShell>
+ );
 }

@@ -26,17 +26,17 @@ export function StorefrontClient({ profile: initialProfile, catalog: initialCata
   const [profile, setProfile] = useState<PublicWorkspaceProfile>(initialProfile);
   const [catalog, setCatalog] = useState<PublicProgramCatalogItem[]>(initialCatalog);
 
-  useEffect(() => {
+  useEffect(() =>{
     if (initialProfile.workspaceSlug) {
       setLastPublicWorkspaceSlug(initialProfile.workspaceSlug);
 
       // Re-fetch client state from LocalStorage if customized
-      getPublicWorkspaceQuery(initialProfile.workspaceSlug).then(p => {
+      getPublicWorkspaceQuery(initialProfile.workspaceSlug).then(p =>{
         if (p) setProfile(p);
       });
 
-      listPublicProgramsQuery(initialProfile.workspaceSlug).then(c => {
-        if (c && c.length > 0) setCatalog(c);
+      listPublicProgramsQuery(initialProfile.workspaceSlug).then(c =>{
+        if (c && c.length >0) setCatalog(c);
       });
     }
 
@@ -45,7 +45,7 @@ export function StorefrontClient({ profile: initialProfile, catalog: initialCata
     }
   }, [initialProfile.workspaceSlug, refCode]);
 
-  const featuredItem = catalog.find(item => item.presentation.featured) || catalog[0];
+  const featuredItem = catalog.find(item =>item.presentation.featured) || catalog[0];
 
   return (
     <div
@@ -56,22 +56,22 @@ export function StorefrontClient({ profile: initialProfile, catalog: initialCata
         color: 'var(--color-text-main)',
       }}
     >
-      <PublicHeader
+     <PublicHeader
         workspaceSlug={profile.workspaceSlug}
         displayName={profile.displayName}
         tagline={profile.tagline}
       />
 
-      <main>
-        <WorkspaceHero profile={profile} featuredItem={featuredItem} />
-        <ValueStrip />
-        <ProgramCatalog items={catalog} workspaceSlug={profile.workspaceSlug} />
-        <PromoterProfile profile={profile} />
-      </main>
+     <main>
+       <WorkspaceHero profile={profile} featuredItem={featuredItem} />
+       <ValueStrip />
+       <ProgramCatalog items={catalog} workspaceSlug={profile.workspaceSlug} />
+       <PromoterProfile profile={profile} />
+     </main>
 
-      <PublicFooter displayName={profile.displayName.split(' ')[0]} />
+     <PublicFooter displayName={profile.displayName.split(' ')[0]} />
 
-      <LearnerTabBar workspaceSlug={profile.workspaceSlug} />
-    </div>
-  );
+     <LearnerTabBar workspaceSlug={profile.workspaceSlug} />
+   </div>
+ );
 }

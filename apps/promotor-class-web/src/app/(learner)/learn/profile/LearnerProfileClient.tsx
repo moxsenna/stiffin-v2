@@ -23,7 +23,7 @@ export function LearnerProfileClient() {
   const [programsMap, setProgramsMap] = useState<Map<string, Program>>(new Map());
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  useEffect(() =>{
     const activeSession = getActiveLearnerSession();
     setSession(activeSession);
 
@@ -36,17 +36,17 @@ export function LearnerProfileClient() {
       getContactByIdQuery(activeSession.contactId),
       getEnrollmentsByContactIdQuery(activeSession.contactId),
       getProgramsQuery(),
-    ]).then(([cnt, enrList, progList]) => {
+    ]).then(([cnt, enrList, progList]) =>{
       setContact(cnt || null);
       setEnrollments(enrList);
       const pMap = new Map<string, Program>();
-      progList.forEach(p => pMap.set(p.id, p));
+      progList.forEach(p =>pMap.set(p.id, p));
       setProgramsMap(pMap);
       setLoading(false);
     });
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = () =>{
     clearActiveLearnerSession();
     const targetSlug = resolveWorkspaceSlug();
     if (targetSlug) {
@@ -56,17 +56,17 @@ export function LearnerProfileClient() {
     }
   };
 
-  const completedCount = enrollments.filter(e => e.status === 'selesai').length;
-  const inProgressCount = enrollments.filter(e => e.status !== 'selesai').length;
+  const completedCount = enrollments.filter(e =>e.status === 'selesai').length;
+  const inProgressCount = enrollments.filter(e =>e.status !== 'selesai').length;
 
   if (loading) {
     return (
       <LearnerShell title="Profil Saya">
-        <div style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-          Memuat profil...
+       <div style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+         Memuat profil...
         </div>
-      </LearnerShell>
-    );
+     </LearnerShell>
+   );
   }
 
   if (!session || !contact) {
@@ -74,12 +74,12 @@ export function LearnerProfileClient() {
 
     return (
       <LearnerShell title="Profil Saya">
-        <div style={{ padding: '40px 16px', textAlign: 'center' }}>
-          <div
+       <div style={{ padding: '40px 16px', textAlign: 'center' }}>
+         <div
             style={{
               width: '64px',
               height: '64px',
-              borderRadius: '50%',
+              borderRadius: '0px',
               backgroundColor: 'var(--color-surface-hover)',
               display: 'inline-flex',
               alignItems: 'center',
@@ -88,19 +88,19 @@ export function LearnerProfileClient() {
               color: 'var(--color-text-muted)',
             }}
           >
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M20 21a8 8 0 0 0-16 0" />
-            </svg>
-          </div>
-          <h2 style={{ fontSize: '18px', fontWeight: 750, marginBottom: '8px' }}>
-            Sesi Belajar Belum Aktif
+           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+             <circle cx="12" cy="8" r="4" />
+             <path d="M20 21a8 8 0 0 0-16 0" />
+           </svg>
+         </div>
+         <h2 style={{ fontSize: '18px', fontWeight: 750, marginBottom: '8px' }}>
+           Sesi Belajar Belum Aktif
           </h2>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '24px', lineHeight: 1.6 }}>
-            Halaman ini menyimpan profil dan riwayat program belajar Anda. Jika Anda calon peserta atau baru pertama kali datang, silakan buka Katalog Program untuk memilih e-course gratis atau program pendampingan STIFIn.
+         <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '24px', lineHeight: 1.6 }}>
+           Halaman ini menyimpan profil dan riwayat program belajar Anda. Jika Anda calon peserta atau baru pertama kali datang, silakan buka Katalog Program untuk memilih e-course gratis atau program pendampingan STIFIn.
           </p>
 
-          {targetWorkspace ? (
+         {targetWorkspace ? (
             <Link
               href={`/p/${targetWorkspace}/catalog`}
               className="touch-target-primary"
@@ -109,33 +109,33 @@ export function LearnerProfileClient() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: '12px 24px',
-                backgroundColor: 'var(--color-primary)',
+                backgroundColor: 'var(--accent-dark)',
                 color: '#FFF',
                 fontWeight: 700,
-                borderRadius: '12px',
+                borderRadius: '0px',
                 textDecoration: 'none',
               }}
             >
-              Lihat Katalog Program →
+             Lihat Katalog Program →
             </Link>
-          ) : (
+         ) : (
             <div style={{ fontSize: '13px', color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>
-              Buka kembali tautan Ruang Belajar dari promotor Anda.
+             Buka kembali tautan Ruang Belajar dari promotor Anda.
             </div>
-          )}
+         )}
         </div>
-      </LearnerShell>
-    );
+     </LearnerShell>
+   );
   }
 
   return (
     <LearnerShell title="Profil Saya" workspaceSlug={session.workspaceSlug}>
-      <div style={{ padding: '20px 16px' }}>
-        {/* Profile Info Card */}
+     <div style={{ padding: '20px 16px' }}>
+       {/* Profile Info Card */}
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
-            borderRadius: '16px',
+            borderRadius: '0px',
             border: '1px solid var(--color-divider)',
             padding: '24px',
             marginBottom: '20px',
@@ -144,13 +144,13 @@ export function LearnerProfileClient() {
             gap: '16px',
           }}
         >
-          <div
+         <div
             style={{
               width: '56px',
               height: '56px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--color-primary-light)',
-              color: 'var(--color-primary)',
+              borderRadius: '0px',
+              backgroundColor: '#ffe0d9',
+              color: 'var(--accent-dark)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -159,22 +159,22 @@ export function LearnerProfileClient() {
               flexShrink: 0,
             }}
           >
-            {contact.name.charAt(0).toUpperCase()}
+           {contact.name.charAt(0).toUpperCase()}
           </div>
-          <div>
-            <h2 style={{ fontSize: '18px', fontWeight: 750, marginBottom: '2px' }}>
-              {contact.name}
+         <div>
+           <h2 style={{ fontSize: '18px', fontWeight: 750, marginBottom: '2px' }}>
+             {contact.name}
             </h2>
-            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-              WhatsApp: {contact.phoneE164}
+           <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+             WhatsApp: {contact.phoneE164}
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 650, marginTop: '4px' }}>
-              Promotor: {session.workspaceSlug}
+           <div style={{ fontSize: '11px', color: 'var(--accent-dark)', fontWeight: 650, marginTop: '4px' }}>
+             Promotor: {session.workspaceSlug}
             </div>
-          </div>
-        </div>
+         </div>
+       </div>
 
-        {/* Stats Grid */}
+       {/* Stats Grid */}
         <div
           style={{
             display: 'grid',
@@ -183,51 +183,51 @@ export function LearnerProfileClient() {
             marginBottom: '24px',
           }}
         >
-          <div
+         <div
             style={{
               backgroundColor: 'var(--color-surface)',
-              borderRadius: '14px',
+              borderRadius: '0px',
               border: '1px solid var(--color-divider)',
               padding: '16px',
               textAlign: 'center',
             }}
           >
-            <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-primary)' }} className="tabular-nums">
-              {inProgressCount}
+           <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--accent-dark)' }} className="tabular-nums">
+             {inProgressCount}
             </div>
-            <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-              Sedang Berjalan
+           <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+             Sedang Berjalan
             </div>
-          </div>
+         </div>
 
-          <div
+         <div
             style={{
               backgroundColor: 'var(--color-surface)',
-              borderRadius: '14px',
+              borderRadius: '0px',
               border: '1px solid var(--color-divider)',
               padding: '16px',
               textAlign: 'center',
             }}
           >
-            <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-status-success)' }} className="tabular-nums">
-              {completedCount}
+           <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-status-success)' }} className="tabular-nums">
+             {completedCount}
             </div>
-            <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-              Program Selesai
+           <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+             Program Selesai
             </div>
-          </div>
-        </div>
+         </div>
+       </div>
 
-        {/* Enrolled Programs List */}
+       {/* Enrolled Programs List */}
         <div style={{ marginBottom: '32px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: 750, marginBottom: '12px' }}>
-            Riwayat Learning Access
+         <h3 style={{ fontSize: '15px', fontWeight: 750, marginBottom: '12px' }}>
+           Riwayat Learning Access
           </h3>
-          {enrollments.length === 0 ? (
+         {enrollments.length === 0 ? (
             <div
               style={{
                 backgroundColor: 'var(--color-surface)',
-                borderRadius: '12px',
+                borderRadius: '0px',
                 border: '1px solid var(--color-divider)',
                 padding: '20px',
                 fontSize: '13px',
@@ -235,11 +235,11 @@ export function LearnerProfileClient() {
                 textAlign: 'center',
               }}
             >
-              Belum ada program yang terdaftar.
+             Belum ada program yang terdaftar.
             </div>
-          ) : (
+         ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {enrollments.map(enr => {
+             {enrollments.map(enr =>{
                 const prog = programsMap.get(enr.programId);
                 if (!prog) return null;
 
@@ -249,7 +249,7 @@ export function LearnerProfileClient() {
                     href={`/learn/programs/${enr.id}`}
                     style={{
                       backgroundColor: 'var(--color-surface)',
-                      borderRadius: '12px',
+                      borderRadius: '0px',
                       border: '1px solid var(--color-divider)',
                       padding: '14px 16px',
                       display: 'flex',
@@ -259,32 +259,32 @@ export function LearnerProfileClient() {
                       color: 'var(--color-text-main)',
                     }}
                   >
-                    <div>
-                      <div style={{ fontSize: '14px', fontWeight: 700 }}>{prog.title}</div>
-                      <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                        Progres: {enr.progressPercent}%
+                   <div>
+                     <div style={{ fontSize: '14px', fontWeight: 700 }}>{prog.title}</div>
+                     <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                       Progres: {enr.progressPercent}%
                       </div>
-                    </div>
-                    <div
+                   </div>
+                   <div
                       style={{
                         fontSize: '12px',
-                        color: 'var(--color-primary)',
+                        color: 'var(--accent-dark)',
                         fontWeight: 700,
                       }}
                     >
-                      Buka →
+                     Buka →
                     </div>
-                  </Link>
-                );
+                 </Link>
+               );
               })}
             </div>
-          )}
+         )}
         </div>
 
-        {/* Referral Program Banner / Entry Card (Prototype Gate) */}
+       {/* Referral Program Banner / Entry Card (Prototype Gate) */}
         {isReferralPrototypeEnabled() && (
           <div style={{ marginBottom: '24px' }}>
-            <Link
+           <Link
               href="/learn/referral"
               style={{
                 display: 'flex',
@@ -292,19 +292,18 @@ export function LearnerProfileClient() {
                 justifyContent: 'space-between',
                 backgroundColor: 'var(--color-surface)',
                 border: '1px solid #BFDBFE',
-                borderRadius: '14px',
+                borderRadius: '0px',
                 padding: '16px',
                 textDecoration: 'none',
                 color: 'var(--color-text-main)',
-                boxShadow: 'var(--shadow-sm)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div
+             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+               <div
                   style={{
                     width: '40px',
                     height: '40px',
-                    borderRadius: '10px',
+                    borderRadius: '0px',
                     backgroundColor: '#EFF6FF',
                     color: '#2563EB',
                     display: 'flex',
@@ -313,32 +312,32 @@ export function LearnerProfileClient() {
                     fontSize: '20px',
                   }}
                 >
-                  🎁
-                </div>
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: 750, color: '#1E40AF' }}>
-                    Referral & Reward
+                  
+               </div>
+               <div>
+                 <div style={{ fontSize: '14px', fontWeight: 750, color: '#1E40AF' }}>
+                   Referral & Reward
                   </div>
-                  <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                    Ajak teman belajar STIFIn & dapatkan voucher reward
+                 <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                   Ajak teman belajar STIFIn & dapatkan voucher reward
                   </div>
-                </div>
-              </div>
-              <span style={{ fontSize: '13px', fontWeight: 750, color: '#2563EB' }}>
-                Lihat →
+               </div>
+             </div>
+             <span style={{ fontSize: '13px', fontWeight: 750, color: '#2563EB' }}>
+               Lihat →
               </span>
-            </Link>
-          </div>
-        )}
+           </Link>
+         </div>
+       )}
 
         {/* Session Action */}
         <div>
-          <button
+         <button
             onClick={handleLogout}
             style={{
               width: '100%',
               minHeight: '48px',
-              borderRadius: '12px',
+              borderRadius: '0px',
               border: '1px solid #F8B4B4',
               backgroundColor: '#FDF2F2',
               color: '#9B1C1C',
@@ -347,10 +346,10 @@ export function LearnerProfileClient() {
               cursor: 'pointer',
             }}
           >
-            Keluar dari Sesi Belajar
+           Keluar dari Sesi Belajar
           </button>
-        </div>
-      </div>
-    </LearnerShell>
-  );
+       </div>
+     </div>
+   </LearnerShell>
+ );
 }

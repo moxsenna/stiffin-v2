@@ -3,6 +3,7 @@
 import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn, getSession, sanitizeReturnTo } from '@/lib/auth';
+import { Wordmark } from '@/components/ui';
 
 function LoginForm() {
   const router = useRouter();
@@ -15,7 +16,7 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) =>{
     e.preventDefault();
     setErrorMessage('');
     setIsLoading(true);
@@ -28,7 +29,6 @@ function LoginForm() {
         return;
       }
 
-      // Verify session and entitlements
       const session = await getSession();
       if (!session) {
         setErrorMessage('Sesi masuk tidak dapat diverifikasi.');
@@ -57,148 +57,80 @@ function LoginForm() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px 16px',
-        backgroundColor: 'var(--color-canvas)',
+        backgroundColor: 'var(--canvas)',
       }}
     >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '400px',
-          backgroundColor: 'var(--color-surface)',
-          borderRadius: '20px',
-          border: '1px solid var(--color-divider)',
-          padding: '32px 24px',
-          boxShadow: 'var(--shadow-md)',
-        }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              backgroundColor: 'var(--color-primary-light)',
-              color: 'var(--color-primary)',
-              fontSize: '24px',
-              marginBottom: '12px',
-            }}
-          >
-            📖
-          </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '4px' }}>
-            Masuk ke PromotorClass
+     <div style={{ width: '100%', maxWidth: 360 }}>
+       <div style={{ marginBottom: 28 }}>
+         <Wordmark class />
+         <h1 style={{ font: '800 26px/1.1 var(--font-sans)', letterSpacing: '-0.03em', marginTop: 18 }}>
+           Masuk ke PromotorClass
           </h1>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: 0 }}>
-            Platform edukasi dan storefront materi STIFIn
+         <p style={{ font: '400 13px/1.5 var(--font-sans)', color: 'var(--muted-strong)', marginTop: 6 }}>
+           Platform edukasi dan storefront materi STIFIn
           </p>
+       </div>
+
+       <div style={{ background: 'var(--surface)', border: 'var(--sep-strong)', padding: 22 }}>
+         {errorMessage && (
+            <div className="field-error" role="alert" style={{ marginBottom: 16 }}>
+             {errorMessage}
+            </div>
+         )}
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+           <div>
+             <label className="field-label" htmlFor="class-email">Email promotor</label>
+             <input
+                id="class-email"
+                type="email"
+                required
+                autoComplete="email"
+                className="input"
+                value={email}
+                onChange={(e) =>setEmail(e.target.value)}
+                placeholder="promotor@stifin.id"
+              />
+           </div>
+
+           <div>
+             <label className="field-label" htmlFor="class-password">Kata sandi</label>
+             <input
+                id="class-password"
+                type="password"
+                required
+                autoComplete="current-password"
+                className="input"
+                value={password}
+                onChange={(e) =>setPassword(e.target.value)}
+                placeholder="Kata sandi"
+              />
+           </div>
+
+           <button type="submit" disabled={isLoading} className="btn btn-primary btn-block">
+             {isLoading ? 'Memverifikasi...' : 'Masuk'}
+            </button>
+         </form>
+       </div>
+
+       <div style={{ marginTop: 20, font: '400 12px/1.5 var(--font-sans)', color: 'var(--muted)' }}>
+         Butuh bantuan akses akun? Hubungi administrator cabang Anda.
         </div>
-
-        {errorMessage && (
-          <div
-            style={{
-              padding: '12px 14px',
-              borderRadius: '10px',
-              backgroundColor: '#FEE2E2',
-              color: '#991B1B',
-              fontSize: '13px',
-              fontWeight: 600,
-              marginBottom: '20px',
-            }}
-          >
-            ⚠️ {errorMessage}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
-              Email Promotor
-            </label>
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="promotor@stifin.id"
-              style={{
-                width: '100%',
-                padding: '11px 14px',
-                borderRadius: '10px',
-                border: '1px solid var(--color-divider)',
-                fontSize: '14px',
-                outline: 'none',
-                backgroundColor: 'var(--color-surface)',
-              }}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
-              Kata Sandi
-            </label>
-            <input
-              type="password"
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              style={{
-                width: '100%',
-                padding: '11px 14px',
-                borderRadius: '10px',
-                border: '1px solid var(--color-divider)',
-                fontSize: '14px',
-                outline: 'none',
-                backgroundColor: 'var(--color-surface)',
-              }}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="touch-target-primary"
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '12px',
-              backgroundColor: isLoading ? 'var(--color-divider)' : 'var(--color-primary)',
-              color: '#FFF',
-              fontSize: '14px',
-              fontWeight: 780,
-              border: 0,
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              marginTop: '8px',
-              boxShadow: 'var(--shadow-sm)',
-            }}
-          >
-            {isLoading ? 'Memverifikasi...' : 'Masuk'}
-          </button>
-        </form>
-
-        <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '12px', color: 'var(--color-text-subtle)' }}>
-          Butuh bantuan akses akun? Hubungi administrator cabang Anda.
-        </div>
-      </div>
-    </div>
-  );
+     </div>
+   </div>
+ );
 }
 
 export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-canvas)' }}>
-          <div style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>Memuat halaman masuk...</div>
-        </div>
-      }
+        <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--canvas)' }}>
+         <div style={{ color: 'var(--muted)', fontSize: '14px' }}>Memuat halaman masuk...</div>
+       </div>
+     }
     >
-      <LoginForm />
-    </Suspense>
-  );
+     <LoginForm />
+   </Suspense>
+ );
 }

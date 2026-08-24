@@ -125,9 +125,9 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     await expect(page.locator('body')).toContainText('Modul 1: Pengenalan');
     await expect(page.locator('body')).toContainText('Pelajaran 1: Mengenal Karakter Diri');
     await expect(page.locator('body')).toContainText('Pelajaran 2: Analisis Video Praktik');
-    await expect(page.locator('text=🎥 Video YouTube').first()).toBeVisible();
-    await expect(page.locator('text=📝 Refleksi').first()).toBeVisible();
-    await expect(page.locator('text=🔗 Tombol CTA').first()).toBeVisible();
+    await expect(page.locator('text=Video YouTube').first()).toBeVisible();
+    await expect(page.locator('text=Refleksi').first()).toBeVisible();
+    await expect(page.locator('text=Tombol CTA').first()).toBeVisible();
 
     // =========================================================================
     // 4. LEARNER CONSUMPTION: REGISTER INTO NEW PROGRAM & COMPLETE JOURNEY

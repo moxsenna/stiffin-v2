@@ -17,7 +17,7 @@ export function PublicFooter({ displayName }: PublicFooterProps) {
         fontSize: '12px',
       }}
     >
-      <div
+     <div
         className="container"
         style={{
           display: 'flex',
@@ -26,9 +26,9 @@ export function PublicFooter({ displayName }: PublicFooterProps) {
           flexWrap: 'wrap',
         }}
       >
-        <span>© 2026 Ruang Belajar {displayName}</span>
-        <span>Didukung oleh PromotorClass</span>
-      </div>
-    </footer>
-  );
+       <span>© 2026 Ruang Belajar {displayName}</span>
+       <span>Didukung oleh PromotorClass</span>
+     </div>
+   </footer>
+ );
 }

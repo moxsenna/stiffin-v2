@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { LearnerDetail } from '@/components/promotor/LearnerDetail';
 import { WhatsAppDraftSheet } from '@/components/promotor/WhatsAppDraftSheet';
+import { PageHeader, SectionHead, SegmentedControl, ProgressBar, EmptyState, ErrorState, LoadingRows } from '@/components/ui';
 import { getContactsQuery } from '@/modules/contacts/queries';
 import { getEnrollmentsQuery } from '@/modules/enrollments/queries';
 import { getLearningSignalsQuery } from '@/modules/signals/queries';
@@ -11,53 +12,69 @@ import { getProgramsQuery } from '@/modules/programs/queries';
 import { Contact, Enrollment, Program, LearningSignal } from '@promotor/contracts';
 import { formatPhoneDisplay } from '@promotor/platform-core';
 
+type LearnerFilter = 'semua' | 'Minat tinggi' | 'Minat sedang' | 'Minat rendah';
+
+function intentTagClass(level: string): string {
+  if (level === 'Minat tinggi') return 'tag tag-hot';
+  if (level === 'Minat sedang') return 'tag tag-warm';
+  return 'tag tag-cold';
+}
+
 export default function LearnersPage() {
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [contacts, setContacts] = useState<Contact[] | null>(null);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [signals, setSignals] = useState<LearningSignal[]>([]);
   const [programsMap, setProgramsMap] = useState<Map<string, Program>>(new Map());
-  const [selectedFilter, setSelectedFilter] = useState<'semua' | 'Minat tinggi' | 'Minat sedang' | 'Minat rendah'>('semua');
+  const [selectedFilter, setSelectedFilter] = useState<LearnerFilter>('semua');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [draftState, setDraftState] = useState<{ isOpen: boolean; contact: Contact | null; message: string }>({
     isOpen: false,
     contact: null,
     message: '',
   });
 
-  useEffect(() => {
-    Promise.all([
-      getContactsQuery(),
-      getEnrollmentsQuery(),
-      getLearningSignalsQuery(),
-      getProgramsQuery(),
-    ]).then(([conData, enrData, sigData, progData]) => {
+  const loadData = React.useCallback(async () =>{
+    setLoadError(null);
+    try {
+      const [conData, enrData, sigData, progData] = await Promise.all([
+        getContactsQuery(),
+        getEnrollmentsQuery(),
+        getLearningSignalsQuery(),
+        getProgramsQuery(),
+      ]);
       setContacts(conData);
       setEnrollments(enrData);
       setSignals(sigData);
 
       const pMap = new Map<string, Program>();
-      progData.forEach((p: Program) => pMap.set(p.id, p));
+      progData.forEach((p: Program) =>pMap.set(p.id, p));
       setProgramsMap(pMap);
-    });
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Tidak dapat memuat peserta.');
+    }
   }, []);
 
-  const handleOpenDraft = (contact: Contact, message: string) => {
+  useEffect(() =>{
+    loadData();
+  }, [loadData]);
+
+  const handleOpenDraft = (contact: Contact, message: string) =>{
     setDraftState({ isOpen: true, contact, message });
   };
 
-  const getSignalForContact = (contactId: string) => {
-    return signals.find(s => s.contactId === contactId);
+  const getSignalForContact = (contactId: string) =>{
+    return signals.find(s =>s.contactId === contactId);
   };
 
-  const getEnrollmentForContact = (contactId: string) => {
-    return enrollments.find(e => e.contactId === contactId);
+  const getEnrollmentForContact = (contactId: string) =>{
+    return enrollments.find(e =>e.contactId === contactId);
   };
 
-  // Class Learners = Contacts that have Class enrollment(s)
-  const enrolledContactIds = new Set(enrollments.map(e => e.contactId));
-  const learnerContacts = contacts.filter(c => enrolledContactIds.has(c.id));
+  const enrolledContactIds = new Set(enrollments.map(e =>e.contactId));
+  const learnerContacts = contacts ? contacts.filter(c =>enrolledContactIds.has(c.id)) : [];
 
-  const filteredContacts = learnerContacts.filter(c => {
+  const filteredContacts = learnerContacts.filter(c =>{
     const enr = getEnrollmentForContact(c.id);
     const sig = getSignalForContact(c.id);
     const intentLabel = ((enr as any)?.intentLabel || 'COLD').toUpperCase();
@@ -75,147 +92,125 @@ export default function LearnersPage() {
 
   return (
     <PromotorShell>
-      <div style={{ padding: '16px' }}>
-        <div style={{ marginBottom: '16px' }}>
-          <h1 style={{ fontSize: '20px', fontWeight: 700 }}>Daftar Peserta & Follow-up</h1>
-          <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-            Filter berdasarkan tingkat minat & lihat detail refleksi
-          </div>
-        </div>
+     <PageHeader
+        kicker="PromotorClass"
+        title="Daftar Peserta & Follow-up"
+        sub={contacts ? `${filteredContacts.length} peserta pembelajaran` : 'Memuat peserta...'}
+      />
 
-        {/* Filter Pills */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-          {(['semua', 'Minat tinggi', 'Minat sedang', 'Minat rendah'] as const).map(filterVal => (
-            <button
-              key={filterVal}
-              onClick={() => setSelectedFilter(filterVal)}
-              className="touch-target"
-              style={{
-                padding: '4px 12px',
-                borderRadius: 'var(--border-radius-full)',
-                fontSize: '12px',
-                fontWeight: 600,
-                backgroundColor: selectedFilter === filterVal ? 'var(--color-primary)' : 'var(--color-surface)',
-                color: selectedFilter === filterVal ? '#FFF' : 'var(--color-text-main)',
-                border: '1px solid var(--color-divider)',
-              }}
-            >
-              {filterVal === 'semua' ? 'Semua Peserta' : filterVal}
-            </button>
-          ))}
-        </div>
+     <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)' }}>
+       <SegmentedControl
+          ariaLabel="Filter tingkat minat"
+          options={[
+            { label: 'Semua', value: 'semua' },
+            { label: 'Minat tinggi', value: 'Minat tinggi' },
+            { label: 'Minat sedang', value: 'Minat sedang' },
+            { label: 'Minat rendah', value: 'Minat rendah' },
+          ]}
+          value={selectedFilter}
+          onChange={(v) =>setSelectedFilter(v as LearnerFilter)}
+        />
+     </div>
 
-        {/* Learners List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {filteredContacts.length === 0 ? (
-            <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '14px', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--color-divider)' }}>
-              Belum ada peserta pembelajaran yang terdaftar.
-            </div>
-          ) : (
-            filteredContacts.map(contact => {
-              const sig = getSignalForContact(contact.id);
-              const enr = getEnrollmentForContact(contact.id);
-              const isSelected = selectedContact?.id === contact.id;
-              const prog = enr ? programsMap.get(enr.programId) : undefined;
-              const intentLabel = ((enr as any)?.intentLabel || 'COLD').toUpperCase();
-              const effectiveSignalLevel =
-                sig?.signalLevel ||
-                (intentLabel === 'HOT'
-                  ? 'Minat tinggi'
-                  : intentLabel === 'WARM'
-                  ? 'Minat sedang'
-                  : 'Minat rendah');
+     {loadError && <ErrorState title="Gagal memuat peserta" detail={loadError} onRetry={() =>loadData()} />}
 
-              const reasonDisplay =
-                sig?.primaryReason ||
-                (prog ? `Terdaftar pada ${prog.title}` : 'Peserta terdaftar');
+      {!contacts && !loadError && (
+        <>
+         <SectionHead label="Peserta" />
+         <LoadingRows rows={4} />
+       </>
+     )}
 
-              return (
-                <div
-                  key={contact.id}
-                  data-testid="learner-item"
-                  onClick={() => setSelectedContact(contact)}
-                  style={{
-                    padding: '14px 16px',
-                    backgroundColor: isSelected ? 'var(--color-primary-light)' : 'var(--color-surface)',
-                    borderRadius: 'var(--border-radius-sm)',
-                    border: '1px solid var(--color-divider)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 700 }}>{contact.name}</span>
-                      <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                        {formatPhoneDisplay(contact.phoneE164)}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '12px', color: 'var(--color-text-subtle)' }}>
-                      Alasan: {reasonDisplay}
-                    </div>
-                  </div>
+      {contacts && filteredContacts.length === 0 && !loadError && (
+        <EmptyState
+          title="Belum ada peserta pembelajaran yang terdaftar"
+          explanation="Peserta muncul setelah kontak didaftarkan ke program kelas."
+        />
+     )}
 
-                  <div style={{ textAlign: 'right' }}>
-                    <span
-                      style={{
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        padding: '2px 8px',
-                        borderRadius: 'var(--border-radius-sm)',
-                        backgroundColor:
-                          effectiveSignalLevel === 'Minat tinggi'
-                            ? 'var(--color-status-success-bg)'
-                            : effectiveSignalLevel === 'Minat sedang'
-                            ? 'var(--color-status-warning-bg)'
-                            : 'var(--color-canvas)',
-                        color:
-                          effectiveSignalLevel === 'Minat tinggi'
-                            ? 'var(--color-status-success)'
-                            : effectiveSignalLevel === 'Minat sedang'
-                            ? 'var(--color-status-warning)'
-                            : 'var(--color-text-muted)',
-                      }}
-                    >
-                      {effectiveSignalLevel}
-                    </span>
-                    {enr && (
-                      <div style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 600, marginTop: '2px' }}>
-                        Progres: {enr.progressPercent}%
-                      </div>
-                    )}
-                  </div>
+      {contacts && filteredContacts.length >0 && (
+        <>
+         <SectionHead label="Peserta" count={`${filteredContacts.length}`} />
+         {filteredContacts.map(contact =>{
+            const sig = getSignalForContact(contact.id);
+            const enr = getEnrollmentForContact(contact.id);
+            const prog = enr ? programsMap.get(enr.programId) : undefined;
+            const intentLabel = ((enr as any)?.intentLabel || 'COLD').toUpperCase();
+            const effectiveSignalLevel =
+              sig?.signalLevel ||
+              (intentLabel === 'HOT'
+                ? 'Minat tinggi'
+                : intentLabel === 'WARM'
+                ? 'Minat sedang'
+                : 'Minat rendah');
+
+            const reasonDisplay =
+              sig?.primaryReason ||
+              (prog ? `Terdaftar pada ${prog.title}` : 'Peserta terdaftar');
+
+            return (
+              <div
+                key={contact.id}
+                data-testid="learner-item"
+                onClick={() =>setSelectedContact(contact)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) =>{
+                  if (e.key === 'Enter' || e.key === ' ') setSelectedContact(contact);
+                }}
+                style={{
+                  minHeight: 44,
+                  padding: '14px 18px',
+                  borderBottom: '1px solid var(--line)',
+                  cursor: 'pointer',
+                  background: 'var(--surface)',
+                }}
+              >
+               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline' }}>
+                 <span style={{ font: '700 15px/1.2 var(--font-sans)' }}>{contact.name}</span>
+                 <span className={intentTagClass(effectiveSignalLevel)} style={{ flex: 'none' }}>{effectiveSignalLevel}</span>
+               </div>
+               <div className="row-meta">
+                 {formatPhoneDisplay(contact.phoneE164)} · {prog ? prog.title : 'Program tidak diketahui'}
                 </div>
-              );
-            })
-          )}
-        </div>
+               <div style={{ marginTop: 4, font: '400 11px/1.45 var(--font-sans)', color: 'var(--muted-strong)' }}>
+                 Alasan: {reasonDisplay}
+                </div>
+               {enr && (
+                  <div style={{ marginTop: 9, display: 'flex', alignItems: 'center', gap: 9 }}>
+                   <ProgressBar pct={enr.progressPercent} thin label={`Progres ${enr.progressPercent}%`} />
+                   <span style={{ font: '700 11px/1 var(--font-sans)', whiteSpace: 'nowrap' }} className="tabular-nums">
+                     Progres: {enr.progressPercent}%
+                    </span>
+                 </div>
+               )}
+              </div>
+           );
+          })}
+        </>
+     )}
+      <div style={{ height: 24 }} />
 
-        {/* Side Panel Drawer for Desktop / Full view */}
-        {selectedContact && (
-          <div data-testid="learner-drawer-container">
-            <LearnerDetail
-              contact={selectedContact}
-              enrollment={getEnrollmentForContact(selectedContact.id)}
-              program={programsMap.get(getEnrollmentForContact(selectedContact.id)?.programId || '')}
-              signal={getSignalForContact(selectedContact.id)}
-              onOpenWhatsAppDraft={handleOpenDraft}
-              onClose={() => setSelectedContact(null)}
-            />
-          </div>
-        )}
-
-        {/* WhatsApp Draft Sheet */}
-        {draftState.isOpen && (
-          <WhatsAppDraftSheet
-            contact={draftState.contact}
-            initialMessage={draftState.message}
-            onClose={() => setDraftState({ ...draftState, isOpen: false })}
+     {selectedContact && (
+        <div data-testid="learner-drawer-container">
+         <LearnerDetail
+            contact={selectedContact}
+            enrollment={getEnrollmentForContact(selectedContact.id)}
+            program={programsMap.get(getEnrollmentForContact(selectedContact.id)?.programId || '')}
+            signal={getSignalForContact(selectedContact.id)}
+            onOpenWhatsAppDraft={handleOpenDraft}
+            onClose={() =>setSelectedContact(null)}
           />
-        )}
-      </div>
+       </div>
+     )}
+
+      {draftState.isOpen && (
+        <WhatsAppDraftSheet
+          contact={draftState.contact}
+          initialMessage={draftState.message}
+          onClose={() =>setDraftState({ ...draftState, isOpen: false })}
+        />
+     )}
     </PromotorShell>
-  );
+ );
 }

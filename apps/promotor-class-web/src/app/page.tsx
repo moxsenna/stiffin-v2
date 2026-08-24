@@ -7,14 +7,14 @@ import { getSession } from '@/lib/auth';
 export default function RootPage() {
   const router = useRouter();
 
-  useEffect(() => {
-    getSession().then((session) => {
+  useEffect(() =>{
+    getSession().then((session) =>{
       if (session) {
         router.replace('/app');
       } else {
         router.replace('/login');
       }
-    }).catch(() => {
+    }).catch(() =>{
       router.replace('/login');
     });
   }, [router]);
@@ -29,9 +29,9 @@ export default function RootPage() {
         backgroundColor: 'var(--color-canvas)',
       }}
     >
-      <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-        Membuka PromotorClass...
+     <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+       Membuka PromotorClass...
       </div>
-    </div>
-  );
+   </div>
+ );
 }

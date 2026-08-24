@@ -25,7 +25,7 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
   const refCode = searchParams.get('ref');
   const { promoter, presentation, program, isRegistrationAllowed } = detail;
 
-  useEffect(() => {
+  useEffect(() =>{
     if (promoter.workspaceSlug) {
       setLastPublicWorkspaceSlug(promoter.workspaceSlug);
     }
@@ -34,7 +34,7 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
     }
   }, [promoter.workspaceSlug, refCode]);
 
-  const scrollToRegister = () => {
+  const scrollToRegister = () =>{
     const el = document.getElementById('register');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
@@ -50,7 +50,7 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
         color: 'var(--color-text-main)',
       }}
     >
-      {/* Mobile Top App Header */}
+     {/* Mobile Top App Header */}
       <MobileAppHeader
         title={program.title}
         showBack={true}
@@ -59,20 +59,20 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
         workspaceSlug={promoter.workspaceSlug}
       />
 
-      {/* Desktop Header */}
+     {/* Desktop Header */}
       <div className="desktop-only">
-        <PublicHeader
+       <PublicHeader
           workspaceSlug={promoter.workspaceSlug}
           displayName={promoter.displayName}
           tagline={promoter.tagline}
           onPrimaryClick={scrollToRegister}
         />
-      </div>
+     </div>
 
-      <main>
-        {/* Back Link for Desktop */}
+     <main>
+       {/* Back Link for Desktop */}
         <div className="container desktop-only" style={{ paddingTop: '24px' }}>
-          <Link
+         <Link
             href={`/p/${promoter.workspaceSlug}`}
             style={{
               color: 'var(--color-text-muted)',
@@ -84,29 +84,29 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
               gap: '6px',
             }}
           >
-            ← Kembali ke ruang belajar
+           ← Kembali ke ruang belajar
           </Link>
-        </div>
+       </div>
 
-        {/* Hero */}
+       {/* Hero */}
         <ProgramHero detail={detail} onStartClick={scrollToRegister} />
 
-        {/* Learning Outcomes */}
+       {/* Learning Outcomes */}
         <LearningOutcomes outcomes={presentation.learningOutcomes} />
 
-        {/* Curriculum Preview */}
+       {/* Curriculum Preview */}
         <CurriculumPreview modules={program.modules} />
 
-        {/* Promoter Profile */}
+       {/* Promoter Profile */}
         <PromoterProfile profile={promoter} />
 
-        {/* Registration Section */}
+       {/* Registration Section */}
         <RegistrationSection detail={detail} />
-      </main>
+     </main>
 
-      <PublicFooter displayName={promoter.displayName.split(' ')[0]} />
+     <PublicFooter displayName={promoter.displayName.split(' ')[0]} />
 
-      {/* Mobile Sticky Program CTA Bar (FLOATS ABOVE BOTTOM NAVIGATION) */}
+     {/* Mobile Sticky Program CTA Bar (FLOATS ABOVE BOTTOM NAVIGATION) */}
       <div
         className="mobile-only"
         style={{
@@ -115,24 +115,21 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
           left: 0,
           right: 0,
           zIndex: 950,
-          backgroundColor: 'rgba(255, 255, 255, 0.98)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          borderTop: '1px solid var(--color-divider)',
+          backgroundColor: 'var(--surface)',
+          borderTop: '2px solid var(--ink)',
           padding: '8px 16px',
-          boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          {isRegistrationAllowed ? (
+       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+         {isRegistrationAllowed ? (
             <button
               onClick={scrollToRegister}
               className="touch-target-primary"
               style={{
                 width: '100%',
                 minHeight: '44px',
-                borderRadius: '12px',
-                backgroundColor: 'var(--color-primary)',
+                borderRadius: '0px',
+                backgroundColor: 'var(--accent-dark)',
                 color: '#FFFFFF',
                 fontWeight: 780,
                 fontSize: '14px',
@@ -141,15 +138,15 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
                 boxShadow: 'var(--shadow-sm)',
               }}
             >
-              Mulai Belajar Gratis →
+             Mulai Belajar Gratis →
             </button>
-          ) : program.programType === 'aftersales' ? (
+         ) : program.programType === 'aftersales' ? (
             <button
               onClick={scrollToRegister}
               style={{
                 width: '100%',
                 minHeight: '44px',
-                borderRadius: '12px',
+                borderRadius: '0px',
                 backgroundColor: 'var(--color-status-warning-bg)',
                 color: 'var(--color-status-warning)',
                 fontWeight: 750,
@@ -158,31 +155,31 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
                 cursor: 'pointer',
               }}
             >
-              Khusus Peserta Tes STIFIn — Lihat Akses
+             Khusus Peserta Tes STIFIn — Lihat Akses
             </button>
-          ) : (program.priceAmount && program.priceAmount > 0) ? (
+         ) : (program.priceAmount && program.priceAmount >0) ? (
             <button
               onClick={scrollToRegister}
               style={{
                 width: '100%',
                 minHeight: '44px',
-                borderRadius: '12px',
-                backgroundColor: 'var(--color-primary-light)',
-                color: 'var(--color-primary)',
+                borderRadius: '0px',
+                backgroundColor: '#ffe0d9',
+                color: 'var(--accent-dark)',
                 fontWeight: 750,
                 fontSize: '13px',
                 border: '1px solid var(--color-primary-border)',
                 cursor: 'pointer',
               }}
             >
-              Rp {(program.priceAmount || 0).toLocaleString('id-ID')} — Hubungi Promotor
+             Rp {(program.priceAmount || 0).toLocaleString('id-ID')} — Hubungi Promotor
             </button>
-          ) : null}
+         ) : null}
         </div>
-      </div>
+     </div>
 
-      {/* Universal Permanent 4-Tab Bottom Navigation Bar */}
+     {/* Universal Permanent 4-Tab Bottom Navigation Bar */}
       <LearnerTabBar workspaceSlug={promoter.workspaceSlug} />
-    </div>
-  );
+   </div>
+ );
 }

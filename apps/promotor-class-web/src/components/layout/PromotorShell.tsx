@@ -4,11 +4,26 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { PromotorTabBar } from './PromotorTabBar';
+import { Wordmark } from '../ui';
 import { getSession, signOut, UserSession } from '@/lib/auth';
 import { getApiMode } from '@/adapters';
 
 interface PromotorShellProps {
   children: React.ReactNode;
+}
+
+const DESKTOP_NAV: Array<{ label: string; href: string }>= [
+  { label: 'Beranda', href: '/app' },
+  { label: 'Program', href: '/app/programs' },
+  { label: 'Learner', href: '/app/learners' },
+  { label: 'Aktivitas', href: '/app/activity' },
+  { label: 'Storefront', href: '/app/storefront' },
+  { label: 'Pengaturan', href: '/app/settings' },
+];
+
+function isActive(pathname: string, href: string): boolean {
+  if (href === '/app') return pathname === '/app';
+  return pathname.startsWith(href);
 }
 
 export function PromotorShell({ children }: PromotorShellProps) {
@@ -17,15 +32,15 @@ export function PromotorShell({ children }: PromotorShellProps) {
   const [session, setSession] = useState<UserSession | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  useEffect(() => {
-    getSession().then((sess) => {
+  useEffect(() =>{
+    getSession().then((sess) =>{
       if (!sess && getApiMode() === 'http') {
         router.push(`/login?returnTo=${encodeURIComponent(pathname)}`);
         return;
       }
       setSession(sess);
       setIsCheckingAuth(false);
-    }).catch(() => {
+    }).catch(() =>{
       if (getApiMode() === 'http') {
         router.push(`/login?returnTo=${encodeURIComponent(pathname)}`);
       } else {
@@ -34,133 +49,73 @@ export function PromotorShell({ children }: PromotorShellProps) {
     });
   }, [pathname, router]);
 
-  const handleLogout = async () => {
+  const handleLogout = async () =>{
     await signOut();
     router.push('/login');
   };
 
-  const navItems = [
-    { label: 'Beranda', href: '/app' },
-    { label: 'Program', href: '/app/programs' },
-    { label: 'Peserta', href: '/app/learners' },
-    { label: 'Aktivitas', href: '/app/activity' },
-    { label: 'Pengaturan', href: '/app/settings' },
-  ];
-
-  const isLinkActive = (href: string) => {
-    if (href === '/app' && pathname === '/app') return true;
-    if (href !== '/app' && pathname.startsWith(href)) return true;
-    return false;
-  };
-
   if (isCheckingAuth && getApiMode() === 'http') {
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-canvas)' }}>
-        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Memuat sesi promotor...</div>
-      </div>
-    );
+      <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--surface)' }}>
+       <div style={{ fontSize: '13px', color: 'var(--muted)', fontFamily: 'var(--font-sans)' }}>Memuat sesi promotor...</div>
+     </div>
+   );
   }
 
   const orgName = session?.organization?.name || 'Workspace Promotor';
   const userName = session?.user?.name || 'Promotor';
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
-      {/* Desktop Sidebar Layout */}
-      <div style={{ display: 'flex', flex: 1 }}>
-        <aside
-          className="desktop-only"
-          style={{
-            width: '240px',
-            backgroundColor: 'var(--color-surface)',
-            borderRight: '1px solid var(--color-divider)',
-            padding: '24px 16px',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            gap: '24px',
-            position: 'sticky',
-            top: 0,
-            height: '100vh',
-          }}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: '-0.02em' }}>
-                PromotorClass
-              </div>
-              <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px', fontWeight: 500 }}>
-                {orgName}
-              </div>
+    <div style={{ minHeight: '100dvh', display: 'flex' }}>
+     <aside className="desktop-nav" aria-label="Navigasi aplikasi">
+       <div>
+         <div className="desktop-nav-brand">
+           <Wordmark class />
+           <div style={{ marginTop: 8, font: '400 11px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>{orgName}</div>
+         </div>
+         <nav className="desktop-nav-group" aria-label="Navigasi utama">
+           {DESKTOP_NAV.map((item) =>(
+              <Link
+                key={item.href}
+                href={item.href}
+                className={isActive(pathname, item.href) ? 'desktop-nav-link is-active' : 'desktop-nav-link'}
+              >
+               {item.label}
+              </Link>
+           ))}
+          </nav>
+       </div>
+       <div className="desktop-nav-footer">
+         <div style={{ minWidth: 0, marginBottom: 10 }}>
+           <div style={{ font: '700 13px/1.3 var(--font-sans)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+             {userName}
             </div>
-
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              {navItems.map(item => {
-                const active = isLinkActive(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    style={{
-                      padding: '10px 14px',
-                      borderRadius: 'var(--border-radius-sm)',
-                      fontWeight: active ? 700 : 400,
-                      color: active ? 'var(--color-primary)' : 'var(--color-text-main)',
-                      backgroundColor: active ? 'var(--color-primary-light)' : 'transparent',
-                      fontSize: '13px',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-
-          {/* User Account / Logout Action */}
-          <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {userName}
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                {session?.user?.email || 'promotor'}
-              </div>
+           <div style={{ font: '400 11px/1.4 var(--font-sans)', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+             {session?.user?.email || 'promotor'}
             </div>
-            <button
-              onClick={handleLogout}
-              title="Keluar dari akun"
-              style={{
-                background: 'none',
-                border: 0,
-                fontSize: '12px',
-                color: 'var(--color-status-danger)',
-                fontWeight: 600,
-                cursor: 'pointer',
-                padding: '4px 8px',
-              }}
-            >
-              Keluar
-            </button>
-          </div>
-        </aside>
+         </div>
+         <button type="button" onClick={handleLogout} title="Keluar dari akun" className="btn btn-danger btn-sm" style={{ width: '100%' }}>
+           Keluar
+          </button>
+       </div>
+     </aside>
 
-        {/* Main Content Area */}
-        <main
-          style={{
-            flex: 1,
-            paddingBottom: 'calc(90px + env(safe-area-inset-bottom, 0px))',
-            maxWidth: '1200px',
-            width: '100%',
-            margin: '0 auto',
-          }}
-        >
-          {children}
-        </main>
-      </div>
+     <main
+        style={{
+          flex: 1,
+          minWidth: 0,
+          width: '100%',
+          maxWidth: '860px',
+          margin: '0 auto',
+          minHeight: '100dvh',
+          background: 'var(--surface)',
+        }}
+        className="page-wrapper-with-bottom-nav"
+      >
+       {children}
+      </main>
 
-      {/* Mobile Sticky Tab Bar */}
-      <PromotorTabBar />
-    </div>
-  );
+     <PromotorTabBar />
+   </div>
+ );
 }

@@ -9,8 +9,8 @@ interface LearnerDetailProps {
   enrollment?: Enrollment;
   program?: Program;
   signal?: LearningSignal;
-  onOpenWhatsAppDraft: (contact: Contact, message: string) => void;
-  onClose?: () => void;
+  onOpenWhatsAppDraft: (contact: Contact, message: string) =>void;
+  onClose?: () =>void;
 }
 
 export function LearnerDetail({
@@ -25,143 +25,82 @@ export function LearnerDetail({
   const primaryReason = signal?.primaryReason || 'Memulai pembelajaran';
   const rawQuote = signal?.rawReflectionQuote;
 
-  const getMinatStyle = (status: string) => {
-    switch (status) {
-      case 'Minat tinggi':
-        return { bg: 'var(--color-status-success-bg)', text: 'var(--color-status-success)' };
-      case 'Minat sedang':
-        return { bg: 'var(--color-status-warning-bg)', text: 'var(--color-status-warning)' };
-      default:
-        return { bg: '#F0F0ED', text: 'var(--color-text-muted)' };
-    }
-  };
+  const intentTagClass =
+    signalLevel === 'Minat tinggi' ? 'tag tag-hot' : signalLevel === 'Minat sedang' ? 'tag tag-warm' : 'tag tag-cold';
 
-  const minatStyle = getMinatStyle(signalLevel);
   const programTitle = program?.title || 'Program Belajar';
   const defaultDraftMessage = `Halo ${contact.name}, saya promotor Anda dari program "${programTitle}". Saya memperhatikan Anda telah ${primaryReason.toLowerCase()}. Bagaimana perkembangan belajar Anda saat ini?`;
 
   return (
-    <div className="side-panel active" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Header Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-text-main)' }}>
-            {contact.name}
-          </h2>
-          <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-            {formatPhoneDisplay(contact.phoneE164)}
-          </div>
-        </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="touch-target"
-            style={{ padding: '4px 8px', fontSize: '14px', color: 'var(--color-text-muted)' }}
-          >
-            ✕
+    <div className="side-panel active" style={{ background: 'var(--surface)', padding: 0, display: 'flex', flexDirection: 'column' }}>
+     <div style={{ borderBottom: 'var(--sep-strong)', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+       <div style={{ minWidth: 0 }}>
+         <div className="kicker kicker-muted">Detail learner</div>
+         <h2 style={{ font: '800 22px/1.1 var(--font-sans)', letterSpacing: '-0.02em', marginTop: 7 }}>{contact.name}</h2>
+         <div className="row-meta">{formatPhoneDisplay(contact.phoneE164)}</div>
+       </div>
+       {onClose && (
+          <button type="button" onClick={onClose} aria-label="Tutup detail learner" className="header-action" style={{ width: 40, height: 40 }}>
+           ✕
           </button>
-        )}
+       )}
       </div>
 
-      {/* Status & Reason Card */}
-      <div
-        style={{
-          padding: '14px',
-          borderRadius: 'var(--border-radius-md)',
-          backgroundColor: minatStyle.bg,
-          border: '1px solid var(--color-divider)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-          <span
-            style={{
-              fontSize: '12px',
-              fontWeight: 700,
-              color: minatStyle.text,
-              padding: '2px 8px',
-              borderRadius: 'var(--border-radius-sm)',
-              backgroundColor: '#FFF',
-            }}
-          >
-            {signalLevel}
-          </span>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-main)' }}>
-            Alasan: {primaryReason}
-          </span>
-        </div>
-        {signal?.intentScore !== undefined && (
-          <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }} className="tabular-nums">
-            Skor indikator lanjutan: {signal.intentScore}/100
-          </div>
-        )}
+     <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
+       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+         <div>
+           <div className="kicker kicker-muted">Intent score</div>
+           <div style={{ marginTop: 8, font: '800 40px/1 var(--font-sans)', letterSpacing: '-0.04em' }} className="tabular-nums">
+             {signal?.intentScore ?? '—'}
+            </div>
+         </div>
+         <span className={intentTagClass}>{signalLevel}</span>
+       </div>
+       {signal?.intentScore !== undefined && (
+          <>
+           <div className="progress progress-thick" style={{ marginTop: 12 }} role="progressbar" aria-valuenow={signal.intentScore} aria-valuemin={0} aria-valuemax={100} aria-label={`Intent score ${signal.intentScore}`}>
+             <span className="progress-fill progress-accent" style={{ width: `${signal.intentScore}%` }} />
+           </div>
+           <div style={{ marginTop: 10, font: '400 11px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>
+             Alasan: {primaryReason}
+            </div>
+         </>
+       )}
       </div>
 
-      {/* Raw Quote Snippet if available */}
-      {rawQuote && (
-        <div
-          style={{
-            padding: '12px',
-            borderRadius: 'var(--border-radius-sm)',
-            backgroundColor: 'var(--color-canvas)',
-            borderLeft: '3px solid var(--color-primary)',
-            fontSize: '13px',
-            fontStyle: 'italic',
-            color: 'var(--color-text-main)',
-          }}
-        >
-          &ldquo;{rawQuote}&rdquo;
-        </div>
-      )}
+     {rawQuote && (
+        <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
+         <div className="kicker kicker-muted">Refleksi terakhir</div>
+         <blockquote className="quote-block" style={{ marginTop: 11 }}>
+           &ldquo;{rawQuote}&rdquo;
+          </blockquote>
+       </div>
+     )}
 
-      {/* Enrollment Progress */}
       {enrollment && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-            <span style={{ fontWeight: 600 }}>Progres Pembelajaran</span>
-            <span className="tabular-nums" style={{ color: 'var(--color-primary)', fontWeight: 700 }}>
-              {enrollment.progressPercent}%
+        <div style={{ padding: '16px 18px', borderBottom: '2px solid var(--ink)' }}>
+         <div className="kicker kicker-muted" style={{ marginBottom: 12 }}>Progres pembelajaran</div>
+         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+           <div className="progress progress-thin" style={{ flex: 1 }}>
+             <span className="progress-fill" style={{ width: `${enrollment.progressPercent}%` }} />
+           </div>
+           <span style={{ font: '700 11px/1 var(--font-sans)' }} className="tabular-nums">
+             Progres: {enrollment.progressPercent}%
             </span>
-          </div>
+         </div>
+         <div className="row-meta" style={{ marginTop: 8 }}>Program: {programTitle}</div>
+       </div>
+     )}
 
-          <div
-            style={{
-              height: '8px',
-              borderRadius: '4px',
-              backgroundColor: 'var(--color-divider)',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                height: '100%',
-                width: `${enrollment.progressPercent}%`,
-                backgroundColor: 'var(--color-primary)',
-                transition: 'width 0.3s ease',
-              }}
-            />
-          </div>
-
-          <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-            Program: {program?.title || 'Program Belajar'}
-          </div>
-        </div>
-      )}
-
-      {/* Action Button */}
-      <button
-        onClick={() => onOpenWhatsAppDraft(contact, defaultDraftMessage)}
-        className="touch-target-primary"
-        style={{
-          width: '100%',
-          backgroundColor: 'var(--color-primary)',
-          color: '#FFF',
-          fontWeight: 600,
-          borderRadius: 'var(--border-radius-md)',
-          marginTop: '10px',
-        }}
-      >
-        Buat Draf WhatsApp
-      </button>
-    </div>
-  );
+      <div style={{ padding: 18 }}>
+       <button
+          type="button"
+          onClick={() =>onOpenWhatsAppDraft(contact, defaultDraftMessage)}
+          className="btn btn-primary btn-block"
+        >
+         Buat Draf WhatsApp
+        </button>
+     </div>
+   </div>
+ );
 }

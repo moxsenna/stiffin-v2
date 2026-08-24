@@ -32,8 +32,8 @@ test.describe('PromotorFlow E2E Browser Suite', () => {
       if (await waButton.isVisible()) {
         await waButton.click();
 
-        // Verify Bottom Sheet renders with explicit "Tandai Terkirim" confirmation
-        const tandaiTerkirimBtn = page.locator('button:has-text("Tandai Terkirim")');
+        // Verify Bottom Sheet renders with explicit human confirmation ("Ya, Sudah Dikirim")
+        const tandaiTerkirimBtn = page.locator('button:has-text("Ya, Sudah Dikirim")');
         await expect(tandaiTerkirimBtn).toBeVisible({ timeout: 5000 });
 
         // Assert no false automated delivery/read claim

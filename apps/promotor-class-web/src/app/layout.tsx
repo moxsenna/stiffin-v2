@@ -16,7 +16,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#286344',
+  themeColor: '#f3f2f2',
 };
 
 export default function RootLayout({
@@ -26,7 +26,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body>{children}</body>
-    </html>
-  );
+     <head>
+       <link rel="preconnect" href="https://fonts.googleapis.com" />
+       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+       <link
+          href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
+     </head>
+     <body>{children}</body>
+   </html>
+ );
 }

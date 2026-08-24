@@ -4,203 +4,180 @@ import React, { useState, useEffect } from 'react';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { LearnerDetail } from '@/components/promotor/LearnerDetail';
 import { WhatsAppDraftSheet } from '@/components/promotor/WhatsAppDraftSheet';
+import { PageHeader, SectionHead, EmptyState, ErrorState, LoadingRows } from '@/components/ui';
 import { getLearningSignalsQuery } from '@/modules/signals/queries';
 import { getContactsQuery } from '@/modules/contacts/queries';
 import { getReflectionsQuery } from '@/modules/reflections/queries';
 import { getEnrollmentsQuery } from '@/modules/enrollments/queries';
 import { LearningSignal, Contact, Reflection, Enrollment } from '@promotor/contracts';
-import { formatTimeAgo, formatPhoneDisplay } from '@promotor/platform-core';
+import { formatTimeAgo } from '@promotor/platform-core';
+
+function signalTagClass(level: string): string {
+  if (level === 'Minat tinggi') return 'tag tag-hot';
+  if (level === 'Minat sedang') return 'tag tag-warm';
+  return 'tag tag-cold';
+}
 
 export default function PromotorHomePage() {
-  const [signals, setSignals] = useState<LearningSignal[]>([]);
+  const [signals, setSignals] = useState<LearningSignal[] | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [reflections, setReflections] = useState<Reflection[]>([]);
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [enrollments] = useState<Enrollment[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [whatsAppDraftContact, setWhatsAppDraftContact] = useState<Contact | null>(null);
   const [isDevMode, setIsDevMode] = useState(false);
 
   const isDevelopmentEnv = process.env.NODE_ENV === 'development';
 
-  useEffect(() => {
-    Promise.all([
-      getLearningSignalsQuery(),
-      getContactsQuery(),
-      getReflectionsQuery(),
-      getEnrollmentsQuery(),
-    ]).then(([sigData, conData, reflData, enrData]) => {
+  const loadData = React.useCallback(async () =>{
+    setLoadError(null);
+    try {
+      const [sigData, conData, reflData, enrData] = await Promise.all([
+        getLearningSignalsQuery(),
+        getContactsQuery(),
+        getReflectionsQuery(),
+        getEnrollmentsQuery(),
+      ]);
       setSignals(sigData);
       setContacts(conData);
       setReflections(reflData);
-      setEnrollments(enrData);
-    });
+      void enrData;
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Tidak dapat memuat sinyal belajar.');
+    }
   }, []);
 
-  const contactMap = new Map(contacts.map(c => [c.id, c]));
+  useEffect(() =>{
+    loadData();
+  }, [loadData]);
+
+  const contactMap = new Map(contacts.map(c =>[c.id, c]));
   const selectedContact = selectedContactId ? contactMap.get(selectedContactId) : null;
 
-  // Resolve dynamic activity timeline from real persistent reflections
-  const activityItems = reflections.map(refl => {
+  const activityItems = reflections.map(refl =>{
     const contact = contactMap.get(refl.contactId);
     const learnerName = contact ? contact.name : 'Peserta';
     return {
       id: refl.id,
-      learnerName,
       summary: `${learnerName} mengirimkan refleksi pembelajaran`,
       timeAgo: formatTimeAgo(refl.submittedAt),
-      timestamp: refl.submittedAt,
     };
   });
 
   return (
     <PromotorShell>
-      <div style={{ padding: '16px' }}>
-        {/* Header Bar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <div>
-            <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '2px' }}>Beranda Promotor</h1>
-            <p style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-              {signals.length} peserta aktif memerlukan perhatian
-            </p>
-          </div>
-
-          {/* Dev capability guard: Only render dev tools toggle in development environment */}
-          {isDevelopmentEnv && (
+     <PageHeader
+        kicker="PromotorClass"
+        title="Beranda"
+        sub={signals ? `${signals.length} peserta perlu perhatian` : 'Memuat sinyal belajar...'}
+        action={
+          isDevelopmentEnv ? (
             <button
-              onClick={() => setIsDevMode(!isDevMode)}
-              style={{ fontSize: '11px', color: 'var(--color-text-subtle)', textDecoration: 'underline' }}
+              type="button"
+              onClick={() =>setIsDevMode(!isDevMode)}
+              className="btn btn-secondary btn-sm"
+              style={{ alignSelf: 'center' }}
             >
-              {isDevMode ? 'Sembunyikan Dev Tools' : 'Dev Tools'}
+             {isDevMode ? 'Sembunyikan Dev Tools' : 'Dev Tools'}
             </button>
-          )}
-        </div>
+         ) : undefined
+        }
+      />
 
-        {/* Development Only Tools */}
-        {isDevelopmentEnv && isDevMode && (
-          <div
-            style={{
-              padding: '12px',
-              backgroundColor: 'var(--color-surface)',
-              borderRadius: 'var(--border-radius-md)',
-              border: '1px dashed var(--color-divider)',
-              marginBottom: '16px',
-              fontSize: '12px',
-            }}
-          >
-            <div style={{ fontWeight: 600, marginBottom: '4px' }}>Mode QA / Simulator Integrasi</div>
-            <div style={{ color: 'var(--color-text-muted)' }}>
-              Status Koneksi PromotorFlow: <strong>Sistem Berjalan Normal (AVAILABLE)</strong>
-            </div>
-          </div>
-        )}
+     {isDevelopmentEnv && isDevMode && (
+        <div className="section-block">
+         <div className="kicker kicker-accent">Mode QA / Simulator Integrasi</div>
+         <p className="muted-note" style={{ marginTop: 6 }}>
+           Status Koneksi PromotorFlow: <strong>Sistem Berjalan Normal (AVAILABLE)</strong>
+         </p>
+       </div>
+     )}
 
-        {/* Work Queue Section */}
-        <div style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px', color: 'var(--color-text-main)' }}>
-            Perlu Perhatian ({signals.length})
-          </h2>
+      {loadError && (
+        <ErrorState title="Gagal memuat sinyal belajar" detail={loadError} onRetry={() =>loadData()} />
+     )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {signals.map(sig => {
-              const contact = contactMap.get(sig.contactId);
-              if (!contact) return null;
+      {!signals && !loadError && (
+        <>
+         <SectionHead label="Perlu perhatian" />
+         <LoadingRows rows={3} />
+       </>
+     )}
 
-              return (
-                <div
-                  key={sig.id}
-                  onClick={() => setSelectedContactId(sig.contactId)}
-                  style={{
-                    backgroundColor: 'var(--color-surface)',
-                    padding: '14px',
-                    borderRadius: 'var(--border-radius-md)',
-                    border: '1px solid var(--color-divider)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '2px' }}>
-                      {contact.name}
-                    </div>
-                    <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '6px' }}>
-                      {formatPhoneDisplay(contact.phoneE164)}
-                    </div>
-                    <div style={{ fontSize: '12px', color: 'var(--color-text-main)' }}>
-                      <strong>{sig.primaryReason}</strong>
-                    </div>
-                  </div>
+      {signals && signals.length >0 && (
+        <>
+         <SectionHead label="Perlu perhatian" count={`${signals.length}`} />
+         {signals.map(sig =>{
+            const contact = contactMap.get(sig.contactId);
+            if (!contact) return null;
 
-                  <div style={{ textAlign: 'right' }}>
-                    <span
-                      style={{
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        padding: '3px 8px',
-                        borderRadius: 'var(--border-radius-full)',
-                        backgroundColor: sig.signalLevel === 'Minat tinggi' ? 'var(--color-primary-light)' : 'var(--color-canvas)',
-                        color: sig.signalLevel === 'Minat tinggi' ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                      }}
-                    >
-                      {sig.signalLevel}
-                    </span>
-                    <div style={{ fontSize: '11px', color: 'var(--color-text-subtle)', marginTop: '4px' }} className="tabular-nums">
-                      Skor: {sig.intentScore}/100
-                    </div>
-                  </div>
+            return (
+              <div key={sig.id} style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline' }}>
+                 <span style={{ font: '700 16px/1.2 var(--font-sans)', letterSpacing: '-0.01em' }}>{contact.name}</span>
+                 <span className={signalTagClass(sig.signalLevel)} style={{ flex: 'none' }}>{sig.signalLevel}</span>
+               </div>
+               <div style={{ marginTop: 8, font: '600 12px/1.35 var(--font-sans)', color: 'var(--accent-dark)' }}>
+                 {sig.primaryReason}
                 </div>
-              );
-            })}
+                <div className="row-meta">
+                  Skor minat: {sig.intentScore}/100
+                </div>
+               <div style={{ marginTop: 12 }}>
+                 <button type="button" className="btn btn-primary btn-sm" onClick={() =>setSelectedContactId(sig.contactId)}>
+                   Lihat learner
+                  </button>
+               </div>
+             </div>
+           );
+          })}
+        </>
+     )}
+
+      {signals && signals.length === 0 && !loadError && (
+        <EmptyState
+          title="Tidak ada yang perlu perhatian"
+          explanation="Sinyal belajar dari aktivitas peserta akan muncul di sini saat ada yang bisa ditindaklanjuti."
+        />
+     )}
+
+      {activityItems.length >0 && (
+        <>
+         <SectionHead label="Aktivitas pembelajaran terbaru" />
+         <div style={{ padding: '10px 18px' }}>
+           {activityItems.slice(0, 10).map(act =>(
+              <div key={act.id} className="timeline-row">
+               <div className="timeline-body">
+                 <div className="timeline-title">{act.summary}</div>
+               </div>
+               <div style={{ marginLeft: 'auto', font: '500 10px/1.4 var(--font-sans)', color: 'var(--muted-light)', flex: 'none' }} className="tabular-nums">
+                 {act.timeAgo}
+                </div>
+             </div>
+           ))}
           </div>
-        </div>
+       </>
+     )}
+      <div style={{ height: 24 }} />
 
-        {/* Dynamic Activity Log */}
-        <div>
-          <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px' }}>Aktivitas Pembelajaran Terbaru</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {activityItems.map(act => (
-              <div
-                key={act.id}
-                style={{
-                  padding: '10px 12px',
-                  backgroundColor: 'var(--color-surface)',
-                  borderRadius: 'var(--border-radius-sm)',
-                  border: '1px solid var(--color-divider)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: '12px',
-                }}
-              >
-                <span>{act.summary}</span>
-                <span style={{ color: 'var(--color-text-subtle)' }} className="tabular-nums">
-                  {act.timeAgo}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+     {selectedContact && (
+        <LearnerDetail
+          contact={selectedContact}
+          onClose={() =>setSelectedContactId(null)}
+          onOpenWhatsAppDraft={c =>{
+            setSelectedContactId(null);
+            setWhatsAppDraftContact(c);
+          }}
+        />
+     )}
 
-        {/* Participant Detail Drawer */}
-        {selectedContact && (
-          <LearnerDetail
-            contact={selectedContact}
-            onClose={() => setSelectedContactId(null)}
-            onOpenWhatsAppDraft={c => {
-              setSelectedContactId(null);
-              setWhatsAppDraftContact(c);
-            }}
-          />
-        )}
-
-        {/* WhatsApp Draft Sheet */}
-        {whatsAppDraftContact && (
-          <WhatsAppDraftSheet
-            contact={whatsAppDraftContact}
-            onClose={() => setWhatsAppDraftContact(null)}
-          />
-        )}
-      </div>
+      {whatsAppDraftContact && (
+        <WhatsAppDraftSheet
+          contact={whatsAppDraftContact}
+          onClose={() =>setWhatsAppDraftContact(null)}
+        />
+     )}
     </PromotorShell>
-  );
+ );
 }

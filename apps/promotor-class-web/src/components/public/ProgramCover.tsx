@@ -36,7 +36,7 @@ export function ProgramCover({
     <div
       style={{
         aspectRatio,
-        borderRadius: '18px',
+        borderRadius: '0px',
         overflow: 'hidden',
         position: 'relative',
         marginBottom: '16px',
@@ -44,7 +44,7 @@ export function ProgramCover({
         backgroundColor: bgColors[variant] || bgColors['cover-a'],
       }}
     >
-      {/* Background Cover Image */}
+     {/* Background Cover Image */}
       {activeImage && (
         <img
           src={activeImage}
@@ -58,7 +58,7 @@ export function ProgramCover({
             objectPosition: 'center',
           }}
         />
-      )}
+     )}
 
       {/* Gradient Overlay for Text Readability */}
       <div
@@ -66,12 +66,12 @@ export function ProgramCover({
           position: 'absolute',
           inset: 0,
           background:
-            'linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%)',
+            'rgba(32,30,29,0.55)',
           zIndex: 1,
         }}
       />
 
-      <div
+     <div
         style={{
           position: 'absolute',
           left: '20px',
@@ -86,7 +86,7 @@ export function ProgramCover({
           textShadow: '0 2px 4px rgba(0,0,0,0.3)',
         }}
       >
-        <small
+       <small
           style={{
             display: 'block',
             fontSize: '11px',
@@ -97,10 +97,10 @@ export function ProgramCover({
             fontWeight: 800,
           }}
         >
-          {publicLabel}
+         {publicLabel}
         </small>
-        {title}
+       {title}
       </div>
-    </div>
-  );
+   </div>
+ );
 }

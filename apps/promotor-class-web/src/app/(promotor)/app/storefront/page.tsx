@@ -7,9 +7,9 @@ import { StorefrontSettingsClient } from '@/components/promotor/StorefrontSettin
 export default function StorefrontPage() {
   return (
     <PromotorShell>
-      <div style={{ padding: '20px 16px', maxWidth: '840px', margin: '0 auto' }}>
-        <StorefrontSettingsClient />
-      </div>
-    </PromotorShell>
-  );
+     <div style={{ padding: '20px 16px', maxWidth: '840px', margin: '0 auto' }}>
+       <StorefrontSettingsClient />
+     </div>
+   </PromotorShell>
+ );
 }

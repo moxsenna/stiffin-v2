@@ -11,28 +11,28 @@ export default function ActivityPage() {
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
 
-  useEffect(() => {
+  useEffect(() =>{
     Promise.all([
       getReflectionsQuery(),
       getContactsQuery(),
-    ]).then(([reflData, conData]) => {
+    ]).then(([reflData, conData]) =>{
       setReflections(reflData);
       setContacts(conData);
     });
   }, []);
 
-  const contactMap = new Map(contacts.map(c => [c.id, c]));
+  const contactMap = new Map(contacts.map(c =>[c.id, c]));
 
   return (
     <PromotorShell>
-      <div style={{ padding: '16px' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '4px' }}>Aktivitas Pembelajaran</h1>
-        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
-          Jejak refleksi & penuntusan materi peserta secara terperinci
+     <div style={{ padding: '16px' }}>
+       <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '4px' }}>Aktivitas Pembelajaran</h1>
+       <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
+         Jejak refleksi & penuntusan materi peserta secara terperinci
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {reflections.map(refl => {
+       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+         {reflections.map(refl =>{
             const contact = contactMap.get(refl.contactId);
             const name = contact ? contact.name : 'Peserta';
 
@@ -46,20 +46,20 @@ export default function ActivityPage() {
                   border: '1px solid var(--color-divider)',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 700, fontSize: '13px' }}>{name}</span>
-                  <span style={{ fontSize: '11px', color: 'var(--color-text-subtle)' }} className="tabular-nums">
-                    {formatTimeAgo(refl.submittedAt)}
+               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                 <span style={{ fontWeight: 700, fontSize: '13px' }}>{name}</span>
+                 <span style={{ fontSize: '11px', color: 'var(--color-text-subtle)' }} className="tabular-nums">
+                   {formatTimeAgo(refl.submittedAt)}
                   </span>
-                </div>
-                <p style={{ fontSize: '13px', color: 'var(--color-text-main)', fontStyle: 'italic' }}>
-                  &ldquo;{refl.answerText}&rdquo;
+               </div>
+               <p style={{ fontSize: '13px', color: 'var(--color-text-main)', fontStyle: 'italic' }}>
+                 &ldquo;{refl.answerText}&rdquo;
                 </p>
-              </div>
-            );
+             </div>
+           );
           })}
         </div>
-      </div>
-    </PromotorShell>
-  );
+     </div>
+   </PromotorShell>
+ );
 }

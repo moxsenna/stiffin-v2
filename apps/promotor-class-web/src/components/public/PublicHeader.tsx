@@ -7,7 +7,7 @@ interface PublicHeaderProps {
   workspaceSlug: string;
   displayName?: string | null;
   tagline?: string | null;
-  onPrimaryClick?: () => void;
+  onPrimaryClick?: () =>void;
 }
 
 export function PublicHeader({
@@ -25,12 +25,10 @@ export function PublicHeader({
         top: 0,
         zIndex: 30,
         backgroundColor: 'rgba(247, 247, 245, 0.94)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--color-divider)',
       }}
     >
-      <div
+     <div
         className="container"
         style={{
           height: '68px',
@@ -40,7 +38,7 @@ export function PublicHeader({
           gap: '16px',
         }}
       >
-        <Link
+       <Link
           href={`/p/${workspaceSlug}`}
           style={{
             display: 'flex',
@@ -50,12 +48,12 @@ export function PublicHeader({
             color: 'inherit',
           }}
         >
-          <div
+         <div
             style={{
               width: '38px',
               height: '38px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--color-primary)',
+              borderRadius: '0px',
+              backgroundColor: 'var(--accent-dark)',
               color: '#FFFFFF',
               display: 'grid',
               placeItems: 'center',
@@ -64,13 +62,13 @@ export function PublicHeader({
               flexShrink: 0,
             }}
           >
-            {avatarLetter}
+           {avatarLetter}
           </div>
-          <div>
-            <span style={{ display: 'block', fontSize: '14px', fontWeight: 760, lineHeight: 1.2 }}>
-              {displayName}
+         <div>
+           <span style={{ display: 'block', fontSize: '14px', fontWeight: 760, lineHeight: 1.2 }}>
+             {displayName}
             </span>
-            <span
+           <span
               style={{
                 display: 'block',
                 fontSize: '11px',
@@ -78,72 +76,72 @@ export function PublicHeader({
                 marginTop: '2px',
               }}
             >
-              {tagline}
+             {tagline}
             </span>
-          </div>
-        </Link>
+         </div>
+       </Link>
 
-        <nav className="desktop-only" style={{ alignItems: 'center', gap: '8px' }}>
-          <a
+       <nav className="desktop-only" style={{ alignItems: 'center', gap: '8px' }}>
+         <a
             href="#programs"
             style={{
               padding: '8px 12px',
-              borderRadius: '10px',
+              borderRadius: '0px',
               color: 'var(--color-text-muted)',
               fontWeight: 650,
               fontSize: '13px',
               textDecoration: 'none',
             }}
           >
-            Program
+           Program
           </a>
-          <a
+         <a
             href="#about"
             style={{
               padding: '8px 12px',
-              borderRadius: '10px',
+              borderRadius: '0px',
               color: 'var(--color-text-muted)',
               fontWeight: 650,
               fontSize: '13px',
               textDecoration: 'none',
             }}
           >
-            Tentang
+           Tentang
           </a>
-          {onPrimaryClick ? (
+         {onPrimaryClick ? (
             <button
               onClick={onPrimaryClick}
               style={{
                 border: 0,
-                backgroundColor: 'var(--color-primary)',
+                backgroundColor: 'var(--accent-dark)',
                 color: '#FFFFFF',
                 fontWeight: 780,
                 fontSize: '13px',
                 padding: '8px 16px',
-                borderRadius: '12px',
+                borderRadius: '0px',
                 cursor: 'pointer',
               }}
             >
-              Mulai belajar
+             Mulai belajar
             </button>
-          ) : (
+         ) : (
             <a
               href="#programs"
               style={{
-                backgroundColor: 'var(--color-primary)',
+                backgroundColor: 'var(--accent-dark)',
                 color: '#FFFFFF',
                 fontWeight: 780,
                 fontSize: '13px',
                 padding: '8px 16px',
-                borderRadius: '12px',
+                borderRadius: '0px',
                 textDecoration: 'none',
               }}
             >
-              Mulai belajar
+             Mulai belajar
             </a>
-          )}
+         )}
         </nav>
-      </div>
-    </header>
-  );
+     </div>
+   </header>
+ );
 }

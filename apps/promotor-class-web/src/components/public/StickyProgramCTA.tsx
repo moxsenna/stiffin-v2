@@ -5,7 +5,7 @@ import React from 'react';
 interface StickyProgramCTAProps {
   label?: string;
   targetId?: string;
-  onClick?: () => void;
+  onClick?: () =>void;
 }
 
 export function StickyProgramCTA({
@@ -13,7 +13,7 @@ export function StickyProgramCTA({
   targetId = 'register',
   onClick,
 }: StickyProgramCTAProps) {
-  const handleClick = () => {
+  const handleClick = () =>{
     if (onClick) {
       onClick();
       return;
@@ -37,19 +37,17 @@ export function StickyProgramCTA({
         zIndex: 40,
         padding: '10px 14px calc(10px + env(safe-area-inset-bottom))',
         backgroundColor: 'rgba(247, 247, 245, 0.96)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
         borderTop: '1px solid var(--color-divider)',
       }}
     >
-      <button
+     <button
         onClick={handleClick}
         className="touch-target-primary"
         style={{
           width: '100%',
           minHeight: '50px',
-          borderRadius: '13px',
-          backgroundColor: 'var(--color-primary)',
+          borderRadius: '0px',
+          backgroundColor: 'var(--accent-dark)',
           color: '#FFFFFF',
           fontWeight: 780,
           fontSize: '15px',
@@ -57,8 +55,8 @@ export function StickyProgramCTA({
           cursor: 'pointer',
         }}
       >
-        {label}
+       {label}
       </button>
-    </div>
-  );
+   </div>
+ );
 }

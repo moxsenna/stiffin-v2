@@ -23,7 +23,7 @@ export function ProgramCard({ item, workspaceSlug }: ProgramCardProps) {
 
   const moduleCount = program.totalModulesCount || 0;
   const lessonCount = program.totalLessonsCount || 0;
-  const lessonMeta = lessonCount > 0 ? `${lessonCount} materi` : `${moduleCount} modul`;
+  const lessonMeta = lessonCount >0 ? `${lessonCount} materi` : `${moduleCount} modul`;
 
   return (
     <article
@@ -34,30 +34,30 @@ export function ProgramCard({ item, workspaceSlug }: ProgramCardProps) {
         flexDirection: 'column',
       }}
     >
-      <Link
+     <Link
         href={`/p/${workspaceSlug}/${program.programSlug}`}
         style={{ textDecoration: 'none', color: 'inherit' }}
       >
-        <ProgramCover
+       <ProgramCover
           title={program.title}
           publicLabel={presentation.heroEyebrow}
           variant={presentation.coverVariant}
         />
 
-        <div
+       <div
           style={{
             fontSize: '11px',
             fontWeight: 820,
             letterSpacing: '0.06em',
             textTransform: 'uppercase',
-            color: 'var(--color-primary)',
+            color: 'var(--accent-dark)',
             marginBottom: '8px',
           }}
         >
-          {presentation.heroEyebrow}
+         {presentation.heroEyebrow}
         </div>
 
-        <h3
+       <h3
           style={{
             fontSize: '21px',
             letterSpacing: '-0.02em',
@@ -66,10 +66,10 @@ export function ProgramCard({ item, workspaceSlug }: ProgramCardProps) {
             fontWeight: 750,
           }}
         >
-          {program.title}
+         {program.title}
         </h3>
 
-        <p
+       <p
           style={{
             color: 'var(--color-text-muted)',
             fontSize: '14px',
@@ -78,10 +78,10 @@ export function ProgramCard({ item, workspaceSlug }: ProgramCardProps) {
             minHeight: '44px',
           }}
         >
-          {presentation.shortOutcome || program.description || program.subtitle}
+         {presentation.shortOutcome || program.description || program.subtitle}
         </p>
 
-        {/* Restrained metadata row */}
+       {/* Restrained metadata row */}
         <div
           style={{
             display: 'flex',
@@ -92,21 +92,21 @@ export function ProgramCard({ item, workspaceSlug }: ProgramCardProps) {
             marginBottom: '14px',
           }}
         >
-          <span>{presentation.durationLabel}</span>
-          <span>·</span>
-          <span>{lessonMeta}</span>
-          <span>·</span>
-          <span style={{ fontWeight: 700 }}>{priceMeta}</span>
-        </div>
-      </Link>
+         <span>{presentation.durationLabel}</span>
+         <span>·</span>
+         <span>{lessonMeta}</span>
+         <span>·</span>
+         <span style={{ fontWeight: 700 }}>{priceMeta}</span>
+       </div>
+     </Link>
 
-      <div style={{ marginTop: 'auto', paddingTop: '4px' }}>
-        <Link
+     <div style={{ marginTop: 'auto', paddingTop: '4px' }}>
+       <Link
           href={`/p/${workspaceSlug}/${program.programSlug}`}
           style={{
             border: 0,
             backgroundColor: 'transparent',
-            color: 'var(--color-primary)',
+            color: 'var(--accent-dark)',
             fontWeight: 760,
             padding: '8px 0',
             fontSize: '14px',
@@ -116,9 +116,9 @@ export function ProgramCard({ item, workspaceSlug }: ProgramCardProps) {
             gap: '6px',
           }}
         >
-          Lihat program →
+         Lihat program →
         </Link>
-        {registrationStatusNotice && (
+       {registrationStatusNotice && (
           <div
             style={{
               fontSize: '11px',
@@ -127,10 +127,10 @@ export function ProgramCard({ item, workspaceSlug }: ProgramCardProps) {
               fontStyle: 'italic',
             }}
           >
-            {registrationStatusNotice}
+           {registrationStatusNotice}
           </div>
-        )}
+       )}
       </div>
-    </article>
-  );
+   </article>
+ );
 }

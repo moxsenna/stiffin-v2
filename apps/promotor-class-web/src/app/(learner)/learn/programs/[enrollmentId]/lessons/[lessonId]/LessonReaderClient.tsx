@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { LearnerShell } from '@/components/layout/LearnerShell';
+import { ErrorState, LoadingRows } from '@/components/ui';
 import { getActiveLearnerContactId } from '@/lib/session';
 import { getEnrollmentByIdQuery } from '@/modules/enrollments/queries';
 import { getProgramByIdQuery } from '@/modules/programs/queries';
@@ -27,7 +28,7 @@ export function LessonReaderClient() {
   const [errorMsg, setErrorMsg] = useState('');
   const [accessDenied, setAccessDenied] = useState(false);
 
-  useEffect(() => {
+  useEffect(() =>{
     async function loadData() {
       try {
         const details = await getEnrollmentFullDetailsQuery(enrollmentId);
@@ -43,7 +44,7 @@ export function LessonReaderClient() {
 
           setEnrollment({
             ...enr,
-            lessonProgress: (prog.modules || []).reduce((acc: any, m: any) => {
+            lessonProgress: (prog.modules || []).reduce((acc: any, m: any) =>{
               for (const l of m.lessons || []) {
                 acc[l.id] = {
                   completed: l.isCompleted,
@@ -57,9 +58,9 @@ export function LessonReaderClient() {
 
           setProgram({
             ...prog,
-            modules: (prog.modules || []).map((m: any) => ({
+            modules: (prog.modules || []).map((m: any) =>({
               ...m,
-              lessons: (m.lessons || []).map((l: any) => ({
+              lessons: (m.lessons || []).map((l: any) =>({
                 ...l,
                 videoYoutubeUrl: l.videoUrl || l.videoYoutubeUrl,
                 hasReflection: !!l.reflectionType,
@@ -93,8 +94,7 @@ export function LessonReaderClient() {
         console.warn('[LessonReaderClient] getEnrollmentFullDetailsQuery fallback:', err);
       }
 
-      // Fallback
-      getEnrollmentByIdQuery(enrollmentId).then(enr => {
+      getEnrollmentByIdQuery(enrollmentId).then(enr =>{
         if (!enr) return;
         const activeContactId = getActiveLearnerContactId();
         if (activeContactId && enr.contactId !== activeContactId) {
@@ -102,7 +102,7 @@ export function LessonReaderClient() {
           return;
         }
         setEnrollment(enr);
-        getProgramByIdQuery(enr.programId).then(prog => {
+        getProgramByIdQuery(enr.programId).then(prog =>{
           if (!prog) return;
           setProgram(prog);
 
@@ -127,33 +127,26 @@ export function LessonReaderClient() {
   if (accessDenied) {
     return (
       <LearnerShell>
-        <div style={{ padding: '40px', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-status-danger)', marginBottom: '8px' }}>
-            Akses Ditolak
-          </h2>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
-            Anda tidak memiliki hak akses ke pelajaran ini.
-          </p>
-          <Link href="/learn" style={{ fontWeight: 600, color: 'var(--color-primary)' }}>
-            ← Kembali ke Program Saya
-          </Link>
-        </div>
-      </LearnerShell>
-    );
+       <ErrorState title="Akses ditolak" detail="Anda tidak memiliki hak akses ke pelajaran ini." />
+       <div style={{ padding: 18 }}>
+         <Link href="/learn" className="btn btn-secondary btn-sm">← Kembali ke Program Saya</Link>
+       </div>
+     </LearnerShell>
+   );
   }
 
   if (!enrollment || !program || !lesson) {
     return (
       <LearnerShell>
-        <div style={{ padding: '40px', textAlign: 'center' }}>Memuat pelajaran...</div>
-      </LearnerShell>
-    );
+       <LoadingRows rows={4} />
+     </LearnerShell>
+   );
   }
 
   const isReflectionRequired = true;
   const isButtonDisabled = isReflectionRequired && !reflectionAnswer.trim();
 
-  const handleComplete = async () => {
+  const handleComplete = async () =>{
     setErrorMsg('');
     setIsSubmitting(true);
 
@@ -165,11 +158,11 @@ export function LessonReaderClient() {
         res = await completeLessonCommand(enrollmentId, lessonId);
       }
 
-      const allLessons = (program?.modules || []).flatMap((m: any) => m.lessons || []);
-      const currentIndex = allLessons.findIndex((l: any) => l.id === lessonId);
+      const allLessons = (program?.modules || []).flatMap((m: any) =>m.lessons || []);
+      const currentIndex = allLessons.findIndex((l: any) =>l.id === lessonId);
       const isLastLesson = currentIndex >= 0 && currentIndex === allLessons.length - 1;
-      const completedCount = allLessons.filter((l: any) => l.isCompleted || l.id === lessonId).length;
-      const isAllDone = allLessons.length > 0 && completedCount >= allLessons.length;
+      const completedCount = allLessons.filter((l: any) =>l.isCompleted || l.id === lessonId).length;
+      const isAllDone = allLessons.length >0 && completedCount >= allLessons.length;
 
       const isCompleted =
         res?.learningStatus === 'COMPLETED' ||
@@ -197,178 +190,140 @@ export function LessonReaderClient() {
     }
   };
 
-  const handleCtaClick = async (ctaUrl: string) => {
+  const handleCtaClick = async (ctaUrl: string) =>{
     await recordCtaClickCommand(enrollmentId, lessonId, ctaUrl);
   };
 
   const embedVideoUrl = getYoutubeEmbedUrl(lesson.videoYoutubeUrl ?? undefined);
 
+  let moduleLabel = '';
+  for (const mod of program.modules) {
+    if ((mod.lessons || []).some((l: any) =>l.id === lessonId)) {
+      moduleLabel = mod.title;
+      break;
+    }
+  }
+
   return (
     <LearnerShell title={lesson.title}>
-      <div style={{ padding: '16px', maxWidth: '700px', margin: '0 auto' }}>
-        <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
-          <Link href={`/learn/programs/${enrollmentId}`}>← Kembali ke Kurikulum</Link>
-        </div>
+     <div style={{ borderBottom: 'var(--sep-strong)', padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+       <div className="kicker kicker-muted">{moduleLabel}</div>
+       <Link href={`/learn/programs/${enrollmentId}`} className="btn btn-ghost btn-sm" style={{ padding: 0 }}>
+         ← Kurikulum
+        </Link>
+     </div>
 
-        <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '16px' }}>{lesson.title}</h1>
+     <article style={{ maxWidth: 700, margin: '0 auto', padding: '18px' }}>
+       <h1 style={{ font: '800 21px/1.2 var(--font-sans)', letterSpacing: '-0.02em' }}>{lesson.title}</h1>
 
-        {/* Embedded YouTube Player */}
-        {embedVideoUrl && (
+       {embedVideoUrl && (
           <div
             style={{
               position: 'relative',
               paddingBottom: '56.25%',
               height: 0,
               overflow: 'hidden',
-              borderRadius: 'var(--border-radius-md)',
-              marginBottom: '16px',
-              backgroundColor: '#000',
+              marginTop: 14,
+              backgroundColor: '#2d2b2b',
+              borderBottom: '2px solid var(--ink)',
             }}
           >
-            <iframe
+           <iframe
               src={embedVideoUrl}
               style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
               allowFullScreen
+              title={`Video pelajaran: ${lesson.title}`}
             />
-          </div>
-        )}
+         </div>
+       )}
 
-        {/* Text Content */}
         {lesson.textContent && (
-          <div
-            style={{
-              backgroundColor: 'var(--color-surface)',
-              padding: '16px',
-              borderRadius: 'var(--border-radius-md)',
-              border: '1px solid var(--color-divider)',
-              fontSize: '14px',
-              lineHeight: 1.6,
-              marginBottom: '20px',
-            }}
-          >
-            {lesson.textContent}
-          </div>
-        )}
+          <p className="body-copy" style={{ marginTop: 16, whiteSpace: 'pre-wrap' }}>
+           {lesson.textContent}
+          </p>
+       )}
 
-        {/* Attachments */}
-        {lesson.attachments && lesson.attachments.length > 0 && (
-          <div style={{ marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Lampiran Berkas / Panduan</h3>
-            {lesson.attachments.map(att => (
+        {lesson.attachments && lesson.attachments.length >0 && (
+          <div style={{ marginTop: 20, borderTop: '1px solid var(--line)', paddingTop: 14 }}>
+           {lesson.attachments.map(att =>(
               <a
                 key={att.id}
                 href={att.url}
                 download
+                className="list-row"
                 style={{
-                  padding: '10px 14px',
-                  backgroundColor: 'var(--color-surface)',
-                  borderRadius: 'var(--border-radius-sm)',
-                  border: '1px solid var(--color-divider)',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  fontSize: '13px',
-                  color: 'inherit',
-                  textDecoration: 'none',
-                  marginBottom: '6px',
+                  alignItems: 'center',
+                  gap: 10,
+                  border: '2px solid var(--ink)',
+                  marginBottom: 8,
+                  paddingLeft: 14,
+                  paddingRight: 14,
                 }}
               >
-                <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{att.name}</span>
-                <span style={{ color: 'var(--color-text-subtle)' }} className="tabular-nums">
-                  {att.sizeFormatted || 'Download'}
+               <span style={{ font: '600 12px/1.3 var(--font-sans)' }}>{att.name}</span>
+               <span style={{ color: 'var(--accent-dark)', font: '700 11px/1 var(--font-sans)' }} className="tabular-nums">
+                 {att.sizeFormatted || 'Unduh'}
                 </span>
-              </a>
-            ))}
+             </a>
+           ))}
           </div>
-        )}
+       )}
 
-        {/* Mandatory Reflection Box */}
-        <div
-          style={{
-            backgroundColor: 'var(--color-surface)',
-            padding: '16px',
-            borderRadius: 'var(--border-radius-md)',
-            border: '2px solid var(--color-primary-border)',
-            marginBottom: '20px',
-          }}
-        >
-          <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '6px' }}>
-            Refleksi Wajib *
-          </h3>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-main)', marginBottom: '10px' }}>
-            {lesson.reflectionPrompt || 'Tuliskan pemikiran dan hasil pengamatan Anda:'}
+        <section style={{ marginTop: 22, border: 'var(--sep-strong)', padding: 16, background: 'var(--surface-muted)' }}>
+         <h3 className="kicker kicker-accent" style={{ fontSize: 10 }}>Refleksi Wajib *</h3>
+         <p style={{ marginTop: 10, font: '600 14px/1.45 var(--font-sans)' }}>
+           {lesson.reflectionPrompt || 'Tuliskan pemikiran dan hasil pengamatan Anda:'}
           </p>
 
-          <textarea
+         <textarea
             rows={4}
             value={reflectionAnswer}
-            onChange={e => setReflectionAnswer(e.target.value)}
+            onChange={e =>setReflectionAnswer(e.target.value)}
             placeholder="Tuliskan refleksi Anda di sini..."
-            style={{
-              width: '100%',
-              padding: '10px',
-              borderRadius: 'var(--border-radius-sm)',
-              border: '1px solid var(--color-divider)',
-              fontSize: '13px',
-            }}
+            aria-label="Jawaban refleksi"
+            className="textarea"
+            style={{ marginTop: 12 }}
           />
-          {isButtonDisabled && (
-            <div style={{ fontSize: '11px', color: 'var(--color-status-warning)', marginTop: '4px' }}>
-              * Anda wajib mengisi refleksi di atas untuk membuka tombol Selesai.
+         {isButtonDisabled && (
+            <div style={{ fontSize: 11, color: 'var(--muted-strong)', marginTop: 8 }}>
+             * Anda wajib mengisi refleksi di atas untuk membuka tombol Selesai.
             </div>
-          )}
-        </div>
+         )}
+        </section>
 
-        {/* Call to Action Button with Explicit Event Tracking */}
-        {(lesson.hasCta || lesson.ctaLabel) && (lesson.ctaUrl || (lesson.ctaConfig as any)?.url || lesson.ctaLabel) && (
-          <div style={{ marginBottom: '20px' }}>
-            <a
+       {(lesson.hasCta || lesson.ctaLabel) && (lesson.ctaUrl || (lesson.ctaConfig as any)?.url || lesson.ctaLabel) && (
+          <div style={{ marginTop: 18 }}>
+           <a
               href={lesson.ctaUrl || (lesson.ctaConfig as any)?.url || '#'}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => {
+              onClick={(e) =>{
                 e.preventDefault();
                 handleCtaClick(lesson.ctaUrl || (lesson.ctaConfig as any)?.url || '#');
               }}
-              className="touch-target-primary"
-              style={{
-                width: '100%',
-                backgroundColor: '#25D366',
-                color: '#FFF',
-                fontWeight: 700,
-                borderRadius: 'var(--border-radius-md)',
-                textAlign: 'center',
-                textDecoration: 'none',
-                display: 'block',
-              }}
+              className="btn btn-accent btn-block"
             >
-              {lesson.ctaLabel || 'Konsultasi via WhatsApp'}
+             {lesson.ctaLabel || 'Konsultasi via WhatsApp'}
             </a>
-          </div>
-        )}
+         </div>
+       )}
 
         {errorMsg && (
-          <div style={{ color: 'var(--color-status-danger)', fontSize: '13px', marginBottom: '10px' }}>
-            {errorMsg}
-          </div>
-        )}
+          <div className="field-error" role="alert" style={{ marginTop: 12 }}>{errorMsg}</div>
+       )}
 
-        {/* Completion Button */}
         <button
           onClick={handleComplete}
           disabled={isButtonDisabled || isSubmitting}
-          className="touch-target-primary"
-          style={{
-            width: '100%',
-            backgroundColor: isButtonDisabled ? 'var(--color-divider)' : 'var(--color-primary)',
-            color: isButtonDisabled ? 'var(--color-text-subtle)' : '#FFF',
-            fontWeight: 700,
-            borderRadius: 'var(--border-radius-md)',
-            cursor: isButtonDisabled ? 'not-allowed' : 'pointer',
-          }}
+          className="btn btn-primary btn-block"
+          style={{ marginTop: 18 }}
         >
-          {isSubmitting ? 'Menyimpan...' : 'Tandai Selesai & Lanjut'}
+         {isSubmitting ? 'Menyimpan...' : 'Tandai Selesai & Lanjut'}
         </button>
-      </div>
-    </LearnerShell>
-  );
+       <div style={{ height: 24 }} />
+     </article>
+   </LearnerShell>
+ );
 }

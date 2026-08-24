@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import { Contact } from '@promotor/contracts';
+import { BottomSheet } from '@/components/ui';
 
 interface WhatsAppDraftSheetProps {
   contact: Contact | null;
   initialMessage?: string;
-  onClose: () => void;
+  onClose: () =>void;
 }
 
 export function WhatsAppDraftSheet({
@@ -24,65 +25,32 @@ export function WhatsAppDraftSheet({
   const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 
   return (
-    <>
-      <div className="sheet-overlay active" onClick={onClose} />
-      <div className="bottom-sheet active">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 700 }}>Draf Pesan WhatsApp</h3>
-          <button onClick={onClose} style={{ padding: '4px 8px', fontSize: '14px' }}>✕</button>
-        </div>
-
-        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '8px' }}>
-          Penerima: <strong>{contact.name}</strong> ({contact.phoneE164})
-        </div>
-
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          rows={5}
-          style={{
-            width: '100%',
-            padding: '10px',
-            borderRadius: 'var(--border-radius-sm)',
-            border: '1px solid var(--color-divider)',
-            fontSize: '13px',
-            resize: 'vertical',
-            marginBottom: '16px',
-          }}
-        />
-
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            onClick={onClose}
-            className="touch-target-primary"
-            style={{
-              flex: 1,
-              border: '1px solid var(--color-divider)',
-              borderRadius: 'var(--border-radius-md)',
-              fontWeight: 600,
-            }}
-          >
-            Batal
-          </button>
-          <a
-            href={waUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="touch-target-primary"
-            style={{
-              flex: 2,
-              backgroundColor: '#25D366',
-              color: '#FFF',
-              borderRadius: 'var(--border-radius-md)',
-              fontWeight: 700,
-              textAlign: 'center',
-              textDecoration: 'none',
-            }}
-          >
-            Buka di WhatsApp
-          </a>
-        </div>
+    <BottomSheet open={!!contact} onClose={onClose} labelledBy="wa-draft-title">
+     <div id="wa-draft-title" className="kicker kicker-muted">Kirim WhatsApp · Draf pesan</div>
+     <div style={{ marginTop: 10, font: '600 14px/1.3 var(--font-sans)' }}>
+       Penerima: {contact.name}
       </div>
-    </>
-  );
+     <div className="row-meta">{contact.phoneE164}</div>
+
+     <textarea
+        aria-label="Draf pesan WhatsApp"
+        value={message}
+        onChange={(e) =>setMessage(e.target.value)}
+        rows={5}
+        className="textarea"
+        style={{ marginTop: 12 }}
+      />
+
+     <p className="sheet-explain">Pesan dibuka di WhatsApp. Anda yang menekan kirim.</p>
+
+     <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+       <a href={waUrl} target="_blank" rel="noopener noreferrer" className="btn btn-accent">
+         Buka di WhatsApp
+        </a>
+       <button type="button" onClick={onClose} className="btn btn-ghost">
+         Batal
+        </button>
+     </div>
+   </BottomSheet>
+ );
 }

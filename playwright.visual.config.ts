@@ -1,24 +1,20 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './tests/e2e',
+  testDir: './tests/visual',
   fullyParallel: false,
   workers: 1,
-  reporter: [['list'], ['html', { open: 'never' }]],
+  reporter: [['list']],
   use: {
     headless: true,
-    viewport: { width: 360, height: 740 },
-    trace: 'on-first-retry',
-    actionTimeout: 10000,
+    viewport: { width: 390, height: 844 },
+    actionTimeout: 15000,
+    navigationTimeout: 30000,
   },
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'mobile-chrome',
-      use: { ...devices['Pixel 5'] },
     },
   ],
   webServer: [

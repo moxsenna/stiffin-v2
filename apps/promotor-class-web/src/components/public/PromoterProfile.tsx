@@ -15,7 +15,7 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
 
   return (
     <section id="about" className="container" style={{ paddingTop: '64px', paddingBottom: '64px' }}>
-      <div
+     <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
@@ -23,21 +23,20 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
           alignItems: 'center',
         }}
       >
-        {/* Portrait Container with Generated WebP Image */}
+       {/* Portrait Container with Generated WebP Image */}
         <div
           style={{
             maxWidth: '340px',
             width: '100%',
             aspectRatio: '4 / 5',
-            borderRadius: '24px',
+            borderRadius: '0px',
             overflow: 'hidden',
             position: 'relative',
             border: '1px solid var(--color-divider)',
-            boxShadow: 'var(--shadow-md)',
             margin: '0 auto',
           }}
         >
-          <img
+         <img
             src={profile.avatarUrl || "/images/promoter_profile_rina.webp"}
             alt={profile.displayName}
             style={{
@@ -48,7 +47,7 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
               display: 'block',
             }}
           />
-          <div
+         <div
             style={{
               position: 'absolute',
               left: '14px',
@@ -56,36 +55,33 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
               right: '14px',
               padding: '10px 14px',
               backgroundColor: 'rgba(255, 255, 255, 0.94)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
               border: '1px solid var(--color-divider)',
-              borderRadius: '14px',
+              borderRadius: '0px',
               fontSize: '13px',
               fontWeight: 750,
               color: '#191918',
-              boxShadow: 'var(--shadow-sm)',
             }}
           >
-            {profile.displayName} · {profile.roleLabel}
+           {profile.displayName} · {profile.roleLabel}
           </div>
-        </div>
+       </div>
 
-        {/* Bio Copy */}
+       {/* Bio Copy */}
         <div>
-          <div
+         <div
             style={{
               fontSize: '12px',
               fontWeight: 820,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              color: 'var(--color-primary)',
+              color: 'var(--accent-dark)',
               marginBottom: '12px',
             }}
           >
-            Tentang pembuat
+           Tentang pembuat
           </div>
 
-          <h2
+         <h2
             style={{
               fontSize: 'clamp(24px, 3.5vw, 36px)',
               letterSpacing: '-0.04em',
@@ -94,10 +90,10 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
               lineHeight: 1.15,
             }}
           >
-            {profile.headline || 'Saya membantu orang tua menerjemahkan hasil tes menjadi kebiasaan yang lebih manusiawi di rumah.'}
+           {profile.headline || 'Saya membantu orang tua menerjemahkan hasil tes menjadi kebiasaan yang lebih manusiawi di rumah.'}
           </h2>
 
-          <p
+         <p
             style={{
               color: '#55544f',
               fontSize: '15px',
@@ -105,12 +101,12 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
               marginBottom: '20px',
             }}
           >
-            {profile.bio}
+           {profile.bio}
           </p>
 
-          {waUrl && (
+         {waUrl && (
             <div style={{ marginBottom: '24px' }}>
-              <a
+             <a
                 href={waUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -122,17 +118,16 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
                   padding: '0 20px',
                   backgroundColor: '#25D366',
                   color: '#FFF',
-                  borderRadius: '12px',
+                  borderRadius: '0px',
                   fontWeight: 750,
                   fontSize: '14px',
                   textDecoration: 'none',
-                  boxShadow: 'var(--shadow-sm)',
                 }}
               >
-                <span>💬</span> Hubungi {profile.displayName.split(' ')[0]} via WhatsApp
+               <span></span>Hubungi {profile.displayName.split(' ')[0]} via WhatsApp
               </a>
-            </div>
-          )}
+           </div>
+         )}
 
           {/* Neutral demonstrative facts */}
           <div
@@ -144,27 +139,27 @@ export function PromoterProfile({ profile }: PromoterProfileProps) {
               borderTop: '1px solid var(--color-divider)',
             }}
           >
-            <div>
-              <strong style={{ fontSize: '18px', display: 'block', fontWeight: 800 }}>
-                {profile.stats.programCount}
+           <div>
+             <strong style={{ fontSize: '18px', display: 'block', fontWeight: 800 }}>
+               {profile.stats.programCount}
               </strong>
-              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>ruang belajar aktif</span>
-            </div>
-            <div>
-              <strong style={{ fontSize: '18px', display: 'block', fontWeight: 800 }}>
-                STIFIn
+             <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>ruang belajar aktif</span>
+           </div>
+           <div>
+             <strong style={{ fontSize: '18px', display: 'block', fontWeight: 800 }}>
+               STIFIn
               </strong>
-              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>metode pendampingan</span>
-            </div>
-            <div>
-              <strong style={{ fontSize: '18px', display: 'block', fontWeight: 800 }}>
-                {profile.stats.location}
+             <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>metode pendampingan</span>
+           </div>
+           <div>
+             <strong style={{ fontSize: '18px', display: 'block', fontWeight: 800 }}>
+               {profile.stats.location}
               </strong>
-              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>wilayah layanan</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+             <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>wilayah layanan</span>
+           </div>
+         </div>
+       </div>
+     </div>
+   </section>
+ );
 }

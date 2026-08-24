@@ -19,7 +19,7 @@ export function LearnerProgramClient() {
   const [program, setProgram] = useState<Program | null>(null);
   const [accessDenied, setAccessDenied] = useState(false);
 
-  useEffect(() => {
+  useEffect(() =>{
     async function loadData() {
       try {
         const details = await getEnrollmentFullDetailsQuery(enrollmentId);
@@ -42,7 +42,7 @@ export function LearnerProgramClient() {
             return;
           }
 
-          const progressMap: Record<string, any> = {};
+          const progressMap: Record<string, any>= {};
           for (const m of prog.modules || []) {
             for (const l of m.lessons || []) {
               progressMap[l.id] = {
@@ -60,9 +60,9 @@ export function LearnerProgramClient() {
 
           setProgram({
             ...prog,
-            modules: (prog.modules || []).map((m: any) => ({
+            modules: (prog.modules || []).map((m: any) =>({
               ...m,
-              lessons: (m.lessons || []).map((l: any) => ({
+              lessons: (m.lessons || []).map((l: any) =>({
                 ...l,
                 videoYoutubeUrl: l.videoUrl || l.videoYoutubeUrl,
                 hasReflection: !!l.reflectionType,
@@ -77,7 +77,7 @@ export function LearnerProgramClient() {
       }
 
       // Fallback
-      getEnrollmentByIdQuery(enrollmentId).then(enr => {
+      getEnrollmentByIdQuery(enrollmentId).then(enr =>{
         if (!enr) return;
         const activeContactId = getActiveLearnerContactId();
         if (activeContactId && enr.contactId !== activeContactId) {
@@ -88,7 +88,7 @@ export function LearnerProgramClient() {
           ...enr,
           lessonProgress: enr.lessonProgress || {},
         });
-        getProgramByIdQuery(enr.programId).then(prog => {
+        getProgramByIdQuery(enr.programId).then(prog =>{
           if (prog) setProgram(prog);
         });
       });
@@ -100,44 +100,44 @@ export function LearnerProgramClient() {
   if (accessDenied) {
     return (
       <LearnerShell>
-        <div style={{ padding: '40px', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-status-danger)', marginBottom: '8px' }}>
-            Akses Ditolak
+       <div style={{ padding: '40px', textAlign: 'center' }}>
+         <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-status-danger)', marginBottom: '8px' }}>
+           Akses Ditolak
           </h2>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
-            Anda tidak memiliki hak akses ke program pembelajaran ini.
+         <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+           Anda tidak memiliki hak akses ke program pembelajaran ini.
           </p>
-          <Link href="/learn" style={{ fontWeight: 600, color: 'var(--color-primary)' }}>
-            ← Kembali ke Program Saya
+         <Link href="/learn" style={{ fontWeight: 600, color: 'var(--accent-dark)' }}>
+           ← Kembali ke Program Saya
           </Link>
-        </div>
-      </LearnerShell>
-    );
+       </div>
+     </LearnerShell>
+   );
   }
 
   if (!enrollment || !program) {
     return (
       <LearnerShell>
-        <div style={{ padding: '40px', textAlign: 'center' }}>Memuat program...</div>
-      </LearnerShell>
-    );
+       <div style={{ padding: '40px', textAlign: 'center' }}>Memuat program...</div>
+     </LearnerShell>
+   );
   }
 
   return (
     <LearnerShell title={program.title}>
-      <div style={{ padding: '16px' }}>
-        <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
-          <Link href="/learn">← Kembali ke Program Saya</Link>
+     <div style={{ padding: '16px' }}>
+       <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
+         <Link href="/learn">← Kembali ke Program Saya</Link>
+       </div>
+
+       <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '4px' }}>{program.title}</h1>
+       <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
+         {program.subtitle}
         </div>
 
-        <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '4px' }}>{program.title}</h1>
-        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
-          {program.subtitle}
-        </div>
-
-        {/* Modules & Lessons List */}
+       {/* Modules & Lessons List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {program.modules.map(mod => (
+         {program.modules.map(mod =>(
             <div
               key={mod.id}
               style={{
@@ -147,10 +147,10 @@ export function LearnerProgramClient() {
                 padding: '16px',
               }}
             >
-              <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '12px' }}>{mod.title}</h3>
+             <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '12px' }}>{mod.title}</h3>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {mod.lessons.map(les => {
+             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+               {mod.lessons.map(les =>{
                   const lessonProgress = (enrollment.lessonProgress && enrollment.lessonProgress[les.id]) || undefined;
                   const isCompleted = (les as any).isCompleted ?? lessonProgress?.completed;
 
@@ -169,34 +169,34 @@ export function LearnerProgramClient() {
                         textDecoration: 'none',
                       }}
                     >
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: '13px' }}>{les.title}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                          {les.videoYoutubeUrl ? 'Video' : 'Teks'} {les.hasReflection ? '· Refleksi' : ''}
+                     <div>
+                       <div style={{ fontWeight: 600, fontSize: '13px' }}>{les.title}</div>
+                       <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                         {les.videoYoutubeUrl ? 'Video' : 'Teks'} {les.hasReflection ? '· Refleksi' : ''}
                         </div>
-                      </div>
+                     </div>
 
-                      <span
+                     <span
                         style={{
                           fontSize: '11px',
                           fontWeight: 600,
                           padding: '2px 8px',
-                          borderRadius: '4px',
+                          borderRadius: '0px',
                           backgroundColor: isCompleted ? 'var(--color-status-success-bg)' : '#FFF',
-                          color: isCompleted ? 'var(--color-status-success)' : 'var(--color-primary)',
+                          color: isCompleted ? 'var(--color-status-success)' : 'var(--accent-dark)',
                           border: '1px solid var(--color-divider)',
                         }}
                       >
-                        {isCompleted ? '✓ Selesai' : 'Mulai →'}
+                       {isCompleted ? '✓ Selesai' : 'Mulai →'}
                       </span>
-                    </Link>
-                  );
+                   </Link>
+                 );
                 })}
               </div>
-            </div>
-          ))}
+           </div>
+         ))}
         </div>
-      </div>
-    </LearnerShell>
-  );
+     </div>
+   </LearnerShell>
+ );
 }

@@ -13,7 +13,7 @@ interface WorkspaceHeroProps {
 export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
   return (
     <section className="container" style={{ paddingTop: '48px', paddingBottom: '32px' }}>
-      <div
+     <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -21,9 +21,9 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
           alignItems: 'center',
         }}
       >
-        {/* Left Headline Column */}
+       {/* Left Headline Column */}
         <div>
-          <div
+         <div
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -32,22 +32,22 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
               fontWeight: 820,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              color: 'var(--color-primary)',
+              color: 'var(--accent-dark)',
               marginBottom: '16px',
             }}
           >
-            <span
+           <span
               style={{
                 width: '7px',
                 height: '7px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--color-primary)',
+                borderRadius: '0px',
+                backgroundColor: 'var(--accent-dark)',
               }}
             />
-            Ruang belajar {profile.displayName.split(' ')[0]}
+           Ruang belajar {profile.displayName.split(' ')[0]}
           </div>
 
-          <h1
+         <h1
             style={{
               fontSize: 'clamp(32px, 4.5vw, 56px)',
               lineHeight: 1.04,
@@ -56,10 +56,10 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
               fontWeight: 800,
             }}
           >
-            {profile.headline}
+           {profile.headline}
           </h1>
 
-          <p
+         <p
             style={{
               fontSize: '16px',
               lineHeight: 1.65,
@@ -68,17 +68,17 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
               marginBottom: '24px',
             }}
           >
-            Materi singkat untuk membantu orang tua mengenali cara belajar anak, mengurangi konflik sehari-hari, dan mendampingi dengan lebih tenang.
+           Materi singkat untuk membantu orang tua mengenali cara belajar anak, mengurangi konflik sehari-hari, dan mendampingi dengan lebih tenang.
           </p>
 
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <a
+         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+           <a
               href="#programs"
               style={{
                 minHeight: '46px',
-                borderRadius: '13px',
+                borderRadius: '0px',
                 padding: '0 20px',
-                backgroundColor: 'var(--color-primary)',
+                backgroundColor: 'var(--accent-dark)',
                 color: '#FFFFFF',
                 fontWeight: 780,
                 fontSize: '14px',
@@ -88,13 +88,13 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                 justifyContent: 'center',
               }}
             >
-              Lihat program
+             Lihat program
             </a>
-            <a
+           <a
               href="#about"
               style={{
                 minHeight: '46px',
-                borderRadius: '13px',
+                borderRadius: '0px',
                 padding: '0 20px',
                 border: '1px solid var(--color-divider)',
                 backgroundColor: '#FFFFFF',
@@ -107,11 +107,11 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                 justifyContent: 'center',
               }}
             >
-              Kenal {profile.displayName.split(' ')[0]}
+             Kenal {profile.displayName.split(' ')[0]}
             </a>
-          </div>
+         </div>
 
-          <div
+         <div
             style={{
               marginTop: '20px',
               display: 'flex',
@@ -121,42 +121,41 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
               fontSize: '12px',
             }}
           >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <i style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#aaa79f', display: 'inline-block' }} />
-              Materi praktis
+           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+             <i style={{ width: '5px', height: '5px', borderRadius: '0px', backgroundColor: '#aaa79f', display: 'inline-block' }} />
+             Materi praktis
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <i style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#aaa79f', display: 'inline-block' }} />
-              Bisa dipelajari kapan saja
+           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+             <i style={{ width: '5px', height: '5px', borderRadius: '0px', backgroundColor: '#aaa79f', display: 'inline-block' }} />
+             Bisa dipelajari kapan saja
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <i style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#aaa79f', display: 'inline-block' }} />
-              Mulai dari program gratis
+           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+             <i style={{ width: '5px', height: '5px', borderRadius: '0px', backgroundColor: '#aaa79f', display: 'inline-block' }} />
+             Mulai dari program gratis
             </span>
-          </div>
-        </div>
+         </div>
+       </div>
 
-        {/* Right Featured Art Card with Generated WebP Photo */}
+       {/* Right Featured Art Card with Generated WebP Photo */}
         {featuredItem && (
           <Link
             href={`/p/${profile.workspaceSlug}/${featuredItem.program.programSlug}`}
             style={{ textDecoration: 'none', color: 'inherit' }}
           >
-            <div
+           <div
               style={{
                 minHeight: '380px',
                 position: 'relative',
-                borderRadius: '24px',
+                borderRadius: '0px',
                 overflow: 'hidden',
                 border: '1px solid #dbe5dd',
-                boxShadow: 'var(--shadow-md)',
                 padding: '28px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
               }}
             >
-              <img
+             <img
                 src="/images/program_cover_7hari.webp"
                 alt={featuredItem.program.title}
                 style={{
@@ -168,18 +167,18 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                   objectPosition: 'center',
                 }}
               />
-              <div
+             <div
                 style={{
                   position: 'absolute',
                   inset: 0,
                   background:
-                    'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0.85) 100%)',
+                    'rgba(32,30,29,0.55)',
                   zIndex: 1,
                 }}
               />
 
-              <div style={{ position: 'relative', zIndex: 2 }}>
-                <span
+             <div style={{ position: 'relative', zIndex: 2 }}>
+               <span
                   style={{
                     display: 'inline-block',
                     fontSize: '11px',
@@ -187,18 +186,17 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                     letterSpacing: '0.08em',
                     textTransform: 'uppercase',
                     backgroundColor: 'rgba(255, 255, 255, 0.92)',
-                    backdropFilter: 'blur(8px)',
                     border: '1px solid rgba(255, 255, 255, 0.5)',
                     padding: '6px 12px',
-                    borderRadius: '999px',
+                    borderRadius: '0px',
                     marginBottom: '14px',
-                    color: 'var(--color-primary)',
+                    color: 'var(--accent-dark)',
                   }}
                 >
-                  Program Pilihan
+                 Program Pilihan
                 </span>
 
-                <div
+               <div
                   style={{
                     fontSize: '34px',
                     lineHeight: 1.02,
@@ -209,10 +207,10 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                     textShadow: '0 2px 6px rgba(0,0,0,0.4)',
                   }}
                 >
-                  {featuredItem.program.title}
+                 {featuredItem.program.title}
                 </div>
 
-                <p
+               <p
                   style={{
                     fontSize: '13px',
                     color: '#e2ece5',
@@ -221,11 +219,11 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                     margin: 0,
                   }}
                 >
-                  {featuredItem.presentation.shortOutcome}
+                 {featuredItem.presentation.shortOutcome}
                 </p>
-              </div>
+             </div>
 
-              <div
+             <div
                 style={{
                   display: 'flex',
                   gap: '10px',
@@ -237,23 +235,23 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                   position: 'relative',
                 }}
               >
-                <img
+               <img
                   src={profile.avatarUrl || "/images/promoter_profile_rina.webp"}
                   alt={profile.displayName}
                   style={{
                     width: '32px',
                     height: '32px',
-                    borderRadius: '50%',
+                    borderRadius: '0px',
                     objectFit: 'cover',
                     border: '2px solid #FFFFFF',
                   }}
                 />
-                <span>oleh {profile.displayName}</span>
-              </div>
-            </div>
-          </Link>
-        )}
+               <span>oleh {profile.displayName}</span>
+             </div>
+           </div>
+         </Link>
+       )}
       </div>
-    </section>
-  );
+   </section>
+ );
 }

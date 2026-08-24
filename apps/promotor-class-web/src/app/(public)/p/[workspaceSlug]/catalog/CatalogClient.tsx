@@ -17,7 +17,7 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'free' | 'client'>('all');
 
-  const filteredCatalog = catalog.filter(item => {
+  const filteredCatalog = catalog.filter(item =>{
     // Search matching
     const matchesSearch =
       item.program.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -45,7 +45,7 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
         color: 'var(--color-text-main)',
       }}
     >
-      {/* Mobile Top App Header */}
+     {/* Mobile Top App Header */}
       <MobileAppHeader
         title="Katalog Program"
         subtitle={`Ruang Belajar ${profile.displayName.split(' ')[0]}`}
@@ -53,27 +53,27 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
         workspaceSlug={profile.workspaceSlug}
       />
 
-      {/* Desktop Header */}
+     {/* Desktop Header */}
       <div className="desktop-only">
-        <PublicHeader
+       <PublicHeader
           workspaceSlug={profile.workspaceSlug}
           displayName={profile.displayName}
           tagline={profile.tagline}
         />
-      </div>
+     </div>
 
-      <main className="container" style={{ paddingTop: '24px', paddingBottom: '48px' }}>
-        {/* Title & Description */}
+     <main className="container" style={{ paddingTop: '24px', paddingBottom: '48px' }}>
+       {/* Title & Description */}
         <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ fontSize: 'clamp(24px, 3.5vw, 32px)', fontWeight: 750, letterSpacing: '-0.03em', marginBottom: '8px' }}>
-            Katalog Program & Pendampingan STIFIn
+         <h1 style={{ fontSize: 'clamp(24px, 3.5vw, 32px)', fontWeight: 750, letterSpacing: '-0.03em', marginBottom: '8px' }}>
+           Katalog Program & Pendampingan STIFIn
           </h1>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', lineHeight: 1.6 }}>
-            Selamat datang! Baik Anda yang sedang mengenal STIFIn maupun peserta yang sudah melakukan tes, temukan program edukasi, e-course, dan pendampingan lanjutan yang dirancang sesuai kebutuhan Anda.
+         <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', lineHeight: 1.6 }}>
+           Selamat datang! Baik Anda yang sedang mengenal STIFIn maupun peserta yang sudah melakukan tes, temukan program edukasi, e-course, dan pendampingan lanjutan yang dirancang sesuai kebutuhan Anda.
           </p>
-        </div>
+       </div>
 
-        {/* Search & Filter Controls */}
+       {/* Search & Filter Controls */}
         <div
           style={{
             display: 'flex',
@@ -82,18 +82,18 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
             marginBottom: '28px',
           }}
         >
-          {/* Search Input */}
+         {/* Search Input */}
           <div style={{ position: 'relative', width: '100%' }}>
-            <input
+           <input
               type="text"
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e =>setSearch(e.target.value)}
               placeholder="Cari e-course, materi, atau program pendampingan..."
               style={{
                 width: '100%',
                 minHeight: '44px',
                 padding: '0 16px 0 40px',
-                borderRadius: '12px',
+                borderRadius: '0px',
                 border: '1px solid var(--color-divider)',
                 backgroundColor: 'var(--color-surface)',
                 fontSize: '14px',
@@ -101,7 +101,7 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
                 boxSizing: 'border-box',
               }}
             />
-            <svg
+           <svg
               width="18"
               height="18"
               viewBox="0 0 24 24"
@@ -117,77 +117,77 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
                 transform: 'translateY(-50%)',
               }}
             >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </div>
+             <circle cx="11" cy="11" r="8" />
+             <line x1="21" y1="21" x2="16.65" y2="16.65" />
+           </svg>
+         </div>
 
-          {/* Filter Chips */}
+         {/* Filter Chips */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => setFilter('all')}
+           <button
+              onClick={() =>setFilter('all')}
               style={{
                 padding: '8px 16px',
-                borderRadius: '20px',
+                borderRadius: '0px',
                 fontSize: '13px',
                 fontWeight: filter === 'all' ? 700 : 500,
-                backgroundColor: filter === 'all' ? 'var(--color-primary)' : 'var(--color-surface)',
+                backgroundColor: filter === 'all' ? 'var(--accent-dark)' : 'var(--color-surface)',
                 color: filter === 'all' ? '#FFFFFF' : 'var(--color-text-main)',
                 border: filter === 'all' ? 'none' : '1px solid var(--color-divider)',
                 cursor: 'pointer',
               }}
             >
-              Semua Program ({catalog.length})
+             Semua Program ({catalog.length})
             </button>
-            <button
-              onClick={() => setFilter('free')}
+           <button
+              onClick={() =>setFilter('free')}
               style={{
                 padding: '8px 16px',
-                borderRadius: '20px',
+                borderRadius: '0px',
                 fontSize: '13px',
                 fontWeight: filter === 'free' ? 700 : 500,
-                backgroundColor: filter === 'free' ? 'var(--color-primary)' : 'var(--color-surface)',
+                backgroundColor: filter === 'free' ? 'var(--accent-dark)' : 'var(--color-surface)',
                 color: filter === 'free' ? '#FFFFFF' : 'var(--color-text-main)',
                 border: filter === 'free' ? 'none' : '1px solid var(--color-divider)',
                 cursor: 'pointer',
               }}
             >
-              Umum & Calon Peserta
+             Umum & Calon Peserta
             </button>
-            <button
-              onClick={() => setFilter('client')}
+           <button
+              onClick={() =>setFilter('client')}
               style={{
                 padding: '8px 16px',
-                borderRadius: '20px',
+                borderRadius: '0px',
                 fontSize: '13px',
                 fontWeight: filter === 'client' ? 700 : 500,
-                backgroundColor: filter === 'client' ? 'var(--color-primary)' : 'var(--color-surface)',
+                backgroundColor: filter === 'client' ? 'var(--accent-dark)' : 'var(--color-surface)',
                 color: filter === 'client' ? '#FFFFFF' : 'var(--color-text-main)',
                 border: filter === 'client' ? 'none' : '1px solid var(--color-divider)',
                 cursor: 'pointer',
               }}
             >
-              Pendampingan Pasca-Tes
+             Pendampingan Pasca-Tes
             </button>
-          </div>
-        </div>
+         </div>
+       </div>
 
-        {/* Program Cards Grid */}
+       {/* Program Cards Grid */}
         {filteredCatalog.length === 0 ? (
           <div
             style={{
               padding: '40px 20px',
               textAlign: 'center',
               backgroundColor: 'var(--color-surface)',
-              borderRadius: '16px',
+              borderRadius: '0px',
               border: '1px solid var(--color-divider)',
               color: 'var(--color-text-muted)',
               fontSize: '14px',
             }}
           >
-            Tidak ada program yang sesuai dengan kriteria pencarian.
+           Tidak ada program yang sesuai dengan kriteria pencarian.
           </div>
-        ) : (
+       ) : (
           <div
             style={{
               display: 'grid',
@@ -195,17 +195,17 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
               gap: '24px',
             }}
           >
-            {filteredCatalog.map(item => (
+           {filteredCatalog.map(item =>(
               <ProgramCard key={item.program.id} item={item} workspaceSlug={profile.workspaceSlug} />
-            ))}
+           ))}
           </div>
-        )}
+       )}
       </main>
 
-      <PublicFooter displayName={profile.displayName.split(' ')[0]} />
+     <PublicFooter displayName={profile.displayName.split(' ')[0]} />
 
-      {/* Global Bottom Navigation */}
+     {/* Global Bottom Navigation */}
       <LearnerTabBar workspaceSlug={profile.workspaceSlug} />
-    </div>
-  );
+   </div>
+ );
 }

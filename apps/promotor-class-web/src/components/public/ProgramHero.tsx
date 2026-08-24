@@ -6,7 +6,7 @@ import { ProgramCover } from './ProgramCover';
 
 interface ProgramHeroProps {
   detail: PublicProgramDetail;
-  onStartClick?: () => void;
+  onStartClick?: () =>void;
 }
 
 export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
@@ -23,11 +23,11 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
   }
 
   const moduleCount = program.modules?.length || 0;
-  const lessonCount = program.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0;
+  const lessonCount = program.modules?.reduce((acc, m) =>acc + (m.lessons?.length || 0), 0) || 0;
 
   return (
     <section className="container" style={{ paddingTop: '28px', paddingBottom: '44px' }}>
-      <div
+     <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -35,33 +35,33 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
           alignItems: 'start',
         }}
       >
-        {/* Cover Column */}
+       {/* Cover Column */}
         <div>
-          <ProgramCover
+         <ProgramCover
             title={program.title}
             publicLabel={presentation.heroEyebrow}
             variant={presentation.coverVariant}
             aspectRatio="16 / 10"
           />
-        </div>
+       </div>
 
-        {/* Copy Column */}
+       {/* Copy Column */}
         <div style={{ paddingTop: '4px' }}>
-          <span
+         <span
             style={{
               display: 'inline-block',
               fontSize: '11px',
               fontWeight: 850,
               textTransform: 'uppercase',
               letterSpacing: '0.07em',
-              color: 'var(--color-primary)',
+              color: 'var(--accent-dark)',
               marginBottom: '12px',
             }}
           >
-            {presentation.heroEyebrow}
+           {presentation.heroEyebrow}
           </span>
 
-          <h1
+         <h1
             style={{
               fontSize: 'clamp(30px, 4vw, 48px)',
               letterSpacing: '-0.04em',
@@ -70,10 +70,10 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
               fontWeight: 800,
             }}
           >
-            {program.title}
+           {program.title}
           </h1>
 
-          <p
+         <p
             style={{
               fontSize: '16px',
               lineHeight: 1.65,
@@ -81,10 +81,10 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
               marginBottom: '20px',
             }}
           >
-            {program.description || program.subtitle}
+           {program.description || program.subtitle}
           </p>
 
-          <div
+         <div
             style={{
               display: 'flex',
               alignItems: 'baseline',
@@ -92,11 +92,11 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
               margin: '16px 0 20px',
             }}
           >
-            <div style={{ fontSize: '28px', fontWeight: 850, color: '#191918' }}>{priceMain}</div>
-            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{priceSub}</div>
-          </div>
+           <div style={{ fontSize: '28px', fontWeight: 850, color: '#191918' }}>{priceMain}</div>
+           <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{priceSub}</div>
+         </div>
 
-          {/* Metadata Row */}
+         {/* Metadata Row */}
           <div
             style={{
               display: 'grid',
@@ -107,33 +107,33 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
               padding: '14px 0',
             }}
           >
-            <div>
-              <strong style={{ fontSize: '13px', display: 'block', fontWeight: 800 }}>
-                {presentation.durationLabel}
+           <div>
+             <strong style={{ fontSize: '13px', display: 'block', fontWeight: 800 }}>
+               {presentation.durationLabel}
               </strong>
-              <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>ritme belajar</span>
-            </div>
-            <div style={{ borderLeft: '1px solid var(--color-divider)', paddingLeft: '12px' }}>
-              <strong style={{ fontSize: '13px', display: 'block', fontWeight: 800 }}>
-                {lessonCount > 0 ? `${lessonCount} materi` : `${moduleCount} modul`}
+             <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>ritme belajar</span>
+           </div>
+           <div style={{ borderLeft: '1px solid var(--color-divider)', paddingLeft: '12px' }}>
+             <strong style={{ fontSize: '13px', display: 'block', fontWeight: 800 }}>
+               {lessonCount >0 ? `${lessonCount} materi` : `${moduleCount} modul`}
               </strong>
-              <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>video + refleksi</span>
-            </div>
-            <div style={{ borderLeft: '1px solid var(--color-divider)', paddingLeft: '12px' }}>
-              <strong style={{ fontSize: '13px', display: 'block', fontWeight: 800 }}>Mandiri</strong>
-              <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>akses kapan saja</span>
-            </div>
-          </div>
+             <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>video + refleksi</span>
+           </div>
+           <div style={{ borderLeft: '1px solid var(--color-divider)', paddingLeft: '12px' }}>
+             <strong style={{ fontSize: '13px', display: 'block', fontWeight: 800 }}>Mandiri</strong>
+             <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>akses kapan saja</span>
+           </div>
+         </div>
 
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            {isRegistrationAllowed ? (
+         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+           {isRegistrationAllowed ? (
               <button
                 onClick={onStartClick}
                 style={{
                   minHeight: '46px',
-                  borderRadius: '13px',
+                  borderRadius: '0px',
                   padding: '0 20px',
-                  backgroundColor: 'var(--color-primary)',
+                  backgroundColor: 'var(--accent-dark)',
                   color: '#FFFFFF',
                   fontWeight: 780,
                   fontSize: '14px',
@@ -141,14 +141,14 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
                   cursor: 'pointer',
                 }}
               >
-                Mulai belajar gratis
+               Mulai belajar gratis
               </button>
-            ) : (
+           ) : (
               <a
                 href="#register"
                 style={{
                   minHeight: '46px',
-                  borderRadius: '13px',
+                  borderRadius: '0px',
                   padding: '0 20px',
                   backgroundColor: 'var(--color-text-muted)',
                   color: '#FFFFFF',
@@ -160,15 +160,15 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
                   alignItems: 'center',
                 }}
               >
-                {program.programType === 'aftersales' ? 'Akses Peserta Tes STIFIn' : 'Informasi Pendaftaran'}
+               {program.programType === 'aftersales' ? 'Akses Peserta Tes STIFIn' : 'Informasi Pendaftaran'}
               </a>
-            )}
+           )}
 
             <a
               href="#curriculum"
               style={{
                 minHeight: '46px',
-                borderRadius: '13px',
+                borderRadius: '0px',
                 padding: '0 20px',
                 border: '1px solid var(--color-divider)',
                 backgroundColor: '#FFFFFF',
@@ -180,11 +180,11 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
                 alignItems: 'center',
               }}
             >
-              Lihat isi program
+             Lihat isi program
             </a>
-          </div>
+         </div>
 
-          {registrationStatusNotice && (
+         {registrationStatusNotice && (
             <div
               style={{
                 marginTop: '12px',
@@ -193,11 +193,11 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
                 fontStyle: 'italic',
               }}
             >
-              {registrationStatusNotice}
+             {registrationStatusNotice}
             </div>
-          )}
+         )}
         </div>
-      </div>
-    </section>
-  );
+     </div>
+   </section>
+ );
 }

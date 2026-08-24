@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
-import { ChevronLeftIcon, ChevronDownIcon, ExternalLinkIcon } from '@/components/foundation/icons';
+import { PageHeader, SectionHead, ErrorState, LoadingRows, BottomSheet, LifecycleStrip } from '@/components/ui';
 import { WhatsAppBottomSheet } from '@/components/today/WhatsAppBottomSheet';
 import {
   contactQueries,
@@ -25,12 +25,32 @@ import { formatPhoneDisplay } from '@promotor/platform-core';
 import { ProductEntitlements, LearningContext, ProgramSummary } from '@promotor/contracts';
 import { FlowIntegrationHealth } from '@/modules/promotorclass/ports';
 
+const LIFECYCLE_STEPS = ['BARU', 'DIHUBUNGI', 'TERTARIK', 'FOLLOW-UP', 'BOOKED', 'SELESAI'];
+const LIFECYCLE_INDEX: Record<string, number>= {
+  NEW: 0,
+  CONTACTED: 1,
+  INTERESTED: 2,
+  FOLLOW_UP: 3,
+  BOOKED: 4,
+  COMPLETED: 5,
+};
+
+function stageTagClass(stage: string): string {
+  const s = stage.toUpperCase();
+  if (s === 'COMPLETED') return 'tag tag-neutral';
+  if (s === 'BOOKED' || s === 'FOLLOW_UP') return 'tag tag-accent';
+  if (s === 'LOST') return 'tag tag-accent';
+  return 'tag tag-outline';
+}
+
 export default function ContactDetailPage() {
   const params = useParams();
   const router = useRouter();
   const contactId = params.contactId as string;
 
   const [contact, setContact] = useState<FlowContact | null>(null);
+  const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [actions, setActions] = useState<FlowNextAction[]>([]);
   const [bookings, setBookings] = useState<FlowBooking[]>([]);
   const [activities, setActivities] = useState<FlowActivity[]>([]);
@@ -54,11 +74,17 @@ export default function ContactDetailPage() {
   const [enrollError, setEnrollError] = useState<string | null>(null);
   const [enrollSuccess, setEnrollSuccess] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async () =>{
     if (!contactId) return;
-    const c = await contactQueries.getContactDetail(contactId);
-    setContact(c);
-    if (c) {
+    setLoadError(null);
+    setNotFound(false);
+    try {
+      const c = await contactQueries.getContactDetail(contactId);
+      setContact(c);
+      if (!c) {
+        setNotFound(true);
+        return;
+      }
       setNotesText(c.notes || '');
       const acts = await nextActionQueries.getContactNextActions(contactId);
       setActions(acts);
@@ -67,7 +93,6 @@ export default function ContactDetailPage() {
       const evs = await activityQueries.listActivities(contactId);
       setActivities(evs);
 
-      // PromotorClass Context
       try {
         const int = await promotorClassQueries.getIntegrationState();
         setClassState({ entitlements: int.entitlements, integrationHealth: int.integrationHealth });
@@ -77,28 +102,51 @@ export default function ContactDetailPage() {
         } else {
           setLearningContext(null);
         }
-      } catch (err) {
+      } catch {
         setLearningContext(null);
       }
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Tidak dapat memuat kontak.');
     }
   }, [contactId]);
 
-  useEffect(() => {
+  useEffect(() =>{
     loadData();
   }, [loadData]);
 
-  if (!contact) {
+  if (!contact && !loadError && !notFound) {
     return (
       <AppShell showBottomNav={true}>
-        <div style={{ padding: '32px 16px', textAlign: 'center', color: '#71706B' }}>Memuat kontak...</div>
-      </AppShell>
-    );
+       <PageHeader kicker="Kontak" title="Memuat..." />
+       <LoadingRows rows={5} />
+     </AppShell>
+   );
   }
 
-  const primaryAction = actions.find((a) => a.status === 'PENDING');
-  const activeBooking = bookings.find((b) => b.status === 'CONFIRMED' || b.status === 'PENDING');
+  if (loadError) {
+    return (
+      <AppShell showBottomNav={true}>
+       <PageHeader kicker="Kontak" title="Kontak" onBack={() =>router.push('/app/contacts')} />
+       <ErrorState title="Gagal memuat kontak" detail={loadError} onRetry={() =>loadData()} />
+     </AppShell>
+   );
+  }
 
-  const handleStageSelect = async (newStage: LifecycleStage) => {
+  if (notFound || !contact) {
+    return (
+      <AppShell showBottomNav={true}>
+       <PageHeader kicker="Kontak" title="Kontak tidak ditemukan" onBack={() =>router.push('/app/contacts')} />
+       <div className="empty-state">
+         <div className="empty-title">Kontak ini tidak ada atau sudah dihapus.</div>
+       </div>
+     </AppShell>
+   );
+  }
+
+  const primaryAction = actions.find((a) =>a.status === 'PENDING');
+  const activeBooking = bookings.find((b) =>b.status === 'CONFIRMED' || b.status === 'PENDING');
+
+  const handleStageSelect = async (newStage: LifecycleStage) =>{
     setShowStageModal(false);
     if (newStage === 'LOST') {
       setShowLostModal(true);
@@ -108,14 +156,14 @@ export default function ContactDetailPage() {
     loadData();
   };
 
-  const handleConfirmLost = async () => {
+  const handleConfirmLost = async () =>{
     if (!lostReasonInput.trim()) return;
     await lifecycleCommands.changeStage(contactId, 'LOST', lostReasonInput.trim());
     setShowLostModal(false);
     loadData();
   };
 
-  const handleOpenWaForAction = async () => {
+  const handleOpenWaForAction = async () =>{
     if (!primaryAction) return;
     const draft = await messagingQueries.generateDraftMessage(
       primaryAction.actionType,
@@ -126,10 +174,10 @@ export default function ContactDetailPage() {
     setActiveWaModal({ draft, waUrl });
   };
 
-  const handleConfirmWaSent = async (scheduleNextDays?: number) => {
+  const handleConfirmWaSent = async (scheduleNextDays?: number) =>{
     if (!primaryAction || !activeWaModal) return;
     await messagingCommands.confirmWhatsAppSent({
-      contactId: contact?.id || contactId,
+      contactId: contact.id,
       actionId: primaryAction.id,
       messageText: activeWaModal.draft,
       scheduleNextFollowUpDays: scheduleNextDays,
@@ -138,11 +186,11 @@ export default function ContactDetailPage() {
     await loadData();
   };
 
-  const handleCreateNewBooking = async () => {
+  const handleCreateNewBooking = async () =>{
     const start = clock.addDays(clock.now(), 2);
     const end = new Date(start.getTime() + 60 * 60 * 1000);
-    await bookingCommands.createBooking({
-      contactId: contact?.id || contactId,
+    const created = await bookingCommands.createBooking({
+      contactId: contact.id,
       serviceId: 'srv_tes_personal',
       serviceTitle: 'Tes STIFIn Personal',
       startAt: start.toISOString(),
@@ -151,30 +199,37 @@ export default function ContactDetailPage() {
       paymentStatus: 'UNPAID',
       amount: 600000,
     });
+    if (created?.id) {
+      try {
+        await bookingCommands.confirmBooking(created.id);
+      } catch {
+        // booking stays PENDING if immediate confirmation is unavailable
+      }
+    }
     setShowBookingModal(false);
     await loadData();
   };
 
-  const handleConfirmBooking = async () => {
+  const handleConfirmBooking = async () =>{
     if (!activeBooking) return;
     await bookingCommands.confirmBooking(activeBooking.id);
     await loadData();
   };
 
-  const handleMarkPaid = async () => {
+  const handleMarkPaid = async () =>{
     if (!activeBooking) return;
     await bookingCommands.changePaymentStatus(activeBooking.id, 'PAID');
     await loadData();
   };
 
-  const handleOpenEnrollModal = async () => {
+  const handleOpenEnrollModal = async () =>{
     setEnrollError(null);
     setEnrollSuccess(null);
     setShowEnrollModal(true);
     setEnrollLoading(true);
     try {
       const progs = await promotorClassQueries.listEligiblePrograms({
-        organizationId: contact?.organizationId || '',
+        organizationId: contact.organizationId || '',
         contactId,
       });
       setEligiblePrograms(progs);
@@ -185,10 +240,10 @@ export default function ContactDetailPage() {
     }
   };
 
-  const handleEnrollProgram = async (programId: string) => {
+  const handleEnrollProgram = async (programId: string) =>{
     setEnrollError(null);
     setEnrollSuccess(null);
-    const existing = learningContext?.activeEnrollments.find((e) => e.programId === programId);
+    const existing = learningContext?.activeEnrollments.find((e) =>e.programId === programId);
     if (existing) {
       setEnrollError('Peserta sudah terdaftar dalam program ini (duplikat dicegah).');
       return;
@@ -197,7 +252,7 @@ export default function ContactDetailPage() {
     setEnrollLoading(true);
     try {
       await promotorClassCommands.enrollContact({
-        organizationId: contact?.organizationId || '',
+        organizationId: contact.organizationId || '',
         contactId,
         programId,
         source: 'PROMOTORFLOW_MANUAL',
@@ -212,566 +267,372 @@ export default function ContactDetailPage() {
     }
   };
 
-  const handleCompleteActiveBooking = async () => {
+  const handleCompleteActiveBooking = async () =>{
     if (!activeBooking) return;
     await bookingCommands.completeBooking(activeBooking.id);
     await loadData();
   };
 
-  const handleSaveNotes = async () => {
+  const handleSaveNotes = async () =>{
     await contactCommands.updateContactIdentity(contactId, { notes: notesText });
     setIsEditingNotes(false);
     await loadData();
   };
 
+  const stageIdx = LIFECYCLE_INDEX[contact.stage.toUpperCase()] ?? -1;
+
   return (
     <AppShell showBottomNav={true}>
-      <div style={{ backgroundColor: '#FFFFFF', minHeight: '100vh', paddingBottom: '32px' }}>
-        {/* Top Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px' }}>
-          <button
-            onClick={() => router.back()}
-            aria-label="Kembali"
-            style={{
-              width: '44px',
-              height: '44px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'none',
-              border: 'none',
-              color: '#191918',
-            }}
-          >
-            <ChevronLeftIcon size={20} />
-          </button>
-          <div style={{ font: '600 14px Inter, sans-serif', color: '#71706B' }}>Detail Kontak</div>
-          <div style={{ width: '44px' }}></div>
-        </div>
+     <PageHeader
+        kicker="Kontak"
+        title={contact.name}
+        sub={`${formatPhoneDisplay(contact.phoneE164)} · ${contact.sourceChannel || 'Lead'}`}
+        backLabel="Kembali"
+        onBack={() =>router.push('/app/contacts')}
+      />
 
-        {/* Identity Header */}
-        <div style={{ padding: '4px 16px 0' }}>
-          <h1 style={{ font: '700 22px/28px Inter, sans-serif', color: '#191918' }}>{contact.name}</h1>
-          <div style={{ font: '400 14px/20px Inter, sans-serif', color: '#71706B', paddingTop: '2px' }}>
-            {formatPhoneDisplay(contact.phoneE164)}
-          </div>
+     {/* Stage + classification */}
+      <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+       <button type="button" className={stageTagClass(contact.stage)} onClick={() =>setShowStageModal(true)} aria-label="Ubah tahap lifecycle">
+         {contact.stage} ▾
+        </button>
+       <span className={`tag ${contact.classification === 'CLIENT' ? 'tag-neutral' : 'tag-outline'}`}>
+         {contact.classification === 'CLIENT' ? 'Klien' : 'Prospek'}
+        </span>
+     </div>
 
-          <button
-            onClick={() => setShowStageModal(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '7px',
-              height: '44px',
-              margin: '4px -6px 0',
-              padding: '0 6px',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              textAlign: 'left',
-            }}
-          >
-            <span
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: contact.stage === 'COMPLETED' ? '#067647' : contact.stage === 'LOST' ? '#B42318' : '#167A68',
-              }}
-            />
-            <span style={{ font: '600 13.5px Inter, sans-serif', color: '#191918' }}>{contact.stage}</span>
-            <span style={{ font: '400 13.5px Inter, sans-serif', color: '#71706B' }}>
-              · {contact.sourceChannel || 'Lead'}
-            </span>
-            <ChevronDownIcon size={13} color="#9C9A94" />
-          </button>
-        </div>
-
-        {/* Next Action Section */}
-        <div style={{ font: '600 11px/16px Inter, sans-serif', letterSpacing: '.07em', color: '#9C9A94', textTransform: 'uppercase', padding: '28px 16px 8px' }}>
-          Tindakan berikutnya
-        </div>
-        <div style={{ padding: '0 16px' }}>
-          {primaryAction ? (
-            <div>
-              <div style={{ font: '600 15.5px/21px Inter, sans-serif', color: '#191918' }}>{primaryAction.title}</div>
-              <div style={{ font: '400 13.5px/19px Inter, sans-serif', color: '#71706B', paddingTop: '2px' }}>
-                {primaryAction.subtitle || `Jatuh tempo: ${clock.formatDayDate(primaryAction.dueAt)}`}
-              </div>
-              <button
-                onClick={handleOpenWaForAction}
-                style={{
-                  width: '100%',
-                  height: '46px',
-                  marginTop: '14px',
-                  border: 'none',
-                  borderRadius: '8px',
-                  backgroundColor: '#167A68',
-                  color: '#FFFFFF',
-                  font: '600 15px Inter, sans-serif',
-                }}
-              >
-                Buka WhatsApp
-              </button>
-              <div style={{ display: 'flex', gap: '20px', paddingTop: '12px' }}>
-                <button
-                  onClick={async () => {
-                    const tomorrow = clock.addDays(clock.now(), 1).toISOString();
-                    await nextActionCommands.rescheduleNextAction(primaryAction.id, tomorrow);
-                    loadData();
-                  }}
-                  style={{ background: 'none', border: 'none', padding: '4px 0', font: '500 14px Inter, sans-serif', color: '#167A68' }}
-                >
-                  Atur ulang
-                </button>
-                <button
-                  onClick={async () => {
-                    const tomorrow = clock.addDays(clock.now(), 1).toISOString();
-                    await nextActionCommands.skipNextAction(primaryAction.id, {
-                      type: 'FOLLOW_UP',
-                      title: 'Follow-up prospek',
-                      dueAt: tomorrow,
-                    });
-                    loadData();
-                  }}
-                  style={{ background: 'none', border: 'none', padding: '4px 0', font: '500 14px Inter, sans-serif', color: '#71706B' }}
-                >
-                  Lewati tindakan ini
-                </button>
-              </div>
+     {/* Next Action */}
+      <SectionHead label="Tindakan berikutnya" />
+     <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
+       {primaryAction ? (
+          <>
+           <div style={{ font: '700 17px/1.25 var(--font-sans)', letterSpacing: '-0.01em' }}>{primaryAction.title}</div>
+           <div style={{ marginTop: 6, font: '400 12px/1.45 var(--font-sans)', color: 'var(--muted-strong)' }}>
+             {primaryAction.subtitle || `Jatuh tempo: ${clock.formatDayDate(primaryAction.dueAt)}`}
             </div>
-          ) : (
-            <div style={{ font: '400 14px/20px Inter, sans-serif', color: '#71706B' }}>
-              Belum ada tindakan aktif.{' '}
-              <button
-                onClick={async () => {
-                  await nextActionCommands.scheduleNextAction({
-                    contactId: contact.id,
-                    actionType: 'FOLLOW_UP',
-                    title: 'Follow-up prospek',
-                    dueAt: clock.addDays(clock.now(), 1).toISOString(),
-                  });
+           <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+             <button type="button" className="btn btn-primary" onClick={handleOpenWaForAction}>
+               Buka WhatsApp
+              </button>
+             <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={async () =>{
+                  const tomorrow = clock.addDays(clock.now(), 1).toISOString();
+                  await nextActionCommands.rescheduleNextAction(primaryAction.id, tomorrow);
                   loadData();
                 }}
-                style={{ background: 'none', border: 'none', font: '500 14px Inter, sans-serif', color: '#167A68' }}
               >
-                + Tambah tindakan
+               Tunda
               </button>
-            </div>
-          )}
-        </div>
-
-        {/* Booking Section */}
-        <div style={{ font: '600 11px/16px Inter, sans-serif', letterSpacing: '.07em', color: '#9C9A94', textTransform: 'uppercase', padding: '28px 16px 8px' }}>
-          Booking
-        </div>
-        <div style={{ padding: '0 16px' }}>
-          {activeBooking ? (
-            <div style={{ padding: '12px', borderRadius: '8px', border: '1px solid #E8E7E3', backgroundColor: '#F7F7F5', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ font: '600 14.5px Inter, sans-serif', color: '#191918' }}>{activeBooking.serviceTitle}</div>
-                <span
-                  style={{
-                    fontSize: '11.5px',
-                    fontWeight: 700,
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    backgroundColor: activeBooking.status === 'CONFIRMED' ? '#ECFDF3' : '#FFFAEB',
-                    color: activeBooking.status === 'CONFIRMED' ? '#067647' : '#B54708',
-                  }}
-                >
-                  {activeBooking.status}
-                </span>
-              </div>
-              <div style={{ font: '400 13px Inter, sans-serif', color: '#71706B' }}>
-                Jadwal: {clock.formatDayDate(activeBooking.startAt)} {clock.formatTime(activeBooking.startAt)}
-              </div>
-              <div style={{ font: '500 13px Inter, sans-serif', color: activeBooking.paymentStatus === 'PAID' ? '#067647' : '#B54708' }}>
-                Status Pembayaran: {activeBooking.paymentStatus}
-              </div>
-              <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
-                {activeBooking.status === 'PENDING' && (
-                  <button
-                    onClick={handleConfirmBooking}
-                    style={{
-                      flex: 1,
-                      height: '36px',
-                      backgroundColor: '#167A68',
-                      color: '#FFFFFF',
-                      borderRadius: '6px',
-                      border: 'none',
-                      font: '600 13px Inter, sans-serif',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Konfirmasi Booking
-                  </button>
-                )}
-                {activeBooking.paymentStatus === 'UNPAID' && (
-                  <button
-                    onClick={handleMarkPaid}
-                    style={{
-                      flex: 1,
-                      height: '36px',
-                      backgroundColor: '#067647',
-                      color: '#FFFFFF',
-                      borderRadius: '6px',
-                      border: 'none',
-                      font: '600 13px Inter, sans-serif',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Tandai Lunas
-                  </button>
-                )}
-                <button
-                  onClick={handleCompleteActiveBooking}
-                  style={{
-                    flex: 1,
-                    height: '36px',
-                    backgroundColor: '#067647',
-                    color: '#FFFFFF',
-                    borderRadius: '6px',
-                    border: 'none',
-                    font: '600 13px Inter, sans-serif',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Tandai Layanan Selesai
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <div style={{ font: '400 14px/20px Inter, sans-serif', color: '#71706B' }}>Belum ada booking aktif.</div>
-              <button
-                onClick={handleCreateNewBooking}
-                style={{ background: 'none', border: 'none', padding: '8px 0 0', font: '500 14px Inter, sans-serif', color: '#167A68', cursor: 'pointer' }}
-              >
-                + Buat booking
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* PromotorClass Learning Section */}
-        {classState?.entitlements.promotorClass && (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '28px 16px 8px' }}>
-              <div style={{ font: '600 11px/16px Inter, sans-serif', letterSpacing: '.07em', color: '#9C9A94', textTransform: 'uppercase' }}>
-                Aktivitas Belajar (PromotorClass)
-              </div>
-              <button
-                onClick={handleOpenEnrollModal}
-                style={{ background: 'none', border: 'none', font: '600 13px Inter, sans-serif', color: '#167A68', cursor: 'pointer' }}
-              >
-                + Daftarkan ke Kelas
-              </button>
-            </div>
-            <div style={{ padding: '0 16px' }}>
-              {classState.integrationHealth.promotorClass === 'UNAVAILABLE' ? (
-                <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: '#FFFAEB', border: '1px solid #B54708', color: '#B54708', font: '400 13px Inter, sans-serif' }}>
-                  Integrasi PromotorClass sedang tidak tersedia (degraded mode). Fungsi utama Flow tetap berjalan.
-                </div>
-              ) : learningContext && learningContext.activeEnrollments.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {learningContext.activeEnrollments.map((enr: LearningContext['activeEnrollments'][number]) => (
-                    <div
-                      key={enr.enrollmentId}
-                      style={{
-                        padding: '12px',
-                        borderRadius: '8px',
-                        border: '1px solid #E8E7E3',
-                        backgroundColor: '#FFFFFF',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px',
-                      }}
-                    >
-                      <div style={{ font: '600 14.5px Inter, sans-serif', color: '#191918' }}>{enr.programTitle}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ font: '600 13px Inter, sans-serif', color: '#167A68' }}>{enr.progressPercent}%</span>
-                        <span style={{ font: '500 12.5px Inter, sans-serif', color: '#71706B' }}>
-                          · {enr.intentLabel === 'hot' ? 'Minat tinggi' : enr.intentLabel === 'warm' ? 'Minat sedang' : 'Minat rendah'}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => alert(`Navigasi ke PromotorClass Learner Detail: /learners/${contact.id}`)}
-                        style={{
-                          marginTop: '4px',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          background: 'none',
-                          border: 'none',
-                          padding: 0,
-                          font: '500 13px Inter, sans-serif',
-                          color: '#167A68',
-                        }}
-                      >
-                        <span>Lihat aktivitas belajar</span>
-                        <ExternalLinkIcon size={12} color="#167A68" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ font: '400 14px Inter, sans-serif', color: '#71706B' }}>
-                  Belum ada enrollment aktif di PromotorClass.
-                </div>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* Notes Section */}
-        <div style={{ font: '600 11px/16px Inter, sans-serif', letterSpacing: '.07em', color: '#9C9A94', textTransform: 'uppercase', padding: '28px 16px 8px' }}>
-          Catatan
-        </div>
-        <div style={{ padding: '0 16px' }}>
-          {!isEditingNotes ? (
-            <div>
-              <div style={{ font: '400 14px/21px Inter, sans-serif', color: '#191918', whiteSpace: 'pre-wrap' }}>
-                {contact.notes || 'Belum ada catatan.'}
-              </div>
-              <button
-                onClick={() => setIsEditingNotes(true)}
-                style={{ background: 'none', border: 'none', padding: '8px 0 0', font: '500 14px Inter, sans-serif', color: '#167A68' }}
-              >
-                Edit catatan
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <textarea
-                value={notesText}
-                onChange={(e) => setNotesText(e.target.value)}
-                rows={4}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  borderRadius: '8px',
-                  border: '1px solid #D5D3CE',
-                  font: '400 14px Inter, sans-serif',
-                }}
-              />
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button
-                  onClick={handleSaveNotes}
-                  style={{
-                    height: '36px',
-                    padding: '0 16px',
-                    backgroundColor: '#167A68',
-                    color: '#FFF',
-                    borderRadius: '6px',
-                    border: 'none',
-                    font: '600 13px Inter, sans-serif',
-                  }}
-                >
-                  Simpan
-                </button>
-                <button
-                  onClick={() => setIsEditingNotes(false)}
-                  style={{
-                    height: '36px',
-                    padding: '0 16px',
-                    backgroundColor: 'transparent',
-                    color: '#71706B',
-                    borderRadius: '6px',
-                    border: '1px solid #D5D3CE',
-                    font: '500 13px Inter, sans-serif',
-                  }}
-                >
-                  Batal
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Activity Timeline Section */}
-        <div style={{ font: '600 11px/16px Inter, sans-serif', letterSpacing: '.07em', color: '#9C9A94', textTransform: 'uppercase', padding: '28px 16px 8px' }}>
-          Aktivitas
-        </div>
-        <div style={{ padding: '0 16px 28px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {activities.length > 0 ? (
-            activities.map((ev) => (
-              <div key={ev.id} style={{ display: 'flex', gap: '14px' }}>
-                <span style={{ font: '450 12.5px/18px Inter, sans-serif', color: '#9C9A94', width: '56px', flex: 'none' }}>
-                  {clock.formatDayDate(ev.timestamp).split(',')[1] || 'Hari ini'}
-                </span>
-                <span style={{ font: '400 13.5px/18px Inter, sans-serif', color: '#191918' }}>
-                  {ev.title} {ev.detail ? `— ${ev.detail}` : ''}
-                </span>
-              </div>
-            ))
-          ) : (
-            <div style={{ font: '400 13.5px Inter, sans-serif', color: '#71706B' }}>Belum ada riwayat aktivitas.</div>
-          )}
-        </div>
-      </div>
-
-      {/* Stage Selection Modal */}
-      {showStageModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ backgroundColor: '#FFF', borderRadius: '12px', width: '100%', maxWidth: '360px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ font: '600 16px Inter, sans-serif', color: '#191918' }}>Ubah Tahap Lifecycle</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {(['NEW', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'BOOKED', 'COMPLETED', 'LOST'] as LifecycleStage[]).map((stg) => (
-                <button
-                  key={stg}
-                  onClick={() => handleStageSelect(stg)}
-                  style={{
-                    height: '40px',
-                    padding: '0 12px',
-                    borderRadius: '6px',
-                    border: contact.stage === stg ? '2px solid #167A68' : '1px solid #E8E7E3',
-                    backgroundColor: contact.stage === stg ? '#EAF5F2' : '#FFFFFF',
-                    color: stg === 'LOST' ? '#B42318' : '#191918',
-                    font: '500 14px Inter, sans-serif',
-                    textAlign: 'left',
-                  }}
-                >
-                  {stg}
-                </button>
-              ))}
-            </div>
-            <button onClick={() => setShowStageModal(false)} style={{ height: '40px', border: 'none', background: 'none', color: '#71706B', font: '500 14px Inter, sans-serif' }}>
-              Batal
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Lost Reason Modal (Required when stage === LOST) */}
-      {showLostModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 350, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ backgroundColor: '#FFF', borderRadius: '12px', width: '100%', maxWidth: '380px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div style={{ font: '600 16px Inter, sans-serif', color: '#B42318' }}>Alasan Tidak Lanjut (Lost Reason)</div>
-            <div style={{ font: '400 13.5px Inter, sans-serif', color: '#71706B' }}>
-              Wajib mengisi alasan mengapa prospek tidak lanjut. Tindakan aktif akan dibatalkan (riwayat histori tetap tersimpan).
-            </div>
-            <select
-              value={lostReasonInput}
-              onChange={(e) => setLostReasonInput(e.target.value)}
-              style={{ height: '40px', padding: '0 10px', borderRadius: '6px', border: '1px solid #D5D3CE', font: '400 14px Inter, sans-serif' }}
-            >
-              <option value="">-- Pilih Alasan --</option>
-              <option value="Harga terlalu mahal">Harga terlalu mahal</option>
-              <option value="Tidak merespon chat">Tidak merespon chat</option>
-              <option value="Memilih kompetitor lain">Memilih kompetitor lain</option>
-              <option value="Jadwal tidak cocok">Jadwal tidak cocok</option>
-              <option value="Batal kebutuhan">Batal kebutuhan</option>
-            </select>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
-              <button
-                onClick={() => setShowLostModal(false)}
-                style={{ flex: 1, height: '40px', border: '1px solid #D5D3CE', borderRadius: '6px', backgroundColor: '#FFF', color: '#71706B', font: '500 14px Inter, sans-serif' }}
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleConfirmLost}
-                disabled={!lostReasonInput.trim()}
-                style={{ flex: 1, height: '40px', border: 'none', borderRadius: '6px', backgroundColor: lostReasonInput.trim() ? '#B42318' : '#D5D3CE', color: '#FFF', font: '600 14px Inter, sans-serif' }}
-              >
-                Konfirmasi Lost
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* PromotorClass Enrollment Modal */}
-      {showEnrollModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 350, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ backgroundColor: '#FFF', borderRadius: '12px', width: '100%', maxWidth: '440px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div style={{ font: '600 16px Inter, sans-serif', color: '#191918' }}>Daftarkan ke Program Kelas</div>
-            <div style={{ font: '400 13px Inter, sans-serif', color: '#71706B' }}>
-              Pilih program edukasi yang akan diberikan kepada peserta {contact.name}.
-            </div>
-
-            {enrollError && (
-              <div style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: '#FEF3F2', border: '1px solid #FECDCA', color: '#B42318', font: '500 13px Inter, sans-serif' }}>
-                {enrollError}
-              </div>
-            )}
-
-            {enrollSuccess && (
-              <div style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: '#ECFDF3', border: '1px solid #A6F4C5', color: '#067647', font: '500 13px Inter, sans-serif' }}>
-                {enrollSuccess}
-              </div>
-            )}
-
-            {enrollLoading ? (
-              <div style={{ padding: '20px', textAlign: 'center', color: '#71706B', fontSize: '13px' }}>Memuat program...</div>
-            ) : eligiblePrograms.length === 0 ? (
-              <div style={{ padding: '20px', textAlign: 'center', color: '#71706B', fontSize: '13px' }}>Tidak ada program kelas yang tersedia.</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
-                {eligiblePrograms.map((prog) => {
-                  const isEnrolled = learningContext?.activeEnrollments.some((e) => e.programId === prog.programId);
-                  return (
-                    <div
-                      key={prog.programId}
-                      data-testid="eligible-program-row"
-                      style={{
-                        padding: '10px 12px',
-                        borderRadius: '8px',
-                        border: '1px solid #E8E7E3',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <div>
-                        <div style={{ font: '600 13.5px Inter, sans-serif', color: '#191918' }}>{prog.title}</div>
-                        <div style={{ font: '400 12px Inter, sans-serif', color: '#71706B' }}>
-                          {prog.programType} · {prog.pricing}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleEnrollProgram(prog.programId)}
-                        disabled={enrollLoading}
-                        style={{
-                          height: '32px',
-                          padding: '0 12px',
-                          borderRadius: '6px',
-                          border: 'none',
-                          backgroundColor: isEnrolled ? '#F0F0ED' : '#167A68',
-                          color: isEnrolled ? '#71706B' : '#FFF',
-                          font: '600 12.5px Inter, sans-serif',
-                          cursor: isEnrolled ? 'default' : 'pointer',
-                        }}
-                      >
-                        {isEnrolled ? 'Terdaftar' : 'Daftarkan'}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            <button
-              onClick={() => setShowEnrollModal(false)}
-              style={{
-                marginTop: '6px',
-                height: '40px',
-                border: '1px solid #D5D3CE',
-                borderRadius: '6px',
-                backgroundColor: '#FFF',
-                color: '#71706B',
-                font: '500 14px Inter, sans-serif',
-                cursor: 'pointer',
+           </div>
+           <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              style={{ marginTop: 8, paddingLeft: 0 }}
+              onClick={async () =>{
+                const tomorrow = clock.addDays(clock.now(), 1).toISOString();
+                await nextActionCommands.skipNextAction(primaryAction.id, {
+                  type: 'FOLLOW_UP',
+                  title: 'Follow-up prospek',
+                  dueAt: tomorrow,
+                });
+                loadData();
               }}
             >
-              Tutup
+             Lewati tindakan ini
             </button>
-          </div>
-        </div>
-      )}
+         </>
+       ) : (
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+           <span style={{ font: '400 13px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>Belum ada tindakan aktif.</span>
+           <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={async () =>{
+                await nextActionCommands.scheduleNextAction({
+                  contactId: contact.id,
+                  actionType: 'FOLLOW_UP',
+                  title: 'Follow-up prospek',
+                  dueAt: clock.addDays(clock.now(), 1).toISOString(),
+                });
+                loadData();
+              }}
+            >
+             + Tambah tindakan
+            </button>
+         </div>
+       )}
+      </div>
 
-      {/* WhatsApp Modal */}
+     {/* Lifecycle strip */}
+      {stageIdx >= 0 && (
+        <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
+         <div className="kicker kicker-muted" style={{ marginBottom: 12 }}>Lifecycle</div>
+         <LifecycleStrip stages={LIFECYCLE_STEPS} currentIndex={stageIdx} />
+       </div>
+     )}
+
+      {/* Booking */}
+      <SectionHead label="Booking" />
+     <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
+       {activeBooking ? (
+          <div>
+           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
+             <div style={{ font: '700 15px/1.25 var(--font-sans)' }}>{activeBooking.serviceTitle}</div>
+             <span className={`tag ${activeBooking.status === 'CONFIRMED' ? 'tag-neutral' : 'tag-accent'}`}>{activeBooking.status}</span>
+           </div>
+           <div className="row-meta">
+             Jadwal: {clock.formatDayDate(activeBooking.startAt)} {clock.formatTime(activeBooking.startAt)}
+            </div>
+           <div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', padding: '12px 0' }}>
+             <span style={{ font: '600 12px/1 var(--font-sans)' }}>Status Pembayaran</span>
+             <span className={`tag ${activeBooking.paymentStatus === 'PAID' ? 'tag-neutral' : 'tag-accent'}`}>
+               Status Pembayaran: {activeBooking.paymentStatus}
+              </span>
+           </div>
+           <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
+             {activeBooking.status === 'PENDING' && (
+                <button type="button" className="btn btn-primary btn-sm" onClick={handleConfirmBooking}>
+                 Konfirmasi Booking
+                </button>
+             )}
+              {activeBooking.paymentStatus === 'UNPAID' && (
+                <button type="button" className="btn btn-primary btn-sm" onClick={handleMarkPaid}>
+                 Tandai Lunas
+                </button>
+             )}
+              <button type="button" className="btn btn-secondary btn-sm" onClick={handleCompleteActiveBooking}>
+               Tandai Layanan Selesai
+              </button>
+           </div>
+         </div>
+       ) : (
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+           <span style={{ font: '400 13px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>Belum ada booking aktif.</span>
+           <button type="button" className="btn btn-secondary btn-sm" onClick={() =>setShowBookingModal(true)}>
+             + Buat booking
+            </button>
+         </div>
+       )}
+      </div>
+
+     {/* PromotorClass learning context */}
+      {classState?.entitlements.promotorClass && (
+        <div style={{ background: 'var(--surface-muted)', borderBottom: '1px solid var(--line)' }}>
+         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 18px 0' }}>
+           <div className="kicker kicker-muted">Konteks belajar · PromotorClass</div>
+           <button type="button" className="btn btn-secondary btn-sm" onClick={handleOpenEnrollModal}>
+             + Daftarkan ke Kelas
+            </button>
+         </div>
+         <div style={{ padding: '12px 18px 16px' }}>
+           {classState.integrationHealth.promotorClass === 'UNAVAILABLE' ? (
+              <div style={{ font: '400 12px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>
+               Integrasi PromotorClass sedang tidak tersedia (degraded mode). Fungsi utama Flow tetap berjalan.
+              </div>
+           ) : learningContext && learningContext.activeEnrollments.length >0 ? (
+              learningContext.activeEnrollments.map((enr: LearningContext['activeEnrollments'][number]) =>(
+                <div key={enr.enrollmentId} style={{ paddingTop: 10 }}>
+                 <div style={{ font: '600 13px/1.35 var(--font-sans)' }}>{enr.programTitle}</div>
+                 <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 9 }}>
+                   <div className="progress progress-thin" style={{ flex: 1 }}>
+                     <span className="progress-fill progress-accent" style={{ width: `${enr.progressPercent}%` }} />
+                   </div>
+                   <span style={{ font: '700 11px/1 var(--font-sans)', width: 34, textAlign: 'right' }}>{enr.progressPercent}%</span>
+                 </div>
+                 <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    style={{ marginTop: 8, paddingLeft: 0 }}
+                    onClick={() =>alert(`Navigasi ke PromotorClass Learner Detail: /learners/${contact.id}`)}
+                  >
+                   Lihat aktivitas belajar →
+                  </button>
+               </div>
+             ))
+            ) : (
+              <div style={{ font: '400 12px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>
+               Belum ada enrollment aktif di PromotorClass.
+              </div>
+           )}
+          </div>
+       </div>
+     )}
+
+      {/* Notes */}
+      <SectionHead label="Catatan" />
+     <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
+       {!isEditingNotes ? (
+          <>
+           <div style={{ font: '400 14px/1.6 var(--font-sans)', whiteSpace: 'pre-wrap' }}>
+             {contact.notes || 'Belum ada catatan.'}
+            </div>
+           <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() =>setIsEditingNotes(true)}>
+             Edit catatan
+            </button>
+         </>
+       ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+           <textarea className="textarea" value={notesText} onChange={(e) =>setNotesText(e.target.value)} rows={4} aria-label="Catatan kontak" />
+           <div style={{ display: 'flex', gap: 8 }}>
+             <button type="button" className="btn btn-primary btn-sm" onClick={handleSaveNotes}>Simpan</button>
+             <button type="button" className="btn btn-secondary btn-sm" onClick={() =>setIsEditingNotes(false)}>Batal</button>
+           </div>
+         </div>
+       )}
+      </div>
+
+     {/* Activity timeline */}
+      <SectionHead label="Aktivitas" count={`${activities.length}`} />
+     <div style={{ padding: '10px 18px 24px' }}>
+       {activities.length >0 ? (
+          activities.map((ev) =>(
+            <div key={ev.id} className="timeline-row">
+             <div className="timeline-date">{clock.formatDayDate(ev.timestamp).split(',')[1]?.trim() || 'Hari ini'}</div>
+             <div className="timeline-body">
+               <div className="timeline-title">{ev.title}</div>
+               {ev.detail ? <div className="timeline-detail">{ev.detail}</div>: null}
+              </div>
+           </div>
+         ))
+        ) : (
+          <div style={{ font: '400 12px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>Belum ada riwayat aktivitas.</div>
+       )}
+      </div>
+
+     {/* Stage selection sheet */}
+      <BottomSheet open={showStageModal} onClose={() =>setShowStageModal(false)} labelledBy="stage-sheet-title">
+       <h2 id="stage-sheet-title" className="sheet-title-lg">Ubah Tahap Lifecycle</h2>
+       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 14 }}>
+         {(['NEW', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'BOOKED', 'COMPLETED', 'LOST'] as LifecycleStage[]).map((stg) =>(
+            <button
+              key={stg}
+              type="button"
+              onClick={() =>handleStageSelect(stg)}
+              className="list-row"
+              style={{
+                border: contact.stage === stg ? '2px solid var(--ink)' : undefined,
+                fontWeight: contact.stage === stg ? 700 : 500,
+                color: stg === 'LOST' ? 'var(--accent-dark)' : 'var(--ink)',
+                background: 'transparent',
+              }}
+            >
+             {stg}
+            </button>
+         ))}
+        </div>
+       <button type="button" className="btn btn-ghost btn-block" style={{ marginTop: 14 }} onClick={() =>setShowStageModal(false)}>
+         Batal
+        </button>
+     </BottomSheet>
+
+     {/* Lost reason sheet */}
+      <BottomSheet open={showLostModal} onClose={() =>setShowLostModal(false)} labelledBy="lost-sheet-title">
+       <h2 id="lost-sheet-title" className="sheet-title-lg" style={{ color: 'var(--accent-dark)' }}>Alasan Tidak Lanjut (Lost Reason)</h2>
+       <p className="sheet-explain">
+         Wajib mengisi alasan mengapa prospek tidak lanjut. Tindakan aktif akan dibatalkan (riwayat histori tetap tersimpan).
+        </p>
+       <select
+          className="select"
+          value={lostReasonInput}
+          onChange={(e) =>setLostReasonInput(e.target.value)}
+          aria-label="Alasan tidak lanjut"
+          style={{ marginTop: 14 }}
+        >
+         <option value="">-- Pilih Alasan --</option>
+         <option value="Harga terlalu mahal">Harga terlalu mahal</option>
+         <option value="Tidak merespon chat">Tidak merespon chat</option>
+         <option value="Memilih kompetitor lain">Memilih kompetitor lain</option>
+         <option value="Jadwal tidak cocok">Jadwal tidak cocok</option>
+         <option value="Batal kebutuhan">Batal kebutuhan</option>
+       </select>
+       <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+         <button type="button" className="btn btn-secondary" onClick={() =>setShowLostModal(false)}>Batal</button>
+         <button
+            type="button"
+            className="btn btn-accent"
+            onClick={handleConfirmLost}
+            disabled={!lostReasonInput.trim()}
+          >
+           Konfirmasi Lost
+          </button>
+       </div>
+     </BottomSheet>
+
+     {/* Enrollment sheet */}
+      <BottomSheet open={showEnrollModal} onClose={() =>setShowEnrollModal(false)} labelledBy="enroll-sheet-title">
+       <h2 id="enroll-sheet-title" className="sheet-title-lg">Daftarkan ke Program Kelas</h2>
+       <p className="sheet-explain">Pilih program edukasi yang akan diberikan kepada peserta {contact.name}.</p>
+
+       {enrollError && (
+          <div className="field-error" role="alert" style={{ marginTop: 12 }}>{enrollError}</div>
+       )}
+        {enrollSuccess && (
+          <div style={{ marginTop: 12, padding: '8px 12px', border: '2px solid var(--ink)', font: '600 12px/1.4 var(--font-sans)', background: 'var(--surface-muted)' }}>
+           {enrollSuccess}
+          </div>
+       )}
+
+        {enrollLoading ? (
+          <div style={{ marginTop: 14 }}><LoadingRows rows={3} /></div>
+       ) : eligiblePrograms.length === 0 ? (
+          <div style={{ marginTop: 14, font: '400 12px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>
+           Tidak ada program kelas yang tersedia.
+          </div>
+       ) : (
+          <div style={{ marginTop: 14, maxHeight: 300, overflowY: 'auto' }}>
+           {eligiblePrograms.map((prog) =>{
+              const isEnrolled = learningContext?.activeEnrollments.some((e) =>e.programId === prog.programId);
+              return (
+                <div
+                  key={prog.programId}
+                  data-testid="eligible-program-row"
+                  className="list-row"
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, cursor: 'default' }}
+                >
+                 <div style={{ minWidth: 0 }}>
+                   <div style={{ font: '600 13px/1.3 var(--font-sans)' }}>{prog.title}</div>
+                   <div style={{ font: '400 11px/1.4 var(--font-sans)', color: 'var(--muted-strong)' }}>
+                     {prog.programType} · {prog.pricing}
+                    </div>
+                 </div>
+                 <button
+                    type="button"
+                    onClick={() =>handleEnrollProgram(prog.programId)}
+                    disabled={enrollLoading}
+                    className={isEnrolled ? 'btn btn-secondary btn-sm' : 'btn btn-primary btn-sm'}
+                    style={isEnrolled ? { opacity: 0.55, cursor: 'default' } : undefined}
+                  >
+                   {isEnrolled ? 'Terdaftar' : 'Daftarkan'}
+                  </button>
+               </div>
+             );
+            })}
+          </div>
+       )}
+
+        <button type="button" className="btn btn-secondary btn-block" style={{ marginTop: 16 }} onClick={() =>setShowEnrollModal(false)}>
+         Tutup
+        </button>
+     </BottomSheet>
+
+     {/* Create booking confirm sheet */}
+      <BottomSheet open={showBookingModal} onClose={() =>setShowBookingModal(false)} labelledBy="booking-sheet-title">
+       <div id="booking-sheet-title" className="kicker kicker-muted">Booking baru</div>
+       <h2 className="sheet-title-lg" style={{ marginTop: 8 }}>Tes STIFIn Personal</h2>
+       <p className="sheet-explain">Jadwal diatur 2 hari dari sekarang, lokasi di tempat (on site), status pembayaran belum dibayar.</p>
+       <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+         <button type="button" className="btn btn-primary" onClick={handleCreateNewBooking}>
+           Konfirmasi Booking
+          </button>
+         <button type="button" className="btn btn-ghost" onClick={() =>setShowBookingModal(false)}>
+           Batal
+          </button>
+       </div>
+     </BottomSheet>
+
+     {/* WhatsApp sheet */}
       {activeWaModal && (
         <WhatsAppBottomSheet
           isOpen={!!activeWaModal}
@@ -779,10 +640,10 @@ export default function ContactDetailPage() {
           phoneE164={contact.phoneE164}
           initialDraft={activeWaModal.draft}
           waUrl={activeWaModal.waUrl}
-          onClose={() => setActiveWaModal(null)}
+          onClose={() =>setActiveWaModal(null)}
           onConfirmSent={handleConfirmWaSent}
         />
-      )}
+     )}
     </AppShell>
-  );
+ );
 }
