@@ -9,8 +9,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/learn',
     scope: '/',
     display: 'standalone',
-    background_color: '#f3f2f2',
-    theme_color: '#201e1d',
+    background_color: '#ffffff',
+    theme_color: '#0f172a',
     orientation: 'portrait',
     prefer_related_applications: false,
     icons: [
