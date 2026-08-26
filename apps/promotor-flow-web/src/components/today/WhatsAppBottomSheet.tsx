@@ -47,11 +47,14 @@ export const WhatsAppBottomSheet: React.FC<WhatsAppBottomSheetProps>= ({
     onClose();
   };
 
-  return (
+    return (
     <BottomSheet open={isOpen} onClose={onClose} labelledBy="wa-sheet-title">
      {!hasOpenedWa ? (
         <>
-         <div id="wa-sheet-title" className="kicker kicker-muted">
+         <h2 id="wa-sheet-title" style={{ font: '700 16px/1.3 var(--font-sans)', marginBottom: 8 }}>
+           Kirim WhatsApp
+          </h2>
+         <div className="kicker kicker-muted">
            Draf pesan · {contactName}
           </div>
          <textarea
