@@ -7,8 +7,8 @@ test.describe('PromotorFlow E2E Browser Suite', () => {
 
     await expect(page).toHaveTitle(/PromotorFlow|Promotor/i);
 
-    // Verify Bottom Navigation is visible at 360px
-    const bottomNav = page.locator('nav, .bottom-nav').first();
+    // Verify Bottom Navigation is visible at 360px (desktop rail is hidden on mobile)
+    const bottomNav = page.locator('.bottom-nav').first();
     await expect(bottomNav).toBeVisible();
 
     // Navigate to Contacts
