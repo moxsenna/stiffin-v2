@@ -144,7 +144,8 @@ export default function ContactDetailPage() {
   }
 
   const primaryAction = actions.find((a) =>a.status === 'PENDING');
-  const activeBooking = bookings.find((b) =>b.status === 'CONFIRMED' || b.status === 'PENDING');
+  const activeBooking = bookings.find((b) =>b.status === 'COMPLETED' || b.status === 'CONFIRMED' || b.status === 'PENDING');
+  const latestBooking = bookings[0] || activeBooking;
 
   const handleStageSelect = async (newStage: LifecycleStage) =>{
     setShowStageModal(false);
@@ -380,7 +381,7 @@ export default function ContactDetailPage() {
           <div>
            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
              <div style={{ font: '700 15px/1.25 var(--font-sans)' }}>{activeBooking.serviceTitle}</div>
-             <span className={`tag ${activeBooking.status === 'CONFIRMED' ? 'tag-neutral' : 'tag-accent'}`}>{activeBooking.status}</span>
+             <span className={`tag ${['COMPLETED','CONFIRMED'].includes(activeBooking.status) ? 'tag-neutral' : 'tag-accent'}`}>{activeBooking.status}</span>
            </div>
            <div className="row-meta">
              Jadwal: {clock.formatDayDate(activeBooking.startAt)} {clock.formatTime(activeBooking.startAt)}

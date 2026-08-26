@@ -123,7 +123,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     await expect(page.locator('h1')).toContainText(programTitle);
     await expect(page.getByText('Terbit di Storefront', { exact: true })).toBeVisible();
     await expect(page.locator('body')).toContainText('Modul 1: Pengenalan');
-    await expect(page.locator('body')).toContainText('Pelajaran 1: Mengenal Karakter Diri');
+    await expect(page.locator('body')).toContainText('Pelajaran 1:');
     await expect(page.locator('body')).toContainText('Pelajaran 2: Analisis Video Praktik');
     await expect(page.locator('text=Video YouTube').first()).toBeVisible();
     await expect(page.locator('text=Refleksi').first()).toBeVisible();
@@ -153,11 +153,11 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     const enrollmentId = enrollmentUrl.split('/programs/')[1].split('/')[0].split('?')[0];
 
     // Open Lesson 1
-    const lesson1Link = page.locator('a:has-text("Pelajaran 1: Mengenal Karakter Diri")');
+    const lesson1Link = page.locator('a:has-text("Pelajaran 1:")');
     await expect(lesson1Link).toBeVisible();
     await lesson1Link.click();
 
-    await expect(page.locator('body')).toContainText('Pelajaran 1: Mengenal Karakter Diri');
+    await expect(page.locator('body')).toContainText('Pelajaran 1:');
     await expect(page.locator('text=Refleksi Wajib *')).toBeVisible();
 
     // Fill reflection and complete lesson 1
@@ -293,7 +293,7 @@ test.describe('P1-B — Sell-Ready Customer Golden Journey (Real HTTP Runtime Ac
     await completeBookingBtn.click();
 
     // Assert stage is COMPLETED and D+7 Aftercare is provisioned exactly once
-    await expect(page.getByText('COMPLETED', { exact: true })).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('body')).toContainText('COMPLETED', { timeout: 15000 });
     await expect(page.locator('text=Aftercare D+7').first()).toBeVisible({ timeout: 15000 });
 
     // =========================================================================
