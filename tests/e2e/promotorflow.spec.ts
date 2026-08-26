@@ -11,8 +11,8 @@ test.describe('PromotorFlow E2E Browser Suite', () => {
     const bottomNav = page.locator('.bottom-nav').first();
     await expect(bottomNav).toBeVisible();
 
-    // Navigate to Contacts
-    const contactsLink = page.locator('a[href*="/app/contacts"]').first();
+    // Navigate to Contacts — scope to bottom-nav on mobile (desktop rail hidden at 360px)
+    const contactsLink = page.locator('.bottom-nav a[href*="/app/contacts"]').first();
     await expect(contactsLink).toBeVisible();
     await contactsLink.click();
     await expect(page).toHaveURL(/.*\/app\/contacts/);

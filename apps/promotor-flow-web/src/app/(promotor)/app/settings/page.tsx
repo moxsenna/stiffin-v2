@@ -126,16 +126,16 @@ export default function SettingsPage() {
     <AppShell showBottomNav={true}>
      <PageHeader kicker="Akun" title="Pengaturan" sub="Profil promotor, jadwal ketersediaan konsultasi, dan sesi akun." />
 
-     <div className="ink-hero">
-       <div className="kicker kicker-on-ink">Profil</div>
-       <div style={{ marginTop: 10, font: '800 19px/1.2 var(--font-sans)', letterSpacing: '-0.02em' }}>
-         {session?.user?.name || settings.promotorName || 'Promotor'}
-        </div>
-       <div style={{ marginTop: 6, font: '400 12px/1.5 var(--font-sans)', color: 'var(--on-ink-muted)' }}>
-         {session?.user?.email || (settings.promotorPhoneE164 ? formatPhoneDisplay(settings.promotorPhoneE164) : 'Belum tersedia')}
-        </div>
-       <div style={{ marginTop: 14, borderTop: '1px solid var(--on-ink-line)', paddingTop: 12 }}>
-         <div style={{ font: '500 11px/1 var(--font-sans)', color: 'var(--on-ink-muted)' }}>Organisasi</div>
+      <div className="ink-hero">
+        <div className="kicker kicker-on-ink">PROMOTOR</div>
+        <div style={{ marginTop: 10, font: '800 19px/1.2 var(--font-sans)', letterSpacing: '-0.02em' }}>
+          {session?.user?.name || settings.promotorName || 'Promotor'}
+         </div>
+        <div style={{ marginTop: 6, font: '400 12px/1.5 var(--font-sans)', color: 'var(--on-ink-muted)' }}>
+          {session?.user?.email || (settings.promotorPhoneE164 ? formatPhoneDisplay(settings.promotorPhoneE164) : 'Belum tersedia')}
+         </div>
+        <div style={{ marginTop: 14, borderTop: '1px solid var(--on-ink-line)', paddingTop: 12 }}>
+          <div style={{ font: '500 11px/1 var(--font-sans)', color: 'var(--on-ink-muted)' }}>ORGANISASI</div>
          <div style={{ marginTop: 6, font: '600 14px/1.3 var(--font-sans)' }}>
            {session?.organization?.name || settings.organizationName || 'Belum tersedia'}
           </div>
