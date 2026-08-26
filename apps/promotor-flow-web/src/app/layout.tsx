@@ -3,7 +3,13 @@ import '@/styles/globals.css';
 
 export const metadata: Metadata = {
   title: 'PromotorFlow — Asisten Bisnis Promotor',
-  description: 'Sistem operasional harian promotor untuk kelola prospek, booking, dan aftercare.',
+  description: 'Sistem operasional harian promotor untuk kelola prospek, booking, dan aftercare. Antrean Today 1-tap WA, booking 14-hari, aftercare D+7.',
+  openGraph: {
+    title: 'PromotorFlow — Asisten Bisnis Promotor',
+    description: 'Antrean Today, booking 14-hari, dan aftercare D+7 untuk promotor STIFIn.',
+    type: 'website',
+    locale: 'id_ID',
+  },
 };
 
 export const viewport: Viewport = {

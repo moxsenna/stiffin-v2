@@ -82,7 +82,7 @@ export const FlowLandingHeader: React.FC = () => {
             alignItems: 'center',
             gap: '32px',
           }}
-          className="desktop-nav"
+          className="landing-nav-links"
         >
           <a href="#fitur" style={{ color: 'var(--color-text-secondary)', fontWeight: 600, fontSize: '14px', textDecoration: 'none' }}>
             Fitur Utama
@@ -128,21 +128,75 @@ export const FlowLandingHeader: React.FC = () => {
               fontWeight: 780,
               fontSize: '13.5px',
               textDecoration: 'none',
-              boxShadow: 'var(--shadow-sm)',
             }}
           >
             Buka App Demo →
           </Link>
+
+          {/* Hamburger Button (mobile only) */}
+          <button
+            type="button"
+            className="landing-hamburger"
+            aria-label={mobileMenuOpen ? 'Tutup menu' : 'Buka menu'}
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            style={{
+              display: 'inline-flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '4px',
+              width: '44px',
+              height: '44px',
+              background: 'transparent',
+              border: '2px solid var(--ink)',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            <span style={{ width: '18px', height: '2px', backgroundColor: 'var(--ink)' }} />
+            <span style={{ width: '18px', height: '2px', backgroundColor: 'var(--ink)' }} />
+            <span style={{ width: '18px', height: '2px', backgroundColor: 'var(--ink)' }} />
+          </button>
         </div>
       </div>
 
       <style jsx>{`
         @media (min-width: 840px) {
-          .desktop-nav {
+          .landing-nav-links {
             display: flex !important;
+          }
+          .landing-hamburger {
+            display: none !important;
+          }
+          .landing-mobile-menu {
+            display: none !important;
           }
         }
       `}</style>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="landing-mobile-menu" style={{ borderTop: '1px solid var(--color-divider)', backgroundColor: 'var(--color-surface)' }}>
+          <nav style={{ display: 'flex', flexDirection: 'column', padding: '8px 24px 16px' }}>
+            <a href="#fitur" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: 'var(--color-text-primary)', fontWeight: 600, fontSize: '15px', textDecoration: 'none', borderBottom: '1px solid var(--color-divider)' }}>
+              Fitur Utama
+            </a>
+            <a href="#simulasi" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: 'var(--color-text-primary)', fontWeight: 600, fontSize: '15px', textDecoration: 'none', borderBottom: '1px solid var(--color-divider)' }}>
+              Simulasi Pipeline
+            </a>
+            <a href="#kalkulator" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: 'var(--color-text-primary)', fontWeight: 600, fontSize: '15px', textDecoration: 'none', borderBottom: '1px solid var(--color-divider)' }}>
+              Kalkulator ROI
+            </a>
+            <a href="#harga" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: 'var(--color-text-primary)', fontWeight: 600, fontSize: '15px', textDecoration: 'none', borderBottom: '1px solid var(--color-divider)' }}>
+              Harga Paket
+            </a>
+            <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: 'var(--color-text-primary)', fontWeight: 600, fontSize: '15px', textDecoration: 'none' }}>
+              FAQ
+            </a>
+          </nav>
+        </div>
+      )}
     </header>
   );
 };

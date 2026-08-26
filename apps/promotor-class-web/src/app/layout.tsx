@@ -4,7 +4,13 @@ import '@/styles/globals.css';
 
 export const metadata: Metadata = {
   title: 'PromotorClass — Client Education OS',
-  description: 'Mengubah aktivitas belajar peserta menjadi sinyal intent dan aksi bisnis promotor.',
+  description: 'Mengubah aktivitas belajar peserta menjadi sinyal intent dan aksi bisnis promotor. Program edukasi, refleksi, intent HOT/WARM/COLD, dan follow-up dalam satu tempat.',
+  openGraph: {
+    title: 'PromotorClass — Client Education OS',
+    description: 'Program edukasi, refleksi, intent scoring, dan follow-up 1-tap untuk promotor STIFIn.',
+    type: 'website',
+    locale: 'id_ID',
+  },
   appleWebApp: {
     capable: true,
     title: 'PromotorClass',

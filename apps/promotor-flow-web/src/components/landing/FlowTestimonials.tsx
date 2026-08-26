@@ -5,28 +5,22 @@ import React from 'react';
 export const FlowTestimonials: React.FC = () => {
   const testimonials = [
     {
-      quote: 'Dulu sering sekali chat orang tua yang tanya tes STIFIn tenggelam karena sehari masuk puluhan DM. Dengan Today Queue PromotorFlow, tidak ada satu pun prospek yang luput. Konversi booking saya naik lebih dari dua kali lipat.',
-      author: 'dr. Rina Hidayati',
+      quote: 'Dulu sering sekali chat orang tua yang tanya tes STIFIn tenggelam karena sehari masuk puluhan DM. Dengan Today Queue PromotorFlow, tidak ada satu pun prospek yang luput.',
       role: 'Promotor Senior & Parenting Coach',
       city: 'Jakarta Selatan',
-      initials: 'RH',
-      verifiedMetric: '+140% Konversi Booking',
+      initials: 'P1',
     },
     {
       quote: 'Link booking 14-hari menghemat waktu tim cabang kami luar biasa banyak. Klien tinggal pilih slot Home Visit yang masih kosong, pilih lokasi, dan masuk kalender otomatis tanpa perlu tanya jawab manual.',
-      author: 'Faisal Ahmad, S.Psi',
       role: 'Kepala Cabang & Promotor STIFIn',
       city: 'Surabaya',
-      initials: 'FA',
-      verifiedMetric: '15 Jam Dihemat / Minggu',
+      initials: 'P2',
     },
     {
-      quote: 'Fitur Aftercare D+7 adalah game changer. Klien merasa sangat diperhatikan karena kita mengevaluasi perkembangan belajar anaknya sepekan pasca tes. Dari situ hampir 40% klien mendaftar tes untuk anggota keluarga lain.',
-      author: 'Hj. Nurul Anisa',
+      quote: 'Fitur Aftercare D+7 adalah game changer. Klien merasa sangat diperhatikan karena kita mengevaluasi perkembangan belajar anaknya sepekan pasca tes.',
       role: 'Konsultan Karir Remaja & Keluarga',
       city: 'Bandung',
-      initials: 'NA',
-      verifiedMetric: '38% Repeat & Referral',
+      initials: 'P3',
     },
   ];
 
@@ -69,7 +63,7 @@ export const FlowTestimonials: React.FC = () => {
         >
           {testimonials.map((t) => (
             <div
-              key={t.author}
+              key={t.role}
               style={{
                 backgroundColor: 'var(--color-canvas)',
                 borderRadius: 'var(--radius-xl)',
@@ -79,37 +73,17 @@ export const FlowTestimonials: React.FC = () => {
                 flexDirection: 'column',
                 justifyContent: 'space-between',
                 gap: '20px',
-                boxShadow: 'var(--shadow-xs)',
               }}
             >
-              <div>
-                <div
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    padding: '3px 10px',
-                    borderRadius: 'var(--radius-full)',
-                    backgroundColor: 'var(--color-primary-light)',
-                    color: 'var(--color-primary)',
-                    fontWeight: 780,
-                    fontSize: '11.5px',
-                    marginBottom: '16px',
-                  }}
-                >
-                  ✓ {t.verifiedMetric}
-                </div>
-
-                <p style={{ fontSize: '14px', color: 'var(--color-text-primary)', lineHeight: 1.65, fontStyle: 'italic', margin: 0 }}>
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-              </div>
+              <p style={{ fontSize: '14px', color: 'var(--color-text-primary)', lineHeight: 1.65, fontStyle: 'italic', margin: 0 }}>
+                &ldquo;{t.quote}&rdquo;
+              </p>
 
               <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div
                   style={{
                     width: '42px',
                     height: '42px',
-                    borderRadius: '50%',
                     backgroundColor: 'var(--color-primary)',
                     color: '#FFFFFF',
                     fontWeight: 800,
@@ -124,10 +98,10 @@ export const FlowTestimonials: React.FC = () => {
                 </div>
                 <div>
                   <div style={{ fontWeight: 800, fontSize: '14.5px', color: 'var(--color-text-primary)' }}>
-                    {t.author}
+                    {t.role}
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
-                    {t.role} · {t.city}
+                    {t.city}
                   </div>
                 </div>
               </div>

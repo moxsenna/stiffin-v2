@@ -56,7 +56,7 @@ export const FlowFinalCta: React.FC = () => {
             margin: '0 auto 40px',
           }}
         >
-          Bergabung bersama 500+ promotor dan cabang STIFIn di seluruh Indonesia. Mulai kelola antrean tindakan harian Anda dengan nol risiko.
+          Bergabung bersama promotor dan cabang STIFIn di seluruh Indonesia. Mulai kelola antrean tindakan harian Anda dengan nol risiko.
         </p>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', justifyContent: 'center' }}>

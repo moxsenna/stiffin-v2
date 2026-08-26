@@ -129,9 +129,12 @@ export default function TodayPage() {
          {item.action.title}
         </div>
      </button>
-     <button type="button" className="row-action" onClick={(e) =>handleOpenWa(item, e)} aria-label={`Kirim WhatsApp ke ${item.contactName}`}>
-       WA
-      </button>
+      <button type="button" className="row-action" onClick={(e) =>handleOpenWa(item, e)} aria-label={`Kirim WhatsApp ke ${item.contactName}`}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2a10 10 0 0 0-8.65 15.02L2 22l5.12-1.32A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.04.79.81-2.96-.2-.31A8.2 8.2 0 1 1 12 20.2zm4.46-6.07c-.24-.12-1.43-.7-1.65-.79-.22-.08-.38-.12-.54.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06a6.66 6.66 0 0 1-1.96-1.21 7.4 7.4 0 0 1-1.36-1.69c-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.31-.74-1.79-.2-.47-.39-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.12 3.64.58.25 1.03.4 1.38.51.58.19 1.11.16 1.53.1.47-.07 1.43-.59 1.63-1.15.2-.56.2-1.05.14-1.15-.06-.1-.22-.16-.46-.28z" />
+        </svg>
+        <span>WA</span>
+       </button>
    </div>
  );
 

@@ -1,30 +1,20 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 
 export default function RootPage() {
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     getSession()
       .then((session) => {
         if (session) router.replace('/app');
-        else setChecking(false);
       })
-      .catch(() => setChecking(false));
+      .catch(() => {});
   }, [router]);
-
-  if (checking) {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--canvas)' }}>
-        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Membuka PromotorClass...</div>
-      </div>
-    );
-  }
 
   return (
     <div style={{ backgroundColor: 'var(--surface)', color: 'var(--ink)', fontFamily: 'var(--font-sans)' }}>
@@ -37,7 +27,7 @@ export default function RootPage() {
               <span style={{ fontSize: 10, fontWeight: 650, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)' }}>Education OS</span>
             </div>
           </Link>
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 24 }} className="desktop-nav">
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 24 }} className="landing-nav-links">
             <a href="#fitur" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>Fitur</a>
             <a href="#cara-kerja" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>Cara Kerja</a>
             <a href="#harga" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>Harga</a>
@@ -53,7 +43,7 @@ export default function RootPage() {
       <section style={{ padding: '64px 24px 48px', maxWidth: 1200, margin: '0 auto', textAlign: 'center' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', backgroundColor: 'var(--accent-soft)', border: '1px solid #bfdbfe', color: 'var(--accent-dark)', fontSize: 12.5, fontWeight: 780, marginBottom: 24 }}>
           <span style={{ width: 8, height: 8, backgroundColor: 'var(--accent)', display: 'inline-block' }} />
-          Dipakai 300+ Promotor STIFIn — 12.000+ peserta aktif
+          Dirancang untuk Promotor & Ekosistem STIFIn di Seluruh Indonesia
         </div>
         <h1 style={{ fontSize: 'clamp(32px,5.5vw,56px)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.04em', maxWidth: 860, margin: '0 auto 18px' }}>
           Ubah Setiap Sesi Belajar<br />Menjadi <span style={{ color: 'var(--accent)' }}>Sinyal Intent</span> yang Menjual
@@ -66,9 +56,9 @@ export default function RootPage() {
           <a href="#cara-kerja" style={{ padding: '14px 28px', backgroundColor: 'var(--surface)', color: 'var(--ink)', border: '2px solid var(--ink)', fontWeight: 750, fontSize: 15, textDecoration: 'none' }}>Lihat Cara Kerja</a>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16, maxWidth: 860, margin: '0 auto', padding: '20px 24px', backgroundColor: 'var(--surface-muted)', border: '1px solid var(--line)', textAlign: 'center' }}>
-          <div><div style={{ fontSize: 28, fontWeight: 900, color: 'var(--accent)' }} className="tabular-nums">4.8/5</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600 }}>Rating Kepuasan Peserta</div></div>
-          <div><div style={{ fontSize: 28, fontWeight: 900, color: 'var(--accent)' }} className="tabular-nums">68%</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600 }}>Rata-rata Penyelesaian Program</div></div>
-          <div><div style={{ fontSize: 28, fontWeight: 900, color: 'var(--accent)' }} className="tabular-nums">3×</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600 }}>Konversi Prospek → Tes</div></div>
+          <div><div style={{ fontSize: 28, fontWeight: 900, color: 'var(--accent)' }}>3</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600 }}>Langkah: Program → Belajar → Follow-up</div></div>
+          <div><div style={{ fontSize: 28, fontWeight: 900, color: 'var(--accent)' }}>HOT/WARM/COLD</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600 }}>Intent Otomatis per Peserta</div></div>
+          <div><div style={{ fontSize: 28, fontWeight: 900, color: 'var(--accent)' }}>D+7</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600 }}>Aftercare Otomatis</div></div>
         </div>
       </section>
 
@@ -138,7 +128,7 @@ export default function RootPage() {
           </div>
           <div style={{ border: '2px solid var(--ink)', padding: 32, backgroundColor: 'var(--ink)', color: '#fff' }}>
             <h3 style={{ fontSize: 18, fontWeight: 800 }}>Pro — Paling Populer</h3>
-            <div style={{ fontSize: 32, fontWeight: 900, margin: '12px 0' }}>Rp 149rb <span style={{ fontSize: 14, fontWeight: 500, color: '#94a3b8' }}>/ bulan</span></div>
+            <div style={{ fontSize: 32, fontWeight: 900, margin: '12px 0' }}>Segera <span style={{ fontSize: 14, fontWeight: 500, color: '#94a3b8' }}>— hubungi kami</span></div>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14, color: '#e2e8f0' }}>
               <li>✓ Program tanpa batas</li>
               <li>✓ Aftercare & lifecycle lengkap</li>
@@ -164,10 +154,10 @@ export default function RootPage() {
       </section>
 
       <footer style={{ padding: '32px 24px', borderTop: '1px solid var(--line)', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
-        © 2026 PromotorClass — STIFIn Platform • <Link href="/login" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Masuk Promotor</Link> • <Link href="/p/demo" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Lihat Storefront Demo</Link>
+        © 2026 PromotorClass — STIFIn Platform • <Link href="/login" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Masuk Promotor</Link> • <Link href="/learn" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Portal Learner</Link>
       </footer>
 
-      <style>{`@media(max-width:840px){.desktop-nav{display:none!important}}`}</style>
+      <style>{`@media(max-width:840px){.landing-nav-links{display:none!important}}`}</style>
     </div>
   );
 }

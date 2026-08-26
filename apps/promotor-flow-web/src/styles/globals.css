@@ -372,20 +372,27 @@ svg {
 /* Compact side action column on operational rows */
 .row-action {
   flex: none;
-  width: 58px;
-  min-height: 44px;
-  border: 0;
-  border-left: 1px solid var(--line);
-  background: transparent;
+  align-self: center;
+  width: 52px;
+  min-height: 48px;
+  margin: 0 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 2px solid var(--accent);
+  background: var(--accent-soft);
   color: var(--accent-dark);
-  font: 700 10px/1.2 var(--font-sans);
+  font: 700 10px/1 var(--font-sans);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
 }
 
 .row-action:hover {
-  background: #ffe0d9;
+  background: var(--accent);
+  color: #ffffff;
 }
 
 /* ------------------------------------------------------------
@@ -1102,4 +1109,19 @@ svg {
 
 .wordmark-dot {
   color: var(--accent);
+}
+
+/* Touch target helpers (audit fix) */
+.touch-target {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.touch-target-primary {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }

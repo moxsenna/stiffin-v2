@@ -102,15 +102,27 @@ export interface BottomSheetProps {
 }
 
 export function BottomSheet({ open, onClose, children, labelledBy }: BottomSheetProps) {
+  const sheetRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    sheetRef.current?.focus();
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
   if (!open) return null;
   return (
     <>
      <div className="sheet-overlay" onClick={onClose} aria-hidden="true" />
-     <div className="sheet" role="dialog" aria-modal="true" aria-labelledby={labelledBy}>
+     <div ref={sheetRef} tabIndex={-1} className="sheet" role="dialog" aria-modal="true" aria-labelledby={labelledBy}>
        {children}
       </div>
-   </>
- );
+    </>
+  );
 }
 
 export function Toast({ message }: { message: string | null }) {

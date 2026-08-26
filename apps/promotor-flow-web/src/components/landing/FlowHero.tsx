@@ -37,7 +37,7 @@ export const FlowHero: React.FC = () => {
         }}
       >
         <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-primary)' }} />
-        <span>Dipercaya 500+ Promotor & Cabang STIFIn di Seluruh Indonesia</span>
+        <span>Dirancang untuk Promotor & Cabang STIFIn di Seluruh Indonesia</span>
       </div>
 
       {/* Main Punchy Editorial Headline */}
@@ -137,27 +137,27 @@ export const FlowHero: React.FC = () => {
         }}
       >
         <div>
-          <div className="tabular-nums" style={{ fontSize: '28px', fontWeight: 900, color: 'var(--color-primary)' }}>
-            98.4%
+          <div style={{ fontSize: '28px', fontWeight: 900, color: 'var(--color-primary)' }}>
+            1-Tap
           </div>
           <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '2px', fontWeight: 600 }}>
-            Follow-Up Tepat Waktu
+            Follow-Up via WhatsApp
           </div>
         </div>
         <div>
-          <div className="tabular-nums" style={{ fontSize: '28px', fontWeight: 900, color: 'var(--color-primary)' }}>
-            3.2x
+          <div style={{ fontSize: '28px', fontWeight: 900, color: 'var(--color-primary)' }}>
+            14-Hari
           </div>
           <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '2px', fontWeight: 600 }}>
-            Peningkatan Konversi Tes
+            Slot Booking Publik Otomatis
           </div>
         </div>
         <div>
-          <div className="tabular-nums" style={{ fontSize: '28px', fontWeight: 900, color: 'var(--color-primary)' }}>
-            15+ Jam
+          <div style={{ fontSize: '28px', fontWeight: 900, color: 'var(--color-primary)' }}>
+            D+7
           </div>
           <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '2px', fontWeight: 600 }}>
-            Waktu Admin Dihemat / Minggu
+            Aftercare Terjadwal Otomatis
           </div>
         </div>
       </div>

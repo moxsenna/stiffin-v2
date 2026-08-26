@@ -59,3 +59,41 @@
   --color-danger: var(--accent-dark);
   --color-status-danger: #dc2626;
 }
+
+/* ------------------------------------------------------------
+   Legacy compatibility aliases (audit fix)
+   Maps remaining var() usages across pages/landing to the
+   canonical system above. Square + flat by policy.
+   ------------------------------------------------------------ */
+:root {
+  --border-radius-sm: 0px;
+  --border-radius-md: 0px;
+  --border-radius-lg: 0px;
+  --border-radius-full: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-full: 0px;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-sheet: none;
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --ease-spring: ease-out;
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-hover: var(--surface-hover);
+  --color-text-tertiary: var(--muted-light);
+  --color-primary-border: var(--line);
+  --color-primary-dark: var(--accent-dark);
+  --color-divider-subtle: var(--surface-hover);
+  --color-status-success: #15803d;
+  --color-status-success-bg: #f0fdf4;
+  --color-status-warning: #b45309;
+  --color-status-warning-bg: #fffbeb;
+  --color-status-danger-bg: #fef2f2;
+  --color-danger-soft: #fee2e2;
+  --color-danger-border: #fecaca;
+}
