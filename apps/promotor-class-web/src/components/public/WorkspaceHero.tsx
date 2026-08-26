@@ -12,130 +12,150 @@ interface WorkspaceHeroProps {
 
 export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
   return (
-    <section className="container" style={{ paddingTop: '40px', paddingBottom: '36px' }}>
-      <div
+    <section className="container" style={{ paddingTop: '48px', paddingBottom: '32px' }}>
+     <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '36px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '40px',
           alignItems: 'center',
         }}
       >
-        {/* Left Headline Column */}
+       {/* Left Headline Column */}
         <div>
-          <h1
+         <div
             style={{
-              fontSize: 'clamp(32px, 4.2vw, 52px)',
-              lineHeight: 1.08,
-              letterSpacing: '-0.035em',
-              marginBottom: '18px',
-              fontWeight: 850,
-              color: 'var(--color-text-main)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '12px',
+              fontWeight: 820,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: 'var(--accent-dark)',
+              marginBottom: '16px',
             }}
           >
-            {profile.headline}
+           <span
+              style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '0px',
+                backgroundColor: 'var(--accent-dark)',
+              }}
+            />
+           Ruang belajar {profile.displayName.split(' ')[0]}
+          </div>
+
+         <h1
+            style={{
+              fontSize: 'clamp(32px, 4.5vw, 56px)',
+              lineHeight: 1.04,
+              letterSpacing: '-0.04em',
+              marginBottom: '18px',
+              fontWeight: 800,
+            }}
+          >
+           {profile.headline}
           </h1>
 
-          <p
+         <p
             style={{
               fontSize: '16px',
               lineHeight: 1.65,
-              color: 'var(--color-text-body)',
-              maxWidth: '600px',
-              marginBottom: '28px',
+              color: '#4f4e4a',
+              maxWidth: '650px',
+              marginBottom: '24px',
             }}
           >
-            Materi singkat dan terstruktur untuk membantu orang tua mengenali potensi genetik anak, mengurangi konflik komunikasi di rumah, dan mendampingi tumbuh kembang dengan tenang.
+           Materi singkat untuk membantu orang tua mengenali cara belajar anak, mengurangi konflik sehari-hari, dan mendampingi dengan lebih tenang.
           </p>
 
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
-            <a
+         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+           <a
               href="#programs"
-              className="touch-target-primary"
               style={{
-                borderRadius: 'var(--border-radius-md)',
-                padding: '0 22px',
-                backgroundColor: 'var(--color-primary)',
+                minHeight: '46px',
+                borderRadius: '0px',
+                padding: '0 20px',
+                backgroundColor: 'var(--accent-dark)',
                 color: '#FFFFFF',
                 fontWeight: 780,
-                fontSize: '14.5px',
-                textDecoration: 'none',
-                boxShadow: 'var(--shadow-sm)',
-              }}
-            >
-              Lihat Program Edukasi
-            </a>
-            <a
-              href="#about"
-              className="touch-target-primary"
-              style={{
-                borderRadius: 'var(--border-radius-md)',
-                padding: '0 20px',
-                border: '1px solid var(--color-divider)',
-                backgroundColor: 'var(--color-surface)',
-                color: 'var(--color-text-main)',
-                fontWeight: 700,
                 fontSize: '14px',
                 textDecoration: 'none',
-                boxShadow: 'var(--shadow-xs)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              Profil {profile.displayName.split(' ')[0]}
+             Lihat program
             </a>
-          </div>
+           <a
+              href="#about"
+              style={{
+                minHeight: '46px',
+                borderRadius: '0px',
+                padding: '0 20px',
+                border: '1px solid var(--color-divider)',
+                backgroundColor: '#FFFFFF',
+                color: '#191918',
+                fontWeight: 760,
+                fontSize: '14px',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+             Kenal {profile.displayName.split(' ')[0]}
+            </a>
+         </div>
 
-          <div
+         <div
             style={{
+              marginTop: '20px',
               display: 'flex',
-              gap: '18px',
+              gap: '16px',
               flexWrap: 'wrap',
               color: 'var(--color-text-muted)',
-              fontSize: '12.5px',
+              fontSize: '12px',
             }}
           >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              Materi praktis & aplikatif
+           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+             <i style={{ width: '5px', height: '5px', borderRadius: '0px', backgroundColor: '#aaa79f', display: 'inline-block' }} />
+             Materi praktis
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              Akses fleksibel kapan saja
+           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+             <i style={{ width: '5px', height: '5px', borderRadius: '0px', backgroundColor: '#aaa79f', display: 'inline-block' }} />
+             Bisa dipelajari kapan saja
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              Tersedia modul gratis
+           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+             <i style={{ width: '5px', height: '5px', borderRadius: '0px', backgroundColor: '#aaa79f', display: 'inline-block' }} />
+             Mulai dari program gratis
             </span>
-          </div>
-        </div>
+         </div>
+       </div>
 
-        {/* Right Featured Art Card */}
+       {/* Right Featured Art Card with Generated WebP Photo */}
         {featuredItem && (
           <Link
             href={`/p/${profile.workspaceSlug}/${featuredItem.program.programSlug}`}
-            style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+            style={{ textDecoration: 'none', color: 'inherit' }}
           >
-            <div
+           <div
               style={{
-                minHeight: '360px',
+                minHeight: '380px',
                 position: 'relative',
-                borderRadius: 'var(--border-radius-xl)',
+                borderRadius: '0px',
                 overflow: 'hidden',
-                border: '1px solid var(--color-divider)',
-                boxShadow: 'var(--shadow-md)',
+                border: '1px solid #dbe5dd',
                 padding: '28px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                backgroundColor: 'var(--color-surface)',
               }}
             >
-              <img
+             <img
                 src="/images/program_cover_7hari.webp"
                 alt={featuredItem.program.title}
                 style={{
@@ -147,64 +167,63 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                   objectPosition: 'center',
                 }}
               />
-              <div
+             <div
                 style={{
                   position: 'absolute',
                   inset: 0,
                   background:
-                    'linear-gradient(180deg, rgba(15,20,17,0.72) 0%, rgba(15,20,17,0.3) 45%, rgba(15,20,17,0.88) 100%)',
+                    'rgba(32,30,29,0.55)',
                   zIndex: 1,
                 }}
               />
 
-              <div style={{ position: 'relative', zIndex: 2 }}>
-                <span
+             <div style={{ position: 'relative', zIndex: 2 }}>
+               <span
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '5px',
+                    display: 'inline-block',
                     fontSize: '11px',
-                    fontWeight: 780,
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255, 255, 255, 0.6)',
-                    padding: '5px 12px',
-                    borderRadius: 'var(--border-radius-full)',
+                    fontWeight: 820,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+                    border: '1px solid rgba(255, 255, 255, 0.5)',
+                    padding: '6px 12px',
+                    borderRadius: '0px',
                     marginBottom: '14px',
-                    color: 'var(--color-primary)',
+                    color: 'var(--accent-dark)',
                   }}
                 >
-                  Program Pilihan
+                 Program Pilihan
                 </span>
 
-                <div
+               <div
                   style={{
-                    fontSize: '28px',
-                    lineHeight: 1.1,
-                    letterSpacing: '-0.03em',
+                    fontSize: '34px',
+                    lineHeight: 1.02,
+                    letterSpacing: '-0.04em',
                     fontWeight: 850,
                     color: '#FFFFFF',
-                    marginBottom: '10px',
+                    marginBottom: '12px',
                     textShadow: '0 2px 6px rgba(0,0,0,0.4)',
                   }}
                 >
-                  {featuredItem.program.title}
+                 {featuredItem.program.title}
                 </div>
 
-                <p
+               <p
                   style={{
-                    fontSize: '13.5px',
-                    color: '#E6EFE9',
-                    maxWidth: '320px',
+                    fontSize: '13px',
+                    color: '#e2ece5',
+                    maxWidth: '300px',
                     lineHeight: 1.5,
                     margin: 0,
                   }}
                 >
-                  {featuredItem.presentation.shortOutcome}
+                 {featuredItem.presentation.shortOutcome}
                 </p>
-              </div>
+             </div>
 
-              <div
+             <div
                 style={{
                   display: 'flex',
                   gap: '10px',
@@ -214,26 +233,25 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                   color: '#FFFFFF',
                   zIndex: 2,
                   position: 'relative',
-                  paddingTop: '20px',
                 }}
               >
-                <img
+               <img
                   src={profile.avatarUrl || "/images/promoter_profile_rina.webp"}
                   alt={profile.displayName}
                   style={{
                     width: '32px',
                     height: '32px',
-                    borderRadius: '50%',
+                    borderRadius: '0px',
                     objectFit: 'cover',
                     border: '2px solid #FFFFFF',
                   }}
                 />
-                <span>oleh {profile.displayName}</span>
-              </div>
-            </div>
-          </Link>
-        )}
+               <span>oleh {profile.displayName}</span>
+             </div>
+           </div>
+         </Link>
+       )}
       </div>
-    </section>
-  );
+   </section>
+ );
 }

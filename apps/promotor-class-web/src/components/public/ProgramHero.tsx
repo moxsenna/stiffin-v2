@@ -6,28 +6,28 @@ import { ProgramCover } from './ProgramCover';
 
 interface ProgramHeroProps {
   detail: PublicProgramDetail;
-  onStartClick?: () => void;
+  onStartClick?: () =>void;
 }
 
 export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
   const { program, presentation, isRegistrationAllowed, registrationStatusNotice } = detail;
 
   let priceMain = 'Gratis';
-  let priceSub = 'Akses penuh materi';
+  let priceSub = 'akses seluruh materi';
   if (program.programType === 'aftersales') {
     priceMain = 'Khusus Peserta Tes';
-    priceSub = 'Khusus alumni tes STIFIn';
+    priceSub = 'akses bagi alumni tes STIFIn';
   } else if (program.pricing === 'one_time' && program.priceAmount) {
     priceMain = `Rp${program.priceAmount.toLocaleString('id-ID')}`;
-    priceSub = 'Pembayaran satu kali';
+    priceSub = 'pembayaran sekali';
   }
 
   const moduleCount = program.modules?.length || 0;
-  const lessonCount = program.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0;
+  const lessonCount = program.modules?.reduce((acc, m) =>acc + (m.lessons?.length || 0), 0) || 0;
 
   return (
-    <section className="container" style={{ paddingTop: '28px', paddingBottom: '40px' }}>
-      <div
+    <section className="container" style={{ paddingTop: '28px', paddingBottom: '44px' }}>
+     <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -35,42 +35,56 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
           alignItems: 'start',
         }}
       >
-        {/* Cover Column */}
+       {/* Cover Column */}
         <div>
-          <ProgramCover
+         <ProgramCover
             title={program.title}
+            publicLabel={presentation.heroEyebrow}
             variant={presentation.coverVariant}
             aspectRatio="16 / 10"
           />
-        </div>
+       </div>
 
-        {/* Copy Column */}
-        <div style={{ paddingTop: '2px' }}>
-          <h1
+       {/* Copy Column */}
+        <div style={{ paddingTop: '4px' }}>
+         <span
             style={{
-              fontSize: 'clamp(28px, 4vw, 44px)',
-              letterSpacing: '-0.035em',
-              lineHeight: 1.1,
-              marginBottom: '14px',
+              display: 'inline-block',
+              fontSize: '11px',
               fontWeight: 850,
-              color: 'var(--color-text-main)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.07em',
+              color: 'var(--accent-dark)',
+              marginBottom: '12px',
             }}
           >
-            {program.title}
+           {presentation.heroEyebrow}
+          </span>
+
+         <h1
+            style={{
+              fontSize: 'clamp(30px, 4vw, 48px)',
+              letterSpacing: '-0.04em',
+              lineHeight: 1.05,
+              marginBottom: '14px',
+              fontWeight: 800,
+            }}
+          >
+           {program.title}
           </h1>
 
-          <p
+         <p
             style={{
-              fontSize: '15.5px',
+              fontSize: '16px',
               lineHeight: 1.65,
-              color: 'var(--color-text-body)',
+              color: '#55544f',
               marginBottom: '20px',
             }}
           >
-            {program.description || program.subtitle}
+           {program.description || program.subtitle}
           </p>
 
-          <div
+         <div
             style={{
               display: 'flex',
               alignItems: 'baseline',
@@ -78,15 +92,11 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
               margin: '16px 0 20px',
             }}
           >
-            <div style={{ fontSize: '28px', fontWeight: 850, color: 'var(--color-text-main)' }}>
-              {priceMain}
-            </div>
-            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
-              {priceSub}
-            </div>
-          </div>
+           <div style={{ fontSize: '28px', fontWeight: 850, color: '#191918' }}>{priceMain}</div>
+           <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{priceSub}</div>
+         </div>
 
-          {/* Metadata Row */}
+         {/* Metadata Row */}
           <div
             style={{
               display: 'grid',
@@ -97,84 +107,84 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
               padding: '14px 0',
             }}
           >
-            <div>
-              <strong style={{ fontSize: '13.5px', display: 'block', fontWeight: 800, color: 'var(--color-text-main)' }}>
-                {presentation.durationLabel}
+           <div>
+             <strong style={{ fontSize: '13px', display: 'block', fontWeight: 800 }}>
+               {presentation.durationLabel}
               </strong>
-              <span style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>ritme belajar</span>
-            </div>
-            <div style={{ borderLeft: '1px solid var(--color-divider)', paddingLeft: '12px' }}>
-              <strong style={{ fontSize: '13.5px', display: 'block', fontWeight: 800, color: 'var(--color-text-main)' }}>
-                {lessonCount > 0 ? `${lessonCount} materi` : `${moduleCount} modul`}
+             <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>ritme belajar</span>
+           </div>
+           <div style={{ borderLeft: '1px solid var(--color-divider)', paddingLeft: '12px' }}>
+             <strong style={{ fontSize: '13px', display: 'block', fontWeight: 800 }}>
+               {lessonCount >0 ? `${lessonCount} materi` : `${moduleCount} modul`}
               </strong>
-              <span style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>video & refleksi</span>
-            </div>
-            <div style={{ borderLeft: '1px solid var(--color-divider)', paddingLeft: '12px' }}>
-              <strong style={{ fontSize: '13.5px', display: 'block', fontWeight: 800, color: 'var(--color-text-main)' }}>
-                Mandiri
-              </strong>
-              <span style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>akses kapan saja</span>
-            </div>
-          </div>
+             <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>video + refleksi</span>
+           </div>
+           <div style={{ borderLeft: '1px solid var(--color-divider)', paddingLeft: '12px' }}>
+             <strong style={{ fontSize: '13px', display: 'block', fontWeight: 800 }}>Mandiri</strong>
+             <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>akses kapan saja</span>
+           </div>
+         </div>
 
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            {isRegistrationAllowed ? (
+         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+           {isRegistrationAllowed ? (
               <button
                 onClick={onStartClick}
-                className="touch-target-primary"
                 style={{
-                  borderRadius: 'var(--border-radius-md)',
-                  padding: '0 24px',
-                  backgroundColor: 'var(--color-primary)',
+                  minHeight: '46px',
+                  borderRadius: '0px',
+                  padding: '0 20px',
+                  backgroundColor: 'var(--accent-dark)',
                   color: '#FFFFFF',
                   fontWeight: 780,
-                  fontSize: '14.5px',
+                  fontSize: '14px',
                   border: 0,
                   cursor: 'pointer',
-                  boxShadow: 'var(--shadow-sm)',
                 }}
               >
-                Mulai Belajar Sekarang
+               Mulai belajar gratis
               </button>
-            ) : (
+           ) : (
               <a
                 href="#register"
-                className="touch-target-primary"
                 style={{
-                  borderRadius: 'var(--border-radius-md)',
-                  padding: '0 22px',
+                  minHeight: '46px',
+                  borderRadius: '0px',
+                  padding: '0 20px',
                   backgroundColor: 'var(--color-text-muted)',
                   color: '#FFFFFF',
                   fontWeight: 780,
                   fontSize: '14px',
                   border: 0,
                   textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
                 }}
               >
-                {program.programType === 'aftersales' ? 'Akses Peserta Tes STIFIn' : 'Informasi Pendaftaran'}
+               {program.programType === 'aftersales' ? 'Akses Peserta Tes STIFIn' : 'Informasi Pendaftaran'}
               </a>
-            )}
+           )}
 
             <a
               href="#curriculum"
-              className="touch-target-primary"
               style={{
-                borderRadius: 'var(--border-radius-md)',
+                minHeight: '46px',
+                borderRadius: '0px',
                 padding: '0 20px',
                 border: '1px solid var(--color-divider)',
-                backgroundColor: 'var(--color-surface)',
-                color: 'var(--color-text-main)',
-                fontWeight: 700,
+                backgroundColor: '#FFFFFF',
+                color: '#191918',
+                fontWeight: 760,
                 fontSize: '14px',
                 textDecoration: 'none',
-                boxShadow: 'var(--shadow-xs)',
+                display: 'inline-flex',
+                alignItems: 'center',
               }}
             >
-              Lihat Isi Kurikulum
+             Lihat isi program
             </a>
-          </div>
+         </div>
 
-          {registrationStatusNotice && (
+         {registrationStatusNotice && (
             <div
               style={{
                 marginTop: '12px',
@@ -183,11 +193,11 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
                 fontStyle: 'italic',
               }}
             >
-              {registrationStatusNotice}
+             {registrationStatusNotice}
             </div>
-          )}
+         )}
         </div>
-      </div>
-    </section>
-  );
+     </div>
+   </section>
+ );
 }

@@ -13,7 +13,7 @@ interface StorefrontSettingsClientProps {
 }
 
 const PRESET_AVATARS = [
-  { label: 'Foto Profil Bawaan', url: '/images/promoter_profile_rina.webp' },
+  { label: 'Foto Profil Bawaan (Default)', url: '/images/promoter_profile_rina.webp' },
   { label: 'Logo Minimalis Hijau', url: '/images/og-card.png' },
 ];
 
@@ -26,7 +26,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [origin, setOrigin] = useState('');
 
-  useEffect(() => {
+  useEffect(() =>{
     if (typeof window !== 'undefined') {
       setOrigin(window.location.origin);
     }
@@ -35,19 +35,19 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
       getProgramsQuery(),
       getPublicStorefrontRepository().getStorefrontProfile(),
     ])
-      .then(([progData, profData]) => {
+      .then(([progData, profData]) =>{
         if (progData) setPrograms(progData);
         if (profData) {
           setProfile(profData);
-          if (profData.avatarUrl && !PRESET_AVATARS.some(p => p.url === profData.avatarUrl)) {
+          if (profData.avatarUrl && !PRESET_AVATARS.some(p =>p.url === profData.avatarUrl)) {
             setCustomAvatarUrl(profData.avatarUrl);
           }
         }
       })
-      .finally(() => setIsLoading(false));
+      .finally(() =>setIsLoading(false));
   }, []);
 
-  const handleSaveStorefront = async (e: React.FormEvent) => {
+  const handleSaveStorefront = async (e: React.FormEvent) =>{
     e.preventDefault();
     if (!profile) return;
 
@@ -65,7 +65,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
 
       setProfile(updated);
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 4000);
+      setTimeout(() =>setSaveSuccess(false), 4000);
     } catch (err: any) {
       alert(`Gagal menyimpan pengaturan: ${err?.message || 'Terjadi kesalahan sistem'}`);
     } finally {
@@ -75,10 +75,10 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
 
   if (isLoading || !profile) {
     return (
-      <div style={{ padding: '48px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '14px', fontWeight: 600 }}>
-        Memuat data storefront...
+      <div style={{ padding: '32px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+       Memuat data storefront...
       </div>
-    );
+   );
   }
 
   const waCleanPhone = profile.whatsappPhoneE164 ? profile.whatsappPhoneE164.replace(/[^0-9]/g, '') : '';
@@ -90,7 +90,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Save Success Banner */}
+     {/* Save Success Banner */}
       {saveSuccess && (
         <div
           style={{
@@ -98,466 +98,447 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
             top: '20px',
             right: '20px',
             zIndex: 2500,
-            backgroundColor: 'var(--color-primary)',
+            backgroundColor: 'var(--accent-dark)',
             color: '#FFF',
             padding: '14px 22px',
-            borderRadius: 'var(--border-radius-md)',
+            borderRadius: '0px',
             fontSize: '14px',
-            fontWeight: 780,
-            boxShadow: 'var(--shadow-lg)',
+            fontWeight: 750,
           }}
         >
-          ✓ Pengaturan Storefront berhasil disimpan!
+         ✓ Pengaturan Storefront berhasil disimpan!
         </div>
-      )}
+     )}
 
       {/* Header Banner & Live Status */}
       <div
         style={{
           backgroundColor: 'var(--color-surface)',
-          borderRadius: 'var(--border-radius-lg)',
+          borderRadius: '0px',
           border: '1px solid var(--color-divider)',
-          padding: '22px',
-          boxShadow: 'var(--shadow-xs)',
+          padding: '20px',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <span
+       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+         <div>
+           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+             <span
                 style={{
                   width: '8px',
                   height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--color-status-success)',
+                  borderRadius: '0px',
+                  backgroundColor: '#10B981',
                   display: 'inline-block',
                 }}
               />
-              <span style={{ fontSize: '11.5px', fontWeight: 780, color: 'var(--color-status-success)' }}>
-                Storefront Publik Aktif
+             <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--color-status-success)', textTransform: 'uppercase' }}>
+               Storefront Publik Aktif
               </span>
-            </div>
-            <h2 style={{ fontSize: '18px', fontWeight: 850, margin: 0, color: 'var(--color-text-main)', letterSpacing: '-0.01em' }}>
-              Pengaturan & Branding Storefront
+           </div>
+           <h2 style={{ fontSize: '18px', fontWeight: 800, margin: 0 }}>
+             Pengaturan & Branding Storefront
             </h2>
-            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-              Alamat publik: <code style={{ color: 'var(--color-primary)', fontWeight: 700 }}>{publicStorefrontUrl}</code>
-            </div>
-          </div>
+           <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+             Alamat publik: <code style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>{publicStorefrontUrl}</code>
+           </div>
+         </div>
 
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <button
+         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+           <button
               type="button"
-              onClick={() => {
+              onClick={() =>{
                 navigator.clipboard.writeText(publicStorefrontUrl);
                 alert('Tautan storefront berhasil disalin ke clipboard!');
               }}
-              className="touch-target"
               style={{
                 padding: '8px 14px',
-                borderRadius: 'var(--border-radius-sm)',
+                borderRadius: '0px',
                 border: '1px solid var(--color-divider)',
                 backgroundColor: 'var(--color-surface)',
                 fontSize: '13px',
-                fontWeight: 750,
+                fontWeight: 700,
                 cursor: 'pointer',
-                boxShadow: 'var(--shadow-xs)',
               }}
             >
-              Salin Tautan
+             Salin Link 
             </button>
 
-            <Link
+           <Link
               href={`/p/${profile.workspaceSlug}`}
               target="_blank"
               rel="noopener noreferrer"
               style={{
                 padding: '8px 16px',
-                borderRadius: 'var(--border-radius-sm)',
-                backgroundColor: 'var(--color-primary-light)',
-                color: 'var(--color-primary)',
+                borderRadius: '0px',
+                backgroundColor: '#ffe0d9',
+                color: 'var(--accent-dark)',
                 fontSize: '13px',
                 fontWeight: 750,
                 textDecoration: 'none',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '4px',
-                border: '1px solid var(--color-primary-border)',
               }}
             >
-              Buka Storefront Publik ↗
+             Buka Storefront Publik ↗
             </Link>
-          </div>
-        </div>
-      </div>
+         </div>
+       </div>
+     </div>
 
-      {/* Realtime Live Preview Card */}
+     {/* Realtime Live Preview Card */}
       <div
         style={{
-          backgroundColor: 'var(--color-primary)',
-          borderRadius: 'var(--border-radius-lg)',
+          backgroundColor: 'var(--ink)',
+          borderRadius: '0px',
           padding: '24px',
           color: '#FFFFFF',
-          boxShadow: 'var(--shadow-md)',
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--color-primary-light)', marginBottom: '14px' }}>
-          Pratinjau Header Storefront Publik
+       <div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#B8D4C5', marginBottom: '12px' }}>
+         ✨ LIVE PREVIEW HEADER STOREFRONT PUBLIK
         </div>
 
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <img
+       <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+         <img
             src={customAvatarUrl || profile.avatarUrl || PRESET_AVATARS[0].url}
             alt={profile.displayName}
             style={{
               width: '68px',
               height: '68px',
-              borderRadius: '50%',
+              borderRadius: '0px',
               objectFit: 'cover',
-              border: '2px solid #FFFFFF',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              border: '3px solid #FFF',
             }}
           />
 
-          <div style={{ flex: 1, minWidth: '220px' }}>
-            <div style={{ fontSize: '20px', fontWeight: 850, letterSpacing: '-0.02em', marginBottom: '2px' }}>
-              {profile.displayName || 'Nama Promotor'}
+         <div style={{ flex: 1, minWidth: '220px' }}>
+           <div style={{ fontSize: '20px', fontWeight: 850, letterSpacing: '-0.02em', marginBottom: '2px' }}>
+             {profile.displayName || 'Nama Promotor'}
             </div>
-            <div style={{ fontSize: '13px', color: '#E2F0E6', fontWeight: 600, marginBottom: '6px' }}>
-              {profile.tagline || 'Tagline Storefront'} · {profile.roleLabel || 'Promotor STIFIn'}
+           <div style={{ fontSize: '13px', color: '#E2F0E6', fontWeight: 600, marginBottom: '6px' }}>
+             {profile.tagline || 'Tagline Storefront'} · {profile.roleLabel || 'Promotor STIFIn'}
             </div>
-            <div style={{ fontSize: '13.5px', color: '#FFF', fontWeight: 700, lineHeight: 1.3 }}>
-              &ldquo;{profile.headline || 'Headline Utama Landing Page'}&rdquo;
+           <div style={{ fontSize: '13.5px', color: '#FFF', fontWeight: 700, lineHeight: 1.3 }}>
+             &quot;{profile.headline || 'Headline Utama Landing Page'}&quot;
             </div>
-            <div style={{ fontSize: '12px', color: '#B8D4C5', marginTop: '6px' }}>
-              {programs.length} program aktif · Wilayah: {profile.city || 'Indonesia'}
+           <div style={{ fontSize: '12px', color: '#B8D4C5', marginTop: '6px' }}>
+             {programs.length} program aktif · Wilayah: {profile.city || 'Indonesia'}
             </div>
-          </div>
-        </div>
-      </div>
+         </div>
+       </div>
+     </div>
 
-      {/* Main Settings Form */}
+     {/* Main Settings Form */}
       <form onSubmit={handleSaveStorefront} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
-        {/* KARTU 1: Foto Profil & Identitas Promotor */}
+       {/* KARTU 1: Foto Profil & Identitas Promotor */}
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
-            borderRadius: 'var(--border-radius-lg)',
+            borderRadius: '0px',
             border: '1px solid var(--color-divider)',
             padding: '22px',
-            boxShadow: 'var(--shadow-xs)',
           }}
         >
-          <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '16px', color: 'var(--color-text-main)' }}>
-            1. Foto Profil & Identitas Promotor
-          </h3>
+         <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '16px' }}>1. Foto Profil / Logo & Identitas Promotor</h3>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '8px', color: 'var(--color-text-main)' }}>
-                Foto Profil / Avatar
+         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+           <div>
+             <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '8px' }}>
+               Pilih Foto Profil Bawaan atau Masukkan URL Gambar Eksternal
               </label>
 
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
-                <img
+             <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
+               <img
                   src={customAvatarUrl || profile.avatarUrl || PRESET_AVATARS[0].url}
                   alt={profile.displayName}
                   style={{
                     width: '76px',
                     height: '76px',
-                    borderRadius: '50%',
+                    borderRadius: '0px',
                     objectFit: 'cover',
                     border: '3px solid var(--color-primary-border)',
-                    boxShadow: 'var(--shadow-xs)',
                   }}
                 />
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: '240px' }}>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {PRESET_AVATARS.map(p => (
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: '240px' }}>
+                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                   {PRESET_AVATARS.map(p =>(
                       <button
                         key={p.url}
                         type="button"
-                        onClick={() => {
+                        onClick={() =>{
                           setCustomAvatarUrl('');
                           setProfile({ ...profile, avatarUrl: p.url });
                         }}
                         style={{
                           padding: '6px 12px',
-                          borderRadius: 'var(--border-radius-sm)',
+                          borderRadius: '0px',
                           border: profile.avatarUrl === p.url && !customAvatarUrl ? '2px solid var(--color-primary)' : '1px solid var(--color-divider)',
-                          backgroundColor: profile.avatarUrl === p.url && !customAvatarUrl ? 'var(--color-primary-light)' : 'var(--color-surface)',
+                          backgroundColor: profile.avatarUrl === p.url && !customAvatarUrl ? '#ffe0d9' : 'var(--color-surface)',
                           color: 'var(--color-text-main)',
                           fontSize: '12px',
                           fontWeight: 700,
                           cursor: 'pointer',
                         }}
                       >
-                        {p.label}
+                       {p.label}
                       </button>
-                    ))}
+                   ))}
                   </div>
 
-                  <div>
-                    <input
+                 <div>
+                   <input
                       type="url"
                       value={customAvatarUrl}
-                      onChange={e => setCustomAvatarUrl(e.target.value)}
+                      onChange={e =>setCustomAvatarUrl(e.target.value)}
                       placeholder="Atau masukkan URL gambar foto/logo eksternal (https://...)"
                       style={{
                         width: '100%',
                         padding: '8px 12px',
-                        borderRadius: 'var(--border-radius-sm)',
+                        borderRadius: '0px',
                         border: '1px solid var(--color-divider)',
                         fontSize: '13px',
                         outline: 'none',
                       }}
                     />
-                  </div>
-                </div>
-              </div>
-            </div>
+                 </div>
+               </div>
+             </div>
+           </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
-                  Nama Tampilan Promotor *
+           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
+             <div>
+               <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
+                 Nama Tampilan Promotor *
                 </label>
-                <input
+               <input
                   type="text"
                   required
                   value={profile.displayName}
-                  onChange={e => setProfile({ ...profile, displayName: e.target.value })}
+                  onChange={e =>setProfile({ ...profile, displayName: e.target.value })}
                   placeholder="Nama Promotor / Nama Brand"
                   style={{
                     width: '100%',
                     padding: '10px 14px',
-                    borderRadius: 'var(--border-radius-sm)',
+                    borderRadius: '0px',
                     border: '1px solid var(--color-divider)',
                     fontSize: '14px',
                     outline: 'none',
                   }}
                 />
-              </div>
+             </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
-                  Peran / Gelar (Role Label)
+             <div>
+               <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
+                 Peran / Gelar (Role Label)
                 </label>
-                <input
+               <input
                   type="text"
                   value={profile.roleLabel || ''}
-                  onChange={e => setProfile({ ...profile, roleLabel: e.target.value })}
+                  onChange={e =>setProfile({ ...profile, roleLabel: e.target.value })}
                   placeholder="Contoh: Promotor STIFIn & Parenting Coach"
                   style={{
                     width: '100%',
                     padding: '10px 14px',
-                    borderRadius: 'var(--border-radius-sm)',
+                    borderRadius: '0px',
                     border: '1px solid var(--color-divider)',
                     fontSize: '14px',
                     outline: 'none',
                   }}
                 />
-              </div>
-            </div>
+             </div>
+           </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
-                Tagline / Subtitle Utama *
+           <div>
+             <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
+               Tagline / Subtitle Utama *
               </label>
-              <input
+             <input
                 type="text"
                 required
                 value={profile.tagline || ''}
-                onChange={e => setProfile({ ...profile, tagline: e.target.value })}
+                onChange={e =>setProfile({ ...profile, tagline: e.target.value })}
                 placeholder="Contoh: Ruang belajar untuk orang tua pendamping anak"
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  borderRadius: 'var(--border-radius-sm)',
+                  borderRadius: '0px',
                   border: '1px solid var(--color-divider)',
                   fontSize: '14px',
                   outline: 'none',
                 }}
               />
-            </div>
-          </div>
-        </div>
+           </div>
+         </div>
+       </div>
 
-        {/* KARTU 2: Headline & Bio Pendampingan */}
+       {/* KARTU 2: Headline & Bio Pendampingan */}
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
-            borderRadius: 'var(--border-radius-lg)',
+            borderRadius: '0px',
             border: '1px solid var(--color-divider)',
             padding: '22px',
-            boxShadow: 'var(--shadow-xs)',
           }}
         >
-          <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '14px', color: 'var(--color-text-main)' }}>
-            2. Copywriting Landing Page & Narasi Bio
-          </h3>
+         <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '14px' }}>2. Copywriting Landing Page & Narasi Bio</h3>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
-                Headline Utama Hero
+         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+           <div>
+             <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
+               Headline Utama Hero (Big Title)
               </label>
-              <input
+             <input
                 type="text"
                 value={profile.headline || ''}
-                onChange={e => setProfile({ ...profile, headline: e.target.value })}
+                onChange={e =>setProfile({ ...profile, headline: e.target.value })}
                 placeholder="Contoh: Belajar memahami potensi diri dan keluarga secara manusiawi."
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  borderRadius: 'var(--border-radius-sm)',
+                  borderRadius: '0px',
                   border: '1px solid var(--color-divider)',
                   fontSize: '14px',
                   outline: 'none',
                 }}
               />
-            </div>
+           </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
-                Narasi Profil Pendampingan (Bio)
+           <div>
+             <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
+               Narasi Profil Pendampingan (Bio)
               </label>
-              <textarea
+             <textarea
                 rows={4}
                 value={profile.bio || ''}
-                onChange={e => setProfile({ ...profile, bio: e.target.value })}
+                onChange={e =>setProfile({ ...profile, bio: e.target.value })}
                 placeholder="Tuliskan latar belakang dan metode pendekatan Anda dalam mendampingi peserta..."
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  borderRadius: 'var(--border-radius-sm)',
+                  borderRadius: '0px',
                   border: '1px solid var(--color-divider)',
                   fontSize: '14px',
                   outline: 'none',
                   lineHeight: 1.5,
                 }}
               />
-            </div>
-          </div>
-        </div>
+           </div>
+         </div>
+       </div>
 
-        {/* KARTU 3: WhatsApp & Wilayah */}
+       {/* KARTU 3: WhatsApp & Wilayah */}
         <div
           style={{
             backgroundColor: 'var(--color-surface)',
-            borderRadius: 'var(--border-radius-lg)',
+            borderRadius: '0px',
             border: '1px solid var(--color-divider)',
             padding: '22px',
-            boxShadow: 'var(--shadow-xs)',
           }}
         >
-          <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '14px', color: 'var(--color-text-main)' }}>
-            3. Kontak & Wilayah Layanan
-          </h3>
+         <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '14px' }}>3. Kontak & Wilayah Layanan</h3>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
-                Nomor WhatsApp Promotor (Format E.164)
+         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+           <div>
+             <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
+               Nomor WhatsApp Promotor (Format E.164)
               </label>
-              <input
+             <input
                 type="tel"
                 value={profile.whatsappPhoneE164 || ''}
-                onChange={e => setProfile({ ...profile, whatsappPhoneE164: e.target.value })}
+                onChange={e =>setProfile({ ...profile, whatsappPhoneE164: e.target.value })}
                 placeholder="+62812345678"
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  borderRadius: 'var(--border-radius-sm)',
+                  borderRadius: '0px',
                   border: '1px solid var(--color-divider)',
                   fontSize: '14px',
                   outline: 'none',
                 }}
               />
-              {waTestUrl && (
+             {waTestUrl && (
                 <div style={{ marginTop: '6px' }}>
-                  <a
+                 <a
                     href={waTestUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ fontSize: '12px', color: 'var(--color-status-success)', fontWeight: 750, textDecoration: 'none' }}
+                    style={{ fontSize: '12px', color: '#10B981', fontWeight: 750, textDecoration: 'none' }}
                   >
-                    Uji Coba Tautan WhatsApp ↗
+                   Uji Coba Tautan WhatsApp  ↗
                   </a>
-                </div>
-              )}
+               </div>
+             )}
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px', color: 'var(--color-text-main)' }}>
-                Wilayah Layanan / Kota
+           <div>
+             <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '6px' }}>
+               Wilayah Layanan / Kota
               </label>
-              <input
+             <input
                 type="text"
                 value={profile.city || ''}
-                onChange={e => setProfile({ ...profile, city: e.target.value })}
+                onChange={e =>setProfile({ ...profile, city: e.target.value })}
                 placeholder="Contoh: Surabaya"
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  borderRadius: 'var(--border-radius-sm)',
+                  borderRadius: '0px',
                   border: '1px solid var(--color-divider)',
                   fontSize: '14px',
                   outline: 'none',
                 }}
               />
-            </div>
-          </div>
-        </div>
+           </div>
+         </div>
+       </div>
 
-        {/* Submit Actions */}
+       {/* Submit Actions */}
         <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '6px' }}>
-          <button
+         <button
             type="submit"
             disabled={isSaving}
             className="touch-target-primary"
             style={{
               padding: '0 28px',
-              backgroundColor: isSaving ? 'var(--color-divider)' : 'var(--color-primary)',
+              backgroundColor: isSaving ? 'var(--color-divider)' : 'var(--accent-dark)',
               color: '#FFF',
               fontWeight: 780,
-              borderRadius: 'var(--border-radius-md)',
+              borderRadius: '0px',
               border: 0,
               cursor: isSaving ? 'not-allowed' : 'pointer',
-              fontSize: '14.5px',
-              boxShadow: 'var(--shadow-sm)',
+              fontSize: '15px',
             }}
           >
-            {isSaving ? 'Menyimpan...' : 'Simpan Pengaturan Storefront'}
+           {isSaving ? 'Menyimpan...' : 'Simpan Pengaturan Storefront'}
           </button>
 
-          <Link
+         <Link
             href={`/p/${profile.workspaceSlug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="touch-target-primary"
             style={{
               padding: '0 22px',
-              backgroundColor: 'var(--color-surface)',
+              backgroundColor: 'var(--color-surface-hover)',
               color: 'var(--color-text-main)',
               fontWeight: 750,
-              borderRadius: 'var(--border-radius-md)',
+              borderRadius: '0px',
               border: '1px solid var(--color-divider)',
               textDecoration: 'none',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '14px',
-              boxShadow: 'var(--shadow-xs)',
             }}
           >
-            Lihat di Storefront Publik ↗
+           Lihat Tampilan di Storefront Publik ↗
           </Link>
-        </div>
-      </form>
-    </div>
-  );
+       </div>
+     </form>
+   </div>
+ );
 }

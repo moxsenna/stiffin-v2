@@ -3,18 +3,31 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { LearnerShell } from '@/components/layout/LearnerShell';
+import { ProgressBar, EmptyState } from '@/components/ui';
 import { getActiveLearnerContactId, resolveWorkspaceSlug } from '@/lib/session';
 import { getEnrollmentsByContactIdQuery } from '@/modules/enrollments/queries';
 import { getProgramsQuery } from '@/modules/programs/queries';
 import { Enrollment, Program } from '@promotor/contracts';
 
+function findNextLesson(prog: Program | undefined, enr: Enrollment): { moduleTitle: string; title: string; id: string } | null {
+  if (!prog) return null;
+  for (const mod of prog.modules) {
+    for (const lesson of mod.lessons) {
+      if (!enr.completedLessonIds.includes(lesson.id)) {
+        return { moduleTitle: mod.title, title: lesson.title, id: lesson.id };
+      }
+    }
+  }
+  return null;
+}
+
 export default function LearnerHomePage() {
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[] | null>(null);
   const [programsMap, setProgramsMap] = useState<Map<string, Program>>(new Map());
   const [noSession, setNoSession] = useState(false);
   const [fallbackWorkspace, setFallbackWorkspace] = useState<string | null>(null);
 
-  useEffect(() => {
+  useEffect(() =>{
     const activeContactId = getActiveLearnerContactId();
     const resolvedSlug = resolveWorkspaceSlug();
     setFallbackWorkspace(resolvedSlug);
@@ -27,10 +40,10 @@ export default function LearnerHomePage() {
     Promise.all([
       getEnrollmentsByContactIdQuery(activeContactId),
       getProgramsQuery(),
-    ]).then(([enrList, progList]) => {
+    ]).then(([enrList, progList]) =>{
       setEnrollments(enrList);
       const pMap = new Map<string, Program>();
-      progList.forEach(p => pMap.set(p.id, p));
+      progList.forEach(p =>pMap.set(p.id, p));
       setProgramsMap(pMap);
     });
   }, []);
@@ -38,192 +51,104 @@ export default function LearnerHomePage() {
   if (noSession) {
     return (
       <LearnerShell title="Program Saya">
-        <div style={{ padding: '48px 16px', textAlign: 'center', maxWidth: '480px', margin: '0 auto' }}>
-          <div
-            style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '16px',
-              backgroundColor: 'var(--color-primary-light)',
-              color: 'var(--color-primary)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '16px',
-            }}
-          >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-            </svg>
-          </div>
-          <h2 style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '8px', color: 'var(--color-text-main)' }}>
-            Belum Memiliki Program Aktif
-          </h2>
-          <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '28px', lineHeight: 1.6 }}>
-            Halaman ini menampilkan seluruh kelas dan e-course yang sedang Anda ikuti. Silakan buka Katalog Program untuk mendaftar materi yang tersedia.
-          </p>
-
-          {fallbackWorkspace ? (
-            <Link
-              href={`/p/${fallbackWorkspace}/catalog`}
-              className="touch-target-primary"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '0 24px',
-                backgroundColor: 'var(--color-primary)',
-                color: '#FFF',
-                fontWeight: 780,
-                fontSize: '14px',
-                borderRadius: 'var(--border-radius-md)',
-                textDecoration: 'none',
-                boxShadow: 'var(--shadow-sm)',
-              }}
-            >
-              Buka Katalog Program →
-            </Link>
-          ) : (
-            <div style={{ fontSize: '13px', color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>
-              Buka kembali tautan Ruang Belajar dari promotor Anda.
-            </div>
-          )}
-        </div>
-      </LearnerShell>
-    );
+       <EmptyState
+          title="Belum memiliki program aktif"
+          explanation="Daftar dan mulai belajar melalui Katalog Program. Buka kembali tautan Ruang Belajar dari promotor Anda bila tautan hilang."
+          action={
+            fallbackWorkspace ? (
+              <Link href={`/p/${fallbackWorkspace}/catalog`} className="btn btn-accent">
+               Lihat Katalog Program
+              </Link>
+           ) : undefined
+          }
+        />
+     </LearnerShell>
+   );
   }
+
+  const list = enrollments ?? [];
+  const activeEnrollment = list.find(e =>e.status === 'aktif');
+  const activeProgram = activeEnrollment ? programsMap.get(activeEnrollment.programId) : undefined;
+  const nextLesson = findNextLesson(activeProgram, activeEnrollment as Enrollment);
 
   return (
     <LearnerShell title="Program Saya" subtitle="Lanjutkan sesi pembelajaran Anda">
-      <div style={{ padding: '20px 0' }}>
-        {enrollments.length === 0 ? (
-          <div
-            style={{
-              padding: '40px 20px',
-              textAlign: 'center',
-              backgroundColor: 'var(--color-surface)',
-              borderRadius: 'var(--border-radius-lg)',
-              border: '1px solid var(--color-divider)',
-              fontSize: '14px',
-              color: 'var(--color-text-muted)',
-              boxShadow: 'var(--shadow-xs)',
-            }}
+     {activeEnrollment && (
+        <div className="ink-hero">
+         <div className="kicker kicker-on-ink">Lanjutkan belajar</div>
+         <div style={{ marginTop: 10, font: '800 19px/1.2 var(--font-sans)', letterSpacing: '-0.02em' }}>
+           {nextLesson ? nextLesson.title : activeProgram?.title || 'Program Anda'}
+          </div>
+         <div style={{ marginTop: 7, font: '500 11px/1.3 var(--font-sans)', color: 'var(--on-ink-muted)' }}>
+           {nextLesson ? `${nextLesson.moduleTitle} · ${activeProgram?.title ?? ''}` : (activeProgram?.subtitle || '')}
+          </div>
+         <div style={{ marginTop: 14 }}>
+           <ProgressBar pct={activeEnrollment.progressPercent} accent label={`Progres ${activeEnrollment.progressPercent}%`} />
+         </div>
+         <div style={{ marginTop: 8, font: '600 11px/1 var(--font-sans)', color: 'var(--on-ink-muted)' }} className="tabular-nums">
+           {activeEnrollment.progressPercent}% selesai
+          </div>
+         <Link
+            href={nextLesson ? `/learn/programs/${activeEnrollment.id}/lessons/${nextLesson.id}` : `/learn/programs/${activeEnrollment.id}`}
+            className="btn btn-accent"
+            style={{ marginTop: 16 }}
           >
-            <p style={{ marginBottom: '20px', lineHeight: 1.5 }}>
-              Anda belum terdaftar dalam program pembelajaran apa pun saat ini.
-            </p>
-            {fallbackWorkspace && (
-              <Link
-                href={`/p/${fallbackWorkspace}/catalog`}
-                className="touch-target-primary"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  padding: '0 22px',
-                  backgroundColor: 'var(--color-primary)',
-                  color: '#FFF',
-                  fontWeight: 780,
-                  fontSize: '14px',
-                  borderRadius: 'var(--border-radius-md)',
-                  textDecoration: 'none',
-                  boxShadow: 'var(--shadow-sm)',
-                }}
-              >
-                Lihat Katalog Program →
+           Lanjutkan pelajaran
+          </Link>
+       </div>
+     )}
+
+      {!enrollments && (
+        <div style={{ padding: 24 }} className="loading-state">
+         <div className="skeleton-line" style={{ width: '80%' }} />
+         <div className="skeleton-line" style={{ width: '60%' }} />
+       </div>
+     )}
+
+      {enrollments && list.length === 0 && (
+        <EmptyState
+          title="Anda belum terdaftar dalam program pembelajaran apa pun"
+          explanation="Pilih program dari katalog untuk mulai belajar."
+          action={
+            fallbackWorkspace ? (
+              <Link href={`/p/${fallbackWorkspace}/catalog`} className="btn btn-secondary btn-sm">
+               Lihat Katalog Program
               </Link>
-            )}
+           ) : undefined
+          }
+        />
+     )}
+
+      {list.length >0 && (
+        <>
+         <div style={{ padding: '14px 18px 10px', font: '700 10px/1 var(--font-sans)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted-strong)', borderBottom: '1px solid var(--line)' }}>
+           Program Anda
           </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {enrollments.map(enr => {
-              const prog = programsMap.get(enr.programId);
-              if (!prog) return null;
-
-              const isCompleted = enr.status === 'selesai' || enr.progressPercent === 100;
-
-              return (
-                <div
-                  key={enr.id}
-                  style={{
-                    backgroundColor: 'var(--color-surface)',
-                    borderRadius: 'var(--border-radius-lg)',
-                    border: '1px solid var(--color-divider)',
-                    padding: '22px',
-                    boxShadow: 'var(--shadow-xs)',
-                  }}
+         {list.map(enr =>{
+            const prog = programsMap.get(enr.programId);
+            const isActive = enr.status !== 'selesai';
+            return (
+              <div key={enr.id} style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)' }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline' }}>
+                 <span style={{ font: '700 14px/1.25 var(--font-sans)' }}>{prog?.title || 'Program'}</span>
+                 <span className={`tag ${isActive ? 'tag-outline' : 'tag-neutral'}`} style={{ flex: 'none' }}>
+                   {enr.status === 'selesai' ? 'Selesai' : 'Berjalan'}
+                  </span>
+               </div>
+               <div className="row-meta">{enr.progressPercent}% · {prog?.modules.length ?? 0} bab</div>
+               <Link
+                  href={`/learn/programs/${enr.id}`}
+                  className="btn btn-secondary btn-sm"
+                  style={{ marginTop: 12 }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
-                    <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--color-text-main)', letterSpacing: '-0.02em' }}>
-                      {prog.title}
-                    </h3>
-                    <span
-                      style={{
-                        fontSize: '11.5px',
-                        fontWeight: 750,
-                        padding: '3px 10px',
-                        borderRadius: 'var(--border-radius-full)',
-                        backgroundColor: isCompleted ? 'var(--color-status-success-bg)' : 'var(--color-primary-light)',
-                        color: isCompleted ? 'var(--color-status-success)' : 'var(--color-primary)',
-                        border: isCompleted ? '1px solid var(--color-status-success-border)' : '1px solid var(--color-primary-border)',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {isCompleted ? '✓ Selesai' : 'Sedang Berjalan'}
-                    </span>
-                  </div>
-
-                  <p style={{ fontSize: '13.5px', color: 'var(--color-text-body)', marginBottom: '18px', lineHeight: 1.55 }}>
-                    {prog.subtitle}
-                  </p>
-
-                  {/* Progress Bar */}
-                  <div style={{ marginBottom: '20px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', marginBottom: '6px' }}>
-                      <span style={{ color: 'var(--color-text-muted)', fontWeight: 550 }}>Progres Belajar</span>
-                      <span className="tabular-nums" style={{ fontWeight: 800, color: 'var(--color-primary)' }}>
-                        {enr.progressPercent}%
-                      </span>
-                    </div>
-                    <div style={{ height: '7px', backgroundColor: 'var(--color-canvas)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--color-divider)' }}>
-                      <div
-                        style={{
-                          height: '100%',
-                          width: `${enr.progressPercent}%`,
-                          backgroundColor: 'var(--color-primary)',
-                          borderRadius: '4px',
-                          transition: 'width 0.3s ease',
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <Link
-                    href={`/learn/programs/${enr.id}`}
-                    className="touch-target-primary"
-                    style={{
-                      width: '100%',
-                      backgroundColor: 'var(--color-primary)',
-                      color: '#FFF',
-                      fontWeight: 780,
-                      fontSize: '14px',
-                      borderRadius: 'var(--border-radius-md)',
-                      textAlign: 'center',
-                      textDecoration: 'none',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: 'var(--shadow-sm)',
-                    }}
-                  >
-                    {isCompleted ? 'Lihat Ringkasan & Hasil' : 'Lanjutkan Belajar →'}
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </LearnerShell>
-  );
+                 {enr.status === 'selesai' ? 'Lihat Hasil & Ringkasan' : 'Lanjutkan Belajar'}
+                </Link>
+             </div>
+           );
+          })}
+        </>
+     )}
+      <div style={{ height: 24 }} />
+   </LearnerShell>
+ );
 }

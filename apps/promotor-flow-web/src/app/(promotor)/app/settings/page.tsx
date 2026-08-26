@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
+import { PageHeader, SectionHead } from '@/components/ui';
 import {
   settingsQueries,
   settingsCommands,
@@ -17,7 +18,6 @@ import { WeeklyAvailabilityRule } from '@/modules/availability/ports';
 import { formatPhoneDisplay } from '@promotor/platform-core';
 import { signOut, getSession, UserSession } from '@/lib/auth';
 import { getApiMode } from '@/adapters';
-import { ChevronLeftIcon } from '@/components/foundation/icons';
 
 const DAY_NAMES = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
@@ -31,15 +31,15 @@ export default function SettingsPage() {
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  useEffect(() => {
+  useEffect(() =>{
     getSession().then(setSession);
     settingsQueries.getSettings().then(setSettings);
-    promotorClassQueries.getIntegrationState().then((res) => {
+    promotorClassQueries.getIntegrationState().then((res) =>{
       if (res.scenarioPreset) setScenarioPreset(res.scenarioPreset);
     });
-    availabilityQueries.getWeeklyRules().then((rules) => {
-      const initialized = [1, 2, 3, 4, 5, 6, 0].map((d) => {
-        const found = rules.find((r) => r.dayOfWeek === d);
+    availabilityQueries.getWeeklyRules().then((rules) =>{
+      const initialized = [1, 2, 3, 4, 5, 6, 0].map((d) =>{
+        const found = rules.find((r) =>r.dayOfWeek === d);
         return (
           found ?? {
             dayOfWeek: d,
@@ -53,19 +53,19 @@ export default function SettingsPage() {
     });
   }, []);
 
-  const handleRuleToggle = (dayOfWeek: number) => {
+  const handleRuleToggle = (dayOfWeek: number) =>{
     setWeeklyRules((prev) =>
-      prev.map((r) => (r.dayOfWeek === dayOfWeek ? { ...r, isActive: !r.isActive } : r))
+     prev.map((r) =>(r.dayOfWeek === dayOfWeek ? { ...r, isActive: !r.isActive } : r))
     );
   };
 
-  const handleRuleTimeChange = (dayOfWeek: number, field: 'startTime' | 'endTime', value: string) => {
+  const handleRuleTimeChange = (dayOfWeek: number, field: 'startTime' | 'endTime', value: string) =>{
     setWeeklyRules((prev) =>
-      prev.map((r) => (r.dayOfWeek === dayOfWeek ? { ...r, [field]: value } : r))
+     prev.map((r) =>(r.dayOfWeek === dayOfWeek ? { ...r, [field]: value } : r))
     );
   };
 
-  const handleSaveAvailability = async () => {
+  const handleSaveAvailability = async () =>{
     setSavingAvailability(true);
     setSaveFeedback(null);
     try {
@@ -79,7 +79,7 @@ export default function SettingsPage() {
       const saved = await availabilityCommands.saveWeeklyRules(weeklyRules);
       setWeeklyRules(saved);
       setSaveFeedback('Jadwal ketersediaan berhasil disimpan.');
-      setTimeout(() => setSaveFeedback(null), 4000);
+      setTimeout(() =>setSaveFeedback(null), 4000);
     } catch (err: any) {
       alert(`Gagal menyimpan jadwal: ${err.message || 'Terjadi kesalahan'}`);
     } finally {
@@ -87,7 +87,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleLogout = async () => {
+  const handleLogout = async () =>{
     setLoggingOut(true);
     try {
       await signOut();
@@ -97,7 +97,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleReset = async () => {
+  const handleReset = async () =>{
     await settingsCommands.resetDemo();
     const updatedSettings = await settingsQueries.getSettings();
     setSettings(updatedSettings);
@@ -106,308 +106,137 @@ export default function SettingsPage() {
     alert('Demo state berhasil di-reset ke data seed awal.');
   };
 
-  const handleScenarioChange = async (preset: DemoScenarioPreset) => {
+  const handleScenarioChange = async (preset: DemoScenarioPreset) =>{
     await promotorClassCommands.setDemoScenario(preset);
     setScenarioPreset(preset);
   };
 
-  if (!settings) return null;
+  if (!settings) {
+    return (
+      <AppShell showBottomNav={true}>
+       <PageHeader kicker="Akun" title="Pengaturan" />
+       <SectionHead label="Memuat" />
+     </AppShell>
+   );
+  }
 
   const isMockDevMode = getApiMode() === 'mock' && settings.isDevMode;
 
   return (
     <AppShell showBottomNav={true}>
-      <div style={{ padding: '16px 16px 0' }}>
-        <button
-          onClick={() => router.push('/app/more')}
-          className="touch-target"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
-            color: 'var(--color-text-secondary)',
-            fontWeight: 650,
-            fontSize: '13px',
-            marginBottom: '8px',
-          }}
-        >
-          <ChevronLeftIcon size={16} />
-          <span>Kembali ke Lainnya</span>
+     <PageHeader kicker="Akun" title="Pengaturan" sub="Profil promotor, jadwal ketersediaan konsultasi, dan sesi akun." />
+
+      <div className="ink-hero">
+        <div className="kicker kicker-on-ink">PROMOTOR</div>
+        <div style={{ marginTop: 10, font: '800 19px/1.2 var(--font-sans)', letterSpacing: '-0.02em' }}>
+          {session?.user?.name || settings.promotorName || 'Promotor'}
+         </div>
+        <div style={{ marginTop: 6, font: '400 12px/1.5 var(--font-sans)', color: 'var(--on-ink-muted)' }}>
+          {session?.user?.email || (settings.promotorPhoneE164 ? formatPhoneDisplay(settings.promotorPhoneE164) : 'Belum tersedia')}
+         </div>
+        <div style={{ marginTop: 14, borderTop: '1px solid var(--on-ink-line)', paddingTop: 12 }}>
+          <div style={{ font: '500 11px/1 var(--font-sans)', color: 'var(--on-ink-muted)' }}>ORGANISASI</div>
+         <div style={{ marginTop: 6, font: '600 14px/1.3 var(--font-sans)' }}>
+           {session?.organization?.name || settings.organizationName || 'Belum tersedia'}
+          </div>
+       </div>
+     </div>
+
+     <SectionHead label="Jadwal ketersediaan mingguan" />
+     <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
+       <p className="muted-note">Atur hari dan jam kerja untuk booking konsultasi storefront.</p>
+
+       {saveFeedback && (
+          <div style={{ marginTop: 12, padding: '8px 12px', border: '2px solid var(--ink)', background: 'var(--surface-muted)', font: '600 12px/1.4 var(--font-sans)' }}>
+           {saveFeedback}
+          </div>
+       )}
+
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column' }}>
+         {weeklyRules.map((r) =>(
+            <div key={r.dayOfWeek} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '11px 0', borderBottom: '1px solid var(--surface-hover)' }}>
+             <label htmlFor={`day-${r.dayOfWeek}`} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', minWidth: 110 }}>
+               <input
+                  type="checkbox"
+                  checked={r.isActive}
+                  onChange={() =>handleRuleToggle(r.dayOfWeek)}
+                  style={{ width: 16, height: 16, accentColor: 'var(--ink)', cursor: 'pointer' }}
+                />
+               <span style={{ font: r.isActive ? '700 13px/1 var(--font-sans)' : '400 13px/1 var(--font-sans)', color: r.isActive ? 'var(--ink)' : 'var(--muted)' }}>
+                 {DAY_NAMES[r.dayOfWeek]}
+                </span>
+             </label>
+
+             {r.isActive ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                 <input
+                    type="time"
+                    aria-label={`${DAY_NAMES[r.dayOfWeek]} jam mulai`}
+                    value={r.startTime}
+                    onChange={(e) =>handleRuleTimeChange(r.dayOfWeek, 'startTime', e.target.value)}
+                    style={{ padding: '5px 6px', border: '1px solid var(--line)', background: 'var(--surface)', font: '500 13px var(--font-sans)', color: 'var(--ink)' }}
+                  />
+                 <span style={{ color: 'var(--muted)', font: '400 12px var(--font-sans)' }}>s/d</span>
+                 <input
+                    type="time"
+                    aria-label={`${DAY_NAMES[r.dayOfWeek]} jam selesai`}
+                    value={r.endTime}
+                    onChange={(e) =>handleRuleTimeChange(r.dayOfWeek, 'endTime', e.target.value)}
+                    style={{ padding: '5px 6px', border: '1px solid var(--line)', background: 'var(--surface)', font: '500 13px var(--font-sans)', color: 'var(--ink)' }}
+                  />
+               </div>
+             ) : (
+                <span style={{ font: '400 12px/1 var(--font-sans)', color: 'var(--muted-light)' }}>Tutup / Libur</span>
+             )}
+            </div>
+         ))}
+        </div>
+
+       <button type="button" onClick={handleSaveAvailability} disabled={savingAvailability} className="btn btn-primary btn-block" style={{ marginTop: 16 }}>
+         {savingAvailability ? 'Menyimpan...' : 'Simpan Jadwal Ketersediaan'}
         </button>
+     </div>
 
-        <h1 style={{ fontSize: '24px', fontWeight: 850, letterSpacing: '-0.03em', color: 'var(--color-text-primary)' }}>
-          Pengaturan & Profil
-        </h1>
-        <div style={{ fontSize: '13.5px', color: 'var(--color-text-secondary)', marginTop: '2px', marginBottom: '16px' }}>
-          Profil promotor, jadwal jam kerja, dan sesi akun
-        </div>
-      </div>
+     <SectionHead label="Sesi akun" />
+     <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
+       <button type="button" onClick={handleLogout} disabled={loggingOut} className="btn btn-danger btn-block">
+         {loggingOut ? 'Memproses Keluar...' : 'Keluar dari Akun (Logout)'}
+        </button>
+     </div>
 
-      <div style={{ padding: '0 16px 32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {/* Profile Card */}
-        <div
-          style={{
-            backgroundColor: 'var(--color-surface)',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--color-divider)',
-            padding: '20px',
-            boxShadow: 'var(--shadow-xs)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-          }}
-        >
-          <div>
-            <div style={{ fontSize: '12px', fontWeight: 750, color: 'var(--color-text-tertiary)' }}>
-              Identitas Promotor
-            </div>
-            <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-primary)', marginTop: '2px' }}>
-              {session?.user?.name || settings.promotorName || 'Promotor STIFIn'}
-            </div>
-            <div style={{ fontSize: '13.5px', color: 'var(--color-text-secondary)' }}>
-              {session?.user?.email || (settings.promotorPhoneE164 ? formatPhoneDisplay(settings.promotorPhoneE164) : 'Belum tersedia')}
-            </div>
-          </div>
-
-          <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '12px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 750, color: 'var(--color-text-tertiary)' }}>
-              Organisasi / Cabang
-            </div>
-            <div style={{ fontSize: '15px', fontWeight: 750, color: 'var(--color-text-primary)', marginTop: '2px' }}>
-              {session?.organization?.name || settings.organizationName || 'STIFIn Brain Consulting'}
-            </div>
-          </div>
-        </div>
-
-        {/* Availability Schedule Card */}
-        <div
-          style={{
-            backgroundColor: 'var(--color-surface)',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--color-divider)',
-            padding: '20px',
-            boxShadow: 'var(--shadow-xs)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '14px',
-          }}
-        >
-          <div>
-            <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-primary)' }}>
-              Jadwal Ketersediaan Mingguan
-            </div>
-            <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
-              Atur jam kerja untuk booking konsultasi storefront publik.
-            </div>
-          </div>
-
-          {saveFeedback && (
-            <div
-              style={{
-                padding: '10px 14px',
-                borderRadius: 'var(--radius-sm)',
-                backgroundColor: 'var(--color-success-soft)',
-                border: '1px solid var(--color-success-border)',
-                color: 'var(--color-success)',
-                fontWeight: 700,
-                fontSize: '13px',
-              }}
-            >
-              ✓ {saveFeedback}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {weeklyRules.map((r) => (
-              <div
-                key={r.dayOfWeek}
+     {isMockDevMode && (
+        <div className="section-block" style={{ borderBottom: 'none' }}>
+         <div className="kicker kicker-accent">Dev controls · skenario demo</div>
+         <p className="muted-note" style={{ marginTop: 8 }}>
+           Pilih skenario integrasi PromotorClass untuk menguji perilaku entitlement dan outage:
+          </p>
+         <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+           {[
+              { key: 'FLOW_ONLY', label: 'FLOW_ONLY (PromotorFlow Standalone)' },
+              { key: 'BUNDLE_AVAILABLE', label: 'BUNDLE_AVAILABLE (Integrasi Class Aktif)' },
+              { key: 'BUNDLE_CLASS_UNAVAILABLE', label: 'BUNDLE_CLASS_UNAVAILABLE (Class Outage)' },
+            ].map((sc) =>(
+              <button
+                key={sc.key}
+                type="button"
+                onClick={() =>handleScenarioChange(sc.key as DemoScenarioPreset)}
+                className="list-row"
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 12px',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--color-divider)',
-                  backgroundColor: r.isActive ? 'var(--color-canvas)' : 'var(--color-surface-hover)',
-                  transition: 'background-color var(--duration-fast) ease',
+                  border: scenarioPreset === sc.key ? '2px solid var(--ink)' : undefined,
+                  fontWeight: scenarioPreset === sc.key ? 700 : 500,
+                  background: 'transparent',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '90px' }}>
-                  <input
-                    type="checkbox"
-                    checked={r.isActive}
-                    onChange={() => handleRuleToggle(r.dayOfWeek)}
-                    style={{ width: '17px', height: '17px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
-                    id={`day-${r.dayOfWeek}`}
-                  />
-                  <label
-                    htmlFor={`day-${r.dayOfWeek}`}
-                    style={{
-                      fontWeight: r.isActive ? 780 : 500,
-                      fontSize: '13.5px',
-                      color: r.isActive ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {DAY_NAMES[r.dayOfWeek]}
-                  </label>
-                </div>
-
-                {r.isActive ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <input
-                      type="time"
-                      value={r.startTime}
-                      onChange={(e) => handleRuleTimeChange(r.dayOfWeek, 'startTime', e.target.value)}
-                      style={{
-                        padding: '4px 8px',
-                        borderRadius: 'var(--radius-xs)',
-                        border: '1px solid var(--color-border-strong)',
-                        fontSize: '13px',
-                        fontWeight: 650,
-                        backgroundColor: 'var(--color-surface)',
-                        color: 'var(--color-text-primary)',
-                      }}
-                    />
-                    <span style={{ color: 'var(--color-text-tertiary)', fontSize: '12px' }}>—</span>
-                    <input
-                      type="time"
-                      value={r.endTime}
-                      onChange={(e) => handleRuleTimeChange(r.dayOfWeek, 'endTime', e.target.value)}
-                      style={{
-                        padding: '4px 8px',
-                        borderRadius: 'var(--radius-xs)',
-                        border: '1px solid var(--color-border-strong)',
-                        fontSize: '13px',
-                        fontWeight: 650,
-                        backgroundColor: 'var(--color-surface)',
-                        color: 'var(--color-text-primary)',
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <span style={{ fontSize: '12.5px', color: 'var(--color-text-tertiary)', fontStyle: 'italic' }}>
-                    Tutup / Libur
-                  </span>
-                )}
-              </div>
-            ))}
+               {sc.label}
+              </button>
+           ))}
           </div>
-
-          <button
-            onClick={handleSaveAvailability}
-            disabled={savingAvailability}
-            className="touch-target-primary"
-            style={{
-              width: '100%',
-              backgroundColor: savingAvailability ? 'var(--color-border-strong)' : 'var(--color-primary)',
-              color: '#FFFFFF',
-              borderRadius: 'var(--radius-md)',
-              border: 'none',
-              fontWeight: 780,
-              fontSize: '14px',
-              cursor: savingAvailability ? 'not-allowed' : 'pointer',
-              boxShadow: 'var(--shadow-sm)',
-            }}
-          >
-            {savingAvailability ? 'Menyimpan...' : 'Simpan Jadwal Ketersediaan'}
+         <button type="button" onClick={handleReset} className="btn btn-accent btn-sm" style={{ marginTop: 12 }}>
+           Reset Demo State
           </button>
-        </div>
-
-        {/* Account Logout Card */}
-        <div
-          style={{
-            backgroundColor: 'var(--color-surface)',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--color-divider)',
-            padding: '20px',
-            boxShadow: 'var(--shadow-xs)',
-          }}
-        >
-          <button
-            onClick={handleLogout}
-            disabled={loggingOut}
-            className="touch-target-primary"
-            style={{
-              width: '100%',
-              backgroundColor: 'var(--color-danger-soft)',
-              color: 'var(--color-danger)',
-              border: '1px solid var(--color-danger-border)',
-              borderRadius: 'var(--radius-md)',
-              fontWeight: 780,
-              fontSize: '14px',
-              cursor: loggingOut ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {loggingOut ? 'Memproses Keluar...' : 'Keluar dari Akun (Logout)'}
-          </button>
-        </div>
-
-        {/* Dev-Only Controls section */}
-        {isMockDevMode && (
-          <div
-            style={{
-              backgroundColor: 'var(--color-surface)',
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--color-warning-border)',
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-            }}
-          >
-            <div style={{ fontWeight: 800, fontSize: '14px', color: 'var(--color-warning)' }}>
-              Dev Controls (Demo Scenario)
-            </div>
-            <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
-              Pilih skenario integrasi PromotorClass untuk menguji perilaku outage dan degraded mode:
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {[
-                { key: 'FLOW_ONLY', label: 'FLOW_ONLY (PromotorFlow Standalone)' },
-                { key: 'BUNDLE_AVAILABLE', label: 'BUNDLE_AVAILABLE (Integrasi Class Aktif)' },
-                { key: 'BUNDLE_CLASS_UNAVAILABLE', label: 'BUNDLE_CLASS_UNAVAILABLE (Class Outage)' },
-              ].map((sc) => (
-                <button
-                  key={sc.key}
-                  onClick={() => handleScenarioChange(sc.key as any)}
-                  className="touch-target"
-                  style={{
-                    padding: '10px 14px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: scenarioPreset === sc.key ? '1.5px solid var(--color-primary)' : '1px solid var(--color-divider)',
-                    backgroundColor: scenarioPreset === sc.key ? 'var(--color-primary-light)' : 'var(--color-surface)',
-                    color: scenarioPreset === sc.key ? 'var(--color-primary)' : 'var(--color-text-primary)',
-                    fontWeight: scenarioPreset === sc.key ? 780 : 500,
-                    fontSize: '13px',
-                    textAlign: 'left',
-                    justifyContent: 'flex-start',
-                  }}
-                >
-                  {sc.label}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={handleReset}
-              className="touch-target"
-              style={{
-                backgroundColor: 'var(--color-danger)',
-                color: '#FFFFFF',
-                borderRadius: 'var(--radius-sm)',
-                border: 'none',
-                fontWeight: 780,
-                fontSize: '13.5px',
-                marginTop: '4px',
-              }}
-            >
-              Reset Demo State
-            </button>
-          </div>
-        )}
-      </div>
-    </AppShell>
-  );
+       </div>
+     )}
+      <div style={{ height: 24 }} />
+   </AppShell>
+ );
 }

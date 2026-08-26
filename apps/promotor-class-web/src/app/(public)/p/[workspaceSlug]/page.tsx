@@ -21,7 +21,7 @@ export default async function PublicStorefrontPage({ params }: PageProps) {
 
   return (
     <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Memuat Storefront...</div>}>
-      <StorefrontClient profile={profile} catalog={catalog} />
-    </Suspense>
-  );
+     <StorefrontClient profile={profile} catalog={catalog} />
+   </Suspense>
+ );
 }

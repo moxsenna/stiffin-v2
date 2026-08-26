@@ -12,7 +12,7 @@ test.describe('P1-4 — Sell-Ready Customer Golden Journey (E2E Browser)', () =>
 
     // 2. Promoter lands on dashboard (/app)
     await expect(page).toHaveURL(/.*\/app/);
-    await expect(page.locator('text=Beranda Promotor')).toBeVisible();
+    await expect(page.locator('h1')).toContainText('Beranda');
 
     // 3. Navigate to Programs (/app/programs)
     await page.goto('http://localhost:3001/app/programs');

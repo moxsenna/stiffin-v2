@@ -11,7 +11,7 @@ import { isTemplatesEnabled } from '@/lib/feature-flags';
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<ProgramTemplate[]>([]);
 
-  useEffect(() => {
+  useEffect(() =>{
     if (isTemplatesEnabled()) {
       getTemplatesQuery().then(setTemplates);
     }
@@ -23,77 +23,65 @@ export default function TemplatesPage() {
 
   return (
     <PromotorShell>
-      <div style={{ padding: '24px 20px', maxWidth: '880px', margin: '0 auto' }}>
-        <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '22px', fontWeight: 850, letterSpacing: '-0.025em', marginBottom: '4px', color: 'var(--color-text-main)' }}>
-            Template Program Edukasi
-          </h1>
-          <div style={{ fontSize: '13.5px', color: 'var(--color-text-muted)' }}>
-            Jalur tercepat membuat program edukasi berkualitas dari struktur teruji
-          </div>
+     <div style={{ padding: '16px' }}>
+       <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '4px' }}>Template Program</h1>
+       <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
+         Jalur tercepat membuat program edukasi berkualitas dari struktur teruji
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-          {templates.map(tmpl => (
+       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+         {templates.map(tmpl =>(
             <div
               key={tmpl.id}
               style={{
                 backgroundColor: 'var(--color-surface)',
-                borderRadius: 'var(--border-radius-lg)',
+                borderRadius: 'var(--border-radius-md)',
                 border: '1px solid var(--color-divider)',
-                padding: '20px',
+                padding: '16px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                boxShadow: 'var(--shadow-xs)',
               }}
             >
-              <div>
-                <span
+             <div>
+               <span
                   style={{
                     fontSize: '11px',
-                    fontWeight: 750,
-                    padding: '3px 8px',
-                    borderRadius: '4px',
-                    backgroundColor: 'var(--color-primary-light)',
-                    color: 'var(--color-primary)',
+                    fontWeight: 600,
+                    padding: '2px 8px',
+                    borderRadius: '0px',
+                    backgroundColor: '#ffe0d9',
+                    color: 'var(--accent-dark)',
                     display: 'inline-block',
-                    marginBottom: '10px',
-                    border: '1px solid var(--color-primary-border)',
+                    marginBottom: '8px',
                   }}
                 >
-                  {tmpl.priceType === 'free' ? 'Gratis (Lead Magnet)' : 'Program Berbayar'}
+                 {tmpl.priceType === 'free' ? 'Lead Magnet' : 'Paid Program'}
                 </span>
-                <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '6px', color: 'var(--color-text-main)' }}>{tmpl.title}</h3>
-                <p style={{ fontSize: '13.5px', color: 'var(--color-text-body)', marginBottom: '16px', lineHeight: 1.55 }}>
-                  {tmpl.description}
+               <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '4px' }}>{tmpl.title}</h3>
+               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '12px' }}>
+                 {tmpl.description}
                 </p>
-              </div>
+             </div>
 
-              <Link
+             <Link
                 href={`/app/programs/new?templateId=${tmpl.id}`}
                 className="touch-target-primary"
                 style={{
                   marginTop: '16px',
-                  backgroundColor: 'var(--color-primary)',
+                  backgroundColor: 'var(--accent-dark)',
                   color: '#FFF',
-                  fontWeight: 780,
-                  fontSize: '13.5px',
-                  borderRadius: 'var(--border-radius-md)',
+                  fontWeight: 600,
+                  borderRadius: 'var(--border-radius-sm)',
                   textAlign: 'center',
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: 'var(--shadow-sm)',
                 }}
               >
-                Gunakan Template Ini →
+               Gunakan Template Ini
               </Link>
-            </div>
-          ))}
+           </div>
+         ))}
         </div>
-      </div>
-    </PromotorShell>
-  );
+     </div>
+   </PromotorShell>
+ );
 }

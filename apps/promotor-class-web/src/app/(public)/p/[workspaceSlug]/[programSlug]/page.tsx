@@ -19,7 +19,7 @@ export default async function PublicProgramLandingPage({ params }: PageProps) {
 
   return (
     <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Memuat Landing Page...</div>}>
-      <PublicLandingClient detail={detail} />
-    </Suspense>
-  );
+     <PublicLandingClient detail={detail} />
+   </Suspense>
+ );
 }

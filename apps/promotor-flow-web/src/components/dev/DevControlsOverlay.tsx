@@ -3,21 +3,20 @@
 import React, { useState } from 'react';
 import { DemoScenarioPreset } from '@/modules/promotorclass/ports';
 import { clock } from '@/lib/container';
-import { SettingsIcon } from '@/components/foundation/icons';
 
 export interface DevControlsOverlayProps {
   currentPreset: DemoScenarioPreset;
-  onSelectPreset: (preset: DemoScenarioPreset) => Promise<void>;
-  onResetDemo: () => Promise<void>;
-  onRefresh: () => void;
+  onSelectPreset: (preset: DemoScenarioPreset) =>Promise<void>;
+  onResetDemo: () =>Promise<void>;
+  onRefresh: () =>void;
 }
 
-export const DevControlsOverlay: React.FC<DevControlsOverlayProps> = ({
+export const DevControlsOverlay: React.FC<DevControlsOverlayProps>= ({
   currentPreset,
   onSelectPreset,
   onResetDemo,
   onRefresh,
-}) => {
+}) =>{
   const [isOpen, setIsOpen] = useState(false);
   const [daysAdvanced, setDaysAdvanced] = useState(0);
 
@@ -26,15 +25,15 @@ export const DevControlsOverlay: React.FC<DevControlsOverlayProps> = ({
     return null;
   }
 
-  const handleAdvanceDays = (days: number) => {
-    setDaysAdvanced((prev) => prev + days);
+  const handleAdvanceDays = (days: number) =>{
+    setDaysAdvanced((prev) =>prev + days);
     if ('advanceDays' in clock && typeof (clock as any).advanceDays === 'function') {
       (clock as any).advanceDays(days);
     }
     onRefresh();
   };
 
-  const handleResetClock = () => {
+  const handleResetClock = () =>{
     setDaysAdvanced(0);
     if ('setNow' in clock && typeof (clock as any).setNow === 'function') {
       (clock as any).setNow('2026-08-12T10:00:00+07:00');
@@ -46,159 +45,147 @@ export const DevControlsOverlay: React.FC<DevControlsOverlayProps> = ({
     <div
       style={{
         position: 'fixed',
-        bottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
+        bottom: '70px',
         right: '12px',
         zIndex: 150,
       }}
     >
-      {!isOpen ? (
+     {!isOpen ? (
         <button
-          onClick={() => setIsOpen(true)}
-          className="touch-target"
+          onClick={() =>setIsOpen(true)}
           style={{
-            height: '32px',
-            padding: '0 12px',
-            borderRadius: 'var(--radius-full)',
-            backgroundColor: '#191918',
+            height: '28px',
+            padding: '0 10px',
+            borderRadius: '0px',
+            backgroundColor: 'var(--ink)',
             color: '#FFFFFF',
-            fontWeight: 700,
-            fontSize: '11.5px',
+            font: '600 11px var(--font-sans)',
             border: 'none',
-            opacity: 0.9,
-            boxShadow: 'var(--shadow-md)',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
+            opacity: 0.85,
           }}
         >
-          <SettingsIcon size={14} color="#FFFFFF" />
-          <span>Dev Controls</span>
+          Dev Controls
         </button>
-      ) : (
+     ) : (
         <div
           style={{
-            width: '290px',
-            backgroundColor: '#191918',
+            width: '280px',
+            backgroundColor: 'var(--ink)',
             color: '#FFFFFF',
-            borderRadius: 'var(--radius-md)',
-            padding: '16px',
-            boxShadow: 'var(--shadow-lg)',
+            borderRadius: '0px',
+            padding: '14px',
             display: 'flex',
             flexDirection: 'column',
             gap: '12px',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: 800, fontSize: '12px', color: '#9C9A94', letterSpacing: '0.02em' }}>
-              Dev & Demo Controls
+         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+           <span style={{ font: '600 12px var(--font-sans)', color: 'var(--muted-light)', textTransform: 'uppercase' }}>
+             DEV / DEMO CONTROLS
             </span>
-            <button
-              onClick={() => setIsOpen(false)}
-              style={{ background: 'none', border: 'none', color: '#9C9A94', fontSize: '14px', padding: '2px' }}
+           <button
+              onClick={() =>setIsOpen(false)}
+              style={{ background: 'none', border: 'none', color: 'var(--muted-light)', fontSize: '14px' }}
             >
-              ✕
+             ✕
             </button>
-          </div>
+         </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontWeight: 650, fontSize: '12px' }}>Skenario Integrasi Class:</span>
-            <div style={{ display: 'flex', gap: '4px' }}>
-              {(['FLOW_ONLY', 'BUNDLE_AVAILABLE', 'BUNDLE_CLASS_UNAVAILABLE'] as DemoScenarioPreset[]).map((p) => (
+         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+           <span style={{ font: '500 12px var(--font-sans)' }}>Integration Scenario:</span>
+           <div style={{ display: 'flex', gap: '4px' }}>
+             {(['FLOW_ONLY', 'BUNDLE_AVAILABLE', 'BUNDLE_CLASS_UNAVAILABLE'] as DemoScenarioPreset[]).map((p) =>(
                 <button
                   key={p}
-                  onClick={async () => {
+                  onClick={async () =>{
                     await onSelectPreset(p);
                     onRefresh();
                   }}
                   style={{
                     flex: 1,
-                    padding: '6px 2px',
+                    padding: '4px 2px',
                     fontSize: '10px',
-                    fontWeight: 700,
-                    borderRadius: 'var(--radius-xs)',
-                    border: currentPreset === p ? '1px solid var(--color-primary)' : '1px solid #333',
-                    backgroundColor: currentPreset === p ? 'var(--color-primary)' : '#2A2A28',
+                    fontWeight: 600,
+                    borderRadius: '0px',
+                    border: currentPreset === p ? '1px solid var(--accent-dark)' : '1px solid #333',
+                    backgroundColor: currentPreset === p ? 'var(--accent-dark)' : '#2A2A28',
                     color: '#FFF',
                   }}
                 >
-                  {p.replace('BUNDLE_', '')}
+                 {p.replace('BUNDLE_', '')}
                 </button>
-              ))}
+             ))}
             </div>
-          </div>
+         </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontWeight: 650, fontSize: '12px' }}>
-              Simulasi Tanggal: {clock.formatDayDate()} ({daysAdvanced >= 0 ? `+${daysAdvanced}` : daysAdvanced} hari)
+         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+           <span style={{ font: '500 12px var(--font-sans)' }}>
+             Simulasi Tanggal: {clock.formatDayDate()} ({daysAdvanced >= 0 ? `+${daysAdvanced}` : daysAdvanced} hari)
             </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <button
-                onClick={() => handleAdvanceDays(1)}
+           <div style={{ display: 'flex', gap: '6px' }}>
+             <button
+                onClick={() =>handleAdvanceDays(1)}
                 style={{
                   flex: 1,
-                  padding: '6px',
+                  padding: '4px',
                   fontSize: '11px',
-                  fontWeight: 650,
-                  borderRadius: 'var(--radius-xs)',
+                  borderRadius: '0px',
                   backgroundColor: '#2A2A28',
                   color: '#FFF',
                   border: '1px solid #444',
                 }}
               >
-                +1 Hari
+               +1 Hari
               </button>
-              <button
-                onClick={() => handleAdvanceDays(7)}
+             <button
+                onClick={() =>handleAdvanceDays(7)}
                 style={{
                   flex: 1,
-                  padding: '6px',
+                  padding: '4px',
                   fontSize: '11px',
-                  fontWeight: 650,
-                  borderRadius: 'var(--radius-xs)',
+                  borderRadius: '0px',
                   backgroundColor: '#2A2A28',
                   color: '#FFF',
                   border: '1px solid #444',
                 }}
               >
-                +7 Hari
+               +7 Hari (Aftercare)
               </button>
-              <button
+             <button
                 onClick={handleResetClock}
                 style={{
-                  padding: '6px 10px',
+                  padding: '4px 8px',
                   fontSize: '11px',
-                  fontWeight: 650,
-                  borderRadius: 'var(--radius-xs)',
+                  borderRadius: '0px',
                   backgroundColor: '#2A2A28',
-                  color: '#9C9A94',
+                  color: 'var(--muted-light)',
                   border: '1px solid #444',
                 }}
               >
-                Reset
+               Reset
               </button>
-            </div>
-          </div>
+           </div>
+         </div>
 
-          <button
-            onClick={async () => {
+         <button
+            onClick={async () =>{
               await onResetDemo();
               handleResetClock();
             }}
             style={{
               width: '100%',
-              padding: '8px',
-              borderRadius: 'var(--radius-xs)',
-              backgroundColor: 'var(--color-danger)',
+              padding: '6px',
+              borderRadius: '0px',
+              backgroundColor: 'var(--accent-dark)',
               color: '#FFF',
               border: 'none',
-              fontWeight: 780,
-              fontSize: '12px',
+              font: '600 12px var(--font-sans)',
             }}
           >
-            Reset Demo State
+           Reset Demo State
           </button>
-        </div>
-      )}
+       </div>
+     )}
     </div>
-  );
+ );
 };

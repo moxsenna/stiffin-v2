@@ -1,99 +1,61 @@
-/* PromotorClass Modern Design System Tokens — Hyper-Modern Electric Blue & Cyan SaaS (Linear/Stripe/Vercel Vibe) */
+/* ============================================================
+   PROMOTOR PLATFORM V0.1 — MODERNIST PWA DESIGN TOKENS
+   Variant: Royal Trust Blue on Clean White (user request)
+   Was: warm gray #f3f2f2 / red #ec3013 — now: white #FFFFFF / blue #2563EB
+   ============================================================ */
+
 :root {
-  /* Brand Accent Palette (Hyper-Modern Electric Royal Blue & Cyan) */
-  --color-primary: #2563EB;
-  --color-primary-hover: #1D4ED8;
-  --color-primary-active: #1E40AF;
-  --color-primary-light: #EFF6FF;
-  --color-primary-light-hover: #DBEAFE;
-  --color-primary-border: #BFDBFE;
-  --color-primary-glow: rgba(37, 99, 235, 0.18);
+  /* Core palette — clean white + professional blue */
+  --surface: #ffffff;
+  --canvas: #f8fafc;
+  --ink: #0f172a;
+  --accent: #2563eb;
+  --accent-dark: #1d4ed8;
+  --accent-soft: #dbeafe;
 
-  /* Secondary Accents */
-  --color-accent-cyan: #06B6D4;
-  --color-accent-cyan-light: #ECFEFF;
-  --color-accent-cyan-border: #A5F3FC;
-  --color-accent-indigo: #4F46E5;
-  --color-accent-indigo-light: #EEF2FF;
-  --color-accent-emerald: #10B981;
-  --color-accent-emerald-light: #ECFDF5;
+  /* Muted text scale — slate */
+  --muted-strong: #334155;
+  --muted: #64748b;
+  --muted-light: #94a3b8;
 
-  /* Modern Gradients */
-  --gradient-primary: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-  --gradient-brand: linear-gradient(135deg, #2563EB 0%, #06B6D4 100%);
-  --gradient-surface: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
-  --gradient-card-glow: linear-gradient(180deg, rgba(37, 99, 235, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
+  /* Lines & surfaces — slate, square, no shadows */
+  --line: #e2e8f0;
+  --surface-muted: #f1f5f9;
+  --surface-hover: #f8fafc;
 
-  /* Modern Canvas & Surface Tokens */
-  --color-canvas: #F8FAFC;
-  --color-canvas-subtle: #F1F5F9;
-  --color-surface: #FFFFFF;
-  --color-surface-hover: #F8FAFC;
-  --color-surface-active: #F1F5F9;
-  --color-surface-muted: #F8FAFC;
-  
-  /* Hairline Borders & High-Precision Dividers */
-  --color-divider: #E2E8F0;
-  --color-divider-subtle: #F1F5F9;
-  --color-border-strong: #CBD5E1;
-  --color-border-focus: #2563EB;
+  /* Text on dark ink blocks */
+  --on-ink: #ffffff;
+  --on-ink-muted: #94a3b8;
+  --on-ink-line: #1e293b;
 
-  /* Typography Colors (Deep Navy & Slate System) */
-  --color-text-main: #0B0F19;
-  --color-text-body: #1E293B;
-  --color-text-muted: #64748B;
-  --color-text-subtle: #94A3B8;
-  --color-text-inverse: #FFFFFF;
+  /* Typography */
+  --font-sans: 'Archivo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  /* Semantic Status Tokens */
-  --color-status-success: #059669;
-  --color-status-success-bg: #ECFDF5;
-  --color-status-success-border: #A7F3D0;
-  --color-status-warning: #D97706;
-  --color-status-warning-bg: #FFFBEB;
-  --color-status-warning-border: #FDE68A;
-  --color-status-danger: #E11D48;
-  --color-status-danger-bg: #FFF1F2;
-  --color-status-danger-border: #FECDD3;
-  --color-status-info: #2563EB;
-  --color-status-info-bg: #EFF6FF;
-  --color-status-info-border: #BFDBFE;
+  /* Separators */
+  --sep-strong: 2px solid var(--ink);
+  --sep-row: 1px solid var(--line);
 
-  /* Spacing System */
-  --space-xxs: 2px;
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
-  --space-2xl: 48px;
-  --space-3xl: 64px;
+  /* Interaction */
+  --tap-min: 44px;
+}
 
-  /* Geometry & Border Radii */
-  --border-radius-xs: 6px;
-  --border-radius-sm: 8px;
-  --border-radius-md: 12px;
-  --border-radius-lg: 16px;
-  --border-radius-xl: 22px;
-  --border-radius-full: 9999px;
-
-  /* Touch Targets & Ergonomics */
-  --min-touch-target: 44px;
-  --primary-action-target: 48px;
-
-  /* Multi-Layered Elevation Shadows (Modern Ambient & Glow) */
-  --shadow-xs: 0 1px 2px rgba(11, 15, 25, 0.04);
-  --shadow-sm: 0 1px 3px rgba(11, 15, 25, 0.06), 0 1px 2px rgba(11, 15, 25, 0.04);
-  --shadow-md: 0 4px 14px -2px rgba(11, 15, 25, 0.08), 0 2px 6px -1px rgba(11, 15, 25, 0.04);
-  --shadow-lg: 0 12px 28px -4px rgba(11, 15, 25, 0.10), 0 4px 12px -2px rgba(11, 15, 25, 0.05);
-  --shadow-xl: 0 20px 44px -8px rgba(11, 15, 25, 0.14), 0 8px 18px -4px rgba(11, 15, 25, 0.06);
-  --shadow-glow: 0 4px 20px rgba(37, 99, 235, 0.28);
-  --shadow-sheet: 0 -8px 32px rgba(11, 15, 25, 0.12);
-  --shadow-drawer: -12px 0 36px rgba(11, 15, 25, 0.14);
-
-  /* Animation Timings & Spring Easing */
-  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --duration-fast: 0.15s;
-  --duration-normal: 0.25s;
+/* Legacy aliases — keep old variable names rendering coherently
+   while pages migrate to the canonical tokens above. */
+:root {
+  --color-canvas: var(--surface);
+  --color-surface: var(--surface);
+  --color-text-primary: var(--ink);
+  --color-text-main: var(--ink);
+  --color-text-secondary: var(--muted-strong);
+  --color-text-muted: var(--muted);
+  --color-text-subtle: var(--muted-light);
+  --color-text-inverse: var(--on-ink);
+  --color-divider: var(--line);
+  --color-border-strong: var(--ink);
+  --color-primary: var(--accent-dark);
+  --color-primary-hover: var(--accent);
+  --color-primary-soft: #eff6ff;
+  --color-primary-light: #eff6ff;
+  --color-danger: var(--accent-dark);
+  --color-status-danger: #dc2626;
 }

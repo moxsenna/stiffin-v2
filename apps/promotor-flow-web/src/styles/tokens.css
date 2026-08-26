@@ -1,97 +1,61 @@
-/* PromotorFlow Modern Design System Tokens — Hyper-Modern Electric Blue & Cyan SaaS (Linear/Raycast Vibe) */
+/* ============================================================
+   PROMOTOR PLATFORM V0.1 — MODERNIST PWA DESIGN TOKENS
+   Variant: Royal Trust Blue on Clean White (user request)
+   Was: warm gray #f3f2f2 / red #ec3013 — now: white #FFFFFF / blue #2563EB
+   ============================================================ */
+
 :root {
-  /* Canvas & Neutral Ink Surfaces */
-  --color-canvas: #F8FAFC;
-  --color-canvas-subtle: #F1F5F9;
-  --color-surface: #FFFFFF;
-  --color-surface-hover: #F8FAFC;
-  --color-surface-active: #F1F5F9;
-  --color-surface-muted: #F8FAFC;
+  /* Core palette — clean white + professional blue */
+  --surface: #ffffff;
+  --canvas: #f8fafc;
+  --ink: #0f172a;
+  --accent: #2563eb;
+  --accent-dark: #1d4ed8;
+  --accent-soft: #dbeafe;
 
-  /* Typography Colors (Deep Navy & Slate Hierarchy) */
-  --color-text-primary: #0B0F19;
-  --color-text-secondary: #1E293B;
-  --color-text-tertiary: #64748B;
-  --color-text-subtle: #94A3B8;
-  --color-text-inverse: #FFFFFF;
+  /* Muted text scale — slate */
+  --muted-strong: #334155;
+  --muted: #64748b;
+  --muted-light: #94a3b8;
 
-  /* Borders & Dividers (High Precision Hairlines) */
-  --color-divider: #E2E8F0;
-  --color-border-strong: #CBD5E1;
-  --color-border-subtle: #F1F5F9;
+  /* Lines & surfaces — slate, square, no shadows */
+  --line: #e2e8f0;
+  --surface-muted: #f1f5f9;
+  --surface-hover: #f8fafc;
 
-  /* Brand Palette - Electric Royal Blue & Cyan */
-  --color-primary: #2563EB;
-  --color-primary-hover: #1D4ED8;
-  --color-primary-active: #1E40AF;
-  --color-primary-light: #EFF6FF;
-  --color-primary-light-hover: #DBEAFE;
-  --color-primary-border: #BFDBFE;
-  --color-primary-glow: rgba(37, 99, 235, 0.18);
+  /* Text on dark ink blocks */
+  --on-ink: #ffffff;
+  --on-ink-muted: #94a3b8;
+  --on-ink-line: #1e293b;
 
-  /* Modern Accents & Gradients */
-  --color-accent-cyan: #06B6D4;
-  --color-accent-cyan-light: #ECFEFF;
-  --color-accent-cyan-border: #A5F3FC;
-  --gradient-primary: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-  --gradient-brand: linear-gradient(135deg, #2563EB 0%, #06B6D4 100%);
+  /* Typography */
+  --font-sans: 'Archivo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  /* Semantic Status Feedback */
-  --color-danger: #E11D48;
-  --color-danger-soft: #FFF1F2;
-  --color-danger-border: #FECDD3;
+  /* Separators */
+  --sep-strong: 2px solid var(--ink);
+  --sep-row: 1px solid var(--line);
 
-  --color-warning: #D97706;
-  --color-warning-soft: #FFFBEB;
-  --color-warning-border: #FDE68A;
+  /* Interaction */
+  --tap-min: 44px;
+}
 
-  --color-success: #059669;
-  --color-success-soft: #ECFDF5;
-  --color-success-border: #A7F3D0;
-
-  --color-info: #2563EB;
-  --color-info-soft: #EFF6FF;
-  --color-info-border: #BFDBFE;
-
-  /* Typography System */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-
-  /* Multi-Layered Elevation Shadows (Modern Ambient & Glow) */
-  --shadow-xs: 0 1px 2px rgba(11, 15, 25, 0.04);
-  --shadow-sm: 0 1px 3px rgba(11, 15, 25, 0.06), 0 1px 2px rgba(11, 15, 25, 0.04);
-  --shadow-md: 0 4px 14px -2px rgba(11, 15, 25, 0.08), 0 2px 6px -1px rgba(11, 15, 25, 0.04);
-  --shadow-lg: 0 12px 28px -4px rgba(11, 15, 25, 0.10), 0 4px 12px -2px rgba(11, 15, 25, 0.05);
-  --shadow-xl: 0 20px 44px -8px rgba(11, 15, 25, 0.14), 0 8px 18px -4px rgba(11, 15, 25, 0.06);
-  --shadow-glow: 0 4px 20px rgba(37, 99, 235, 0.28);
-  --shadow-sheet: 0 -8px 32px rgba(11, 15, 25, 0.12);
-
-  /* Geometry & Border Radius */
-  --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 22px;
-  --radius-sheet: 22px;
-  --radius-full: 9999px;
-
-  /* Spacing Scale */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-
-  /* Motion & Spring Timings */
-  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --duration-fast: 150ms;
-  --duration-normal: 250ms;
-
-  /* Touch Ergonomics */
-  --touch-target-min: 44px;
-  --touch-target-primary: 48px;
+/* Legacy aliases — keep old variable names rendering coherently
+   while pages migrate to the canonical tokens above. */
+:root {
+  --color-canvas: var(--surface);
+  --color-surface: var(--surface);
+  --color-text-primary: var(--ink);
+  --color-text-main: var(--ink);
+  --color-text-secondary: var(--muted-strong);
+  --color-text-muted: var(--muted);
+  --color-text-subtle: var(--muted-light);
+  --color-text-inverse: var(--on-ink);
+  --color-divider: var(--line);
+  --color-border-strong: var(--ink);
+  --color-primary: var(--accent-dark);
+  --color-primary-hover: var(--accent);
+  --color-primary-soft: #eff6ff;
+  --color-primary-light: #eff6ff;
+  --color-danger: var(--accent-dark);
+  --color-status-danger: #dc2626;
 }

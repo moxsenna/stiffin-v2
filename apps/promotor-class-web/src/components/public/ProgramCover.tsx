@@ -13,6 +13,7 @@ interface ProgramCoverProps {
 
 export function ProgramCover({
   title,
+  publicLabel = '',
   variant = 'cover-a',
   imageUrl,
   aspectRatio = '16 / 10',
@@ -24,9 +25,9 @@ export function ProgramCover({
   };
 
   const bgColors = {
-    'cover-a': '#286344',
-    'cover-b': '#8A622A',
-    'cover-c': '#2C446E',
+    'cover-a': '#dce9de',
+    'cover-b': '#ede3d1',
+    'cover-c': '#e1e5ee',
   };
 
   const activeImage = imageUrl || imageMap[variant] || imageMap['cover-a'];
@@ -35,15 +36,15 @@ export function ProgramCover({
     <div
       style={{
         aspectRatio,
-        borderRadius: 'var(--border-radius-md)',
+        borderRadius: '0px',
         overflow: 'hidden',
         position: 'relative',
-        marginBottom: '14px',
+        marginBottom: '16px',
         border: '1px solid var(--color-divider)',
         backgroundColor: bgColors[variant] || bgColors['cover-a'],
       }}
     >
-      {/* Background Cover Image */}
+     {/* Background Cover Image */}
       {activeImage && (
         <img
           src={activeImage}
@@ -57,7 +58,7 @@ export function ProgramCover({
             objectPosition: 'center',
           }}
         />
-      )}
+     )}
 
       {/* Gradient Overlay for Text Readability */}
       <div
@@ -65,28 +66,41 @@ export function ProgramCover({
           position: 'absolute',
           inset: 0,
           background:
-            'linear-gradient(180deg, rgba(15,20,17,0.7) 0%, rgba(15,20,17,0.2) 40%, rgba(15,20,17,0.85) 100%)',
+            'rgba(32,30,29,0.55)',
           zIndex: 1,
         }}
       />
 
-      <div
+     <div
         style={{
           position: 'absolute',
-          left: '18px',
-          bottom: '16px',
-          right: '18px',
-          fontSize: '20px',
-          lineHeight: 1.15,
-          letterSpacing: '-0.025em',
+          left: '20px',
+          top: '20px',
+          right: '20px',
+          fontSize: '26px',
+          lineHeight: 1.05,
+          letterSpacing: '-0.035em',
           fontWeight: 850,
           color: '#FFFFFF',
           zIndex: 2,
-          textShadow: '0 2px 4px rgba(0,0,0,0.4)',
+          textShadow: '0 2px 4px rgba(0,0,0,0.3)',
         }}
       >
-        {title}
+       <small
+          style={{
+            display: 'block',
+            fontSize: '11px',
+            letterSpacing: '0.09em',
+            textTransform: 'uppercase',
+            marginBottom: '8px',
+            color: '#e2f0e6',
+            fontWeight: 800,
+          }}
+        >
+         {publicLabel}
+        </small>
+       {title}
       </div>
-    </div>
-  );
+   </div>
+ );
 }

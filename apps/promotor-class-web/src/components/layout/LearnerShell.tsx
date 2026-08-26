@@ -22,16 +22,8 @@ export function LearnerShell({
   workspaceSlug,
 }: LearnerShellProps) {
   return (
-    <div
-      className="page-wrapper-with-bottom-nav"
-      style={{
-        minHeight: '100dvh',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'var(--color-canvas)',
-      }}
-    >
-      {/* Mobile Top App Header */}
+    <div className="page-wrapper-with-bottom-nav" style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--surface)' }}>
+     {/* Mobile Top App Header */}
       <MobileAppHeader
         title={title}
         subtitle={subtitle}
@@ -41,21 +33,20 @@ export function LearnerShell({
         workspaceSlug={workspaceSlug}
       />
 
-      {/* Main Content Area */}
+     {/* Main Content Area */}
       <main
         style={{
           flex: 1,
-          maxWidth: '820px',
+          maxWidth: '760px',
           width: '100%',
           margin: '0 auto',
-          padding: '0 16px',
         }}
       >
-        {children}
+       {children}
       </main>
 
-      {/* Mobile Sticky Tab Bar */}
+     {/* Mobile Sticky Tab Bar */}
       <LearnerTabBar workspaceSlug={workspaceSlug} />
-    </div>
-  );
+   </div>
+ );
 }

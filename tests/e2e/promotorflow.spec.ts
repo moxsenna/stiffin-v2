@@ -7,12 +7,12 @@ test.describe('PromotorFlow E2E Browser Suite', () => {
 
     await expect(page).toHaveTitle(/PromotorFlow|Promotor/i);
 
-    // Verify Bottom Navigation is visible at 360px
-    const bottomNav = page.locator('nav, .bottom-nav').first();
+    // Verify Bottom Navigation is visible at 360px (desktop rail is hidden on mobile)
+    const bottomNav = page.locator('.bottom-nav').first();
     await expect(bottomNav).toBeVisible();
 
-    // Navigate to Contacts
-    const contactsLink = page.locator('a[href*="/app/contacts"]').first();
+    // Navigate to Contacts — scope to bottom-nav on mobile (desktop rail hidden at 360px)
+    const contactsLink = page.locator('.bottom-nav a[href*="/app/contacts"]').first();
     await expect(contactsLink).toBeVisible();
     await contactsLink.click();
     await expect(page).toHaveURL(/.*\/app\/contacts/);
@@ -32,8 +32,8 @@ test.describe('PromotorFlow E2E Browser Suite', () => {
       if (await waButton.isVisible()) {
         await waButton.click();
 
-        // Verify Bottom Sheet renders with explicit "Tandai Terkirim" confirmation
-        const tandaiTerkirimBtn = page.locator('button:has-text("Tandai Terkirim")');
+        // Verify Bottom Sheet renders with explicit human confirmation ("Ya, Sudah Dikirim")
+        const tandaiTerkirimBtn = page.locator('button:has-text("Ya, Sudah Dikirim")');
         await expect(tandaiTerkirimBtn).toBeVisible({ timeout: 5000 });
 
         // Assert no false automated delivery/read claim

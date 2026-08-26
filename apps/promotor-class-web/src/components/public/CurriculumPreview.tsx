@@ -16,50 +16,54 @@ export function CurriculumPreview({ modules }: CurriculumPreviewProps) {
       className="container"
       style={{
         borderTop: '1px solid var(--color-divider)',
-        paddingTop: '48px',
-        paddingBottom: '48px',
+        paddingTop: '54px',
+        paddingBottom: '54px',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-        gap: '36px',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+        gap: '40px',
       }}
     >
-      <div>
-        <h2 style={{ fontSize: '26px', letterSpacing: '-0.03em', fontWeight: 850, margin: 0, color: 'var(--color-text-main)' }}>
-          Struktur & Kurikulum Program
+     <div>
+       <div
+          style={{
+            fontSize: '12px',
+            fontWeight: 820,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: 'var(--accent-dark)',
+            marginBottom: '12px',
+          }}
+        >
+         Isi program
+        </div>
+       <h2 style={{ fontSize: '28px', letterSpacing: '-0.03em', fontWeight: 750, margin: 0 }}>
+         Ringkas, bertahap, dan mudah diikuti
         </h2>
-        <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginTop: '8px', lineHeight: 1.6 }}>
-          Materi disajikan ringkas, bertahap, dan dilengkapi studi kasus aplikatif.
-        </p>
-      </div>
+     </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {modules.map((mod, idx) => {
+     <div>
+       {modules.map((mod, idx) =>{
           const lessonCount = mod.lessons?.length || 0;
           return (
             <div
               key={mod.id}
               style={{
-                backgroundColor: 'var(--color-surface)',
-                borderRadius: 'var(--border-radius-md)',
-                border: '1px solid var(--color-divider)',
-                padding: '20px',
-                boxShadow: 'var(--shadow-xs)',
+                borderTop: '1px solid var(--color-divider)',
+                padding: '18px 0',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <div style={{ fontWeight: 800, fontSize: '15.5px', color: 'var(--color-text-main)' }}>
-                  Modul {idx + 1}: {mod.title}
-                </div>
-                <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted)', fontWeight: 600 }}>
-                  {lessonCount} materi
-                </div>
+             <div style={{ fontWeight: 800, fontSize: '16px', color: '#191918' }}>
+               {String(idx + 1).padStart(2, '0')} · {mod.title}
+              </div>
+             <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+               {lessonCount} materi
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {mod.lessons.map(les => {
+             <div style={{ marginTop: '14px', display: 'grid', gap: '8px' }}>
+               {mod.lessons.map(les =>{
                   let formatLabel = 'Bacaan';
                   if (les.hasVideo && les.hasReflection) {
-                    formatLabel = 'Video & Refleksi';
+                    formatLabel = 'Video + Refleksi';
                   } else if (les.hasVideo) {
                     formatLabel = 'Video';
                   } else if (les.hasReflection) {
@@ -72,37 +76,31 @@ export function CurriculumPreview({ modules }: CurriculumPreviewProps) {
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'center',
-                        gap: '16px',
-                        fontSize: '13.5px',
-                        padding: '8px 12px',
-                        backgroundColor: 'var(--color-canvas)',
-                        borderRadius: 'var(--border-radius-xs)',
-                        color: 'var(--color-text-body)',
+                        gap: '18px',
+                        fontSize: '14px',
+                        padding: '8px 0',
+                        color: '#4e4d48',
+                        borderBottom: '1px dashed var(--color-divider-subtle)',
                       }}
                     >
-                      <span style={{ fontWeight: 600 }}>{les.title}</span>
-                      <span
+                     <span style={{ fontWeight: 550 }}>{les.title}</span>
+                     <span
                         style={{
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          color: 'var(--color-primary)',
-                          backgroundColor: 'var(--color-primary-light)',
-                          padding: '2px 8px',
-                          borderRadius: '4px',
+                          fontSize: '12px',
+                          color: 'var(--color-text-muted)',
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        {formatLabel}
+                       {formatLabel}
                       </span>
-                    </div>
-                  );
+                   </div>
+                 );
                 })}
               </div>
-            </div>
-          );
+           </div>
+         );
         })}
       </div>
-    </section>
-  );
+   </section>
+ );
 }

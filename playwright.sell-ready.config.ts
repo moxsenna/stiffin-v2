@@ -38,8 +38,8 @@ export default defineConfig({
       },
     },
     {
-      command: 'pnpm --filter @promotor/promotor-class-web dev -p 3001',
-      port: 3001,
+      command: `pnpm --filter @promotor/promotor-class-web dev -p ${process.env.CLASS_PORT || 3001}`,
+      port: Number(process.env.CLASS_PORT || 3001),
       reuseExistingServer: !process.env.CI,
       timeout: 60000,
       env: {
@@ -48,8 +48,8 @@ export default defineConfig({
       },
     },
     {
-      command: 'pnpm --filter @promotor/promotor-flow-web dev -p 3000',
-      port: 3000,
+      command: `pnpm --filter @promotor/promotor-flow-web dev -p ${process.env.FLOW_PORT || 3000}`,
+      port: Number(process.env.FLOW_PORT || 3000),
       reuseExistingServer: !process.env.CI,
       timeout: 60000,
       env: {

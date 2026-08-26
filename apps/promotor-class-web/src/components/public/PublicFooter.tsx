@@ -10,27 +10,25 @@ export function PublicFooter({ displayName }: PublicFooterProps) {
   return (
     <footer
       style={{
-        paddingTop: '36px',
+        paddingTop: '38px',
         paddingBottom: '54px',
         borderTop: '1px solid var(--color-divider)',
         color: 'var(--color-text-muted)',
-        fontSize: '12.5px',
-        backgroundColor: 'var(--color-canvas)',
+        fontSize: '12px',
       }}
     >
-      <div
+     <div
         className="container"
         style={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '16px',
+          gap: '20px',
           flexWrap: 'wrap',
         }}
       >
-        <span>© {new Date().getFullYear()} Ruang Belajar {displayName || 'STIFIn'}</span>
-        <span style={{ color: 'var(--color-text-subtle)' }}>Didukung oleh PromotorClass</span>
-      </div>
-    </footer>
-  );
+       <span>© 2026 Ruang Belajar {displayName}</span>
+       <span>Didukung oleh PromotorClass</span>
+     </div>
+   </footer>
+ );
 }
