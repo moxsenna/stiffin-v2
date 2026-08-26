@@ -186,13 +186,13 @@ export function LessonEditorClient() {
            <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
              Judul Pelajaran *
             </label>
-           <input
+            <input
               type="text"
               required
               data-testid="lesson-title-input"
               value={title}
-              onChange={(e) =>setTitle(e.target.value)}
-              placeholder="Contoh: Mengenali Cara Kerja Otak Kanan"
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Contoh: Sesi 1 - Mengenali Cara Kerja Otak Kanan"
               style={{
                 width: '100%',
                 padding: '10px 14px',
