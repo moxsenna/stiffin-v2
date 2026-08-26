@@ -60,7 +60,7 @@ export function ProgramCompletedClient() {
    );
   }
 
-  const reflectionCount = enrollment.completedLessonIds.length;
+  const reflectionCount = enrollment.completedLessonIds?.length ?? 0;
   const waBookingUrl = promoterPhone
     ? `https://wa.me/${promoterPhone}?text=${encodeURIComponent(`Halo, saya telah menyelesaikan program "${program.title}". Saya ingin konsultasi / booking Tes STIFIn.`)}`
     : null;
