@@ -110,7 +110,7 @@ export const WhatsAppBottomSheet: React.FC<WhatsAppBottomSheetProps>= ({
 
          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
            <button type="button" className="btn btn-primary" onClick={handleConfirm}>
-             Ya, sudah
+             Ya, Sudah Dikirim
             </button>
            <button type="button" className="btn btn-secondary" onClick={() =>setHasOpenedWa(false)}>
              Belum
