@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 
 export default function RootPage() {
   const router = useRouter();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     getSession()
@@ -16,28 +18,118 @@ export default function RootPage() {
       .catch(() => {});
   }, [router]);
 
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 12);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
     <div style={{ backgroundColor: 'var(--surface)', color: 'var(--ink)', fontFamily: 'var(--font-sans)' }}>
-      <header style={{ position: 'sticky', top: 0, zIndex: 200, backgroundColor: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid var(--line)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'var(--ink)' }}>
-            <div style={{ width: 36, height: 36, backgroundColor: 'var(--accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13 }}>PC</div>
-            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-              <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.03em' }}>PromotorClass</span>
-              <span style={{ fontSize: 10, fontWeight: 650, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)' }}>Education OS</span>
+      <header
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 200,
+          backgroundColor: isScrolled ? 'rgba(255,255,255,0.94)' : 'var(--surface)',
+          backdropFilter: isScrolled ? 'blur(12px)' : 'none',
+          WebkitBackdropFilter: isScrolled ? 'blur(12px)' : 'none',
+          borderBottom: isScrolled ? '1px solid var(--line)' : '1px solid transparent',
+          transition: 'all 180ms ease',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: '0 auto',
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+          }}
+        >
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'var(--ink)', minWidth: 0 }}>
+            <div
+              style={{
+                width: 34,
+                height: 34,
+                backgroundColor: 'var(--accent)',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 800,
+                fontSize: 13,
+                flexShrink: 0,
+              }}
+            >
+              PC
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, minWidth: 0 }}>
+              <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.03em', whiteSpace: 'nowrap' }}>PromotorClass</span>
+              <span style={{ fontSize: 10, fontWeight: 650, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)', whiteSpace: 'nowrap' }}>Education OS</span>
             </div>
           </Link>
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 24 }} className="landing-nav-links">
+          <nav style={{ display: 'none', alignItems: 'center', gap: 22 }} className="landing-nav-links">
             <a href="#fitur" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>Fitur</a>
             <a href="#cara-kerja" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>Cara Kerja</a>
             <a href="#harga" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>Harga</a>
             <a href="#faq" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>FAQ</a>
           </nav>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Link href="/login" style={{ padding: '8px 16px', fontSize: 13.5, fontWeight: 700, color: 'var(--ink)', textDecoration: 'none' }}>Masuk</Link>
-            <Link href="/login" style={{ padding: '10px 18px', backgroundColor: 'var(--accent)', color: '#fff', fontWeight: 800, fontSize: 13.5, textDecoration: 'none', borderRadius: 0 }}>Buat Kelas Gratis →</Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            <Link
+              href="/login"
+              style={{ display: 'none', padding: '8px 14px', fontSize: 13.5, fontWeight: 700, color: 'var(--ink)', textDecoration: 'none', whiteSpace: 'nowrap' }}
+              className="landing-nav-links"
+            >
+              Masuk
+            </Link>
+            <Link
+              href="/login"
+              style={{ padding: '10px 14px', backgroundColor: 'var(--accent)', color: '#fff', fontWeight: 800, fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap' }}
+            >
+              <span className="landing-cta-long">Buat Kelas Gratis →</span>
+              <span className="landing-cta-short" style={{ display: 'none' }}>Gratis →</span>
+            </Link>
+            <button
+              type="button"
+              aria-label={mobileMenuOpen ? 'Tutup menu' : 'Buka menu'}
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="landing-hamburger"
+              style={{
+                display: 'inline-flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: 4,
+                width: 42,
+                height: 42,
+                background: 'transparent',
+                border: '2px solid var(--ink)',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              <span style={{ width: 16, height: 2, backgroundColor: 'var(--ink)', display: 'block' }} />
+              <span style={{ width: 16, height: 2, backgroundColor: 'var(--ink)', display: 'block' }} />
+              <span style={{ width: 16, height: 2, backgroundColor: 'var(--ink)', display: 'block' }} />
+            </button>
           </div>
         </div>
+        {mobileMenuOpen && (
+          <div style={{ borderTop: '1px solid var(--line)', backgroundColor: 'var(--surface)' }}>
+            <nav style={{ display: 'flex', flexDirection: 'column', padding: '8px 16px 16px' }}>
+              <a href="#fitur" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--ink)', fontWeight: 600, fontSize: 15, textDecoration: 'none', borderBottom: '1px solid var(--line)' }}>Fitur</a>
+              <a href="#cara-kerja" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--ink)', fontWeight: 600, fontSize: 15, textDecoration: 'none', borderBottom: '1px solid var(--line)' }}>Cara Kerja</a>
+              <a href="#harga" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--ink)', fontWeight: 600, fontSize: 15, textDecoration: 'none', borderBottom: '1px solid var(--line)' }}>Harga</a>
+              <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--ink)', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>FAQ</a>
+              <Link href="/login" onClick={() => setMobileMenuOpen(false)} style={{ marginTop: 12, padding: '14px', border: '2px solid var(--ink)', textAlign: 'center', fontWeight: 700, textDecoration: 'none', color: 'var(--ink)' }}>Masuk</Link>
+            </nav>
+          </div>
+        )}
+        <style>{`@media(min-width:840px){.landing-nav-links{display:flex!important}.landing-hamburger{display:none!important}.landing-cta-short{display:none!important}.landing-cta-long{display:inline!important}}@media(max-width:839px){.landing-nav-links{display:none!important}.landing-hamburger{display:inline-flex!important}.landing-cta-long{display:none!important}.landing-cta-short{display:inline!important}}`}</style>
       </header>
 
       <section style={{ padding: '64px 24px 48px', maxWidth: 1200, margin: '0 auto', textAlign: 'center' }}>

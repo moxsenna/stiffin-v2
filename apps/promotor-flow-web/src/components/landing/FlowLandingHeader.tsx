@@ -105,7 +105,7 @@ export const FlowLandingHeader: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Link
             href="/login"
-            className="touch-target"
+            className="touch-target landing-nav-links"
             style={{
               padding: '8px 16px',
               fontSize: '13.5px',
@@ -130,7 +130,8 @@ export const FlowLandingHeader: React.FC = () => {
               textDecoration: 'none',
             }}
           >
-            Buka App Demo →
+            <span className="landing-cta-long">Buka App Demo →</span>
+            <span className="landing-cta-short" style={{ display: 'none' }}>Demo →</span>
           </Link>
 
           {/* Hamburger Button (mobile only) */}
@@ -139,7 +140,7 @@ export const FlowLandingHeader: React.FC = () => {
             className="landing-hamburger"
             aria-label={mobileMenuOpen ? 'Tutup menu' : 'Buka menu'}
             aria-expanded={mobileMenuOpen}
-            onClick={() => setMobileMenuOpen((v) => !v)}
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             style={{
               display: 'inline-flex',
               flexDirection: 'column',
@@ -171,6 +172,20 @@ export const FlowLandingHeader: React.FC = () => {
           }
           .landing-mobile-menu {
             display: none !important;
+          }
+          .landing-cta-short {
+            display: none !important;
+          }
+          .landing-cta-long {
+            display: inline !important;
+          }
+        }
+        @media (max-width: 839px) {
+          .landing-cta-long {
+            display: none !important;
+          }
+          .landing-cta-short {
+            display: inline !important;
           }
         }
       `}</style>
