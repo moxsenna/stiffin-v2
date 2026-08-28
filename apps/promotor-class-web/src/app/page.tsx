@@ -147,10 +147,10 @@ export default function RootPage() {
           <Link href="/login" style={{ padding: '14px 28px', backgroundColor: 'var(--accent)', color: '#fff', fontWeight: 800, fontSize: 15, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>Mulai Gratis — Buat Program Pertama →</Link>
           <a href="#cara-kerja" style={{ padding: '14px 28px', backgroundColor: 'var(--surface)', color: 'var(--ink)', border: '2px solid var(--ink)', fontWeight: 750, fontSize: 15, textDecoration: 'none' }}>Lihat Cara Kerja</a>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16, maxWidth: 860, margin: '0 auto', padding: '20px 24px', backgroundColor: 'var(--surface-muted)', border: '1px solid var(--line)', textAlign: 'center' }}>
-          <div><div style={{ fontSize: 28, fontWeight: 900, color: 'var(--accent)' }}>3</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600 }}>Langkah: Program → Belajar → Follow-up</div></div>
-          <div><div style={{ fontSize: 28, fontWeight: 900, color: 'var(--accent)' }}>HOT/WARM/COLD</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600 }}>Intent Otomatis per Peserta</div></div>
-          <div><div style={{ fontSize: 28, fontWeight: 900, color: 'var(--accent)' }}>D+7</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600 }}>Aftercare Otomatis</div></div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 16, maxWidth: 860, margin: '0 auto', padding: '16px', backgroundColor: 'var(--surface-muted)', border: '1px solid var(--line)', textAlign: 'center' }}>
+          <div style={{ minWidth: 0, overflowWrap: 'anywhere' }}><div style={{ fontSize: 'clamp(20px,4vw,28px)', fontWeight: 900, color: 'var(--accent)', wordBreak: 'break-word' }}>3</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600, overflowWrap: 'anywhere' }}>Langkah: Program → Belajar → Follow-up</div></div>
+          <div style={{ minWidth: 0, overflowWrap: 'anywhere' }}><div style={{ fontSize: 'clamp(18px,3.5vw,24px)', fontWeight: 900, color: 'var(--accent)', wordBreak: 'break-word' }}>HOT/WARM/COLD</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600, overflowWrap: 'anywhere' }}>Intent Otomatis per Peserta</div></div>
+          <div style={{ minWidth: 0, overflowWrap: 'anywhere' }}><div style={{ fontSize: 'clamp(20px,4vw,28px)', fontWeight: 900, color: 'var(--accent)' }}>D+7</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600 }}>Aftercare Otomatis</div></div>
         </div>
       </section>
 
