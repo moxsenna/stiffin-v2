@@ -48,8 +48,36 @@ export class HttpProgramRepository implements ProgramRepositoryPort {
       durationLabel: input.durationLabel,
       coverVariant: input.coverVariant as any,
       imageUrl: input.imageUrl,
+      coverImageUrl: input.coverImageUrl,
       outcomes: input.outcomes,
     });
+  }
+
+  async presignCoverUpload(params: { programId?: string; fileName: string; contentType: string; contentLength: number }) {
+    if (params.programId) {
+      return this.client.presignProgramCover(params.programId, {
+        fileName: params.fileName,
+        contentType: params.contentType,
+        contentLength: params.contentLength,
+      });
+    }
+    return this.client.presignNewProgramCover({
+      fileName: params.fileName,
+      contentType: params.contentType,
+      contentLength: params.contentLength,
+    });
+  }
+
+  async confirmCoverUpload(params: { programId: string; key: string; contentType: string; contentLength?: number }) {
+    return this.client.confirmProgramCover(params.programId, {
+      key: params.key,
+      contentType: params.contentType,
+      contentLength: params.contentLength,
+    });
+  }
+
+  async deleteCoverImage(programId: string): Promise<void> {
+    await this.client.deleteProgramCover(programId);
   }
 
   async toggleProgramStatus(programId: string): Promise<Program> {

@@ -8,6 +8,7 @@ interface ProgramCoverProps {
   publicLabel?: string | null;
   variant?: 'cover-a' | 'cover-b' | 'cover-c';
   imageUrl?: string | null;
+  coverImageUrl?: string | null;
   aspectRatio?: string;
 }
 
@@ -16,6 +17,7 @@ export function ProgramCover({
   publicLabel = '',
   variant = 'cover-a',
   imageUrl,
+  coverImageUrl,
   aspectRatio = '16 / 10',
 }: ProgramCoverProps) {
   const imageMap = {
@@ -30,7 +32,7 @@ export function ProgramCover({
     'cover-c': '#e1e5ee',
   };
 
-  const activeImage = imageUrl || imageMap[variant] || imageMap['cover-a'];
+  const activeImage = coverImageUrl || imageUrl || imageMap[variant] || imageMap['cover-a'];
 
   return (
     <div

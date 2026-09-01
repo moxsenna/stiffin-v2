@@ -128,6 +128,7 @@ export const ProgramSchema = z.object({
   pricing: ProgramPricingSchema,
   priceAmount: z.number().default(0),
   publishedAt: z.string().optional().nullable(),
+  coverImageUrl: z.string().optional().nullable(),
   presentation: ProgramPublicPresentationSchema.optional().nullable(),
   modules: z.array(ModuleSchema),
   createdAt: z.string(),
@@ -506,6 +507,31 @@ export interface IntegrationHealth {
 // ==========================================
 // 8. B3 Program Management DTO Schemas
 // ==========================================
+export const PresignCoverUploadRequestSchema = z.object({
+  fileName: z.string().min(1, 'Nama file wajib diisi'),
+  contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  contentLength: z.number().int().min(1).max(2097152, 'Ukuran file maks 2MB (2097152 bytes)'),
+});
+export type PresignCoverUploadRequest = z.infer<typeof PresignCoverUploadRequestSchema>;
+
+export const PresignCoverUploadResponseSchema = z.object({
+  key: z.string(),
+  uploadUrl: z.string(),
+  publicUrl: z.string(),
+  contentType: z.string(),
+  contentLength: z.number(),
+  expiresAt: z.string(),
+  maxBytes: z.number(),
+});
+export type PresignCoverUploadResponse = z.infer<typeof PresignCoverUploadResponseSchema>;
+
+export const ConfirmCoverUploadRequestSchema = z.object({
+  key: z.string().min(1),
+  contentType: z.string(),
+  contentLength: z.number().optional(),
+});
+export type ConfirmCoverUploadRequest = z.infer<typeof ConfirmCoverUploadRequestSchema>;
+
 export const CreateProgramRequestSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   subtitle: z.string().optional().nullable(),
@@ -516,6 +542,7 @@ export const CreateProgramRequestSchema = z.object({
   durationLabel: z.string().optional().nullable(),
   coverVariant: z.enum(['cover-a', 'cover-b', 'cover-c']).optional(),
   imageUrl: z.string().optional().nullable(),
+  coverImageUrl: z.string().optional().nullable(),
   outcomes: z.array(LearningOutcomeSchema).optional(),
 });
 export type CreateProgramRequest = z.infer<typeof CreateProgramRequestSchema>;

@@ -39,11 +39,244 @@ function getRequestContext(c: any): {
   return { ctx, actor, db };
 }
 
+const MAX_COVER_BYTES_DEFAULT = 2097152;
+const ALLOWED_COVER_MIME_DEFAULT = ['image/jpeg', 'image/png', 'image/webp'] as const;
+
+function getCoverLimits(env: any) {
+  const max = parseInt(env?.MAX_COVER_BYTES ?? String(MAX_COVER_BYTES_DEFAULT), 10);
+  const raw = String(env?.ALLOWED_COVER_MIME ?? ALLOWED_COVER_MIME_DEFAULT.join(','));
+  const allowed = raw
+    .split(',')
+    .map((s: string) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return { maxBytes: Number.isFinite(max) ? max : MAX_COVER_BYTES_DEFAULT, allowed };
+}
+
+function sanitizeCoverKeyPart(name: string) {
+  const base = name.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/-+/g, '-').slice(0, 80);
+  return base || 'cover';
+}
+
+function extForMime(mime: string) {
+  const m = mime.toLowerCase();
+  if (m === 'image/jpeg') return 'jpg';
+  if (m === 'image/png') return 'png';
+  if (m === 'image/webp') return 'webp';
+  return 'bin';
+}
+
+function publicUrlForKey(env: any, key: string) {
+  const base = String(env?.R2_PUBLIC_BASE_URL ?? '').replace(/\/+$/, '');
+  if (base) return `${base}/${key}`;
+  return `https://pub-promotor-class-assets.r2.dev/${key}`;
+}
+
+async function createR2PresignedPutUrl(env: any, key: string, contentType: string) {
+  const bucket: any = env?.CLASS_ASSETS;
+  if (!bucket) throw new DomainError('INTERNAL_ERROR', 'R2 bucket CLASS_ASSETS is not configured');
+  if (typeof bucket.createPresignedUrl === 'function') {
+    return await bucket.createPresignedUrl({
+      method: 'PUT',
+      key,
+      expires: 600,
+      headers: { 'Content-Type': contentType },
+    } as any);
+  }
+  // Fallback: use Worker-proxied upload URL if native presign not available
+  // Frontend will PUT to this Worker URL which then streams to R2
+  // We signal this by returning a Worker URL
+  const baseUrl = String(env?.BETTER_AUTH_URL ?? '').replace(/\/+$/, '');
+  return `${baseUrl}/api/v1/uploads/r2/${encodeURIComponent(key)}`;
+}
+
 export function registerClassRoutes(app: Hono<AppEnv>) {
   // ==========================================
   // PromotorClass Operator Endpoints
   // Gated by Better Auth + promotorClass entitlement
   // ==========================================
+
+  // 0a. Presign cover upload for existing program (direct R2 PUT)
+  app.post('/api/v1/programs/:programId/cover/presign', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const env: any = c.env as any;
+    const programId = c.req.param('programId');
+    const raw = await c.req.json().catch(() => ({}));
+    const fileName = String(raw?.fileName ?? '').trim();
+    const contentType = String(raw?.contentType ?? '').trim().toLowerCase();
+    const contentLength = Number(raw?.contentLength);
+
+    const { maxBytes, allowed } = getCoverLimits(env);
+    if (!contentType || !allowed.includes(contentType)) {
+      throw new DomainError('VALIDATION_ERROR', `Tipe file tidak didukung. Gunakan: ${allowed.join(', ')}`);
+    }
+    if (!Number.isFinite(contentLength) || contentLength <= 0 || contentLength > maxBytes) {
+      throw new DomainError('VALIDATION_ERROR', `Ukuran file melebihi batas 2MB (maks ${maxBytes} bytes)`);
+    }
+    if (!fileName) throw new DomainError('VALIDATION_ERROR', 'Nama file wajib diisi');
+
+    const rows = await db.select().from(programs).where(and(eq(programs.id, programId), eq(programs.organizationId, ctx.organizationId))).limit(1);
+    const prog = rows[0] as any;
+    if (!prog) throw new DomainError('NOT_FOUND', 'Program tidak ditemukan');
+
+    const ext = extForMime(contentType);
+    const safeBase = sanitizeCoverKeyPart(fileName.replace(/\.[^.]+$/, ''));
+    const key = `programs/${ctx.organizationId}/${programId}/cover/${crypto.randomUUID()}-${safeBase}.${ext}`;
+
+    const uploadUrl = await createR2PresignedPutUrl(env, key, contentType);
+    const publicUrl = publicUrlForKey(env, key);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+    return c.json({ key, uploadUrl, publicUrl, contentType, contentLength, expiresAt, maxBytes }, 200);
+  });
+
+  // 0b. Presign cover upload for new program (no programId yet) - tmp key
+  app.post('/api/v1/uploads/cover/presign', async (c) => {
+    const { ctx } = getRequestContext(c);
+    const env: any = c.env as any;
+    const raw = await c.req.json().catch(() => ({}));
+    const fileName = String(raw?.fileName ?? '').trim();
+    const contentType = String(raw?.contentType ?? '').trim().toLowerCase();
+    const contentLength = Number(raw?.contentLength);
+
+    const { maxBytes, allowed } = getCoverLimits(env);
+    if (!contentType || !allowed.includes(contentType)) {
+      throw new DomainError('VALIDATION_ERROR', `Tipe file tidak didukung. Gunakan: ${allowed.join(', ')}`);
+    }
+    if (!Number.isFinite(contentLength) || contentLength <= 0 || contentLength > maxBytes) {
+      throw new DomainError('VALIDATION_ERROR', `Ukuran file melebihi batas 2MB (maks ${maxBytes} bytes)`);
+    }
+    if (!fileName) throw new DomainError('VALIDATION_ERROR', 'Nama file wajib diisi');
+
+    const ext = extForMime(contentType);
+    const safeBase = sanitizeCoverKeyPart(fileName.replace(/\.[^.]+$/, ''));
+    const key = `programs/${ctx.organizationId}/pending/cover/${crypto.randomUUID()}-${safeBase}.${ext}`;
+
+    const uploadUrl = await createR2PresignedPutUrl(env, key, contentType);
+    const publicUrl = publicUrlForKey(env, key);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+    return c.json({ key, uploadUrl, publicUrl, contentType, contentLength, expiresAt, maxBytes }, 200);
+  });
+
+  // 0c. Confirm cover after direct upload (verify R2 object exists, persist to DB, delete old)
+  app.post('/api/v1/programs/:programId/cover/confirm', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const env: any = c.env as any;
+    const programId = c.req.param('programId');
+    const raw = await c.req.json().catch(() => ({}));
+    const key = String(raw?.key ?? '').trim();
+    const contentType = String(raw?.contentType ?? '').trim().toLowerCase();
+    const contentLength = Number(raw?.contentLength);
+
+    if (!key) throw new DomainError('VALIDATION_ERROR', 'Key R2 wajib diisi');
+    const prefix = `programs/${ctx.organizationId}/${programId}/cover/`;
+    const pendingPrefix = `programs/${ctx.organizationId}/pending/cover/`;
+    if (!key.startsWith(prefix) && !key.startsWith(pendingPrefix)) {
+      throw new DomainError('VALIDATION_ERROR', 'Key tidak valid untuk program ini');
+    }
+
+    const bucket: any = env?.CLASS_ASSETS;
+    if (!bucket) throw new DomainError('INTERNAL_ERROR', 'R2 bucket tidak terkonfigurasi');
+
+    const obj = await bucket.head(key);
+    if (!obj) throw new DomainError('NOT_FOUND', 'File belum ter-upload ke R2');
+
+    const { maxBytes, allowed } = getCoverLimits(env);
+    const actualSize = Number((obj as any).size ?? (obj as any).contentLength ?? contentLength);
+    const actualMime = String((obj as any).httpMetadata?.contentType ?? contentType ?? '').toLowerCase();
+    if (!allowed.includes(actualMime)) {
+      await bucket.delete(key).catch(() => {});
+      throw new DomainError('VALIDATION_ERROR', `Tipe file tidak didukung: ${actualMime}`);
+    }
+    if (!Number.isFinite(actualSize) || actualSize > maxBytes) {
+      await bucket.delete(key).catch(() => {});
+      throw new DomainError('VALIDATION_ERROR', `Ukuran file melebihi 2MB`);
+    }
+
+    const rows = await db.select().from(programs).where(and(eq(programs.id, programId), eq(programs.organizationId, ctx.organizationId))).limit(1);
+    const prog: any = rows[0];
+    if (!prog) throw new DomainError('NOT_FOUND', 'Program tidak ditemukan');
+
+    const oldKey = prog.coverImageKey as string | null;
+    const publicUrl = publicUrlForKey(env, key);
+    const nowIso = new Date().toISOString();
+
+    // If pending key, copy to final key
+    let finalKey = key;
+    let finalUrl = publicUrl;
+    if (key.startsWith(pendingPrefix)) {
+      const ext = extForMime(actualMime);
+      const final = `programs/${ctx.organizationId}/${programId}/cover/${crypto.randomUUID()}.${ext}`;
+      const srcObj = await bucket.get(key);
+      if (!srcObj) throw new DomainError('NOT_FOUND', 'File pending tidak ditemukan');
+      await bucket.put(final, srcObj.body, { httpMetadata: { contentType: actualMime } });
+      await bucket.delete(key).catch(() => {});
+      finalKey = final;
+      finalUrl = publicUrlForKey(env, final);
+    }
+
+    await db
+      .update(programs)
+      .set({
+        coverImageKey: finalKey,
+        coverImageUrl: finalUrl,
+        coverImageMime: actualMime,
+        coverImageSize: actualSize,
+        coverImageUploadedAt: nowIso as any,
+        updatedAt: nowIso as any,
+      })
+      .where(and(eq(programs.id, programId), eq(programs.organizationId, ctx.organizationId)));
+
+    if (oldKey && oldKey !== finalKey) {
+      await bucket.delete(oldKey).catch(() => {});
+    }
+
+    return c.json({ key: finalKey, publicUrl: finalUrl, contentType: actualMime, contentLength: actualSize }, 200);
+  });
+
+  // 0d. Delete cover
+  app.delete('/api/v1/programs/:programId/cover', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const env: any = c.env as any;
+    const programId = c.req.param('programId');
+    const rows = await db.select().from(programs).where(and(eq(programs.id, programId), eq(programs.organizationId, ctx.organizationId))).limit(1);
+    const prog: any = rows[0];
+    if (!prog) throw new DomainError('NOT_FOUND', 'Program tidak ditemukan');
+    const oldKey = prog.coverImageKey as string | null;
+    if (oldKey) {
+      const bucket: any = env?.CLASS_ASSETS;
+      if (bucket) await bucket.delete(oldKey).catch(() => {});
+    }
+    await db
+      .update(programs)
+      .set({
+        coverImageKey: null as any,
+        coverImageUrl: null as any,
+        coverImageMime: null as any,
+        coverImageSize: null as any,
+        coverImageUploadedAt: null as any,
+        updatedAt: new Date().toISOString() as any,
+      })
+      .where(and(eq(programs.id, programId), eq(programs.organizationId, ctx.organizationId)));
+    return c.json({ success: true }, 200);
+  });
+
+  // Fallback proxy for presign fallback (when native presign not available)
+  app.put('/api/v1/uploads/r2/:key{.*}', async (c) => {
+    const { ctx } = getRequestContext(c);
+    const env: any = c.env as any;
+    const key = c.req.param('key');
+    if (!key || !key.startsWith(`programs/${ctx.organizationId}/`)) {
+      throw new DomainError('VALIDATION_ERROR', 'Key tidak valid');
+    }
+    const bucket: any = env?.CLASS_ASSETS;
+    if (!bucket) throw new DomainError('INTERNAL_ERROR', 'R2 tidak terkonfigurasi');
+    const contentType = c.req.header('content-type') ?? 'application/octet-stream';
+    const body = c.req.raw.body;
+    if (!body) throw new DomainError('VALIDATION_ERROR', 'Body kosong');
+    await bucket.put(key, body, { httpMetadata: { contentType } });
+    return c.json({ success: true, key }, 200);
+  });
 
   // 1. List Enrollments
   app.get('/api/v1/class/enrollments', async (c) => {

@@ -314,6 +314,58 @@ export class MockProgramRepository implements ProgramRepositoryPort {
       programs: curr.programs.filter(p => p.id !== programId),
     }));
   }
+
+  async presignCoverUpload(params: { programId?: string; fileName: string; contentType: string; contentLength: number }) {
+    const key = `mock_cover_${Date.now()}_${params.fileName}`;
+    return {
+      key,
+      uploadUrl: `https://mock.upload.local/${key}`,
+      publicUrl: `https://mock.cdn.local/${key}`,
+      contentType: params.contentType,
+      contentLength: params.contentLength,
+      expiresAt: new Date(Date.now() + 600000).toISOString(),
+      maxBytes: 2097152,
+    };
+  }
+
+  async confirmCoverUpload(params: { programId: string; key: string; contentType: string; contentLength?: number }) {
+    const publicUrl = `https://mock.cdn.local/${params.key}`;
+    MockStateStore.updateState(curr => {
+      const programs = curr.programs.map(p => {
+        if (p.id === params.programId) {
+          return {
+            ...p,
+            coverImageUrl: publicUrl,
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        return p;
+      });
+      return { ...curr, programs };
+    });
+    return {
+      key: params.key,
+      publicUrl,
+      contentType: params.contentType,
+      contentLength: params.contentLength || 1024,
+    };
+  }
+
+  async deleteCoverImage(programId: string): Promise<void> {
+    MockStateStore.updateState(curr => {
+      const programs = curr.programs.map(p => {
+        if (p.id === programId) {
+          return {
+            ...p,
+            coverImageUrl: undefined,
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        return p;
+      });
+      return { ...curr, programs };
+    });
+  }
 }
 
 export const programRepository = new MockProgramRepository();

@@ -7,6 +7,7 @@ import { PromotorShell } from '@/components/layout/PromotorShell';
 import { createProgramDetailedCommand } from '@/modules/programs/commands';
 import { getTemplateByIdQuery } from '@/modules/templates/queries';
 import { ProgramCover } from '@/components/public/ProgramCover';
+import { ImageUpload } from '@/components/promotor/ImageUpload';
 
 function NewProgramForm() {
   const router = useRouter();
@@ -474,39 +475,51 @@ function NewProgramForm() {
                </div>
              </div>
 
-             {/* Optional Custom Image URL */}
-              <div style={{ marginTop: '10px' }}>
-               <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
-                 URL Gambar Kustom (Opsional)
+              {/* Upload Cover via R2 Presigned Direct */}
+              <div style={{ marginTop: '14px', borderTop: '1px solid var(--color-divider)', paddingTop: '14px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '8px' }}>
+                  Upload Gambar Cover Program (Cloudflare R2 Direct)
                 </label>
-               <input
+                <ImageUpload
+                  currentImageUrl={coverImageUrl}
+                  onUploaded={({ publicUrl }) => setCoverImageUrl(publicUrl)}
+                  onRemoved={() => setCoverImageUrl('')}
+                />
+              </div>
+
+              {/* Optional Custom Image URL */}
+              <div style={{ marginTop: '12px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '4px' }}>
+                  Atau tautkan URL Gambar Eksternal (Opsional)
+                </label>
+                <input
                   type="url"
                   value={coverImageUrl}
-                  onChange={(e) =>setCoverImageUrl(e.target.value)}
-                  placeholder="https://example.com/cover-image.webp (Kosongkan untuk menggunakan Preset)"
+                  onChange={(e) => setCoverImageUrl(e.target.value)}
+                  placeholder="https://example.com/cover-image.webp"
                   style={{
                     width: '100%',
-                    padding: '10px 14px',
+                    padding: '8px 12px',
                     borderRadius: '0px',
                     border: '1px solid var(--color-divider)',
                     fontSize: '13px',
                     outline: 'none',
                   }}
                 />
-             </div>
+              </div>
 
-             {/* Live Preview */}
+              {/* Live Preview */}
               <div style={{ marginTop: '16px' }}>
-               <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-subtle)', marginBottom: '8px' }}>
-                 Pratinjau Visual Cover Storefront:
+                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-subtle)', marginBottom: '8px' }}>
+                  Pratinjau Visual Cover Storefront:
                 </div>
-               <ProgramCover
+                <ProgramCover
                   title={title || 'Judul Program'}
                   publicLabel={heroEyebrow}
                   variant={coverVariant}
                   imageUrl={coverImageUrl || undefined}
                 />
-             </div>
+              </div>
            </div>
          </div>
        </div>

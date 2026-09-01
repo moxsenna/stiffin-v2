@@ -318,6 +318,30 @@ export class PromotorClassContentApiClient {
     return res.presentation;
   }
 
+  async presignProgramCover(
+    programId: string,
+    data: { fileName: string; contentType: string; contentLength: number }
+  ): Promise<{ key: string; uploadUrl: string; publicUrl: string; contentType: string; contentLength: number; expiresAt: string; maxBytes: number }> {
+    return this.client.post(`/api/v1/programs/${encodeURIComponent(programId)}/cover/presign`, data);
+  }
+
+  async presignNewProgramCover(
+    data: { fileName: string; contentType: string; contentLength: number }
+  ): Promise<{ key: string; uploadUrl: string; publicUrl: string; contentType: string; contentLength: number; expiresAt: string; maxBytes: number }> {
+    return this.client.post('/api/v1/uploads/cover/presign', data);
+  }
+
+  async confirmProgramCover(
+    programId: string,
+    data: { key: string; contentType: string; contentLength?: number }
+  ): Promise<{ key: string; publicUrl: string; contentType: string; contentLength: number }> {
+    return this.client.post(`/api/v1/programs/${encodeURIComponent(programId)}/cover/confirm`, data);
+  }
+
+  async deleteProgramCover(programId: string): Promise<{ success: boolean }> {
+    return this.client.delete(`/api/v1/programs/${encodeURIComponent(programId)}/cover`);
+  }
+
   async updateProgramPresentation(
     programId: string,
     patch: UpdateProgramPresentationRequest
