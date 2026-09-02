@@ -14,11 +14,6 @@ interface StorefrontSettingsClientProps {
   programs?: Program[];
 }
 
-const PRESET_AVATARS = [
-  { label: 'Foto Profil Bawaan (Default)', url: '/images/promoter_profile_rina.webp' },
-  { label: 'Logo Minimalis Hijau', url: '/images/og-card.png' },
-];
-
 export function StorefrontSettingsClient({ programs: initialPrograms = [] }: StorefrontSettingsClientProps) {
   const [activeTab, setActiveTab] = useState<'brand' | 'profile'>('brand');
   const [programs, setPrograms] = useState<Program[]>(initialPrograms);
@@ -42,7 +37,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
         if (progData) setPrograms(progData);
         if (profData) {
           setProfile(profData);
-          if (profData.avatarUrl && !PRESET_AVATARS.some(p => p.url === profData.avatarUrl)) {
+          if (profData.avatarUrl) {
             setCustomAvatarUrl(profData.avatarUrl);
           }
         }
@@ -56,7 +51,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
 
     setIsSaving(true);
     try {
-      const activeAvatar = customAvatarUrl.trim() || profile.avatarUrl || PRESET_AVATARS[0].url;
+      const activeAvatar = customAvatarUrl.trim() || profile.avatarUrl || null;
       const updated = await getPublicStorefrontRepository().updateStorefrontProfile({
         ...profile,
         avatarUrl: activeAvatar,
@@ -274,7 +269,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
 
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
               <img
-                src={customAvatarUrl || profile.avatarUrl || PRESET_AVATARS[0].url}
+                src={customAvatarUrl || profile.avatarUrl || '/images/promoter_profile_rina.webp'}
                 alt={profile.displayName}
                 style={{
                   width: '68px',
@@ -312,7 +307,7 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
             >
               <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '4px' }}>1. Foto Profil Promotor</h3>
               <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
-                Unggah foto profil asli Anda sendiri (disimpan langsung di Cloudflare R2 &amp; otomatis dioptimalkan ke WebP) atau pilih gambar bawaan.
+                Unggah foto profil asli Anda sendiri. Foto otomatis dioptimalkan ke format modern WebP dan disimpan langsung di Cloudflare R2.
               </p>
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', alignItems: 'start' }}>
@@ -326,87 +321,42 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
                     aspectRatio="1/1"
                     maxWidth={800}
                     maxHeight={800}
-                    currentImageUrl={customAvatarUrl || (profile.avatarUrl && !PRESET_AVATARS.some(p => p.url === profile.avatarUrl) ? profile.avatarUrl : undefined)}
+                    currentImageUrl={customAvatarUrl || profile.avatarUrl || undefined}
                     onUploaded={({ publicUrl }) => {
                       setCustomAvatarUrl(publicUrl);
                       setProfile({ ...profile, avatarUrl: publicUrl });
                     }}
                     onRemoved={() => {
                       setCustomAvatarUrl('');
-                      setProfile({ ...profile, avatarUrl: PRESET_AVATARS[0].url });
+                      setProfile({ ...profile, avatarUrl: '' });
                     }}
                   />
                 </div>
 
-                {/* Alternatif: Preset atau URL Eksternal */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '8px' }}>
-                      Atau Pilih Gambar Bawaan:
-                    </label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {PRESET_AVATARS.map(preset => {
-                        const isSelected = (profile.avatarUrl === preset.url && !customAvatarUrl);
-                        return (
-                          <button
-                            key={preset.url}
-                            type="button"
-                            onClick={() => {
-                              setCustomAvatarUrl('');
-                              setProfile({ ...profile, avatarUrl: preset.url });
-                            }}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '12px',
-                              padding: '8px 12px',
-                              borderRadius: '0px',
-                              border: isSelected ? '2px solid var(--accent-dark)' : '1px solid var(--color-divider)',
-                              backgroundColor: isSelected ? 'var(--color-surface-hover)' : 'transparent',
-                              textAlign: 'left',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <img
-                              src={preset.url}
-                              alt={preset.label}
-                              style={{ width: '36px', height: '36px', borderRadius: '0px', objectFit: 'cover' }}
-                            />
-                            <span style={{ fontSize: '13px', fontWeight: isSelected ? 750 : 500 }}>
-                              {preset.label}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '8px' }}>
-                      Atau Masukkan URL Foto Kustom:
-                    </label>
-                    <input
-                      type="url"
-                      value={customAvatarUrl}
-                      onChange={e => {
-                        setCustomAvatarUrl(e.target.value);
-                        if (e.target.value.trim()) {
-                          setProfile({ ...profile, avatarUrl: e.target.value.trim() });
-                        }
-                      }}
-                      placeholder="https://domain.com/foto-anda.webp"
-                      style={{
-                        width: '100%',
-                        padding: '10px 14px',
-                        borderRadius: '0px',
-                        border: '1px solid var(--color-divider)',
-                        fontSize: '13px',
-                        outline: 'none',
-                      }}
-                    />
-                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-                      Format WebP rasio 1:1 sangat disarankan untuk performa loading maksimal.
-                    </div>
+                {/* Alternatif: Masukkan URL Eksternal */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '8px' }}>
+                    Atau Masukkan URL Foto Kustom:
+                  </label>
+                  <input
+                    type="url"
+                    value={customAvatarUrl}
+                    onChange={e => {
+                      setCustomAvatarUrl(e.target.value);
+                      setProfile({ ...profile, avatarUrl: e.target.value.trim() });
+                    }}
+                    placeholder="https://domain.com/foto-anda.webp"
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: '0px',
+                      border: '1px solid var(--color-divider)',
+                      fontSize: '13px',
+                      outline: 'none',
+                    }}
+                  />
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '6px' }}>
+                    Format WebP rasio 1:1 sangat disarankan untuk performa loading maksimal.
                   </div>
                 </div>
               </div>
