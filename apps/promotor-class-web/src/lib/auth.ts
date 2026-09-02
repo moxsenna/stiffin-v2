@@ -116,3 +116,42 @@ export async function signOut(): Promise<void> {
     localStorage.removeItem('promotor_session_token');
   }
 }
+
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!currentPassword || !newPassword) {
+    return { success: false, error: 'Kata sandi saat ini dan kata sandi baru wajib diisi' };
+  }
+  if (newPassword.length < 8) {
+    return { success: false, error: 'Kata sandi baru minimal 8 karakter' };
+  }
+
+  const mode = process.env.NEXT_PUBLIC_API_MODE;
+  if (mode !== 'http' && process.env.NODE_ENV !== 'production') {
+    return { success: true };
+  }
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+  try {
+    const res = await fetch(`${apiUrl}/api/auth/change-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        currentPassword,
+        newPassword,
+        revokeOtherSessions: true,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return { success: false, error: err?.message || 'Gagal mengubah kata sandi. Pastikan kata sandi lama benar.' };
+    }
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Gagal terhubung ke server autentikasi' };
+  }
+}
+
