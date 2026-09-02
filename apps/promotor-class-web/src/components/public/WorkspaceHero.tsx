@@ -11,95 +11,108 @@ interface WorkspaceHeroProps {
 }
 
 export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
+  const isCentered = profile.theme?.heroAlignment === 'CENTER';
+
   return (
-    <section className="container" style={{ paddingTop: '48px', paddingBottom: '32px' }}>
-     <div
+    <section className="container" style={{ paddingTop: '48px', paddingBottom: '36px' }}>
+      <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gridTemplateColumns: isCentered ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '40px',
           alignItems: 'center',
+          textAlign: isCentered ? 'center' : 'left',
         }}
       >
-       {/* Left Headline Column */}
-        <div>
-         <div
+        {/* Headline Column */}
+        <div style={isCentered ? { maxWidth: '780px', margin: '0 auto' } : {}}>
+          <div
             style={{
               display: 'inline-flex',
               alignItems: 'center',
+              justifyContent: isCentered ? 'center' : 'flex-start',
               gap: '8px',
               fontSize: '12px',
-              fontWeight: 820,
+              fontWeight: 800,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              color: 'var(--accent-dark)',
+              color: 'var(--brand-accent, var(--accent-dark))',
               marginBottom: '16px',
             }}
           >
-           <span
+            <span
               style={{
                 width: '7px',
                 height: '7px',
-                borderRadius: '0px',
-                backgroundColor: 'var(--accent-dark)',
+                borderRadius: 'var(--brand-radius-sm, 0px)',
+                backgroundColor: 'var(--brand-accent, var(--accent-dark))',
               }}
             />
-           Ruang belajar {profile.displayName.split(' ')[0]}
+            {profile.theme?.brandName || `Ruang belajar ${profile.displayName.split(' ')[0]}`}
           </div>
 
-         <h1
+          <h1
             style={{
-              fontSize: 'clamp(32px, 4.5vw, 56px)',
-              lineHeight: 1.04,
-              letterSpacing: '-0.04em',
+              fontSize: 'clamp(32px, 4.5vw, 54px)',
+              lineHeight: 1.05,
+              letterSpacing: '-0.035em',
               marginBottom: '18px',
               fontWeight: 800,
+              color: 'var(--brand-text, #111827)',
             }}
           >
-           {profile.headline}
+            {profile.headline || profile.tagline || 'Ruang Belajar & Pendampingan Karakter'}
           </h1>
 
-         <p
+          <p
             style={{
               fontSize: '16px',
               lineHeight: 1.65,
-              color: '#4f4e4a',
-              maxWidth: '650px',
-              marginBottom: '24px',
+              color: 'var(--brand-muted, #4f4e4a)',
+              maxWidth: isCentered ? '700px' : '650px',
+              margin: isCentered ? '0 auto 24px auto' : '0 0 24px 0',
             }}
           >
-           Materi singkat untuk membantu orang tua mengenali cara belajar anak, mengurangi konflik sehari-hari, dan mendampingi dengan lebih tenang.
+            {profile.bio || 'Materi singkat untuk membantu Anda mengenali potensi genetik, mengurangi hambatan komunikasi, dan bertumbuh dengan pendekatan yang terarah.'}
           </p>
 
-         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-           <a
+          <div
+            style={{
+              display: 'flex',
+              gap: '12px',
+              flexWrap: 'wrap',
+              justifyContent: isCentered ? 'center' : 'flex-start',
+            }}
+          >
+            <a
               href="#programs"
               style={{
                 minHeight: '46px',
-                borderRadius: '0px',
-                padding: '0 20px',
-                backgroundColor: 'var(--accent-dark)',
-                color: '#FFFFFF',
-                fontWeight: 780,
+                borderRadius: 'var(--brand-radius, 0px)',
+                padding: '0 22px',
+                backgroundColor: 'var(--brand-primary, #201e1d)',
+                color: 'var(--brand-primary-fg, #FFFFFF)',
+                fontWeight: 700,
                 fontSize: '14px',
                 textDecoration: 'none',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                transition: 'opacity 0.15s ease',
               }}
             >
-             Lihat program
+              Lihat program
             </a>
-           <a
+            <a
               href="#about"
               style={{
                 minHeight: '46px',
-                borderRadius: '0px',
-                padding: '0 20px',
-                border: '1px solid var(--color-divider)',
-                backgroundColor: '#FFFFFF',
-                color: '#191918',
-                fontWeight: 760,
+                borderRadius: 'var(--brand-radius, 0px)',
+                padding: '0 22px',
+                border: '1px solid var(--color-divider, #e5e7eb)',
+                backgroundColor: 'var(--brand-surface, #FFFFFF)',
+                color: 'var(--brand-text, #191918)',
+                fontWeight: 650,
                 fontSize: '14px',
                 textDecoration: 'none',
                 display: 'inline-flex',
@@ -107,36 +120,61 @@ export function WorkspaceHero({ profile, featuredItem }: WorkspaceHeroProps) {
                 justifyContent: 'center',
               }}
             >
-             Kenal {profile.displayName.split(' ')[0]}
+              Kenal {profile.displayName.split(' ')[0]}
             </a>
-         </div>
+          </div>
 
-         <div
+          <div
             style={{
-              marginTop: '20px',
+              marginTop: '22px',
               display: 'flex',
               gap: '16px',
               flexWrap: 'wrap',
-              color: 'var(--color-text-muted)',
+              justifyContent: isCentered ? 'center' : 'flex-start',
+              color: 'var(--brand-muted, #5a5954)',
               fontSize: '12px',
             }}
           >
-           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-             <i style={{ width: '5px', height: '5px', borderRadius: '0px', backgroundColor: '#aaa79f', display: 'inline-block' }} />
-             Materi praktis
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <i
+                style={{
+                  width: '5px',
+                  height: '5px',
+                  borderRadius: 'var(--brand-radius-sm, 0px)',
+                  backgroundColor: 'var(--brand-muted, #aaa79f)',
+                  display: 'inline-block',
+                }}
+              />
+              Materi praktis
             </span>
-           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-             <i style={{ width: '5px', height: '5px', borderRadius: '0px', backgroundColor: '#aaa79f', display: 'inline-block' }} />
-             Bisa dipelajari kapan saja
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <i
+                style={{
+                  width: '5px',
+                  height: '5px',
+                  borderRadius: 'var(--brand-radius-sm, 0px)',
+                  backgroundColor: 'var(--brand-muted, #aaa79f)',
+                  display: 'inline-block',
+                }}
+              />
+              Bisa dipelajari kapan saja
             </span>
-           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-             <i style={{ width: '5px', height: '5px', borderRadius: '0px', backgroundColor: '#aaa79f', display: 'inline-block' }} />
-             Mulai dari program gratis
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <i
+                style={{
+                  width: '5px',
+                  height: '5px',
+                  borderRadius: 'var(--brand-radius-sm, 0px)',
+                  backgroundColor: 'var(--brand-muted, #aaa79f)',
+                  display: 'inline-block',
+                }}
+              />
+              Mulai dari program gratis
             </span>
-         </div>
-       </div>
+          </div>
+        </div>
 
-       {/* Right Featured Art Card with Generated WebP Photo */}
+        {/* Right Featured Art Card with Generated WebP Photo */}
         {featuredItem && (
           <Link
             href={`/p/${profile.workspaceSlug}/${featuredItem.program.programSlug}`}

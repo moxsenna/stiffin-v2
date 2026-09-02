@@ -56,7 +56,7 @@ export function PlatformHero() {
               margin: '0 auto 32px',
             }}
           >
-            PromotorClass adalah <strong>Client Education OS</strong> yang mengubah video ringkas dan materi pengantar Anda menjadi sinyal niat beli, onboarding aftersales terstruktur, dan tindak lanjut WhatsApp siap closing.
+            Talira Class adalah <strong>Client Education OS</strong> yang mengubah video ringkas dan materi pengantar Anda menjadi sinyal niat beli, onboarding aftersales terstruktur, dan tindak lanjut WhatsApp siap closing.
           </p>
 
           {/* Direct CTA Cluster */}

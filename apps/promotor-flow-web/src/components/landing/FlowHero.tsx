@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { WhatsAppIcon, CheckIcon, LightningIcon, CalendarIcon, UsersIcon } from '../foundation/icons';
+import { FlowDemoAccessCard } from './DemoAccessCard';
 
 export const FlowHero: React.FC = () => {
   const [activeDemoTab, setActiveDemoTab] = useState<'today' | 'booking' | 'aftercare'>('today');
@@ -76,11 +77,11 @@ export const FlowHero: React.FC = () => {
           flexWrap: 'wrap',
           gap: '14px',
           justifyContent: 'center',
-          marginBottom: '56px',
+          marginBottom: '40px',
         }}
       >
         <Link
-          href="/app"
+          href="/login"
           className="touch-target-primary"
           style={{
             padding: '14px 32px',
@@ -96,28 +97,31 @@ export const FlowHero: React.FC = () => {
             gap: '8px',
           }}
         >
-          <span>Coba Demo Interaktif Sekarang</span>
+          <span>Mulai Gunakan Talira Flow</span>
           <span>→</span>
         </Link>
 
         <a
-          href="#simulasi"
+          href="#akses-demo"
           className="touch-target"
           style={{
             padding: '14px 28px',
             backgroundColor: 'var(--color-surface)',
             color: 'var(--color-text-primary)',
             borderRadius: 'var(--radius-full)',
-            border: '1px solid var(--color-border-strong)',
+            border: '2px solid var(--color-primary)',
             fontWeight: 750,
             fontSize: '15px',
             textDecoration: 'none',
             boxShadow: 'var(--shadow-xs)',
           }}
         >
-          Lihat Cara Kerja Pipeline
+          ⚡ Akses Akun Demo
         </a>
       </div>
+
+      {/* Prominent Flow Demo Access Card */}
+      <FlowDemoAccessCard />
 
       {/* Key Proof Metrics Bar */}
       <div
@@ -191,7 +195,7 @@ export const FlowHero: React.FC = () => {
             <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#FFBD2E' }} />
             <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#27C93F' }} />
             <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-tertiary)', marginLeft: '8px' }}>
-              PromotorFlow App Preview · Daily Execution OS
+              Talira Flow App Preview · Daily Execution OS
             </span>
           </div>
 

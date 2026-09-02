@@ -7,72 +7,135 @@ import {
   directUploadToR2,
   deleteCoverImageCommand,
 } from '@/modules/programs/commands';
+import { presignWorkspaceAssetCommand } from '@/modules/public-storefront/queries';
+import { compressAndConvertToWebP, formatBytes } from '@/lib/image-compression';
 
 export interface ImageUploadProps {
   programId?: string;
+  kind?: 'cover' | 'avatar' | 'logo';
+  aspectRatio?: '16/9' | '1/1' | 'auto';
+  maxWidth?: number;
+  maxHeight?: number;
   currentImageUrl?: string;
   onUploaded: (info: { publicUrl: string; key: string }) => void;
   onRemoved?: () => void;
   disabled?: boolean;
+  label?: string;
+  helpText?: string;
 }
 
-const MAX_BYTES = 2 * 1024 * 1024; // 2MB strict
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'];
 
 export function ImageUpload({
   programId,
+  kind = 'cover',
+  aspectRatio,
+  maxWidth,
+  maxHeight,
   currentImageUrl,
   onUploaded,
   onRemoved,
   disabled = false,
+  label,
+  helpText,
 }: ImageUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null);
   const [uploading, setUploading] = useState(false);
+  const [statusText, setStatusText] = useState<string>('Mengunggah...');
+  const [compressionInfo, setCompressionInfo] = useState<{ originalSize: number; compressedSize: number } | null>(null);
   const [progress, setProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const handleFile = async (file: File) => {
-    setErrorMsg(null);
+  // Synchronize previewUrl if parent updates currentImageUrl
+  React.useEffect(() => {
+    setPreviewUrl(currentImageUrl || null);
+  }, [currentImageUrl]);
 
-    if (!ALLOWED_TYPES.includes(file.type.toLowerCase())) {
+  const effectiveAspectRatio = aspectRatio || (kind === 'avatar' ? '1/1' : kind === 'logo' ? 'auto' : '16/9');
+  const targetMaxWidth = maxWidth || (kind === 'cover' ? 1600 : 800);
+  const targetMaxHeight = maxHeight || (kind === 'cover' ? 900 : 800);
+
+  const defaultLabel =
+    label ||
+    (kind === 'avatar'
+      ? 'Klik atau seret foto profil ke sini'
+      : kind === 'logo'
+      ? 'Klik atau seret logo brand ke sini'
+      : 'Klik atau seret gambar cover ke sini');
+
+  const defaultActiveText =
+    helpText ||
+    (kind === 'avatar'
+      ? 'Foto profil aktif · R2 Cloud Storage'
+      : kind === 'logo'
+      ? 'Logo brand aktif · R2 Cloud Storage'
+      : 'Cover aktif · R2 Cloud Storage');
+
+  const handleFile = async (rawFile: File) => {
+    setErrorMsg(null);
+    setCompressionInfo(null);
+
+    if (!ALLOWED_TYPES.includes(rawFile.type.toLowerCase()) && !rawFile.name.match(/\.(jpe?g|png|webp|avif)$/i)) {
       setErrorMsg('Format file tidak didukung. Gunakan JPG, PNG, atau WebP.');
       return;
     }
 
-    if (file.size > MAX_BYTES) {
-      const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
-      setErrorMsg(`Ukuran file (${sizeMb} MB) melebihi batas maksimal 2 MB.`);
-      return;
-    }
-
-    // Local instant preview
-    const localBlobUrl = URL.createObjectURL(file);
-    setPreviewUrl(localBlobUrl);
     setUploading(true);
+    setStatusText('Mengompresi & mengubah ke WebP...');
     setProgress(15);
 
     try {
-      // 1. Dapatkan presigned PUT URL dari API
-      const presign = await presignCoverUploadCommand({
-        programId,
-        fileName: file.name,
-        contentType: file.type.toLowerCase(),
-        contentLength: file.size,
+      // 0. Kompresi otomatis ke WebP di sisi browser
+      const compressionResult = await compressAndConvertToWebP(rawFile, {
+        maxWidth: targetMaxWidth,
+        maxHeight: targetMaxHeight,
+        quality: 0.85,
       });
 
-      setProgress(40);
+      const file = compressionResult.file;
+      setCompressionInfo({
+        originalSize: compressionResult.originalSize,
+        compressedSize: compressionResult.compressedSize,
+      });
+
+      // Local instant preview
+      const localBlobUrl = URL.createObjectURL(file);
+      setPreviewUrl(localBlobUrl);
+      setProgress(35);
+      setStatusText('Menyiapkan upload R2...');
+
+      // 1. Dapatkan presigned PUT URL dari API sesuai jenis aset
+      let presign: { key: string; uploadUrl: string; publicUrl: string };
+      if (kind === 'avatar' || kind === 'logo') {
+        presign = await presignWorkspaceAssetCommand(kind, {
+          fileName: file.name,
+          contentType: file.type.toLowerCase(),
+          contentLength: file.size,
+        });
+      } else {
+        presign = await presignCoverUploadCommand({
+          programId,
+          fileName: file.name,
+          contentType: file.type.toLowerCase(),
+          contentLength: file.size,
+        });
+      }
+
+      setProgress(60);
+      setStatusText('Mengunggah langsung ke Cloudflare R2...');
 
       // 2. Direct upload PUT ke Cloudflare R2
       await directUploadToR2(presign.uploadUrl, file, file.type.toLowerCase());
       setProgress(85);
+      setStatusText('Memfinalisasi aset...');
 
-      // 3. Jika sudah ada programId yang tersimpan, confirm ke backend
+      // 3. Jika sudah ada programId yang tersimpan (khusus program cover), confirm ke backend
       let finalPublicUrl = presign.publicUrl;
       let finalKey = presign.key;
 
-      if (programId) {
+      if (kind === 'cover' && programId) {
         const confirmed = await confirmCoverUploadCommand({
           programId,
           key: presign.key,
@@ -119,7 +182,7 @@ export function ImageUpload({
     setPreviewUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
 
-    if (programId) {
+    if (kind === 'cover' && programId) {
       try {
         await deleteCoverImageCommand(programId);
       } catch (err: any) {
@@ -129,6 +192,8 @@ export function ImageUpload({
 
     if (onRemoved) onRemoved();
   };
+
+  const isSquare = effectiveAspectRatio === '1/1';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -159,23 +224,29 @@ export function ImageUpload({
           <div
             style={{
               position: 'relative',
-              width: '100%',
-              aspectRatio: '16/9',
+              width: isSquare ? '140px' : '100%',
+              maxWidth: isSquare ? '140px' : '100%',
+              aspectRatio: isSquare ? '1/1' : effectiveAspectRatio === 'auto' ? 'auto' : '16/9',
+              minHeight: isSquare ? '140px' : effectiveAspectRatio === 'auto' ? '80px' : 'auto',
+              maxHeight: isSquare ? '140px' : effectiveAspectRatio === 'auto' ? '140px' : 'auto',
               backgroundColor: '#0F172A',
               overflow: 'hidden',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              borderRadius: isSquare ? '4px' : '0px',
+              margin: isSquare ? '0 auto' : undefined,
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={previewUrl}
-              alt="Cover program preview"
+              alt="Asset preview"
               style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
+                width: isSquare ? '100%' : effectiveAspectRatio === 'auto' ? 'auto' : '100%',
+                height: isSquare ? '100%' : effectiveAspectRatio === 'auto' ? '100%' : '100%',
+                maxHeight: '140px',
+                objectFit: isSquare ? 'cover' : effectiveAspectRatio === 'auto' ? 'contain' : 'cover',
               }}
             />
             {uploading && (
@@ -183,28 +254,41 @@ export function ImageUpload({
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  backgroundColor: 'rgba(15, 23, 42, 0.65)',
+                  backgroundColor: 'rgba(15, 23, 42, 0.75)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#FFFFFF',
                   gap: '8px',
-                  padding: '16px',
+                  padding: '8px',
+                  backdropFilter: 'blur(2px)',
                 }}
               >
-                <div style={{ fontSize: '13px', fontWeight: 700 }}>Mengunggah langsung ke R2... ({progress}%)</div>
-                <div style={{ width: '80%', height: '6px', backgroundColor: 'rgba(255,255,255,0.2)', overflow: 'hidden' }}>
-                  <div style={{ width: `${progress}%`, height: '100%', backgroundColor: 'var(--accent)' }} />
+                <div style={{ fontSize: '11px', fontWeight: 700, textAlign: 'center' }}>{statusText}</div>
+                <div style={{ width: '80%', height: '4px', backgroundColor: 'rgba(255,255,255,0.2)', overflow: 'hidden' }}>
+                  <div style={{ width: `${progress}%`, height: '100%', backgroundColor: 'var(--accent)', transition: 'width 150ms ease' }} />
                 </div>
+                {compressionInfo && (
+                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.85)', fontWeight: 500, textAlign: 'center' }}>
+                    {formatBytes(compressionInfo.compressedSize)} (WebP)
+                  </div>
+                )}
               </div>
             )}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>
-              Cover aktif · Public R2 Storage
-            </span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--muted-strong)', fontWeight: 600 }}>
+                {defaultActiveText}
+              </span>
+              {compressionInfo && (
+                <span className="tag tag-accent" style={{ fontSize: '10px', padding: '2px 6px' }}>
+                  WebP ({formatBytes(compressionInfo.compressedSize)})
+                </span>
+              )}
+            </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
                 type="button"
@@ -255,10 +339,10 @@ export function ImageUpload({
 
           <div>
             <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--ink)' }}>
-              Klik atau seret gambar ke sini untuk upload cover
+              {defaultLabel}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px' }}>
-              Maksimal 2 MB · Format JPG, PNG, atau WebP
+              Otomatis dikonversi ke WebP &amp; dikompresi agar loading super cepat
             </div>
           </div>
 
@@ -280,7 +364,7 @@ export function ImageUpload({
       )}
 
       <div style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: 1.4 }}>
-        Keterangan: Maksimal ukuran upload <strong>2 MB</strong>. Gambar akan disimpan secara publik di Cloudflare R2 untuk ditampilkan di Storefront & Katalog Program.
+        ⚡ <strong>Optimasi Otomatis:</strong> Gambar apa pun (JPG, PNG, WebP) akan otomatis diubah ke format modern <strong>WebP</strong> dan di-<em>resize</em> secara instan di browser sebelum diunggah ke Cloudflare R2.
       </div>
     </div>
   );

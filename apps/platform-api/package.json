@@ -17,6 +17,9 @@
     "b6:live-acceptance": "tsx tooling/b6-live-acceptance.ts",
     "b6.1:live-acceptance": "tsx tooling/b6.1-live-acceptance.ts",
     "v0.1:live-acceptance": "tsx tooling/v01-live-acceptance.ts",
+    "demo:staging:seed": "tsx ../../scripts/seed-staging-demo.ts",
+    "demo:staging:verify": "tsx ../../scripts/verify-staging-demo.ts",
+    "demo:staging:reset": "tsx ../../scripts/reset-staging-demo.ts",
     "build": "wrangler deploy --dry-run --outdir dist",
     "deploy:cf": "wrangler deploy",
     "deploy:staging:cf": "wrangler deploy --env staging"

@@ -41,6 +41,7 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
             title={program.title}
             publicLabel={presentation.heroEyebrow}
             variant={presentation.coverVariant}
+            imageUrl={presentation.imageUrl || (program as any).coverImageUrl}
             aspectRatio="16 / 10"
           />
        </div>

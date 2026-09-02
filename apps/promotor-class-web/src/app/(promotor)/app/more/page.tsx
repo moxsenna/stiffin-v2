@@ -14,7 +14,7 @@ const MORE_LINKS: Array<{ label: string; href: string; note: string }>= [
 export default function MorePage() {
   return (
     <PromotorShell>
-     <PageHeader kicker="PromotorClass" title="Lainnya" sub="Aktivitas, storefront, dan pengaturan" />
+     <PageHeader kicker="Talira Class" title="Lainnya" sub="Aktivitas, storefront, dan pengaturan" />
      <div>
        {MORE_LINKS.map((link) =>(
           <Link key={link.href} href={link.href} className="list-row">

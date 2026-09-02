@@ -4,4 +4,13 @@ export type {
   ProgramPublicPresentation,
   PublicProgramCatalogItem,
   PublicProgramDetail,
+  StorefrontTheme,
+  UpdateStorefrontThemeRequest,
+  PublicStorefrontTheme,
+  StorefrontStylePreset,
+  StorefrontFontPreset,
+  StorefrontRadiusPreset,
+  StorefrontButtonPreset,
+  StorefrontLayoutPreset,
+  HeroAlignment,
 } from '@promotor/contracts';

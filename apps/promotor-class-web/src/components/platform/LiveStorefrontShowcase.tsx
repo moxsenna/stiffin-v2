@@ -132,7 +132,7 @@ export function LiveStorefrontShowcase() {
 
             {/* Testimonial Quote */}
             <div style={{ padding: '14px', backgroundColor: 'var(--color-primary-light)', borderRadius: '12px', border: '1px solid var(--color-primary-border)', fontSize: '12px', color: '#1f5238', lineHeight: 1.55 }}>
-              &ldquo;Sejak memakai PromotorClass, peserta yang mendaftar program gratis saya meningkat 3x lipat, dan hampir separuhnya lanjut mengambil sesi tes STIFIn untuk seluruh anggota keluarga.&rdquo;
+              &ldquo;Sejak memakai Talira Class, peserta yang mendaftar program gratis saya meningkat 3x lipat, dan hampir separuhnya lanjut mengambil sesi tes STIFIn untuk seluruh anggota keluarga.&rdquo;
             </div>
           </div>
         </div>

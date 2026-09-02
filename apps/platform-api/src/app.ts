@@ -128,7 +128,7 @@ export function createApp(deps?: AppDependencies) {
       },
     });
 
-    return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, 500);
+    return c.json({ error: { code: 'INTERNAL_ERROR', message: err?.message || 'Internal error' } }, 500);
   });
 
   // GET /health — Light probe (Zero DB calls)
@@ -206,6 +206,9 @@ export function createApp(deps?: AppDependencies) {
           allowed = [
             'https://stiffin-promotor-class.moxsenna.workers.dev',
             'https://stiffin-promotor-flow.moxsenna.workers.dev',
+            'https://stiffin-promotor-class.senna.my.id',
+            'https://stiffin-promotor-flow.senna.my.id',
+            'https://stiffin-promotor-api.senna.my.id',
             ...prodTrusted,
           ];
         } else if (isStaging) {
@@ -216,6 +219,9 @@ export function createApp(deps?: AppDependencies) {
           allowed = [
             'https://promotor-class-staging.moxsenna.workers.dev',
             'https://promotor-flow-staging.moxsenna.workers.dev',
+            'https://stiffin-promotor-class.senna.my.id',
+            'https://stiffin-promotor-flow.senna.my.id',
+            'https://stiffin-promotor-api.senna.my.id',
             ...stagingTrusted,
           ];
         } else if (isDevelopment) {
@@ -869,6 +875,54 @@ export function createApp(deps?: AppDependencies) {
   );
 
   registerClassRoutes(app);
+
+  // ==========================================
+  // Canonical Demo Workspace Seeding (Protected Operator Endpoint)
+  // ==========================================
+  app.post('/api/v1/demo/seed', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const secret = c.req.header('x-demo-seed-key');
+    const expectedSecret = (c.env as any)?.DEMO_SEED_KEY || 'StiffinDemo2026!';
+    if (secret !== expectedSecret) {
+      return c.json({ error: { code: 'UNAUTHORIZED', message: 'Invalid demo seed key' } }, 401);
+    }
+
+    try {
+      const { seedStagingDemo } = await import('./services/demo-seed-service');
+      const db = (c.get as any)('db');
+      if (!db) {
+        throw new Error('Database instance missing on context');
+      }
+      const result = await seedStagingDemo(db, {
+        promoterEmail: 'demo.promotor@stifin.id',
+        promoterPassword: 'DemoPromotor123!',
+      });
+      return c.json({ success: true, message: 'Canonical demo workspace seeded successfully', result }, 200);
+    } catch (err: any) {
+      return c.json({ success: false, error: err?.message, stack: err?.stack }, 500);
+    }
+  });
+
+  app.get('/api/v1/demo/verify', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const secret = c.req.header('x-demo-seed-key');
+    const expectedSecret = (c.env as any)?.DEMO_SEED_KEY || 'StiffinDemo2026!';
+    if (secret !== expectedSecret) {
+      return c.json({ error: { code: 'UNAUTHORIZED', message: 'Invalid demo seed key' } }, 401);
+    }
+
+    try {
+      const { verifyStagingDemo } = await import('./services/demo-seed-service');
+      const db = (c.get as any)('db');
+      if (!db) {
+        throw new Error('Database instance missing on context');
+      }
+      const result = await verifyStagingDemo(db);
+      return c.json({ success: true, result }, 200);
+    } catch (err: any) {
+      return c.json({ success: false, error: err?.message, stack: err?.stack }, 500);
+    }
+  });
 
   return app;
 }

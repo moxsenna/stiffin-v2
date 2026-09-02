@@ -137,6 +137,297 @@ export const ProgramSchema = z.object({
 
 export type Program = z.infer<typeof ProgramSchema>;
 
+// ==========================================
+// 3b. Storefront Brand Customization Contracts
+// ==========================================
+export const HexColorSchema = z
+  .string()
+  .regex(/^#[0-9a-fA-F]{6}$/, 'Must be a valid 6-character hex color (#RRGGBB)');
+
+export type HexColor = z.infer<typeof HexColorSchema>;
+
+export const StorefrontStylePresetSchema = z.enum(['MODERNIST', 'SOFT', 'MINIMAL', 'EDITORIAL']);
+export type StorefrontStylePreset = z.infer<typeof StorefrontStylePresetSchema>;
+
+export const StorefrontFontPresetSchema = z.enum(['ARCHIVO', 'INTER', 'MANROPE', 'LORA']);
+export type StorefrontFontPreset = z.infer<typeof StorefrontFontPresetSchema>;
+
+export const StorefrontRadiusPresetSchema = z.enum(['SHARP', 'SOFT', 'ROUNDED']);
+export type StorefrontRadiusPreset = z.infer<typeof StorefrontRadiusPresetSchema>;
+
+export const StorefrontButtonPresetSchema = z.enum(['SOLID', 'OUTLINE', 'SOFT']);
+export type StorefrontButtonPreset = z.infer<typeof StorefrontButtonPresetSchema>;
+
+export const StorefrontLayoutPresetSchema = z.enum(['LIST', 'GRID']);
+export type StorefrontLayoutPreset = z.infer<typeof StorefrontLayoutPresetSchema>;
+
+export const HeroAlignmentSchema = z.enum(['LEFT', 'CENTER']);
+export type HeroAlignment = z.infer<typeof HeroAlignmentSchema>;
+
+export const StorefrontThemeSchema = z.object({
+  id: z.string().uuid().optional(),
+  organizationId: z.string().uuid(),
+  brandName: z.string().min(1, 'Brand name cannot be empty').max(100),
+  tagline: z.string().max(255).optional().nullable(),
+  logoUrl: z.string().url().regex(/^https:\/\//, 'Logo URL must use HTTPS').optional().nullable(),
+  primaryColor: HexColorSchema,
+  accentColor: HexColorSchema,
+  backgroundColor: HexColorSchema,
+  surfaceColor: HexColorSchema,
+  textColor: HexColorSchema,
+  mutedTextColor: HexColorSchema,
+  stylePreset: StorefrontStylePresetSchema,
+  fontPreset: StorefrontFontPresetSchema,
+  radiusPreset: StorefrontRadiusPresetSchema,
+  buttonPreset: StorefrontButtonPresetSchema,
+  layoutPreset: StorefrontLayoutPresetSchema,
+  heroAlignment: HeroAlignmentSchema,
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+export type StorefrontTheme = z.infer<typeof StorefrontThemeSchema>;
+
+export const UpdateStorefrontThemeRequestSchema = z.object({
+  brandName: z.string().min(1, 'Brand name cannot be empty').max(100),
+  tagline: z.string().max(255).optional().nullable(),
+  logoUrl: z.string().url().regex(/^https:\/\//, 'Logo URL must use HTTPS').optional().nullable(),
+  primaryColor: HexColorSchema,
+  accentColor: HexColorSchema,
+  backgroundColor: HexColorSchema,
+  surfaceColor: HexColorSchema,
+  textColor: HexColorSchema,
+  mutedTextColor: HexColorSchema,
+  stylePreset: StorefrontStylePresetSchema,
+  fontPreset: StorefrontFontPresetSchema,
+  radiusPreset: StorefrontRadiusPresetSchema,
+  buttonPreset: StorefrontButtonPresetSchema,
+  layoutPreset: StorefrontLayoutPresetSchema,
+  heroAlignment: HeroAlignmentSchema,
+});
+export type UpdateStorefrontThemeRequest = z.infer<typeof UpdateStorefrontThemeRequestSchema>;
+
+export const PublicStorefrontThemeSchema = z.object({
+  brandName: z.string(),
+  tagline: z.string().optional().nullable(),
+  logoUrl: z.string().optional().nullable(),
+  primaryColor: HexColorSchema,
+  accentColor: HexColorSchema,
+  backgroundColor: HexColorSchema,
+  surfaceColor: HexColorSchema,
+  textColor: HexColorSchema,
+  mutedTextColor: HexColorSchema,
+  stylePreset: StorefrontStylePresetSchema,
+  fontPreset: StorefrontFontPresetSchema,
+  radiusPreset: StorefrontRadiusPresetSchema,
+  buttonPreset: StorefrontButtonPresetSchema,
+  layoutPreset: StorefrontLayoutPresetSchema,
+  heroAlignment: HeroAlignmentSchema,
+});
+export type PublicStorefrontTheme = z.infer<typeof PublicStorefrontThemeSchema>;
+
+export const TALIRA_DEFAULT_STOREFRONT_THEME: PublicStorefrontTheme = {
+  brandName: 'Talira Class',
+  tagline: null,
+  logoUrl: null,
+  primaryColor: '#201e1d',
+  accentColor: '#ec3013',
+  backgroundColor: '#f3f2f2',
+  surfaceColor: '#ffffff',
+  textColor: '#201e1d',
+  mutedTextColor: '#5a5954',
+  stylePreset: 'MODERNIST',
+  fontPreset: 'ARCHIVO',
+  radiusPreset: 'SHARP',
+  buttonPreset: 'SOLID',
+  layoutPreset: 'LIST',
+  heroAlignment: 'LEFT',
+};
+
+export const STYLE_PRESET_TOKENS: Record<StorefrontStylePreset, Omit<PublicStorefrontTheme, 'brandName' | 'tagline' | 'logoUrl'>> = {
+  MODERNIST: {
+    primaryColor: '#201e1d',
+    accentColor: '#ec3013',
+    backgroundColor: '#f3f2f2',
+    surfaceColor: '#ffffff',
+    textColor: '#201e1d',
+    mutedTextColor: '#5a5954',
+    stylePreset: 'MODERNIST',
+    fontPreset: 'ARCHIVO',
+    radiusPreset: 'SHARP',
+    buttonPreset: 'SOLID',
+    layoutPreset: 'LIST',
+    heroAlignment: 'LEFT',
+  },
+  SOFT: {
+    primaryColor: '#2d3a34',
+    accentColor: '#437a65',
+    backgroundColor: '#f7f6f2',
+    surfaceColor: '#ffffff',
+    textColor: '#242c28',
+    mutedTextColor: '#637069',
+    stylePreset: 'SOFT',
+    fontPreset: 'MANROPE',
+    radiusPreset: 'ROUNDED',
+    buttonPreset: 'SOFT',
+    layoutPreset: 'GRID',
+    heroAlignment: 'CENTER',
+  },
+  MINIMAL: {
+    primaryColor: '#111827',
+    accentColor: '#4b5563',
+    backgroundColor: '#fafafa',
+    surfaceColor: '#ffffff',
+    textColor: '#111827',
+    mutedTextColor: '#6b7280',
+    stylePreset: 'MINIMAL',
+    fontPreset: 'INTER',
+    radiusPreset: 'SOFT',
+    buttonPreset: 'SOLID',
+    layoutPreset: 'LIST',
+    heroAlignment: 'LEFT',
+  },
+  EDITORIAL: {
+    primaryColor: '#1c1917',
+    accentColor: '#c2410c',
+    backgroundColor: '#f5f2eb',
+    surfaceColor: '#ffffff',
+    textColor: '#1c1917',
+    mutedTextColor: '#57534e',
+    stylePreset: 'EDITORIAL',
+    fontPreset: 'LORA',
+    radiusPreset: 'SHARP',
+    buttonPreset: 'OUTLINE',
+    layoutPreset: 'LIST',
+    heroAlignment: 'CENTER',
+  },
+};
+
+// ==========================================
+// 3c. Color, Contrast & Token Utilities
+// ==========================================
+export function parseHexColor(hex: string): { r: number; g: number; b: number } | null {
+  const match = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/.exec(hex.trim());
+  if (!match) return null;
+  return {
+    r: parseInt(match[1], 16),
+    g: parseInt(match[2], 16),
+    b: parseInt(match[3], 16),
+  };
+}
+
+export function getLuminance(hex: string): number {
+  const rgb = parseHexColor(hex);
+  if (!rgb) return 0;
+  const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+export function getContrastRatio(hex1: string, hex2: string): number {
+  const lum1 = getLuminance(hex1);
+  const lum2 = getLuminance(hex2);
+  const lighter = Math.max(lum1, lum2);
+  const darker = Math.min(lum1, lum2);
+  return Number(((lighter + 0.05) / (darker + 0.05)).toFixed(2));
+}
+
+export function getReadableTextColor(bgHex: string): '#FFFFFF' | '#111827' {
+  const contrastWithWhite = getContrastRatio('#FFFFFF', bgHex);
+  const contrastWithDark = getContrastRatio('#111827', bgHex);
+  return contrastWithWhite >= contrastWithDark ? '#FFFFFF' : '#111827';
+}
+
+export function validateThemeContrast(theme: PublicStorefrontTheme): {
+  isAccessible: boolean;
+  issues: string[];
+  contrastRatios: {
+    textOnBackground: number;
+    textOnSurface: number;
+    mutedOnBackground: number;
+    mutedOnSurface: number;
+    primaryBtnContrast: number;
+    accentBtnContrast: number;
+  };
+} {
+  const textOnBackground = getContrastRatio(theme.textColor, theme.backgroundColor);
+  const textOnSurface = getContrastRatio(theme.textColor, theme.surfaceColor);
+  const mutedOnBackground = getContrastRatio(theme.mutedTextColor, theme.backgroundColor);
+  const mutedOnSurface = getContrastRatio(theme.mutedTextColor, theme.surfaceColor);
+
+  const primaryBtnFg = getReadableTextColor(theme.primaryColor);
+  const primaryBtnContrast = getContrastRatio(primaryBtnFg, theme.primaryColor);
+
+  const accentBtnFg = getReadableTextColor(theme.accentColor);
+  const accentBtnContrast = getContrastRatio(accentBtnFg, theme.accentColor);
+
+  const issues: string[] = [];
+  if (textOnBackground < 4.5) {
+    issues.push(`Kontras teks pada latar belakang (${textOnBackground}:1) di bawah standar WCAG AA 4.5:1`);
+  }
+  if (textOnSurface < 4.5) {
+    issues.push(`Kontras teks pada kartu/permukaan (${textOnSurface}:1) di bawah standar WCAG AA 4.5:1`);
+  }
+  if (mutedOnBackground < 3.0) {
+    issues.push(`Kontras teks sekunder pada latar belakang (${mutedOnBackground}:1) di bawah 3:1`);
+  }
+  if (mutedOnSurface < 3.0) {
+    issues.push(`Kontras teks sekunder pada kartu/permukaan (${mutedOnSurface}:1) di bawah 3:1`);
+  }
+
+  return {
+    isAccessible: issues.length === 0,
+    issues,
+    contrastRatios: {
+      textOnBackground,
+      textOnSurface,
+      mutedOnBackground,
+      mutedOnSurface,
+      primaryBtnContrast,
+      accentBtnContrast,
+    },
+  };
+}
+
+export const FONT_PRESET_FAMILY_MAP: Record<StorefrontFontPreset, string> = {
+  ARCHIVO: "'Archivo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  INTER: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  MANROPE: "'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  LORA: "'Lora', Georgia, 'Times New Roman', Cambria, serif",
+};
+
+export const RADIUS_PRESET_VALUE_MAP: Record<StorefrontRadiusPreset, { sm: string; md: string; lg: string; pill: string }> = {
+  SHARP: { sm: '0px', md: '0px', lg: '0px', pill: '0px' },
+  SOFT: { sm: '4px', md: '6px', lg: '8px', pill: '9999px' },
+  ROUNDED: { sm: '8px', md: '12px', lg: '16px', pill: '9999px' },
+};
+
+export function generateStorefrontCssVariables(theme: PublicStorefrontTheme): Record<string, string> {
+  const font = FONT_PRESET_FAMILY_MAP[theme.fontPreset] || FONT_PRESET_FAMILY_MAP.ARCHIVO;
+  const radius = RADIUS_PRESET_VALUE_MAP[theme.radiusPreset] || RADIUS_PRESET_VALUE_MAP.SHARP;
+  const primaryFg = getReadableTextColor(theme.primaryColor);
+  const accentFg = getReadableTextColor(theme.accentColor);
+
+  return {
+    '--brand-primary': theme.primaryColor,
+    '--brand-primary-fg': primaryFg,
+    '--brand-accent': theme.accentColor,
+    '--brand-accent-fg': accentFg,
+    '--brand-bg': theme.backgroundColor,
+    '--brand-surface': theme.surfaceColor,
+    '--brand-text': theme.textColor,
+    '--brand-muted': theme.mutedTextColor,
+    '--brand-radius-sm': radius.sm,
+    '--brand-radius': radius.md,
+    '--brand-radius-lg': radius.lg,
+    '--brand-font': font,
+    '--brand-btn-preset': theme.buttonPreset,
+    '--brand-layout-preset': theme.layoutPreset,
+    '--brand-hero-align': theme.heroAlignment,
+  };
+}
+
 export const PublicWorkspaceProfileSchema = z.object({
   workspaceSlug: z.string(),
   displayName: z.string(),
@@ -149,6 +440,7 @@ export const PublicWorkspaceProfileSchema = z.object({
   whatsappPhoneE164: PhoneE164Schema.optional().nullable(),
   avatarUrl: z.string().optional().nullable(),
   logoUrl: z.string().optional().nullable(),
+  theme: PublicStorefrontThemeSchema.optional().nullable(),
   stats: z.object({
     familiesHelped: z.string().optional(),
     programCount: z.union([z.string(), z.number()]).optional(),

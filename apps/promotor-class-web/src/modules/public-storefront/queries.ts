@@ -3,6 +3,8 @@ import {
   PublicWorkspaceProfile,
   PublicProgramCatalogItem,
   PublicProgramDetail,
+  StorefrontTheme,
+  UpdateStorefrontThemeRequest,
 } from './types';
 
 export async function getPublicWorkspaceQuery(
@@ -27,3 +29,25 @@ export async function getPublicProgramDetailQuery(
 ): Promise<PublicProgramDetail | null> {
   return getPublicStorefrontRepository().getPublicProgramDetail(workspaceSlug, programSlug);
 }
+
+export async function getStorefrontThemeQuery(): Promise<StorefrontTheme> {
+  return getPublicStorefrontRepository().getStorefrontTheme();
+}
+
+export async function updateStorefrontThemeMutation(
+  theme: UpdateStorefrontThemeRequest
+): Promise<StorefrontTheme> {
+  return getPublicStorefrontRepository().updateStorefrontTheme(theme);
+}
+
+export async function resetStorefrontThemeMutation(): Promise<StorefrontTheme> {
+  return getPublicStorefrontRepository().resetStorefrontTheme();
+}
+
+export async function presignWorkspaceAssetCommand(
+  kind: 'avatar' | 'logo',
+  params: { fileName: string; contentType: string; contentLength: number }
+) {
+  return getPublicStorefrontRepository().presignWorkspaceAsset(kind, params);
+}
+

@@ -31,3 +31,4 @@ export * from './learning-events';
 export * from './learning-signals';
 export * from './learner-sessions';
 export * from './integration-outbox';
+export * from './storefront-themes';

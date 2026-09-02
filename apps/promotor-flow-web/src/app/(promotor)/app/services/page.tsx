@@ -26,7 +26,7 @@ export default function ServicesPage() {
 
   return (
     <AppShell showBottomNav={true}>
-     <PageHeader kicker="PromotorFlow" title="Layanan STIFIn" sub="Katalog layanan tes biometrik & sesi konsultasi aktif." />
+     <PageHeader kicker="Talira Flow" title="Layanan STIFIn" sub="Katalog layanan tes biometrik & sesi konsultasi aktif." />
 
      {loadError && <ErrorState title="Gagal memuat layanan" detail={loadError} onRetry={() =>loadServices()} />}
 

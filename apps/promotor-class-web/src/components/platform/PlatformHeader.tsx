@@ -49,26 +49,21 @@ export function PlatformHeader() {
             color: 'var(--color-text-main)',
           }}
         >
-          <span
+          <img
+            src="/icon.webp"
+            alt="Talira Class"
+            width={36}
+            height={36}
             style={{
               width: '36px',
               height: '36px',
-              borderRadius: '10px',
-              backgroundColor: 'var(--color-primary)',
-              color: '#FFFFFF',
-              display: 'grid',
-              placeItems: 'center',
-              fontWeight: 800,
-              fontSize: '16px',
-              letterSpacing: '-0.02em',
-              boxShadow: '0 2px 6px rgba(40, 99, 68, 0.25)',
+              objectFit: 'contain',
+              flexShrink: 0,
             }}
-          >
-            P
-          </span>
+          />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontWeight: 800, fontSize: '16px', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-              PromotorClass
+              Talira Class
             </span>
             <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 550 }}>
               Client Education OS

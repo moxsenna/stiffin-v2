@@ -2,6 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
   "name": "stiffin-promotor-class",
+  "account_id": "06738739e65bc88a495de618cabfa5ca",
   "compatibility_date": "2026-08-12",
   "compatibility_flags": [
     "nodejs_compat",

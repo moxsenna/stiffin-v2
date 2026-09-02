@@ -35,26 +35,24 @@ export const FlowLandingFooter: React.FC = () => {
                 marginBottom: '14px',
               }}
             >
-              <div
+              <img
+                src="/icon.webp"
+                alt="Talira Flow"
+                width={32}
+                height={32}
                 style={{
                   width: '32px',
                   height: '32px',
-                  borderRadius: 'var(--radius-sm)',
-                  backgroundColor: 'var(--color-primary)',
-                  color: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  objectFit: 'contain',
+                  flexShrink: 0,
                 }}
-              >
-                <LightningIcon size={18} color="#FFFFFF" />
-              </div>
+              />
               <span style={{ fontSize: '17px', fontWeight: 850, letterSpacing: '-0.03em' }}>
-                PromotorFlow
+                Talira Flow
               </span>
             </Link>
             <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-              Sistem operasi eksekusi harian promotor STIFIn. Merapikan pipeline prospek, jadwal booking 14-hari, dan siklus retensi aftercare.
+              Sistem operasi eksekusi harian promotor. Merapikan pipeline prospek, jadwal booking 14-hari, dan siklus retensi aftercare.
             </p>
           </div>
 
@@ -77,9 +75,9 @@ export const FlowLandingFooter: React.FC = () => {
               Ekosistem Terintegrasi
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13.5px' }}>
-              <span style={{ color: 'var(--color-text-secondary)' }}>PromotorFlow (Daily Execution OS)</span>
-              <span style={{ color: 'var(--color-text-secondary)' }}>PromotorClass (Client Education OS)</span>
-              <span style={{ color: 'var(--color-text-secondary)' }}>STIFIn Biometric Intelligence</span>
+              <span style={{ color: 'var(--color-text-secondary)' }}>Talira Flow (Daily Execution OS)</span>
+              <span style={{ color: 'var(--color-text-secondary)' }}>Talira Class (Client Education OS)</span>
+              <span style={{ color: 'var(--color-text-secondary)' }}>Talira Platform Intelligence</span>
             </div>
           </div>
 
@@ -114,10 +112,10 @@ export const FlowLandingFooter: React.FC = () => {
           }}
         >
           <div>
-            © {new Date().getFullYear()} PromotorFlow. Hak cipta dilindungi undang-undang.
+            © {new Date().getFullYear()} Talira Flow. Hak cipta dilindungi undang-undang.
           </div>
           <div>
-            Dibuat untuk praktisi, promotor, dan cabang STIFIn di seluruh Indonesia.
+            Dibuat untuk praktisi, promotor, dan konsultan edukasi di seluruh Indonesia.
           </div>
         </div>
       </div>

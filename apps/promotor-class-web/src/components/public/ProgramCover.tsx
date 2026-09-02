@@ -6,7 +6,7 @@ import React from 'react';
 interface ProgramCoverProps {
   title: string;
   publicLabel?: string | null;
-  variant?: 'cover-a' | 'cover-b' | 'cover-c';
+  variant?: 'cover-a' | 'cover-b' | 'cover-c' | 'cover-d' | string;
   imageUrl?: string | null;
   coverImageUrl?: string | null;
   aspectRatio?: string;
@@ -20,19 +20,32 @@ export function ProgramCover({
   coverImageUrl,
   aspectRatio = '16 / 10',
 }: ProgramCoverProps) {
-  const imageMap = {
+  const imageMap: Record<string, string> = {
     'cover-a': '/images/program_cover_7hari.webp',
     'cover-b': '/images/program_cover_30hari.webp',
     'cover-c': '/images/program_cover_parenting.webp',
+    'cover-d': '/images/program_cover_remaja.webp',
   };
 
-  const bgColors = {
+  const bgColors: Record<string, string> = {
     'cover-a': '#dce9de',
     'cover-b': '#ede3d1',
     'cover-c': '#e1e5ee',
+    'cover-d': '#1E293B',
   };
 
-  const activeImage = coverImageUrl || imageUrl || imageMap[variant] || imageMap['cover-a'];
+  const defaultFallback =
+    title.toLowerCase().includes('remaja')
+      ? '/images/program_cover_remaja.webp'
+      : (imageMap[variant] || imageMap['cover-a']);
+
+  const [imgSrc, setImgSrc] = React.useState<string>(
+    coverImageUrl || imageUrl || defaultFallback
+  );
+
+  React.useEffect(() => {
+    setImgSrc(coverImageUrl || imageUrl || defaultFallback);
+  }, [coverImageUrl, imageUrl, defaultFallback]);
 
   return (
     <div
@@ -46,11 +59,16 @@ export function ProgramCover({
         backgroundColor: bgColors[variant] || bgColors['cover-a'],
       }}
     >
-     {/* Background Cover Image */}
-      {activeImage && (
+      {/* Background Cover Image */}
+      {imgSrc && (
         <img
-          src={activeImage}
+          src={imgSrc}
           alt={title}
+          onError={() => {
+            if (imgSrc !== defaultFallback) {
+              setImgSrc(defaultFallback);
+            }
+          }}
           style={{
             position: 'absolute',
             inset: 0,
@@ -60,7 +78,7 @@ export function ProgramCover({
             objectPosition: 'center',
           }}
         />
-     )}
+      )}
 
       {/* Gradient Overlay for Text Readability */}
       <div

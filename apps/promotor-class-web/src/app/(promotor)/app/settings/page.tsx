@@ -158,7 +158,7 @@ export default function SettingsPage() {
           >
            <h3 style={{ fontSize: '16px', fontWeight: 780, marginBottom: '4px' }}>Akun & Sesi</h3>
            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '14px' }}>
-             Keluar dari sesi PromotorClass pada perangkat ini.
+             Keluar dari sesi Talira Class pada perangkat ini.
             </p>
            <button
               onClick={handleLogout}

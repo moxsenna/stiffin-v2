@@ -20,6 +20,9 @@
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
     "test:integration": "pnpm --filter @promotor/platform-api test:integration",
+    "demo:staging:seed": "pnpm --filter @promotor/platform-api exec tsx ../../scripts/seed-staging-demo.ts",
+    "demo:staging:verify": "pnpm --filter @promotor/platform-api exec tsx ../../scripts/verify-staging-demo.ts",
+    "demo:staging:reset": "pnpm --filter @promotor/platform-api exec tsx ../../scripts/reset-staging-demo.ts",
     "test:e2e": "playwright test",
     "test:e2e:sell-ready": "playwright test --config=playwright.sell-ready.config.ts",
     "test:e2e:staging": "playwright test --config=playwright.staging.config.ts"
@@ -33,6 +36,7 @@
     "esbuild": "^0.28.2",
     "next": "15.3.8",
     "sharp": "^0.35.3",
+    "tsx": "^4.19.3",
     "typescript": "^5.3.3"
   },
   "dependencies": {

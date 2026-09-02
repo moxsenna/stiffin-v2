@@ -7,16 +7,18 @@ interface PublicHeaderProps {
   workspaceSlug: string;
   displayName?: string | null;
   tagline?: string | null;
-  onPrimaryClick?: () =>void;
+  logoUrl?: string | null;
+  onPrimaryClick?: () => void;
 }
 
 export function PublicHeader({
   workspaceSlug,
   displayName = '',
   tagline = '',
+  logoUrl,
   onPrimaryClick,
 }: PublicHeaderProps) {
-  const avatarLetter = displayName ? displayName.charAt(0).toUpperCase() : 'R';
+  const avatarLetter = displayName ? displayName.charAt(0).toUpperCase() : 'T';
 
   return (
     <header
@@ -24,11 +26,12 @@ export function PublicHeader({
         position: 'sticky',
         top: 0,
         zIndex: 30,
-        backgroundColor: 'rgba(247, 247, 245, 0.94)',
-        borderBottom: '1px solid var(--color-divider)',
+        backgroundColor: 'var(--brand-surface, rgba(247, 247, 245, 0.94))',
+        borderBottom: '1px solid var(--color-divider, #e5e7eb)',
+        backdropFilter: 'blur(8px)',
       }}
     >
-     <div
+      <div
         className="container"
         style={{
           height: '68px',
@@ -38,7 +41,7 @@ export function PublicHeader({
           gap: '16px',
         }}
       >
-       <Link
+        <Link
           href={`/p/${workspaceSlug}`}
           style={{
             display: 'flex',
@@ -48,100 +51,126 @@ export function PublicHeader({
             color: 'inherit',
           }}
         >
-         <div
-            style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '0px',
-              backgroundColor: 'var(--accent-dark)',
-              color: '#FFFFFF',
-              display: 'grid',
-              placeItems: 'center',
-              fontWeight: 800,
-              fontSize: '15px',
-              flexShrink: 0,
-            }}
-          >
-           {avatarLetter}
-          </div>
-         <div>
-           <span style={{ display: 'block', fontSize: '14px', fontWeight: 760, lineHeight: 1.2 }}>
-             {displayName}
-            </span>
-           <span
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={displayName || 'Logo'}
               style={{
-                display: 'block',
-                fontSize: '11px',
-                color: 'var(--color-text-muted)',
-                marginTop: '2px',
+                width: '38px',
+                height: '38px',
+                borderRadius: 'var(--brand-radius, 0px)',
+                objectFit: 'cover',
+                flexShrink: 0,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: 'var(--brand-radius, 0px)',
+                backgroundColor: 'var(--brand-primary, #201e1d)',
+                color: 'var(--brand-primary-fg, #FFFFFF)',
+                display: 'grid',
+                placeItems: 'center',
+                fontWeight: 800,
+                fontSize: '15px',
+                flexShrink: 0,
               }}
             >
-             {tagline}
+              {avatarLetter}
+            </div>
+          )}
+          <div>
+            <span
+              style={{
+                display: 'block',
+                fontSize: '15px',
+                fontWeight: 750,
+                lineHeight: 1.2,
+                color: 'var(--brand-text, #201e1d)',
+              }}
+            >
+              {displayName}
             </span>
-         </div>
-       </Link>
+            {tagline && (
+              <span
+                style={{
+                  display: 'block',
+                  fontSize: '11px',
+                  color: 'var(--brand-muted, #5a5954)',
+                  marginTop: '2px',
+                }}
+              >
+                {tagline}
+              </span>
+            )}
+          </div>
+        </Link>
 
-       <nav className="desktop-only" style={{ alignItems: 'center', gap: '8px' }}>
-         <a
+        <nav className="desktop-only" style={{ alignItems: 'center', gap: '8px' }}>
+          <a
             href="#programs"
             style={{
               padding: '8px 12px',
-              borderRadius: '0px',
-              color: 'var(--color-text-muted)',
-              fontWeight: 650,
+              borderRadius: 'var(--brand-radius-sm, 0px)',
+              color: 'var(--brand-muted, #5a5954)',
+              fontWeight: 600,
               fontSize: '13px',
               textDecoration: 'none',
             }}
           >
-           Program
+            Program
           </a>
-         <a
+          <a
             href="#about"
             style={{
               padding: '8px 12px',
-              borderRadius: '0px',
-              color: 'var(--color-text-muted)',
-              fontWeight: 650,
+              borderRadius: 'var(--brand-radius-sm, 0px)',
+              color: 'var(--brand-muted, #5a5954)',
+              fontWeight: 600,
               fontSize: '13px',
               textDecoration: 'none',
             }}
           >
-           Tentang
+            Tentang
           </a>
-         {onPrimaryClick ? (
+          {onPrimaryClick ? (
             <button
               onClick={onPrimaryClick}
               style={{
                 border: 0,
-                backgroundColor: 'var(--accent-dark)',
-                color: '#FFFFFF',
-                fontWeight: 780,
+                backgroundColor: 'var(--brand-primary, #201e1d)',
+                color: 'var(--brand-primary-fg, #FFFFFF)',
+                fontWeight: 700,
                 fontSize: '13px',
-                padding: '8px 16px',
-                borderRadius: '0px',
+                padding: '9px 18px',
+                borderRadius: 'var(--brand-radius, 0px)',
                 cursor: 'pointer',
+                transition: 'opacity 0.15s ease',
               }}
             >
-             Mulai belajar
+              Mulai belajar
             </button>
-         ) : (
+          ) : (
             <a
               href="#programs"
               style={{
-                backgroundColor: 'var(--accent-dark)',
-                color: '#FFFFFF',
-                fontWeight: 780,
+                backgroundColor: 'var(--brand-primary, #201e1d)',
+                color: 'var(--brand-primary-fg, #FFFFFF)',
+                fontWeight: 700,
                 fontSize: '13px',
-                padding: '8px 16px',
-                borderRadius: '0px',
+                padding: '9px 18px',
+                borderRadius: 'var(--brand-radius, 0px)',
                 textDecoration: 'none',
+                transition: 'opacity 0.15s ease',
               }}
             >
-             Mulai belajar
+              Mulai belajar
             </a>
-         )}
+          )}
         </nav>
-     </div>
-   </header>
- );
+      </div>
+    </header>
+  );
 }

@@ -8,6 +8,8 @@ import { ProgramCard } from '@/components/public/ProgramCard';
 import { MobileAppHeader } from '@/components/layout/MobileAppHeader';
 import { LearnerTabBar } from '@/components/layout/LearnerTabBar';
 
+import { StorefrontThemeProvider } from '@/components/theme/StorefrontThemeProvider';
+
 interface CatalogClientProps {
   profile: PublicWorkspaceProfile;
   catalog: PublicProgramCatalogItem[];
@@ -17,7 +19,7 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'free' | 'client'>('all');
 
-  const filteredCatalog = catalog.filter(item =>{
+  const filteredCatalog = catalog.filter(item => {
     // Search matching
     const matchesSearch =
       item.program.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -37,30 +39,25 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
   });
 
   return (
-    <div
-      className="page-wrapper-with-bottom-nav"
-      style={{
-        backgroundColor: 'var(--color-surface-muted)',
-        minHeight: '100vh',
-        color: 'var(--color-text-main)',
-      }}
-    >
-     {/* Mobile Top App Header */}
-      <MobileAppHeader
-        title="Katalog Program"
-        subtitle={`Ruang Belajar ${profile.displayName.split(' ')[0]}`}
-        showProfile={true}
-        workspaceSlug={profile.workspaceSlug}
-      />
-
-     {/* Desktop Header */}
-      <div className="desktop-only">
-       <PublicHeader
+    <StorefrontThemeProvider theme={profile.theme}>
+      <div className="page-wrapper-with-bottom-nav">
+        {/* Mobile Top App Header */}
+        <MobileAppHeader
+          title="Katalog Program"
+          subtitle={`Ruang Belajar ${(profile.theme?.brandName || profile.displayName).split(' ')[0]}`}
+          showProfile={true}
           workspaceSlug={profile.workspaceSlug}
-          displayName={profile.displayName}
-          tagline={profile.tagline}
         />
-     </div>
+
+        {/* Desktop Header */}
+        <div className="desktop-only">
+          <PublicHeader
+            workspaceSlug={profile.workspaceSlug}
+            displayName={profile.theme?.brandName || profile.displayName}
+            tagline={profile.theme?.tagline || profile.tagline}
+            logoUrl={profile.theme?.logoUrl || profile.logoUrl}
+          />
+        </div>
 
      <main className="container" style={{ paddingTop: '24px', paddingBottom: '48px' }}>
        {/* Title & Description */}
@@ -202,10 +199,11 @@ export function CatalogClient({ profile, catalog }: CatalogClientProps) {
        )}
       </main>
 
-     <PublicFooter displayName={profile.displayName.split(' ')[0]} />
+        <PublicFooter displayName={(profile.theme?.brandName || profile.displayName).split(' ')[0]} />
 
-     {/* Global Bottom Navigation */}
-      <LearnerTabBar workspaceSlug={profile.workspaceSlug} />
-   </div>
- );
+        {/* Global Bottom Navigation */}
+        <LearnerTabBar workspaceSlug={profile.workspaceSlug} />
+      </div>
+    </StorefrontThemeProvider>
+  );
 }

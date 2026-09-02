@@ -1,6 +1,7 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "stiffin-promotor-api",
+  "account_id": "06738739e65bc88a495de618cabfa5ca",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-13",
   "compatibility_flags": [
@@ -24,7 +25,7 @@
   "vars": {
     "APP_ENV": "production",
     "BETTER_AUTH_URL": "https://stiffin-promotor-api.moxsenna.workers.dev",
-    "BETTER_AUTH_TRUSTED_ORIGINS": "https://stiffin-promotor-class.moxsenna.workers.dev,https://stiffin-promotor-flow.moxsenna.workers.dev",
+    "BETTER_AUTH_TRUSTED_ORIGINS": "https://stiffin-promotor-class.moxsenna.workers.dev,https://stiffin-promotor-flow.moxsenna.workers.dev,https://stiffin-promotor-class.senna.my.id,https://stiffin-promotor-flow.senna.my.id,https://stiffin-promotor-api.senna.my.id",
     "R2_PUBLIC_BASE_URL": "https://pub-promotor-class-assets.r2.dev",
     "MAX_COVER_BYTES": "2097152",
     "ALLOWED_COVER_MIME": "image/jpeg,image/png,image/webp"
@@ -47,7 +48,7 @@
       "vars": {
         "APP_ENV": "staging",
         "BETTER_AUTH_URL": "https://stiffin-promotor-api-staging.moxsenna.workers.dev",
-        "BETTER_AUTH_TRUSTED_ORIGINS": "https://promotor-class-staging.moxsenna.workers.dev,https://promotor-flow-staging.moxsenna.workers.dev",
+        "BETTER_AUTH_TRUSTED_ORIGINS": "https://promotor-class-staging.moxsenna.workers.dev,https://promotor-flow-staging.moxsenna.workers.dev,https://stiffin-promotor-class.senna.my.id,https://stiffin-promotor-flow.senna.my.id,https://stiffin-promotor-api.senna.my.id",
         "R2_PUBLIC_BASE_URL": "https://pub-promotor-class-assets-staging.r2.dev",
         "MAX_COVER_BYTES": "2097152",
         "ALLOWED_COVER_MIME": "image/jpeg,image/png,image/webp"

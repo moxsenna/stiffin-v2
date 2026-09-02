@@ -30,12 +30,12 @@ export const FlowPricingSection: React.FC = () => {
     {
       name: 'Ekosistem Lengkap (Flow + Class)',
       badge: 'Paling Populer & Hemat',
-      description: 'Solusi lengkap integrasi CRM operasional harian + Client Education OS PromotorClass.',
+      description: 'Solusi lengkap integrasi CRM operasional harian + Client Education OS Talira Class.',
       priceMonthly: 299000,
       priceAnnualPerMonth: 199000,
       features: [
-        'Seluruh Fitur PromotorFlow Mandiri',
-        'Integrasi Penuh PromotorClass (LMS Edukasi Klien)',
+        'Seluruh Fitur Talira Flow Mandiri',
+        'Integrasi Penuh Talira Class (LMS Edukasi Klien)',
         'Deteksi Sinyal Intent Belajar Real-Time (Hot / Warm / Cold)',
         'Storefront Katalog Program & Modul Refleksi',
         'Sertifikat Kelulusan & Booking Tes Lanjutan Terkoneksi',
@@ -90,7 +90,7 @@ export const FlowPricingSection: React.FC = () => {
             Investasi Terjangkau dengan ROI yang Langsung Terasa
           </h2>
           <p style={{ fontSize: '15.5px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-            Hanya butuh 1 tambahan klien tes STIFIn per bulan untuk menutup seluruh biaya langganan PromotorFlow.
+            Hanya butuh 1 tambahan klien tes STIFIn per bulan untuk menutup seluruh biaya langganan Talira Flow.
           </p>
 
           {/* Billing Cycle Toggle */}

@@ -1,4 +1,5 @@
 const fs = require('fs');
+const fsp = require('fs/promises');
 const path = require('path');
 const { execSync } = require('child_process');
 
@@ -31,6 +32,63 @@ function resolveRealTarget(target, dest) {
   return resolved;
 }
 
+function ensureParentDir(filePath) {
+  try {
+    const parent = path.dirname(filePath);
+    if (!fs.existsSync(parent)) {
+      fs.mkdirSync(parent, { recursive: true });
+    }
+  } catch (e) {}
+}
+
+const origCopyFileSync = fs.copyFileSync;
+fs.copyFileSync = function (src, dest, mode) {
+  ensureParentDir(dest);
+  return origCopyFileSync(src, dest, mode);
+};
+
+const origCopyFile = fs.copyFile;
+fs.copyFile = function (src, dest, mode, cb) {
+  if (typeof mode === 'function') {
+    cb = mode;
+    mode = 0;
+  }
+  ensureParentDir(dest);
+  return origCopyFile(src, dest, mode, cb);
+};
+
+const origPromisesCopyFile = fsp.copyFile;
+const patchedPromisesCopyFile = async function (src, dest, mode) {
+  ensureParentDir(dest);
+  return origPromisesCopyFile(src, dest, mode);
+};
+fsp.copyFile = patchedPromisesCopyFile;
+if (fs.promises) {
+  fs.promises.copyFile = patchedPromisesCopyFile;
+}
+
+const origRenameSync = fs.renameSync;
+fs.renameSync = function (oldPath, newPath) {
+  ensureParentDir(newPath);
+  return origRenameSync(oldPath, newPath);
+};
+
+const origRename = fs.rename;
+fs.rename = function (oldPath, newPath, cb) {
+  ensureParentDir(newPath);
+  return origRename(oldPath, newPath, cb);
+};
+
+const origPromisesRename = fsp.rename;
+const patchedPromisesRename = async function (oldPath, newPath) {
+  ensureParentDir(newPath);
+  return origPromisesRename(oldPath, newPath);
+};
+fsp.rename = patchedPromisesRename;
+if (fs.promises) {
+  fs.promises.rename = patchedPromisesRename;
+}
+
 function safeCopy(target, dest) {
   try {
     const resolvedTarget = resolveRealTarget(target, dest);
@@ -40,8 +98,8 @@ function safeCopy(target, dest) {
       fs.mkdirSync(dest, { recursive: true });
       fs.cpSync(resolvedTarget, dest, { recursive: true, force: true });
     } else {
-      fs.mkdirSync(path.dirname(dest), { recursive: true });
-      fs.copyFileSync(resolvedTarget, dest);
+      ensureParentDir(dest);
+      origCopyFileSync(resolvedTarget, dest);
     }
   } catch (e) {
     // ignore
@@ -61,10 +119,12 @@ fs.symlink = function (target, dest, type, cb) {
   if (cb) cb(null);
 };
 
+const patchedPromisesSymlink = async function (target, dest, type) {
+  safeCopy(target, dest);
+};
+fsp.symlink = patchedPromisesSymlink;
 if (fs.promises) {
-  fs.promises.symlink = async function (target, dest, type) {
-    safeCopy(target, dest);
-  };
+  fs.promises.symlink = patchedPromisesSymlink;
 }
 
 // Windows rmSync safe fallback
@@ -81,24 +141,3 @@ fs.rmSync = function (targetPath, options) {
     } catch (e) {}
   }
 };
-
-// Ensure standalone sync on exit
-process.on('exit', () => {
-  try {
-    const cwd = process.cwd();
-    const appName = path.basename(cwd);
-    const dotNext = path.join(cwd, '.next');
-    const standaloneAppDotNext = path.join(dotNext, 'standalone', 'apps', appName, '.next');
-    if (fs.existsSync(dotNext) && fs.existsSync(path.join(dotNext, 'standalone'))) {
-      fs.mkdirSync(standaloneAppDotNext, { recursive: true });
-      const itemsToCopy = ['BUILD_ID', 'prerender-manifest.json', 'routes-manifest.json', 'app-build-manifest.json', 'build-manifest.json', 'server'];
-      for (const item of itemsToCopy) {
-        const src = path.join(dotNext, item);
-        const dst = path.join(standaloneAppDotNext, item);
-        if (fs.existsSync(src) && !fs.existsSync(dst)) {
-          safeCopy(src, dst);
-        }
-      }
-    }
-  } catch (e) {}
-});

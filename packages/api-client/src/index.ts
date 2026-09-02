@@ -8,6 +8,8 @@ import type {
   UpdateProgramRequest,
   UpdateProgramPresentationRequest,
   UpdateWorkspaceProfileRequest,
+  StorefrontTheme,
+  UpdateStorefrontThemeRequest,
   UpsertLessonRequest,
   CreateFlowContactRequest,
   UpdateFlowContactProfileRequest,
@@ -331,6 +333,13 @@ export class PromotorClassContentApiClient {
     return this.client.post('/api/v1/uploads/cover/presign', data);
   }
 
+  async presignWorkspaceAsset(
+    kind: 'avatar' | 'logo',
+    data: { fileName: string; contentType: string; contentLength: number }
+  ): Promise<{ key: string; uploadUrl: string; publicUrl: string; contentType: string; contentLength: number; expiresAt: string; maxBytes: number }> {
+    return this.client.post(`/api/v1/uploads/workspace/${encodeURIComponent(kind)}/presign`, data);
+  }
+
   async confirmProgramCover(
     programId: string,
     data: { key: string; contentType: string; contentLength?: number }
@@ -361,6 +370,21 @@ export class PromotorClassContentApiClient {
   async updateWorkspaceProfile(patch: UpdateWorkspaceProfileRequest): Promise<PublicWorkspaceProfile> {
     const res = await this.client.put<{ profile: PublicWorkspaceProfile }>('/api/v1/storefront/profile', patch);
     return res.profile;
+  }
+
+  async getStorefrontTheme(): Promise<StorefrontTheme> {
+    const res = await this.client.get<{ theme: StorefrontTheme }>('/api/v1/class/storefront/theme');
+    return res.theme;
+  }
+
+  async updateStorefrontTheme(body: UpdateStorefrontThemeRequest): Promise<StorefrontTheme> {
+    const res = await this.client.put<{ success: boolean; theme: StorefrontTheme }>('/api/v1/class/storefront/theme', body);
+    return res.theme;
+  }
+
+  async resetStorefrontTheme(): Promise<StorefrontTheme> {
+    const res = await this.client.post<{ success: boolean; theme: StorefrontTheme }>('/api/v1/class/storefront/theme/reset', {});
+    return res.theme;
   }
 
   // B4 Registration & Enrollment

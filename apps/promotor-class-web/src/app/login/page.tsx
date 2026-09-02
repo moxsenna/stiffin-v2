@@ -37,14 +37,14 @@ function LoginForm() {
       }
 
       if (session.entitlements && !session.entitlements.promotorClass) {
-        setErrorMessage('Akun Anda tidak memiliki akses ke PromotorClass.');
+        setErrorMessage('Akun Anda tidak memiliki akses ke Talira Class.');
         setIsLoading(false);
         return;
       }
 
-      router.replace(returnTo);
+      router.push(returnTo);
     } catch (err: any) {
-      setErrorMessage(err?.message || 'Terjadi kesalahan sistem saat masuk.');
+      setErrorMessage(err?.message || 'Email atau kata sandi tidak valid');
       setIsLoading(false);
     }
   };
@@ -64,10 +64,10 @@ function LoginForm() {
        <div style={{ marginBottom: 28 }}>
          <Wordmark class />
          <h1 style={{ font: '800 26px/1.1 var(--font-sans)', letterSpacing: '-0.03em', marginTop: 18 }}>
-           Masuk ke PromotorClass
+           Masuk ke Talira Class
           </h1>
          <p style={{ font: '400 13px/1.5 var(--font-sans)', color: 'var(--muted-strong)', marginTop: 6 }}>
-           Platform edukasi dan storefront materi STIFIn
+           Platform edukasi dan client portal
           </p>
        </div>
 
@@ -107,17 +107,44 @@ function LoginForm() {
               />
            </div>
 
-           <button type="submit" disabled={isLoading} className="btn btn-primary btn-block">
-             {isLoading ? 'Memverifikasi...' : 'Masuk'}
+            <button type="submit" disabled={isLoading} className="btn btn-primary btn-block">
+              {isLoading ? 'Memverifikasi...' : 'Masuk'}
             </button>
-         </form>
-       </div>
+          </form>
 
-       <div style={{ marginTop: 20, font: '400 12px/1.5 var(--font-sans)', color: 'var(--muted)' }}>
-         Butuh bantuan akses akun? Hubungi administrator cabang Anda.
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--line)', textAlign: 'center' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('demo.promotor@stifin.id');
+                setPassword('DemoPromotor123!');
+              }}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                backgroundColor: 'var(--canvas)',
+                border: '1px dashed var(--muted-strong)',
+                fontSize: '12px',
+                fontWeight: 700,
+                color: 'var(--ink)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+              }}
+            >
+              <span>⚡</span>
+              <span>Gunakan Akun Demo (1-Klik Isi)</span>
+            </button>
+          </div>
         </div>
-     </div>
-   </div>
+
+        <div style={{ marginTop: 20, font: '400 12px/1.5 var(--font-sans)', color: 'var(--muted)' }}>
+          Akun Demo: <strong>demo.promotor@stifin.id</strong> • Sandi: <strong>DemoPromotor123!</strong>
+        </div>
+      </div>
+    </div>
  );
 }
 

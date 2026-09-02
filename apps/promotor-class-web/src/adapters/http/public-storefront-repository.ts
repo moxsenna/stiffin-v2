@@ -2,6 +2,8 @@ import type {
   PublicWorkspaceProfile,
   PublicProgramCatalogItem,
   PublicProgramDetail,
+  StorefrontTheme,
+  UpdateStorefrontThemeRequest,
 } from '@promotor/contracts';
 import { PublicStorefrontRepositoryPort } from '@/modules/public-storefront/ports';
 import { PromotorClassContentApiClient } from '@promotor/api-client';
@@ -74,5 +76,24 @@ export class HttpPublicStorefrontRepository implements PublicStorefrontRepositor
           }
         : undefined,
     });
+  }
+
+  async getStorefrontTheme(): Promise<StorefrontTheme> {
+    return this.client.getStorefrontTheme();
+  }
+
+  async updateStorefrontTheme(theme: UpdateStorefrontThemeRequest): Promise<StorefrontTheme> {
+    return this.client.updateStorefrontTheme(theme);
+  }
+
+  async resetStorefrontTheme(): Promise<StorefrontTheme> {
+    return this.client.resetStorefrontTheme();
+  }
+
+  async presignWorkspaceAsset(
+    kind: 'avatar' | 'logo',
+    params: { fileName: string; contentType: string; contentLength: number }
+  ) {
+    return this.client.presignWorkspaceAsset(kind, params);
   }
 }

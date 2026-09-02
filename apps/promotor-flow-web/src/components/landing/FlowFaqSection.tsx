@@ -11,24 +11,24 @@ interface FaqItem {
 export const FlowFaqSection: React.FC = () => {
   const faqs: FaqItem[] = [
     {
-      question: 'Apakah PromotorFlow memerlukan instalasi khusus dari Play Store atau App Store?',
-      answer: 'Tidak perlu. PromotorFlow dibangun dengan teknologi Progressive Web App (PWA) modern. Anda dapat membukanya langsung melalui browser di smartphone, tablet, maupun laptop. Anda juga dapat menambahkan icon PromotorFlow ke Home Screen ponsel dengan 1-klik untuk pengalaman native tanpa memakan memori penyimpanan.',
+      question: 'Apakah Talira Flow memerlukan instalasi khusus dari Play Store atau App Store?',
+      answer: 'Tidak perlu. Talira Flow dibangun dengan teknologi Progressive Web App (PWA) modern. Anda dapat membukanya langsung melalui browser di smartphone, tablet, maupun laptop. Anda juga dapat menambahkan icon Talira Flow ke Home Screen ponsel dengan 1-klik untuk pengalaman native tanpa memakan memori penyimpanan.',
     },
     {
-      question: 'Bagaimana integrasi PromotorFlow dengan platform PromotorClass?',
-      answer: 'Sangat mulus! Jika Anda mengaktifkan paket Ekosistem Lengkap, setiap aktivitas belajar peserta di modul PromotorClass (seperti penyelesaian video materi atau lembar refleksi) akan otomatis mengirimkan sinyal intent (Hot/Warm/Cold) ke antrean tindakan Hari Ini di PromotorFlow Anda secara real-time.',
+      question: 'Bagaimana integrasi Talira Flow dengan platform Talira Class?',
+      answer: 'Sangat mulus! Jika Anda mengaktifkan paket Ekosistem Lengkap, setiap aktivitas belajar peserta di modul Talira Class (seperti penyelesaian video materi atau lembar refleksi) akan otomatis mengirimkan sinyal intent (Hot/Warm/Cold) ke antrean tindakan Hari Ini di Talira Flow Anda secara real-time.',
     },
     {
       question: 'Apakah link booking jadwal bisa saya pasang di bio Instagram atau pesan otomatis WhatsApp?',
-      answer: 'Bisa sekali! Setiap promotor mendapatkan tautan booking publik unik (misal: promotorflow.id/p/nama-anda/book). Tautan ini dapat langsung Anda taruh di bio Instagram, TikTok, Linktree, maupun pesan auto-reply WhatsApp Business Anda.',
+      answer: 'Bisa sekali! Setiap promotor mendapatkan tautan booking publik unik (misal: talira.id/p/nama-anda/book). Tautan ini dapat langsung Anda taruh di bio Instagram, TikTok, Linktree, maupun pesan auto-reply WhatsApp Business Anda.',
     },
     {
       question: 'Apakah data kontak dan catatan klien saya terjamin keamanannya?',
-      answer: 'Sangat aman. Setiap promotor memiliki isolasi data multi-tenant tersendiri yang terenkripsi. Kontak, catatan kendala keluarga, dan histori booking Anda hanya dapat diakses oleh Anda dan tim cabang yang Anda beri wewenang resmi.',
+      answer: 'Sangat aman. Setiap promotor memiliki isolasi data multi-tenant tersendiri yang terenkripsi. Kontak, catatan kendala keluarga, dan histori booking Anda hanya dapat diakses oleh Anda dan tim yang Anda beri wewenang resmi.',
     },
     {
       question: 'Bagaimana jika ada dua klien yang memilih jam konsultasi yang sama secara bersamaan?',
-      answer: 'Sistem PromotorFlow dilengkapi mekanisme pencegahan race condition. Begitu sebuah slot waktu berhasil dibooking, slot tersebut langsung dikunci dan otomatis hilang dari pilihan klien lain dalam hitungan milidetik.',
+      answer: 'Sistem Talira Flow dilengkapi mekanisme pencegahan race condition. Begitu sebuah slot waktu berhasil dibooking, slot tersebut langsung dikunci dan otomatis hilang dari pilihan klien lain dalam hitungan milidetik.',
     },
   ];
 
@@ -64,7 +64,7 @@ export const FlowFaqSection: React.FC = () => {
             Pertanyaan yang Sering Diajukan (FAQ)
           </h2>
           <p style={{ fontSize: '15px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-            Semua hal yang perlu Anda ketahui sebelum menggunakan PromotorFlow.
+            Semua hal yang perlu Anda ketahui sebelum menggunakan Talira Flow.
           </p>
         </div>
 

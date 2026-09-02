@@ -44,7 +44,7 @@ export default function ContactsPage() {
   return (
     <AppShell showBottomNav={true}>
      <PageHeader
-        kicker="PromotorFlow"
+        kicker="Talira Flow"
         title="Kontak"
         sub={loadError ? undefined : `${shown} dari ${shown} kontak`}
         action={

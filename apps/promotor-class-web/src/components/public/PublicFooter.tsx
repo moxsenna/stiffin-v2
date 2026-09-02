@@ -27,7 +27,7 @@ export function PublicFooter({ displayName }: PublicFooterProps) {
         }}
       >
        <span>© 2026 Ruang Belajar {displayName}</span>
-       <span>Didukung oleh PromotorClass</span>
+       <span>Didukung oleh Talira Class</span>
      </div>
    </footer>
  );

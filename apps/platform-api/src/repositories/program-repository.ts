@@ -185,7 +185,7 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
       pricing: progRow.program.pricing as any,
       priceAmount: progRow.program.priceAmount,
       publishedAt: progRow.program.publishedAt ?? undefined,
-      coverImageUrl: progRow.program.coverImageUrl ?? undefined,
+      coverImageUrl: presentationMapped?.imageUrl ?? undefined,
       presentation: presentationMapped,
       modules: fullModules,
       createdAt: progRow.program.createdAt,
@@ -301,7 +301,7 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
           pricing: createdProgram.pricing as any,
           priceAmount: createdProgram.priceAmount,
           publishedAt: createdProgram.publishedAt ?? undefined,
-          coverImageUrl: createdProgram.coverImageUrl ?? undefined,
+          coverImageUrl: presentationInput?.imageUrl ?? undefined,
           presentation: {
             coverVariant: (presentationInput?.coverVariant ?? 'cover-a') as any,
             featured: presentationInput?.featured ?? false,

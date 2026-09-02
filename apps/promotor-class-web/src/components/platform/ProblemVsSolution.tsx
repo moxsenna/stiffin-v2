@@ -56,7 +56,7 @@ export function ProblemVsSolution() {
             Mengapa cara lama menguras tenaga tanpa hasil konversi yang jelas.
           </h2>
           <p style={{ fontSize: '16px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-            Bandingkan alur kerja konvensional berbasis Google Drive dan broadcast WhatsApp manual dengan arsitektur terintegrasi PromotorClass.
+            Bandingkan alur kerja konvensional berbasis Google Drive dan broadcast WhatsApp manual dengan arsitektur terintegrasi Talira Class.
           </p>
         </div>
 
@@ -93,7 +93,7 @@ export function ProblemVsSolution() {
             </div>
             <div style={{ color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-primary)' }} />
-              Dengan PromotorClass
+              Dengan Talira Class
             </div>
           </div>
 

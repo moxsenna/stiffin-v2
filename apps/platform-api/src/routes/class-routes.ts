@@ -5,16 +5,19 @@ import type { AppEnv } from '../app';
 import { DomainError } from '../core/errors';
 import {
   CreateManualEnrollmentRequestSchema,
+  UpdateStorefrontThemeRequestSchema,
 } from '@promotor/contracts';
 import { createEnrollmentService } from '../services/class/enrollment-service';
 import { createPromotorClassAdapter } from '../services/class/promotor-class-adapter';
 import { createLearningEngineService } from '../services/class/learning-engine-service';
+import { createStorefrontThemeService } from '../services/class/storefront-theme-service';
 import { createEntitlementRepository } from '../repositories/entitlement-repository';
 import { contacts } from '../db/schema/contacts';
 import { reflectionResponses } from '../db/schema/reflection-responses';
 import { learningEvents } from '../db/schema/learning-events';
 import { enrollments } from '../db/schema/enrollments';
 import { programs } from '../db/schema/programs';
+import { programPresentations } from '../db/schema/program-presentations';
 import { learningSignals } from '../db/schema/learning-signals';
 import { integrationOutbox } from '../db/schema/integration-outbox';
 import type { OrganizationContext } from '../core/organization-context';
@@ -67,8 +70,9 @@ function extForMime(mime: string) {
 
 function publicUrlForKey(env: any, key: string) {
   const base = String(env?.R2_PUBLIC_BASE_URL ?? '').replace(/\/+$/, '');
-  if (base) return `${base}/${key}`;
-  return `https://pub-promotor-class-assets.r2.dev/${key}`;
+  if (base && !base.includes('pub-promotor-class-assets.r2.dev')) return `${base}/${key}`;
+  const apiUrl = String(env?.BETTER_AUTH_URL ?? 'https://stiffin-promotor-api.moxsenna.workers.dev').replace(/\/+$/, '');
+  return `${apiUrl}/api/v1/assets/r2/${key}`;
 }
 
 async function createR2PresignedPutUrl(env: any, key: string, contentType: string) {
@@ -114,9 +118,12 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
     }
     if (!fileName) throw new DomainError('VALIDATION_ERROR', 'Nama file wajib diisi');
 
-    const rows = await db.select().from(programs).where(and(eq(programs.id, programId), eq(programs.organizationId, ctx.organizationId))).limit(1);
-    const prog = rows[0] as any;
-    if (!prog) throw new DomainError('NOT_FOUND', 'Program tidak ditemukan');
+    const rows = await db
+      .select({ id: programs.id })
+      .from(programs)
+      .where(and(eq(programs.id, programId), eq(programs.organizationId, ctx.organizationId)))
+      .limit(1);
+    if (rows.length === 0) throw new DomainError('NOT_FOUND', 'Program tidak ditemukan');
 
     const ext = extForMime(contentType);
     const safeBase = sanitizeCoverKeyPart(fileName.replace(/\.[^.]+$/, ''));
@@ -150,6 +157,39 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
     const ext = extForMime(contentType);
     const safeBase = sanitizeCoverKeyPart(fileName.replace(/\.[^.]+$/, ''));
     const key = `programs/${ctx.organizationId}/pending/cover/${crypto.randomUUID()}-${safeBase}.${ext}`;
+
+    const uploadUrl = await createR2PresignedPutUrl(env, key, contentType);
+    const publicUrl = publicUrlForKey(env, key);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+    return c.json({ key, uploadUrl, publicUrl, contentType, contentLength, expiresAt, maxBytes }, 200);
+  });
+
+  // 0b2. Presign workspace assets (avatar, logo) upload
+  app.post('/api/v1/uploads/workspace/:kind/presign', async (c) => {
+    const { ctx } = getRequestContext(c);
+    const env: any = c.env as any;
+    const kind = c.req.param('kind');
+    if (kind !== 'avatar' && kind !== 'logo') {
+      throw new DomainError('VALIDATION_ERROR', 'Jenis aset tidak valid (hanya avatar atau logo)');
+    }
+    const raw = await c.req.json().catch(() => ({}));
+    const fileName = String(raw?.fileName ?? '').trim();
+    const contentType = String(raw?.contentType ?? '').trim().toLowerCase();
+    const contentLength = Number(raw?.contentLength);
+
+    const { maxBytes, allowed } = getCoverLimits(env);
+    if (!contentType || !allowed.includes(contentType)) {
+      throw new DomainError('VALIDATION_ERROR', `Tipe file tidak didukung. Gunakan: ${allowed.join(', ')}`);
+    }
+    if (!Number.isFinite(contentLength) || contentLength <= 0 || contentLength > maxBytes) {
+      throw new DomainError('VALIDATION_ERROR', `Ukuran file melebihi batas 2MB (maks ${maxBytes} bytes)`);
+    }
+    if (!fileName) throw new DomainError('VALIDATION_ERROR', 'Nama file wajib diisi');
+
+    const ext = extForMime(contentType);
+    const safeBase = sanitizeCoverKeyPart(fileName.replace(/\.[^.]+$/, ''));
+    const key = `workspace/${ctx.organizationId}/${kind}/${crypto.randomUUID()}-${safeBase}.${ext}`;
 
     const uploadUrl = await createR2PresignedPutUrl(env, key, contentType);
     const publicUrl = publicUrlForKey(env, key);
@@ -193,11 +233,13 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
       throw new DomainError('VALIDATION_ERROR', `Ukuran file melebihi 2MB`);
     }
 
-    const rows = await db.select().from(programs).where(and(eq(programs.id, programId), eq(programs.organizationId, ctx.organizationId))).limit(1);
-    const prog: any = rows[0];
-    if (!prog) throw new DomainError('NOT_FOUND', 'Program tidak ditemukan');
+    const rows = await db
+      .select({ id: programs.id })
+      .from(programs)
+      .where(and(eq(programs.id, programId), eq(programs.organizationId, ctx.organizationId)))
+      .limit(1);
+    if (rows.length === 0) throw new DomainError('NOT_FOUND', 'Program tidak ditemukan');
 
-    const oldKey = prog.coverImageKey as string | null;
     const publicUrl = publicUrlForKey(env, key);
     const nowIso = new Date().toISOString();
 
@@ -215,20 +257,27 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
       finalUrl = publicUrlForKey(env, final);
     }
 
-    await db
-      .update(programs)
-      .set({
-        coverImageKey: finalKey,
-        coverImageUrl: finalUrl,
-        coverImageMime: actualMime,
-        coverImageSize: actualSize,
-        coverImageUploadedAt: nowIso as any,
-        updatedAt: nowIso as any,
-      })
-      .where(and(eq(programs.id, programId), eq(programs.organizationId, ctx.organizationId)));
+    const presRows = await db
+      .select()
+      .from(programPresentations)
+      .where(eq(programPresentations.programId, programId))
+      .limit(1);
 
-    if (oldKey && oldKey !== finalKey) {
-      await bucket.delete(oldKey).catch(() => {});
+    if (presRows.length > 0) {
+      await db
+        .update(programPresentations)
+        .set({
+          imageUrl: finalUrl,
+          updatedAt: nowIso as any,
+        })
+        .where(eq(programPresentations.programId, programId));
+    } else {
+      await db.insert(programPresentations).values({
+        programId,
+        imageUrl: finalUrl,
+        createdAt: nowIso as any,
+        updatedAt: nowIso as any,
+      });
     }
 
     return c.json({ key: finalKey, publicUrl: finalUrl, contentType: actualMime, contentLength: actualSize }, 200);
@@ -237,28 +286,42 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
   // 0d. Delete cover
   app.delete('/api/v1/programs/:programId/cover', async (c) => {
     const { ctx, db } = getRequestContext(c);
-    const env: any = c.env as any;
     const programId = c.req.param('programId');
-    const rows = await db.select().from(programs).where(and(eq(programs.id, programId), eq(programs.organizationId, ctx.organizationId))).limit(1);
-    const prog: any = rows[0];
-    if (!prog) throw new DomainError('NOT_FOUND', 'Program tidak ditemukan');
-    const oldKey = prog.coverImageKey as string | null;
-    if (oldKey) {
-      const bucket: any = env?.CLASS_ASSETS;
-      if (bucket) await bucket.delete(oldKey).catch(() => {});
-    }
+    const rows = await db
+      .select({ id: programs.id })
+      .from(programs)
+      .where(and(eq(programs.id, programId), eq(programs.organizationId, ctx.organizationId)))
+      .limit(1);
+    if (rows.length === 0) throw new DomainError('NOT_FOUND', 'Program tidak ditemukan');
+
     await db
-      .update(programs)
+      .update(programPresentations)
       .set({
-        coverImageKey: null as any,
-        coverImageUrl: null as any,
-        coverImageMime: null as any,
-        coverImageSize: null as any,
-        coverImageUploadedAt: null as any,
+        imageUrl: null,
         updatedAt: new Date().toISOString() as any,
       })
-      .where(and(eq(programs.id, programId), eq(programs.organizationId, ctx.organizationId)));
+      .where(eq(programPresentations.programId, programId));
     return c.json({ success: true }, 200);
+  });
+
+  // Public R2 Asset Delivery (Zero Auth, high-speed cached CDN stream)
+  app.get('/api/v1/assets/r2/:key{.*}', async (c) => {
+    const env: any = c.env as any;
+    const key = c.req.param('key');
+    const bucket: any = env?.CLASS_ASSETS;
+    if (!bucket) {
+      return c.text('R2 Storage tidak terkonfigurasi', 500);
+    }
+    const obj = await bucket.get(key);
+    if (!obj) {
+      return c.text('Asset tidak ditemukan', 404);
+    }
+    const headers = new Headers();
+    obj.writeHttpMetadata(headers);
+    headers.set('etag', obj.httpEtag);
+    headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    headers.set('Access-Control-Allow-Origin', '*');
+    return new Response(obj.body, { headers });
   });
 
   // Fallback proxy for presign fallback (when native presign not available)
@@ -266,7 +329,7 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
     const { ctx } = getRequestContext(c);
     const env: any = c.env as any;
     const key = c.req.param('key');
-    if (!key || !key.startsWith(`programs/${ctx.organizationId}/`)) {
+    if (!key || (!key.startsWith(`programs/${ctx.organizationId}/`) && !key.startsWith(`workspace/${ctx.organizationId}/`))) {
       throw new DomainError('VALIDATION_ERROR', 'Key tidak valid');
     }
     const bucket: any = env?.CLASS_ASSETS;
@@ -276,6 +339,45 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
     if (!body) throw new DomainError('VALIDATION_ERROR', 'Body kosong');
     await bucket.put(key, body, { httpMetadata: { contentType } });
     return c.json({ success: true, key }, 200);
+  });
+
+  // ==========================================
+  // Storefront Brand Customization Endpoints
+  // Tenant-scoped (organizationId from context)
+  // ==========================================
+  app.get('/api/v1/class/storefront/theme', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const service = createStorefrontThemeService(db);
+    const theme = await service.getThemeByOrg(ctx.organizationId);
+    return c.json({ theme }, 200);
+  });
+
+  app.put('/api/v1/class/storefront/theme', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    try {
+      const body = await c.req.json().catch(() => ({}));
+      const validated = UpdateStorefrontThemeRequestSchema.parse(body);
+      const service = createStorefrontThemeService(db);
+      const theme = await service.updateTheme(ctx.organizationId, validated);
+      return c.json({ success: true, theme }, 200);
+    } catch (err: any) {
+      console.error('[PUT /storefront/theme error]:', err?.message, err?.detail, err?.code);
+      return c.json({
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: err?.message || 'Update failed',
+          detail: err?.detail || err?.cause?.message || null,
+          pgCode: err?.code || null,
+        }
+      }, 500);
+    }
+  });
+
+  app.post('/api/v1/class/storefront/theme/reset', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const service = createStorefrontThemeService(db);
+    const theme = await service.resetTheme(ctx.organizationId);
+    return c.json({ success: true, theme }, 200);
   });
 
   // 1. List Enrollments

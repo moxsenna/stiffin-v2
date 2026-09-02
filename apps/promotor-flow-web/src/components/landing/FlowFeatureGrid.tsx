@@ -56,7 +56,7 @@ export const FlowFeatureGrid: React.FC = () => {
             Fitur Lengkap yang Dirancang Khusus untuk Alur Kerja Promotor STIFIn
           </h2>
           <p style={{ fontSize: '15.5px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-            Bukan CRM generik yang rumit. PromotorFlow dibangun dari pengalaman nyata para praktisi dan konsultan STIFIn terbaik di lapangan.
+            Bukan CRM generik yang rumit. Talira Flow dibangun dari pengalaman nyata para praktisi dan konsultan STIFIn terbaik di lapangan.
           </p>
         </div>
 

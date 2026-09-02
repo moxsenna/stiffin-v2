@@ -16,6 +16,8 @@ import { MobileAppHeader } from '@/components/layout/MobileAppHeader';
 import { setLastPublicWorkspaceSlug } from '@/lib/session';
 import { capturePrototypeReferralCode } from '@/lib/referral-capture';
 
+import { StorefrontThemeProvider } from '@/components/theme/StorefrontThemeProvider';
+
 interface PublicLandingClientProps {
   detail: PublicProgramDetail;
 }
@@ -25,7 +27,7 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
   const refCode = searchParams.get('ref');
   const { promoter, presentation, program, isRegistrationAllowed } = detail;
 
-  useEffect(() =>{
+  useEffect(() => {
     if (promoter.workspaceSlug) {
       setLastPublicWorkspaceSlug(promoter.workspaceSlug);
     }
@@ -34,7 +36,7 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
     }
   }, [promoter.workspaceSlug, refCode]);
 
-  const scrollToRegister = () =>{
+  const scrollToRegister = () => {
     const el = document.getElementById('register');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
@@ -42,32 +44,27 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
   };
 
   return (
-    <div
-      className="page-wrapper-with-bottom-nav-and-cta"
-      style={{
-        backgroundColor: 'var(--color-surface-muted)',
-        minHeight: '100vh',
-        color: 'var(--color-text-main)',
-      }}
-    >
-     {/* Mobile Top App Header */}
-      <MobileAppHeader
-        title={program.title}
-        showBack={true}
-        backHref={`/p/${promoter.workspaceSlug}`}
-        showProfile={true}
-        workspaceSlug={promoter.workspaceSlug}
-      />
-
-     {/* Desktop Header */}
-      <div className="desktop-only">
-       <PublicHeader
+    <StorefrontThemeProvider theme={promoter.theme}>
+      <div className="page-wrapper-with-bottom-nav-and-cta">
+        {/* Mobile Top App Header */}
+        <MobileAppHeader
+          title={program.title}
+          showBack={true}
+          backHref={`/p/${promoter.workspaceSlug}`}
+          showProfile={true}
           workspaceSlug={promoter.workspaceSlug}
-          displayName={promoter.displayName}
-          tagline={promoter.tagline}
-          onPrimaryClick={scrollToRegister}
         />
-     </div>
+
+        {/* Desktop Header */}
+        <div className="desktop-only">
+          <PublicHeader
+            workspaceSlug={promoter.workspaceSlug}
+            displayName={promoter.theme?.brandName || promoter.displayName}
+            tagline={promoter.theme?.tagline || promoter.tagline}
+            logoUrl={promoter.theme?.logoUrl || promoter.logoUrl}
+            onPrimaryClick={scrollToRegister}
+          />
+        </div>
 
      <main>
        {/* Back Link for Desktop */}
@@ -181,5 +178,6 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
      {/* Universal Permanent 4-Tab Bottom Navigation Bar */}
       <LearnerTabBar workspaceSlug={promoter.workspaceSlug} />
    </div>
+  </StorefrontThemeProvider>
  );
 }
