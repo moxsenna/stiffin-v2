@@ -1,7 +1,6 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "stiffin-promotor-api",
-  "account_id": "06738739e65bc88a495de618cabfa5ca",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-13",
   "compatibility_flags": [
