@@ -8,4 +8,11 @@ export interface Env {
   BETTER_AUTH_URL?: string;
   /** Comma-separated additional trusted frontend origins. */
   BETTER_AUTH_TRUSTED_ORIGINS?: string;
+
+  /** Paycore Integration Configuration (Cloudflare Worker bindings / env vars) */
+  PAYCORE_BASE_URL?: string;
+  PAYCORE_APP_UUID?: string;
+  PAYCORE_KEY_ID?: string;
+  PAYCORE_APP_SECRET?: string;
+  PAYCORE_WEBHOOK_SECRET?: string;
 }

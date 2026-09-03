@@ -38,6 +38,12 @@ export interface ManualEnrollmentInput {
 export interface EnrollmentServiceOptions {
   clock?: () => Date;
   tokenExpiryDays?: number;
+  orgRepo?: ReturnType<typeof createOrganizationRepository>;
+  programRepo?: ReturnType<typeof createProgramRepository>;
+  contactRepo?: ReturnType<typeof createContactRepository>;
+  enrollmentRepo?: EnrollmentRepository;
+  learnerAccessRepo?: LearnerAccessRepository;
+  learningEventRepo?: LearningEventRepository;
 }
 
 export interface EnrollmentService {
@@ -56,12 +62,12 @@ export function createEnrollmentService(
   const clock = options?.clock ?? (() => new Date());
   const tokenExpiryDays = options?.tokenExpiryDays ?? 30;
 
-  const orgRepo = createOrganizationRepository(db);
-  const programRepo = createProgramRepository(db);
-  const contactRepo = createContactRepository(db, normalizePhone, normalizeEmail);
-  const enrollmentRepo = createEnrollmentRepository(db);
-  const learnerAccessRepo = createLearnerAccessRepository(db);
-  const learningEventRepo = createLearningEventRepository(db);
+  const orgRepo = options?.orgRepo ?? createOrganizationRepository(db);
+  const programRepo = options?.programRepo ?? createProgramRepository(db);
+  const contactRepo = options?.contactRepo ?? createContactRepository(db, normalizePhone, normalizeEmail);
+  const enrollmentRepo = options?.enrollmentRepo ?? createEnrollmentRepository(db);
+  const learnerAccessRepo = options?.learnerAccessRepo ?? createLearnerAccessRepository(db);
+  const learningEventRepo = options?.learningEventRepo ?? createLearningEventRepository(db);
 
   return {
     async registerPublicLearner(input: PublicRegistrationInput): Promise<PublicRegistrationResult> {
@@ -99,6 +105,17 @@ export function createEnrollmentService(
       }
       if (program.accessType !== 'public') {
         throw new DomainError('FORBIDDEN', 'Program ini tidak terbuka untuk pendaftaran publik langsung');
+      }
+      if (program.pricing === 'one_time') {
+        throw new DomainError(
+          'PAYMENT_REQUIRED',
+          'Program edukasi ini berbayar dan memerlukan pembelian melalui alur checkout',
+          {
+            programId: program.id,
+            pricing: program.pricing,
+            priceAmount: program.priceAmount,
+          }
+        );
       }
 
       // 4. Check whether contact already exists before matchOrCreate

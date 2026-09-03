@@ -15,6 +15,7 @@ import { LearnerTabBar } from '@/components/layout/LearnerTabBar';
 import { MobileAppHeader } from '@/components/layout/MobileAppHeader';
 import { setLastPublicWorkspaceSlug } from '@/lib/session';
 import { capturePrototypeReferralCode } from '@/lib/referral-capture';
+import { formatIDR } from '@promotor/platform-core';
 
 interface PublicLandingClientProps {
   detail: PublicProgramDetail;
@@ -121,7 +122,26 @@ export function PublicLandingClient({ detail }: PublicLandingClientProps) {
         }}
       >
        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-         {isRegistrationAllowed ? (
+         {program.pricing === 'one_time' ? (
+            <button
+              onClick={scrollToRegister}
+              className="touch-target-primary"
+              style={{
+                width: '100%',
+                minHeight: '44px',
+                borderRadius: '0px',
+                backgroundColor: '#4F46E5',
+                color: '#FFFFFF',
+                fontWeight: 780,
+                fontSize: '14px',
+                border: 0,
+                cursor: 'pointer',
+                boxShadow: 'var(--shadow-sm)',
+              }}
+            >
+              Beli Sekarang — {formatIDR(program.priceAmount)} →
+            </button>
+          ) : isRegistrationAllowed ? (
             <button
               onClick={scrollToRegister}
               className="touch-target-primary"

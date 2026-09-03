@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { PageHeader } from '@/components/ui';
 
-const MORE_LINKS: Array<{ label: string; href: string; note: string }>= [
+const MORE_LINKS: Array<{ label: string; href: string; note: string }> = [
+  { label: 'Pesanan', href: '/app/orders', note: 'Kelola transaksi & status pembelian kelas berbayar' },
   { label: 'Aktivitas', href: '/app/activity', note: 'Sinyal belajar terbaru dari learner' },
   { label: 'Storefront', href: '/app/storefront', note: 'Halaman publik dan katalog program' },
   { label: 'Pengaturan', href: '/app/settings', note: 'Akun, organisasi, dan preferensi' },

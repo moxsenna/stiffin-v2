@@ -12,6 +12,9 @@ export type DomainErrorCode =
   | 'PROGRAM_NOT_PUBLISHED'
   | 'CONTENT_DELETE_FORBIDDEN'
   | 'SLOT_UNAVAILABLE'
+  | 'PAYMENT_REQUIRED'
+  | 'PLAN_LIMIT_REACHED'
+  | 'FEATURE_REQUIRES_UPGRADE'
   | 'INTERNAL_ERROR';
 
 export class DomainError extends Error {

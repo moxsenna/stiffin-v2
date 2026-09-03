@@ -61,9 +61,9 @@ export function getApiMode(): 'http' | 'mock' {
   return mode === 'http' ? 'http' : 'mock';
 }
 
-function getApiClient(): PromotorClassContentApiClient {
+export function getPlatformApiClient(): PromotorClassContentApiClient {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
-  const client = new ApiClient({
+  const rawClient = new ApiClient({
     baseUrl,
     authToken: () => {
       if (typeof window !== 'undefined') {
@@ -76,7 +76,11 @@ function getApiClient(): PromotorClassContentApiClient {
     },
     credentials: 'include',
   });
-  return new PromotorClassContentApiClient(client);
+  return new PromotorClassContentApiClient(rawClient);
+}
+
+function getApiClient(): PromotorClassContentApiClient {
+  return getPlatformApiClient();
 }
 
 export function getProgramRepository(): ProgramRepositoryPort {

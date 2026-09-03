@@ -2,69 +2,13 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { CheckIcon } from '../foundation/icons';
+import { TALIRA_PLANS } from '@promotor/contracts';
 
 export const FlowPricingSection: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
 
-  const plans = [
-    {
-      name: 'Promotor Mandiri',
-      badge: null,
-      description: 'Untuk promotor solo yang ingin merapikan pipeline dan meningkatkan konversi tes.',
-      priceMonthly: 149000,
-      priceAnnualPerMonth: 99000,
-      features: [
-        'Kontak CRM & Prospek Tanpa Batas',
-        'Antrean Eksekusi Harian (Today Work Queue)',
-        'Tombol 1-Tap Kirim Pesan WhatsApp',
-        'Halaman Booking Publik 14-Hari (On-Site & Home Visit)',
-        'Siklus Otomatis Aftercare D+7',
-        'Katalog Template Pesan WhatsApp Kustom',
-        'Dukungan WebApp PWA Mobile & Desktop',
-      ],
-      popular: false,
-      ctaText: 'Mulai Uji Coba Gratis 14 Hari',
-      href: '/app',
-    },
-    {
-      name: 'Ekosistem Lengkap (Flow + Class)',
-      badge: 'Paling Populer & Hemat',
-      description: 'Solusi lengkap integrasi CRM operasional harian + Client Education OS PromotorClass.',
-      priceMonthly: 299000,
-      priceAnnualPerMonth: 199000,
-      features: [
-        'Seluruh Fitur PromotorFlow Mandiri',
-        'Integrasi Penuh PromotorClass (LMS Edukasi Klien)',
-        'Deteksi Sinyal Intent Belajar Real-Time (Hot / Warm / Cold)',
-        'Storefront Katalog Program & Modul Refleksi',
-        'Sertifikat Kelulusan & Booking Tes Lanjutan Terkoneksi',
-        'Sinkronisasi Status Pembayaran & Referral Klien',
-        'Prioritas Pembaruan Fitur & Dukungan Teknis',
-      ],
-      popular: true,
-      ctaText: 'Pilih Paket Ekosistem Lengkap',
-      href: '/app',
-    },
-    {
-      name: 'Cabang & Organisasi',
-      badge: null,
-      description: 'Untuk kantor cabang atau yayasan dengan banyak promotor dan tim admin.',
-      priceMonthly: 699000,
-      priceAnnualPerMonth: 499000,
-      features: [
-        'Hingga 5 Akun Promotor / Konsultan Aktif',
-        'Penyaluran Lead Otomatis ke Tim Promotor',
-        'Dashboard Analisis Kinerja Cabang Terpusat',
-        'Kustomisasi Branding Cabang & Logo',
-        'Export Laporan Keuangan & Rekap Sesi Tes',
-        'Dedicated WhatsApp Onboarding & Pelatihan Tim',
-      ],
-      popular: false,
-      ctaText: 'Hubungi Konsultasi Cabang',
-      href: '/app',
-    },
-  ];
+  const freePlan = TALIRA_PLANS.FREE;
+  const soloPlan = TALIRA_PLANS.SOLO;
 
   return (
     <section
@@ -74,23 +18,35 @@ export const FlowPricingSection: React.FC = () => {
         backgroundColor: 'var(--color-canvas)',
       }}
     >
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         {/* Section Header */}
         <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 40px' }}>
+          <div
+            style={{
+              fontSize: '12px',
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: 'var(--color-primary, #059669)',
+              marginBottom: '10px',
+            }}
+          >
+            Satu Langganan, Solusi Terpadu
+          </div>
           <h2
             style={{
               fontSize: 'clamp(26px, 4vw, 38px)',
               fontWeight: 900,
               letterSpacing: '-0.03em',
-              color: 'var(--color-text-primary)',
+              color: 'var(--color-text-primary, #111827)',
               marginBottom: '14px',
               lineHeight: 1.2,
             }}
           >
-            Investasi Terjangkau dengan ROI yang Langsung Terasa
+            Investasi Terjangkau dengan Hasil Nyata
           </h2>
-          <p style={{ fontSize: '15.5px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-            Hanya butuh 1 tambahan klien tes STIFIn per bulan untuk menutup seluruh biaya langganan PromotorFlow.
+          <p style={{ fontSize: '15.5px', color: 'var(--color-text-secondary, #4B5563)', lineHeight: 1.6 }}>
+            Langganan Talira mencakup <strong>Talira Flow</strong> (CRM & Pipeline WhatsApp) dan <strong>Talira Class</strong> (LMS & Program Edukasi).
           </p>
 
           {/* Billing Cycle Toggle */}
@@ -98,60 +54,47 @@ export const FlowPricingSection: React.FC = () => {
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              backgroundColor: 'var(--color-surface)',
-              borderRadius: 'var(--radius-full)',
-              border: '1px solid var(--color-border-strong)',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E5E7EB',
+              borderRadius: '12px',
               padding: '4px',
-              marginTop: '24px',
-              boxShadow: 'var(--shadow-xs)',
+              marginTop: '20px',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
             }}
           >
             <button
+              type="button"
               onClick={() => setBillingCycle('monthly')}
               style={{
-                padding: '8px 20px',
-                borderRadius: 'var(--radius-full)',
-                backgroundColor: billingCycle === 'monthly' ? 'var(--color-primary)' : 'transparent',
-                color: billingCycle === 'monthly' ? '#FFFFFF' : 'var(--color-text-secondary)',
-                border: 'none',
-                fontWeight: 780,
+                padding: '8px 18px',
+                borderRadius: '8px',
+                border: 0,
+                backgroundColor: billingCycle === 'monthly' ? '#059669' : 'transparent',
+                color: billingCycle === 'monthly' ? '#FFFFFF' : '#6B7280',
+                fontWeight: 700,
                 fontSize: '13px',
                 cursor: 'pointer',
-                transition: 'all var(--duration-fast) ease',
+                transition: 'all 0.15s ease',
               }}
             >
               Bulanan
             </button>
             <button
+              type="button"
               onClick={() => setBillingCycle('annual')}
               style={{
-                padding: '8px 20px',
-                borderRadius: 'var(--radius-full)',
-                backgroundColor: billingCycle === 'annual' ? 'var(--color-primary)' : 'transparent',
-                color: billingCycle === 'annual' ? '#FFFFFF' : 'var(--color-text-secondary)',
-                border: 'none',
-                fontWeight: 780,
+                padding: '8px 18px',
+                borderRadius: '8px',
+                border: 0,
+                backgroundColor: billingCycle === 'annual' ? '#059669' : 'transparent',
+                color: billingCycle === 'annual' ? '#FFFFFF' : '#6B7280',
+                fontWeight: 700,
                 fontSize: '13px',
                 cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                transition: 'all var(--duration-fast) ease',
+                transition: 'all 0.15s ease',
               }}
             >
-              <span>Tahunan</span>
-              <span
-                style={{
-                  fontSize: '10.5px',
-                  fontWeight: 800,
-                  backgroundColor: billingCycle === 'annual' ? 'rgba(255,255,255,0.25)' : 'var(--color-primary-light)',
-                  color: billingCycle === 'annual' ? '#FFFFFF' : 'var(--color-primary)',
-                  padding: '2px 6px',
-                  borderRadius: 'var(--radius-full)',
-                }}
-              >
-                Hemat 33%
-              </span>
+              Tahunan <span style={{ fontSize: '11px', opacity: 0.9 }}>· Hemat 17%</span>
             </button>
           </div>
         </div>
@@ -161,107 +104,182 @@ export const FlowPricingSection: React.FC = () => {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '24px',
+            gap: '32px',
             alignItems: 'stretch',
           }}
         >
-          {plans.map((plan) => {
-            const price = billingCycle === 'annual' ? plan.priceAnnualPerMonth : plan.priceMonthly;
-            return (
-              <div
-                key={plan.name}
-                style={{
-                  backgroundColor: 'var(--color-surface)',
-                  borderRadius: 'var(--radius-xl)',
-                  border: plan.popular ? '2px solid var(--color-primary)' : '1px solid var(--color-divider)',
-                  padding: '36px 28px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  gap: '24px',
-                  position: 'relative',
-                  boxShadow: plan.popular ? 'var(--shadow-lg)' : 'var(--shadow-xs)',
-                  transform: plan.popular ? 'scale(1.02)' : 'none',
-                  transition: 'transform var(--duration-fast) ease',
-                }}
-              >
-                <div>
-                  {plan.badge && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: '-14px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        padding: '4px 14px',
-                        backgroundColor: 'var(--color-primary)',
-                        color: '#FFFFFF',
-                        borderRadius: 'var(--radius-full)',
-                        fontSize: '11.5px',
-                        fontWeight: 800,
-                        letterSpacing: '0.02em',
-                        boxShadow: 'var(--shadow-sm)',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      ★ {plan.badge}
-                    </div>
-                  )}
-
-                  <h3 style={{ fontSize: '20px', fontWeight: 850, color: 'var(--color-text-primary)', marginBottom: '8px' }}>
-                    {plan.name}
-                  </h3>
-
-                  <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.5, margin: '0 0 20px' }}>
-                    {plan.description}
-                  </p>
-
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text-secondary)' }}>Rp</span>
-                    <span className="tabular-nums" style={{ fontSize: '36px', fontWeight: 900, color: 'var(--color-text-primary)', letterSpacing: '-0.02em' }}>
-                      {price.toLocaleString('id-ID')}
-                    </span>
-                    <span style={{ fontSize: '13px', color: 'var(--color-text-tertiary)' }}>/bulan</span>
-                  </div>
-
-                  {billingCycle === 'annual' && (
-                    <div style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 700, marginBottom: '20px' }}>
-                      Ditagih tahunan (Rp {(price * 12).toLocaleString('id-ID')} / thn)
-                    </div>
-                  )}
-
-                  <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {plan.features.map((f) => (
-                      <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: 'var(--color-text-primary)', lineHeight: 1.45 }}>
-                        <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>✓</span>
-                        <span>{f}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <Link
-                  href={plan.href}
-                  className="touch-target-primary"
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: 'var(--radius-md)',
-                    backgroundColor: plan.popular ? 'var(--color-primary)' : 'var(--color-surface-hover)',
-                    color: plan.popular ? '#FFFFFF' : 'var(--color-text-primary)',
-                    border: plan.popular ? 'none' : '1px solid var(--color-border-strong)',
-                    fontWeight: 800,
-                    fontSize: '14px',
-                    textDecoration: 'none',
-                    textAlign: 'center',
-                    boxShadow: plan.popular ? 'var(--shadow-sm)' : 'none',
-                  }}
-                >
-                  {plan.ctaText} →
-                </Link>
+          {/* Card 1: Free */}
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '20px',
+              border: '1px solid #E5E7EB',
+              padding: '36px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+            }}
+          >
+            <div>
+              <div style={{ fontSize: '18px', fontWeight: 800, color: '#111827', marginBottom: '6px' }}>
+                Talira Free
               </div>
-            );
-          })}
+              <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '20px', lineHeight: 1.5 }}>
+                Mulai kelola prospek dan kenalkan materi edukasi pengantar Anda tanpa biaya investasi awal.
+              </p>
+
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '28px' }}>
+                <span style={{ fontSize: '36px', fontWeight: 850, color: '#111827' }}>Rp0</span>
+                <span style={{ fontSize: '13px', color: '#6B7280' }}>/ gratis selamanya</span>
+              </div>
+
+              <div style={{ display: 'grid', gap: '12px', borderTop: '1px solid #F3F4F6', paddingTop: '20px', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
+                  <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
+                  Hingga 250 Kontak CRM
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
+                  <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
+                  1 Program Kelas Terpublikasi
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
+                  <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
+                  Hingga 50 Peserta Belajar Aktif
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
+                  <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
+                  Antrean Eksekusi Harian (Work Queue)
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
+                  <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
+                  Tombol 1-Tap Kirim WhatsApp
+                </div>
+              </div>
+            </div>
+
+            <Link
+              href="/app"
+              style={{
+                width: '100%',
+                minHeight: '48px',
+                borderRadius: '12px',
+                backgroundColor: '#FFFFFF',
+                color: '#111827',
+                border: '1px solid #D1D5DB',
+                fontWeight: 750,
+                fontSize: '14px',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              Mulai Gratis Sekarang
+            </Link>
+          </div>
+
+          {/* Card 2: Solo */}
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '20px',
+              border: '2px solid #059669',
+              padding: '36px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              boxShadow: '0 12px 24px -4px rgba(5, 150, 105, 0.15)',
+              position: 'relative',
+            }}
+          >
+            <div
+              style={{
+                position: 'absolute',
+                top: '-13px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                backgroundColor: '#059669',
+                color: '#FFFFFF',
+                fontSize: '11px',
+                fontWeight: 800,
+                padding: '4px 14px',
+                borderRadius: '999px',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+              }}
+            >
+              Paling Populer & Hemat
+            </div>
+
+            <div>
+              <div style={{ fontSize: '18px', fontWeight: 800, color: '#111827', marginBottom: '6px' }}>
+                Talira Solo
+              </div>
+              <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '20px', lineHeight: 1.5 }}>
+                Solusi terpadu CRM PromotorFlow + LMS PromotorClass dengan penjualan kelas berbayar.
+              </p>
+
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '36px', fontWeight: 850, color: '#059669' }}>
+                  {billingCycle === 'annual' ? 'Rp 1.490.000' : 'Rp 149.000'}
+                </span>
+                <span style={{ fontSize: '13px', color: '#6B7280' }}>
+                  {billingCycle === 'annual' ? '/ tahun' : '/ bulan'}
+                </span>
+              </div>
+              <div style={{ fontSize: '11.5px', color: '#6B7280', marginBottom: '24px' }}>
+                + Rp3.000 flat per transaksi kelas berbayar (0% komisi persentase)
+              </div>
+
+              <div style={{ display: 'grid', gap: '12px', borderTop: '1px solid #F3F4F6', paddingTop: '20px', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#111827', fontWeight: 700 }}>
+                  <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
+                  Buka Penjualan Kelas Berbayar
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
+                  <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
+                  Hingga 2.500 Kontak CRM Terhubung
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
+                  <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
+                  Hingga 10 Program Kelas Terpublikasi
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
+                  <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
+                  Hingga 500 Peserta Belajar Aktif
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
+                  <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
+                  Integrasi Sinyal Belajar Real-Time (Hot/Warm/Cold)
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
+                  <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
+                  Halaman Booking Publik & Siklus Aftercare
+                </div>
+              </div>
+            </div>
+
+            <Link
+              href="/app"
+              style={{
+                width: '100%',
+                minHeight: '48px',
+                borderRadius: '12px',
+                backgroundColor: '#059669',
+                color: '#FFFFFF',
+                fontWeight: 780,
+                fontSize: '14px',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)',
+              }}
+            >
+              Pilih Paket Solo Sekarang
+            </Link>
+          </div>
         </div>
       </div>
     </section>

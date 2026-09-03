@@ -12,10 +12,11 @@ interface PromotorShellProps {
   children: React.ReactNode;
 }
 
-const DESKTOP_NAV: Array<{ label: string; href: string }>= [
+const DESKTOP_NAV: Array<{ label: string; href: string }> = [
   { label: 'Beranda', href: '/app' },
   { label: 'Program', href: '/app/programs' },
   { label: 'Learner', href: '/app/learners' },
+  { label: 'Pesanan', href: '/app/orders' },
   { label: 'Aktivitas', href: '/app/activity' },
   { label: 'Storefront', href: '/app/storefront' },
   { label: 'Pengaturan', href: '/app/settings' },

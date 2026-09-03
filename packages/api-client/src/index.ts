@@ -56,6 +56,16 @@ import type {
   ProgramAnalyticsResponse,
   LearnersListResponse,
   IntegrationHealth,
+  OrganizationPlanAccess,
+  CreateSubscriptionCheckoutRequest,
+  CreateSubscriptionCheckoutResponse,
+  PublicPaidCheckoutRequest,
+  PublicPaidCheckoutResponse,
+  PublicOrderStatusResponse,
+  ListOrdersQuery,
+  ListOrdersResponse,
+  CommerceOrder,
+  RejectOrderRequest,
 } from '@promotor/contracts';
 
 export interface ApiClientConfig {
@@ -494,6 +504,67 @@ export class PromotorClassContentApiClient {
       return { promotorFlow: 'UNAVAILABLE' };
     }
   }
+
+  // ==========================================
+  // Billing & Subscriptions
+  // ==========================================
+  async getPlanAccess(): Promise<OrganizationPlanAccess> {
+    return this.client.get<OrganizationPlanAccess>('/api/v1/billing/plan');
+  }
+
+  async createSubscriptionCheckout(
+    data: CreateSubscriptionCheckoutRequest
+  ): Promise<CreateSubscriptionCheckoutResponse> {
+    return this.client.post<CreateSubscriptionCheckoutResponse>('/api/v1/billing/subscription/checkout', data);
+  }
+
+  // ==========================================
+  // Public Paid Program Commerce
+  // ==========================================
+  async createPaidProgramCheckout(
+    slug: string,
+    programSlug: string,
+    data: PublicPaidCheckoutRequest
+  ): Promise<PublicPaidCheckoutResponse> {
+    return this.client.post<PublicPaidCheckoutResponse>(
+      `/api/v1/public/${encodeURIComponent(slug)}/programs/${encodeURIComponent(programSlug)}/checkout`,
+      data
+    );
+  }
+
+  async getPublicOrderStatus(
+    slug: string,
+    programSlug: string,
+    reference: string
+  ): Promise<PublicOrderStatusResponse> {
+    return this.client.get<PublicOrderStatusResponse>(
+      `/api/v1/public/${encodeURIComponent(slug)}/programs/${encodeURIComponent(programSlug)}/orders/${encodeURIComponent(reference)}`
+    );
+  }
+
+  // ==========================================
+  // PromotorClass Orders Management
+  // ==========================================
+  async listOrders(query?: Partial<ListOrdersQuery>): Promise<ListOrdersResponse> {
+    const params = new URLSearchParams();
+    if (query?.status) params.set('status', query.status);
+    if (query?.limit) params.set('limit', String(query.limit));
+    if (query?.offset) params.set('offset', String(query.offset));
+    const qs = params.toString();
+    return this.client.get<ListOrdersResponse>(`/api/v1/class/orders${qs ? `?${qs}` : ''}`);
+  }
+
+  async getOrderById(orderId: string): Promise<{ order: CommerceOrder }> {
+    return this.client.get<{ order: CommerceOrder }>(`/api/v1/class/orders/${encodeURIComponent(orderId)}`);
+  }
+
+  async rejectOrder(orderId: string, reason: string): Promise<{ order: CommerceOrder }> {
+    return this.client.post<{ order: CommerceOrder }>(`/api/v1/class/orders/${encodeURIComponent(orderId)}/reject`, { reason });
+  }
+
+  async approveOrder(orderId: string): Promise<{ order: CommerceOrder }> {
+    return this.client.post<{ order: CommerceOrder }>(`/api/v1/class/orders/${encodeURIComponent(orderId)}/approve`);
+  }
 }
 
 export { PromotorClassContentApiClient as PromotorApiClient };
@@ -794,6 +865,67 @@ export class PromotorFlowApiClient {
       }
       return { promotorFlow: 'AVAILABLE', promotorClass: 'UNAVAILABLE' };
     }
+  }
+
+  // ==========================================
+  // Billing & Subscriptions
+  // ==========================================
+  async getPlanAccess(): Promise<OrganizationPlanAccess> {
+    return this.client.get<OrganizationPlanAccess>('/api/v1/billing/plan');
+  }
+
+  async createSubscriptionCheckout(
+    data: CreateSubscriptionCheckoutRequest
+  ): Promise<CreateSubscriptionCheckoutResponse> {
+    return this.client.post<CreateSubscriptionCheckoutResponse>('/api/v1/billing/subscription/checkout', data);
+  }
+
+  // ==========================================
+  // Public Paid Program Commerce
+  // ==========================================
+  async createPaidProgramCheckout(
+    slug: string,
+    programSlug: string,
+    data: PublicPaidCheckoutRequest
+  ): Promise<PublicPaidCheckoutResponse> {
+    return this.client.post<PublicPaidCheckoutResponse>(
+      `/api/v1/public/${encodeURIComponent(slug)}/programs/${encodeURIComponent(programSlug)}/checkout`,
+      data
+    );
+  }
+
+  async getPublicOrderStatus(
+    slug: string,
+    programSlug: string,
+    reference: string
+  ): Promise<PublicOrderStatusResponse> {
+    return this.client.get<PublicOrderStatusResponse>(
+      `/api/v1/public/${encodeURIComponent(slug)}/programs/${encodeURIComponent(programSlug)}/orders/${encodeURIComponent(reference)}`
+    );
+  }
+
+  // ==========================================
+  // PromotorClass Orders Management
+  // ==========================================
+  async listOrders(query?: Partial<ListOrdersQuery>): Promise<ListOrdersResponse> {
+    const params = new URLSearchParams();
+    if (query?.status) params.set('status', query.status);
+    if (query?.limit) params.set('limit', String(query.limit));
+    if (query?.offset) params.set('offset', String(query.offset));
+    const qs = params.toString();
+    return this.client.get<ListOrdersResponse>(`/api/v1/class/orders${qs ? `?${qs}` : ''}`);
+  }
+
+  async getOrderById(orderId: string): Promise<{ order: CommerceOrder }> {
+    return this.client.get<{ order: CommerceOrder }>(`/api/v1/class/orders/${encodeURIComponent(orderId)}`);
+  }
+
+  async rejectOrder(orderId: string, reason: string): Promise<{ order: CommerceOrder }> {
+    return this.client.post<{ order: CommerceOrder }>(`/api/v1/class/orders/${encodeURIComponent(orderId)}/reject`, { reason });
+  }
+
+  async approveOrder(orderId: string): Promise<{ order: CommerceOrder }> {
+    return this.client.post<{ order: CommerceOrder }>(`/api/v1/class/orders/${encodeURIComponent(orderId)}/approve`);
   }
 }
 
