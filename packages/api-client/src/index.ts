@@ -58,6 +58,18 @@ import type {
   ProgramAnalyticsResponse,
   LearnersListResponse,
   IntegrationHealth,
+  OrganizationBankAccount,
+  CreateBankAccountRequest,
+  UpdateBankAccountRequest,
+  OrganizationPaymentSettings,
+  UpdatePaymentSettingsRequest,
+  PublicPaymentInfo,
+  ProgramPurchaseRequest,
+  CreatePublicPurchaseRequest,
+  CreatePublicPurchaseResponse,
+  OrdersListResponse,
+  PurchaseStatus,
+  PurchaseMethod,
 } from '@promotor/contracts';
 
 export interface ApiClientConfig {
@@ -399,6 +411,24 @@ export class PromotorClassContentApiClient {
     );
   }
 
+  // Manual Paid Program Commerce
+  async getPublicPaymentInfo(workspaceSlug: string): Promise<PublicPaymentInfo> {
+    return this.client.get<PublicPaymentInfo>(
+      `/api/v1/public/${encodeURIComponent(workspaceSlug)}/payment-info`
+    );
+  }
+
+  async createPublicPurchaseRequest(
+    workspaceSlug: string,
+    programSlug: string,
+    data: CreatePublicPurchaseRequest
+  ): Promise<CreatePublicPurchaseResponse> {
+    return this.client.post<CreatePublicPurchaseResponse>(
+      `/api/v1/public/${encodeURIComponent(workspaceSlug)}/programs/${encodeURIComponent(programSlug)}/purchase-requests`,
+      data
+    );
+  }
+
   async redeemLearnerToken(data: RedeemLearnerTokenRequest | string): Promise<RedeemLearnerTokenResponse> {
     const payload = typeof data === 'string' ? { token: data } : data;
     return this.client.post('/api/v1/public/learner/redeem-token', payload);
@@ -541,6 +571,60 @@ export class PromotorClassContentApiClient {
       }
       return { promotorFlow: 'UNAVAILABLE' };
     }
+  }
+
+  // ==========================================
+  // Manual Paid Program Commerce (§10, §11, §12)
+  // ==========================================
+
+  async listOrders(query?: { status?: PurchaseStatus; method?: PurchaseMethod }): Promise<OrdersListResponse> {
+    const params = new URLSearchParams();
+    if (query?.status) params.append('status', query.status);
+    if (query?.method) params.append('method', query.method);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return this.client.get<OrdersListResponse>(`/api/v1/class/orders${qs}`);
+  }
+
+  async getOrderById(id: string): Promise<{ order: ProgramPurchaseRequest }> {
+    return this.client.get<{ order: ProgramPurchaseRequest }>(`/api/v1/class/orders/${encodeURIComponent(id)}`);
+  }
+
+  async approveOrder(id: string): Promise<{ order: ProgramPurchaseRequest; enrollmentId: string; wasAlreadyApproved: boolean }> {
+    return this.client.post<{ order: ProgramPurchaseRequest; enrollmentId: string; wasAlreadyApproved: boolean }>(
+      `/api/v1/class/orders/${encodeURIComponent(id)}/approve`
+    );
+  }
+
+  async rejectOrder(id: string, reason?: string | null): Promise<{ order: ProgramPurchaseRequest }> {
+    return this.client.post<{ order: ProgramPurchaseRequest }>(
+      `/api/v1/class/orders/${encodeURIComponent(id)}/reject`,
+      { reason }
+    );
+  }
+
+  async getPaymentSettings(): Promise<{ settings: OrganizationPaymentSettings }> {
+    return this.client.get<{ settings: OrganizationPaymentSettings }>('/api/v1/class/settings/payments');
+  }
+
+  async updatePaymentSettings(data: UpdatePaymentSettingsRequest): Promise<{ settings: OrganizationPaymentSettings }> {
+    return this.client.put<{ settings: OrganizationPaymentSettings }>('/api/v1/class/settings/payments', data);
+  }
+
+  async createBankAccount(data: CreateBankAccountRequest): Promise<{ bankAccount: OrganizationBankAccount }> {
+    return this.client.post<{ bankAccount: OrganizationBankAccount }>('/api/v1/class/settings/payments/bank-accounts', data);
+  }
+
+  async updateBankAccount(id: string, data: UpdateBankAccountRequest): Promise<{ bankAccount: OrganizationBankAccount }> {
+    return this.client.put<{ bankAccount: OrganizationBankAccount }>(
+      `/api/v1/class/settings/payments/bank-accounts/${encodeURIComponent(id)}`,
+      data
+    );
+  }
+
+  async deleteBankAccount(id: string): Promise<{ success: boolean }> {
+    return this.client.delete<{ success: boolean }>(
+      `/api/v1/class/settings/payments/bank-accounts/${encodeURIComponent(id)}`
+    );
   }
 }
 

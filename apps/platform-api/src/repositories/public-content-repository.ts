@@ -87,6 +87,8 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
       accessType: progRow.accessType as any,
       pricing: progRow.pricing as any,
       priceAmount: progRow.priceAmount,
+      bankTransferEnabled: progRow.bankTransferEnabled ?? false,
+      whatsAppEnabled: progRow.whatsAppEnabled ?? false,
       publishedAt: progRow.publishedAt ?? undefined,
       totalModulesCount: moduleRows.length,
       totalLessonsCount,
@@ -161,6 +163,8 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
       accessType: progRow.accessType as any,
       pricing: progRow.pricing as any,
       priceAmount: progRow.priceAmount,
+      bankTransferEnabled: progRow.bankTransferEnabled ?? false,
+      whatsAppEnabled: progRow.whatsAppEnabled ?? false,
       publishedAt: progRow.publishedAt ?? undefined,
       totalModulesCount: moduleRows.length,
       totalLessonsCount,
@@ -289,7 +293,20 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
 
       const rows = await db
         .select({
-          program: programs,
+          program: {
+            id: programs.id,
+            organizationId: programs.organizationId,
+            slug: programs.slug,
+            title: programs.title,
+            subtitle: programs.subtitle,
+            description: programs.description,
+            programType: programs.programType,
+            accessType: programs.accessType,
+            pricing: programs.pricing,
+            priceAmount: programs.priceAmount,
+            status: programs.status,
+            publishedAt: programs.publishedAt,
+          },
           presentation: programPresentations,
         })
         .from(programs)
@@ -336,7 +353,20 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
 
       const [row] = await db
         .select({
-          program: programs,
+          program: {
+            id: programs.id,
+            organizationId: programs.organizationId,
+            slug: programs.slug,
+            title: programs.title,
+            subtitle: programs.subtitle,
+            description: programs.description,
+            programType: programs.programType,
+            accessType: programs.accessType,
+            pricing: programs.pricing,
+            priceAmount: programs.priceAmount,
+            status: programs.status,
+            publishedAt: programs.publishedAt,
+          },
           presentation: programPresentations,
         })
         .from(programs)

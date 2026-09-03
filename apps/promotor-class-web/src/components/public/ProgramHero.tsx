@@ -126,8 +126,8 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
            </div>
          </div>
 
-         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-           {isRegistrationAllowed ? (
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            {isRegistrationAllowed ? (
               <button
                 onClick={onStartClick}
                 style={{
@@ -142,9 +142,26 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
                   cursor: 'pointer',
                 }}
               >
-               Mulai belajar gratis
+                Mulai belajar gratis
               </button>
-           ) : (
+            ) : program.pricing === 'one_time' && (program.priceAmount || 0) > 0 ? (
+              <button
+                onClick={onStartClick}
+                style={{
+                  minHeight: '46px',
+                  borderRadius: '0px',
+                  padding: '0 20px',
+                  backgroundColor: 'var(--accent-dark)',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  fontSize: '14px',
+                  border: 0,
+                  cursor: 'pointer',
+                }}
+              >
+                Beli Program Sekarang →
+              </button>
+            ) : (
               <a
                 href="#register"
                 style={{
@@ -161,9 +178,9 @@ export function ProgramHero({ detail, onStartClick }: ProgramHeroProps) {
                   alignItems: 'center',
                 }}
               >
-               {program.programType === 'aftersales' ? 'Akses Peserta Tes STIFIn' : 'Informasi Pendaftaran'}
+                {program.programType === 'aftersales' ? 'Akses Peserta Tes STIFIn' : 'Informasi Pendaftaran'}
               </a>
-           )}
+            )}
 
             <a
               href="#curriculum"

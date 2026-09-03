@@ -9,6 +9,12 @@ import { isTemplatesEnabled, isReferralPrototypeEnabled } from '@/lib/feature-fl
 export default function MorePage() {
   const moreLinks = [
     {
+      label: 'Pesanan & Pembelian Program',
+      href: '/app/orders',
+      note: 'Konfirmasi manual transfer bank dan pesanan WhatsApp',
+      icon: '🛍️',
+    },
+    {
       label: 'Storefront & Branding',
       href: '/app/storefront',
       note: 'Kustomisasi logo, tema visual, foto profil & narasi publik',

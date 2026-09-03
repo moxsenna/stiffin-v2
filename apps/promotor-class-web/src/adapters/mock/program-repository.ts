@@ -61,6 +61,8 @@ export class MockProgramRepository implements ProgramRepositoryPort {
       status: 'draft', // F0.4 Requirement: Programs default to draft
       pricing: priceType === 'free' ? 'free' : 'one_time',
       priceAmount: priceType === 'paid' ? 150000 : 0,
+      bankTransferEnabled: priceType === 'paid',
+      whatsAppEnabled: priceType === 'paid',
       modules: [newModule],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -112,6 +114,8 @@ export class MockProgramRepository implements ProgramRepositoryPort {
       status: 'draft', // F0.4 Requirement: Programs default to draft
       pricing: input.programType === 'lead_magnet' ? 'free' : 'one_time',
       priceAmount: input.programType === 'lead_magnet' ? 0 : (input.priceAmount || 150000),
+      bankTransferEnabled: input.bankTransferEnabled ?? (input.programType === 'paid'),
+      whatsAppEnabled: input.whatsAppEnabled ?? (input.programType === 'paid'),
       modules: [initialModule],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

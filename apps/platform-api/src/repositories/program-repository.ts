@@ -71,7 +71,22 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
   async function loadFullProgram(ctx: OrganizationContext, programId: string): Promise<Program | null> {
     const [progRow] = await db
       .select({
-        program: programs,
+        program: {
+          id: programs.id,
+          organizationId: programs.organizationId,
+          slug: programs.slug,
+          title: programs.title,
+          subtitle: programs.subtitle,
+          description: programs.description,
+          programType: programs.programType,
+          accessType: programs.accessType,
+          status: programs.status,
+          pricing: programs.pricing,
+          priceAmount: programs.priceAmount,
+          publishedAt: programs.publishedAt,
+          createdAt: programs.createdAt,
+          updatedAt: programs.updatedAt,
+        },
         orgSlug: organizations.slug,
         presentation: programPresentations,
       })
@@ -139,13 +154,12 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
         hasReflection: !!(les.reflectionType || les.reflectionPrompt),
         reflectionType: (les.reflectionType as any) ?? (les.reflectionPrompt ? 'long_text' : undefined),
         reflectionPrompt: les.reflectionPrompt ?? undefined,
-        reflectionOptions: les.reflectionOptions ?? undefined,
-        hasCta: !!(les.ctaType && les.ctaLabel),
-        ctaType: les.ctaType as any,
+        reflectionOptions: les.reflectionOptions ?? [],
         ctaLabel: les.ctaLabel ?? undefined,
-        ctaUrl: (les.ctaConfig as any)?.url ?? undefined,
-        ctaTargetProgramId: les.ctaTargetProgramId ?? undefined,
-        ctaConfig: les.ctaConfig ?? undefined,
+        ctaUrl: les.ctaUrl ?? undefined,
+        isOptional: les.isOptional,
+        createdAt: les.createdAt,
+        updatedAt: les.updatedAt,
       });
       lessonsByModule.set(les.moduleId, list);
     }
@@ -156,13 +170,15 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
       title: m.title,
       order: m.order,
       lessons: lessonsByModule.get(m.id) ?? [],
+      createdAt: m.createdAt,
+      updatedAt: m.updatedAt,
     }));
 
     const pres = progRow.presentation;
     const presentationMapped: ProgramPublicPresentation | null = pres
       ? {
-          coverVariant: pres.coverVariant as any,
-          featured: pres.featured,
+          coverVariant: (pres.coverVariant as any) ?? 'cover-a',
+          featured: pres.featured ?? false,
           imageUrl: pres.imageUrl ?? undefined,
           heroEyebrow: pres.heroEyebrow ?? undefined,
           shortOutcome: pres.shortOutcome ?? undefined,
@@ -184,6 +200,8 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
       status: progRow.program.status as any,
       pricing: progRow.program.pricing as any,
       priceAmount: progRow.program.priceAmount,
+      bankTransferEnabled: (progRow.program as any).bankTransferEnabled ?? (progRow.program.pricing === 'one_time'),
+      whatsAppEnabled: (progRow.program as any).whatsAppEnabled ?? (progRow.program.pricing === 'one_time'),
       publishedAt: progRow.program.publishedAt ?? undefined,
       coverImageUrl: presentationMapped?.imageUrl ?? undefined,
       presentation: presentationMapped,
@@ -202,7 +220,22 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
 
       const rows = await db
         .select({
-          program: programs,
+          program: {
+            id: programs.id,
+            organizationId: programs.organizationId,
+            slug: programs.slug,
+            title: programs.title,
+            subtitle: programs.subtitle,
+            description: programs.description,
+            programType: programs.programType,
+            accessType: programs.accessType,
+            status: programs.status,
+            pricing: programs.pricing,
+            priceAmount: programs.priceAmount,
+            publishedAt: programs.publishedAt,
+            createdAt: programs.createdAt,
+            updatedAt: programs.updatedAt,
+          },
           orgSlug: organizations.slug,
           presentation: programPresentations,
         })
@@ -300,6 +333,8 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
           status: createdProgram.status as any,
           pricing: createdProgram.pricing as any,
           priceAmount: createdProgram.priceAmount,
+          bankTransferEnabled: createdProgram.bankTransferEnabled ?? false,
+          whatsAppEnabled: createdProgram.whatsAppEnabled ?? false,
           publishedAt: createdProgram.publishedAt ?? undefined,
           coverImageUrl: presentationInput?.imageUrl ?? undefined,
           presentation: {
@@ -340,7 +375,7 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
         .update(programs)
         .set({ ...patch, updatedAt: sql`now()` })
         .where(and(eq(programs.id, id), eq(programs.organizationId, ctx.organizationId)))
-        .returning();
+        .returning({ id: programs.id });
 
       if (!updated) return null;
       return loadFullProgram(ctx, id);
@@ -358,7 +393,7 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
         .update(programs)
         .set(patch)
         .where(and(eq(programs.id, id), eq(programs.organizationId, ctx.organizationId)))
-        .returning();
+        .returning({ id: programs.id });
 
       if (!updated) return null;
       return loadFullProgram(ctx, id);

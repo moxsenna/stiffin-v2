@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { sql } from 'drizzle-orm';
 import { Env } from './env';
 import { executeDbHealthProbe } from './db/client';
 import { authLifecycle, sessionMiddleware } from './auth/session-middleware';
@@ -22,10 +23,12 @@ import { createEnrollmentService } from './services/class/enrollment-service';
 import { createLearningEngineService } from './services/class/learning-engine-service';
 import { createLearnerSessionService } from './services/class/learner-session-service';
 import { learnerAuthMiddleware } from './middleware/learner-auth-middleware';
+import { createCommerceService } from './services/class/commerce-service';
 import {
   PublicSlotsQuerySchema,
   CreatePublicBookingRequestSchema,
   PublicRegisterLearnerRequestSchema,
+  CreatePublicPurchaseRequestSchema,
   RedeemLearnerTokenRequestSchema,
   SubmitReflectionRequestSchema,
   RecordLearningEventRequestSchema,
@@ -408,6 +411,42 @@ export function createApp(deps?: AppDependencies) {
 
   app.post('/api/v1/public/:slug/programs/:programSlug/register', handlePublicRegistration);
   app.post('/api/v1/public/workspaces/:workspaceSlug/programs/:programSlug/register', handlePublicRegistration);
+
+  // ==========================================
+  // Public Paid Program Purchase Requests
+  // ==========================================
+  const handlePublicPurchaseRequest = async (c: any) => {
+    c.header('Cache-Control', 'no-store');
+    const slug = c.req.param('slug') || c.req.param('workspaceSlug');
+    const programSlug = c.req.param('programSlug');
+    const db = c.get('db');
+    const raw = await c.req.json().catch(() => ({}));
+
+    const parsed = CreatePublicPurchaseRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', parsed.error.issues[0]?.message || 'Data pemesanan tidak valid');
+    }
+
+    const commerceService = createCommerceService(db);
+    const result = await commerceService.createPublicPurchase(slug, programSlug, parsed.data);
+    return c.json(result, 201);
+  };
+
+  app.post('/api/v1/public/:slug/programs/:programSlug/purchase-requests', handlePublicPurchaseRequest);
+  app.post('/api/v1/public/workspaces/:workspaceSlug/programs/:programSlug/purchase-requests', handlePublicPurchaseRequest);
+
+  const handlePublicPaymentInfo = async (c: any) => {
+    c.header('Cache-Control', 'no-store');
+    const slug = c.req.param('slug') || c.req.param('workspaceSlug');
+    const db = c.get('db');
+    const commerceService = createCommerceService(db);
+    const result = await commerceService.getPublicPaymentInfo(slug);
+    return c.json(result, 200);
+  };
+
+  app.get('/api/v1/public/:slug/payment-info', handlePublicPaymentInfo);
+  app.get('/api/v1/public/workspaces/:workspaceSlug/payment-info', handlePublicPaymentInfo);
+
 
   // ==========================================
   // Learner Auth & Session Redemption (§4, §5)

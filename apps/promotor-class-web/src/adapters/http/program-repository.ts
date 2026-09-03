@@ -44,6 +44,8 @@ export class HttpProgramRepository implements ProgramRepositoryPort {
       description: input.description,
       programType: input.programType,
       priceAmount: input.priceAmount,
+      bankTransferEnabled: input.bankTransferEnabled,
+      whatsAppEnabled: input.whatsAppEnabled,
       heroEyebrow: input.heroEyebrow,
       durationLabel: input.durationLabel,
       coverVariant: input.coverVariant as any,

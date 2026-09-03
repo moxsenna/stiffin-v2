@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, timestamp, uniqueIndex, index, check } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, integer, boolean, timestamp, uniqueIndex, index, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { organizations } from './organizations';
 
@@ -18,6 +18,8 @@ export const programs = pgTable(
     status: text('status').notNull().default('draft'),
     pricing: text('pricing').notNull().default('free'),
     priceAmount: integer('price_amount').notNull().default(0),
+    bankTransferEnabled: boolean('bank_transfer_enabled').notNull().default(false),
+    whatsAppEnabled: boolean('whatsapp_enabled').notNull().default(false),
     publishedAt: timestamp('published_at', { withTimezone: true, mode: 'string' }),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),

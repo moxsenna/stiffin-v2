@@ -6,6 +6,8 @@ export interface CreateProgramDetailedInput {
   description: string;
   programType: 'lead_magnet' | 'aftersales' | 'paid' | 'private';
   priceAmount?: number;
+  bankTransferEnabled?: boolean;
+  whatsAppEnabled?: boolean;
   heroEyebrow?: string;
   durationLabel?: string;
   coverVariant?: string;

@@ -8,6 +8,7 @@ import { getPublicStorefrontRepository } from '@/adapters';
 import { resetDemoStateCommand } from '@/modules/developer/commands';
 import { isReferralPrototypeEnabled } from '@/lib/feature-flags';
 import { getSession, signOut, changePassword, UserSession } from '@/lib/auth';
+import { PaymentSettingsSection } from '@/components/promotor/PaymentSettingsSection';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -165,7 +166,10 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* KARTU 2: Keamanan & Ubah Kata Sandi */}
+          {/* KARTU 2: Metode Pembayaran & Rekening Bank */}
+          <PaymentSettingsSection />
+
+          {/* KARTU 3: Keamanan & Ubah Kata Sandi */}
           <div
             style={{
               backgroundColor: 'var(--color-surface)',

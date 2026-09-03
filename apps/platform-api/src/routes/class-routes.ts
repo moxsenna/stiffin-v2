@@ -6,8 +6,12 @@ import { DomainError } from '../core/errors';
 import {
   CreateManualEnrollmentRequestSchema,
   UpdateStorefrontThemeRequestSchema,
+  UpdatePaymentSettingsRequestSchema,
+  CreateBankAccountRequestSchema,
+  UpdateBankAccountRequestSchema,
 } from '@promotor/contracts';
 import { createEnrollmentService } from '../services/class/enrollment-service';
+import { createCommerceService } from '../services/class/commerce-service';
 import { createPromotorClassAdapter } from '../services/class/promotor-class-adapter';
 import { createLearningEngineService } from '../services/class/learning-engine-service';
 import { createStorefrontThemeService } from '../services/class/storefront-theme-service';
@@ -722,5 +726,139 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
       })),
     }, 200);
   });
+
+  // ==========================================
+  // Manual Paid Program Commerce Endpoints
+  // ==========================================
+
+  // 14. List Orders (Purchase Requests)
+  app.get('/api/v1/class/orders', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const status = c.req.query('status') as any;
+    const method = c.req.query('method') as any;
+
+    const commerceService = createCommerceService(db);
+    const orders = await commerceService.listOrders(ctx.organizationId, {
+      status: status || undefined,
+      method: method || undefined,
+    });
+
+    return c.json({ orders, total: orders.length }, 200);
+  });
+
+  // 15. Get Single Order Detail
+  app.get('/api/v1/class/orders/:id', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const id = c.req.param('id');
+
+    const commerceService = createCommerceService(db);
+    const order = await commerceService.getOrderById(ctx.organizationId, id);
+    if (!order) {
+      throw new DomainError('NOT_FOUND', 'Pesanan tidak ditemukan');
+    }
+
+    return c.json({ order }, 200);
+  });
+
+  // 16. Approve Order (Grant Access)
+  app.post('/api/v1/class/orders/:id/approve', async (c) => {
+    const { ctx, actor, db } = getRequestContext(c);
+    const id = c.req.param('id');
+
+    const commerceService = createCommerceService(db);
+    const result = await commerceService.approvePurchaseRequest(ctx.organizationId, id, actor.userId);
+
+    return c.json(result, 200);
+  });
+
+  // 17. Reject Order
+  app.post('/api/v1/class/orders/:id/reject', async (c) => {
+    const { ctx, actor, db } = getRequestContext(c);
+    const id = c.req.param('id');
+    const raw = await c.req.json().catch(() => ({}));
+
+    const commerceService = createCommerceService(db);
+    const order = await commerceService.rejectPurchaseRequest(
+      ctx.organizationId,
+      id,
+      actor.userId,
+      raw.reason
+    );
+
+    return c.json({ order }, 200);
+  });
+
+  // 18. Get Payment Settings
+  app.get('/api/v1/class/settings/payments', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const commerceService = createCommerceService(db);
+    const settings = await commerceService.getPaymentSettings(ctx.organizationId);
+    return c.json({ settings }, 200);
+  });
+
+  // 19. Update Payment Settings (Sales WhatsApp)
+  app.put('/api/v1/class/settings/payments', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = UpdatePaymentSettingsRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', parsed.error.issues[0]?.message || 'Format nomor WhatsApp penjualan tidak valid');
+    }
+
+    const commerceService = createCommerceService(db);
+    const settings = await commerceService.updateSalesWhatsAppNumber(
+      ctx.organizationId,
+      parsed.data.salesWhatsAppNumber ?? null
+    );
+
+    return c.json({ settings }, 200);
+  });
+
+  // 20. Bank Accounts CRUD
+  app.post('/api/v1/class/settings/payments/bank-accounts', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = CreateBankAccountRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', parsed.error.issues[0]?.message || 'Data rekening bank tidak valid');
+    }
+
+    const commerceService = createCommerceService(db);
+    const bankAccount = await commerceService.createBankAccount(ctx.organizationId, parsed.data);
+
+    return c.json({ bankAccount }, 201);
+  });
+
+  app.put('/api/v1/class/settings/payments/bank-accounts/:id', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const id = c.req.param('id');
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = UpdateBankAccountRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', parsed.error.issues[0]?.message || 'Data rekening bank tidak valid');
+    }
+
+    const commerceService = createCommerceService(db);
+    const bankAccount = await commerceService.updateBankAccount(ctx.organizationId, id, parsed.data);
+    if (!bankAccount) {
+      throw new DomainError('NOT_FOUND', 'Rekening bank tidak ditemukan');
+    }
+
+    return c.json({ bankAccount }, 200);
+  });
+
+  app.delete('/api/v1/class/settings/payments/bank-accounts/:id', async (c) => {
+    const { ctx, db } = getRequestContext(c);
+    const id = c.req.param('id');
+
+    const commerceService = createCommerceService(db);
+    const deleted = await commerceService.deleteBankAccount(ctx.organizationId, id);
+    if (!deleted) {
+      throw new DomainError('NOT_FOUND', 'Rekening bank tidak ditemukan');
+    }
+
+    return c.json({ success: true }, 200);
+  });
 }
+
 

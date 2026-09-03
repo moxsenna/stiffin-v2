@@ -127,6 +127,8 @@ export const ProgramSchema = z.object({
   status: ProgramStatusSchema,
   pricing: ProgramPricingSchema,
   priceAmount: z.number().default(0),
+  bankTransferEnabled: z.boolean().default(false),
+  whatsAppEnabled: z.boolean().default(false),
   publishedAt: z.string().optional().nullable(),
   coverImageUrl: z.string().optional().nullable(),
   presentation: ProgramPublicPresentationSchema.optional().nullable(),
@@ -477,6 +479,8 @@ export const PublicProgramSummarySchema = z.object({
   accessType: AccessTypeSchema,
   pricing: ProgramPricingSchema,
   priceAmount: z.number(),
+  bankTransferEnabled: z.boolean().default(false),
+  whatsAppEnabled: z.boolean().default(false),
   publishedAt: z.string().optional().nullable(),
   totalLessonsCount: z.number(),
   totalModulesCount: z.number(),
@@ -830,6 +834,8 @@ export const CreateProgramRequestSchema = z.object({
   description: z.string().optional().nullable(),
   programType: ActiveProgramTypeSchema,
   priceAmount: z.number().min(0).optional(),
+  bankTransferEnabled: z.boolean().optional(),
+  whatsAppEnabled: z.boolean().optional(),
   heroEyebrow: z.string().optional().nullable(),
   durationLabel: z.string().optional().nullable(),
   coverVariant: z.enum(['cover-a', 'cover-b', 'cover-c']).optional(),
@@ -847,6 +853,8 @@ export const UpdateProgramRequestSchema = z.object({
   accessType: AccessTypeSchema.optional(),
   pricing: ProgramPricingSchema.optional(),
   priceAmount: z.number().min(0).optional(),
+  bankTransferEnabled: z.boolean().optional(),
+  whatsAppEnabled: z.boolean().optional(),
 });
 export type UpdateProgramRequest = z.infer<typeof UpdateProgramRequestSchema>;
 
@@ -1469,4 +1477,158 @@ export const LearnersListResponseSchema = z.object({
   total: z.number().int().nonnegative(),
 });
 export type LearnersListResponse = z.infer<typeof LearnersListResponseSchema>;
+
+// ==========================================
+// 3c. Manual Paid Program Commerce Contracts
+// ==========================================
+export const PurchaseMethodSchema = z.enum(['BANK_TRANSFER', 'WHATSAPP']);
+export type PurchaseMethod = z.infer<typeof PurchaseMethodSchema>;
+
+export const PurchaseStatusSchema = z.enum(['PENDING', 'APPROVED', 'REJECTED']);
+export type PurchaseStatus = z.infer<typeof PurchaseStatusSchema>;
+
+export const ProgramAccessTypeSchema = z.enum(['FREE', 'PAID']);
+export type ProgramAccessType = z.infer<typeof ProgramAccessTypeSchema>;
+
+export const CurrencySchema = z.literal('IDR');
+export type Currency = z.infer<typeof CurrencySchema>;
+
+export const OrganizationBankAccountSchema = z.object({
+  id: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  bankName: z.string().min(1, 'Nama bank tidak boleh kosong').max(100),
+  accountNumber: z.string().min(1, 'Nomor rekening tidak boleh kosong').max(50),
+  accountHolderName: z.string().min(1, 'Nama pemilik rekening tidak boleh kosong').max(100),
+  isActive: z.boolean().default(true),
+  sortOrder: z.number().int().default(0),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+export type OrganizationBankAccount = z.infer<typeof OrganizationBankAccountSchema>;
+
+export const CreateBankAccountRequestSchema = z.object({
+  bankName: z.string().min(1, 'Nama bank wajib diisi').max(100),
+  accountNumber: z.string().min(1, 'Nomor rekening wajib diisi').max(50),
+  accountHolderName: z.string().min(1, 'Nama pemilik rekening wajib diisi').max(100),
+  isActive: z.boolean().optional().default(true),
+  sortOrder: z.number().int().optional(),
+});
+export type CreateBankAccountRequest = z.infer<typeof CreateBankAccountRequestSchema>;
+
+export const UpdateBankAccountRequestSchema = z.object({
+  bankName: z.string().min(1, 'Nama bank wajib diisi').max(100).optional(),
+  accountNumber: z.string().min(1, 'Nomor rekening wajib diisi').max(50).optional(),
+  accountHolderName: z.string().min(1, 'Nama pemilik rekening wajib diisi').max(100).optional(),
+  isActive: z.boolean().optional(),
+  sortOrder: z.number().int().optional(),
+});
+export type UpdateBankAccountRequest = z.infer<typeof UpdateBankAccountRequestSchema>;
+
+export const OrganizationPaymentSettingsSchema = z.object({
+  id: z.string().uuid().optional(),
+  organizationId: z.string().uuid(),
+  salesWhatsAppNumber: PhoneE164Schema.optional().nullable(),
+  bankAccounts: z.array(OrganizationBankAccountSchema).default([]),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+export type OrganizationPaymentSettings = z.infer<typeof OrganizationPaymentSettingsSchema>;
+
+export const UpdatePaymentSettingsRequestSchema = z.object({
+  salesWhatsAppNumber: PhoneE164Schema.optional().nullable(),
+});
+export type UpdatePaymentSettingsRequest = z.infer<typeof UpdatePaymentSettingsRequestSchema>;
+
+export const PublicPaymentInfoSchema = z.object({
+  salesWhatsAppNumber: PhoneE164Schema.optional().nullable(),
+  bankAccounts: z.array(
+    z.object({
+      id: z.string(),
+      bankName: z.string(),
+      accountNumber: z.string(),
+      accountHolderName: z.string(),
+    })
+  ),
+});
+export type PublicPaymentInfo = z.infer<typeof PublicPaymentInfoSchema>;
+
+export const ProgramPurchaseRequestSchema = z.object({
+  id: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  programId: z.string().uuid(),
+  contactId: z.string().uuid(),
+  purchaseReference: z.string().min(1),
+  purchaseMethod: PurchaseMethodSchema,
+  status: PurchaseStatusSchema,
+  priceAmount: z.number().int().nonnegative(),
+  currency: CurrencySchema.default('IDR'),
+  buyerName: z.string().min(1),
+  buyerPhone: PhoneE164Schema,
+  buyerNote: z.string().optional().nullable(),
+  bankAccountId: z.string().uuid().optional().nullable(),
+  bankAccountDetails: z
+    .object({
+      bankName: z.string(),
+      accountNumber: z.string(),
+      accountHolderName: z.string(),
+    })
+    .optional()
+    .nullable(),
+  programTitle: z.string().optional(),
+  programSlug: z.string().optional(),
+  approvedAt: z.string().optional().nullable(),
+  approvedByUserId: z.string().uuid().optional().nullable(),
+  rejectedAt: z.string().optional().nullable(),
+  rejectedByUserId: z.string().uuid().optional().nullable(),
+  rejectionReason: z.string().optional().nullable(),
+  enrollmentId: z.string().uuid().optional().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type ProgramPurchaseRequest = z.infer<typeof ProgramPurchaseRequestSchema>;
+
+export const CreatePublicPurchaseRequestSchema = z.object({
+  name: z.string().min(1, 'Nama wajib diisi').max(100),
+  phone: z.string().min(1, 'Nomor WhatsApp wajib diisi').max(30),
+  purchaseMethod: PurchaseMethodSchema,
+  buyerNote: z.string().max(500).optional().nullable(),
+  bankAccountId: z.string().uuid().optional().nullable(),
+});
+export type CreatePublicPurchaseRequest = z.infer<typeof CreatePublicPurchaseRequestSchema>;
+
+export const CreatePublicPurchaseResponseSchema = z.object({
+  purchaseRequest: ProgramPurchaseRequestSchema,
+  paymentInstructions: z
+    .object({
+      programTitle: z.string(),
+      priceAmount: z.number().int(),
+      formattedPrice: z.string(),
+      purchaseReference: z.string(),
+      bankAccounts: z.array(
+        z.object({
+          id: z.string(),
+          bankName: z.string(),
+          accountNumber: z.string(),
+          accountHolderName: z.string(),
+        })
+      ),
+      whatsappConfirmationUrl: z.string().optional().nullable(),
+    })
+    .optional()
+    .nullable(),
+  whatsappPurchaseUrl: z.string().optional().nullable(),
+});
+export type CreatePublicPurchaseResponse = z.infer<typeof CreatePublicPurchaseResponseSchema>;
+
+export const RejectPurchaseRequestSchema = z.object({
+  reason: z.string().max(255).optional().nullable(),
+});
+export type RejectPurchaseRequest = z.infer<typeof RejectPurchaseRequestSchema>;
+
+export const OrdersListResponseSchema = z.object({
+  orders: z.array(ProgramPurchaseRequestSchema),
+  total: z.number().int().nonnegative(),
+});
+export type OrdersListResponse = z.infer<typeof OrdersListResponseSchema>;
+
 
