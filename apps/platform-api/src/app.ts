@@ -33,6 +33,9 @@ import {
 } from '@promotor/contracts';
 import { registerFlowRoutes } from './routes/flow-routes';
 import { registerClassRoutes } from './routes/class-routes';
+import { registerCommerceRoutes } from './routes/commerce-routes';
+import { createSubscriptionRepository } from './repositories/subscription-repository';
+import { createPlanAccessService } from './services/billing/plan-access-service';
 import { requestLoggerMiddleware, logOperation } from './core/observability';
 
 export interface AppDependencies {
@@ -44,7 +47,7 @@ export type AppEnv = {
   Variables: { db: NodePgDatabase; auth: AuthInstance; authContext: AuthContext | null };
 };
 
-function domainErrorStatus(err: DomainError): 400 | 401 | 403 | 404 | 409 | 500 {
+function domainErrorStatus(err: DomainError): 400 | 401 | 402 | 403 | 404 | 409 | 500 {
   switch (err.code) {
     case 'NOT_FOUND':
       return 404;
@@ -59,7 +62,11 @@ function domainErrorStatus(err: DomainError): 400 | 401 | 403 | 404 | 409 | 500 
       return 401;
     case 'FORBIDDEN':
     case 'CONTENT_DELETE_FORBIDDEN':
+    case 'PLAN_LIMIT_REACHED':
+    case 'FEATURE_REQUIRES_UPGRADE':
       return 403;
+    case 'PAYMENT_REQUIRED':
+      return 402;
     default:
       return 500;
   }
@@ -111,7 +118,7 @@ export function createApp(deps?: AppDependencies) {
         user_id: userId,
         error: { code: err.code, message: err.message },
       });
-      return c.json({ error: { code: err.code, message: err.message } }, status);
+      return c.json({ error: { code: err.code, message: err.message, ...(err.details ? { details: err.details } : {}) } }, status);
     }
 
     logOperation({
@@ -635,9 +642,11 @@ export function createApp(deps?: AppDependencies) {
     const programRepo = createProgramRepository(db);
     const profileRepo = createWorkspaceProfileRepository(db);
     const service = createProgramService(programRepo, profileRepo);
+    const subscriptionRepo = createSubscriptionRepository(db);
+    const planAccessService = createPlanAccessService(subscriptionRepo);
     const authCtx = c.get('authContext')!;
     const ctx = { organizationId: authCtx.organization!.organizationId };
-    return { service, ctx };
+    return { service, planAccessService, ctx };
   }
 
   // Programs List & Create
@@ -651,8 +660,11 @@ export function createApp(deps?: AppDependencies) {
 
   app.post('/api/v1/programs', async (c) => {
     c.header('Cache-Control', 'no-store');
-    const { service, ctx } = getServices(c);
+    const { service, planAccessService, ctx } = getServices(c);
     const body = await c.req.json();
+    if (body?.pricing === 'one_time') {
+      await planAccessService.assertCanUsePaidPrograms(ctx.organizationId);
+    }
     const created = await service.createProgram(ctx, body);
     return c.json({ program: created }, 201);
   });
@@ -668,9 +680,12 @@ export function createApp(deps?: AppDependencies) {
 
   app.patch('/api/v1/programs/:programId', async (c) => {
     c.header('Cache-Control', 'no-store');
-    const { service, ctx } = getServices(c);
+    const { service, planAccessService, ctx } = getServices(c);
     const programId = c.req.param('programId');
     const body = await c.req.json();
+    if (body?.pricing === 'one_time') {
+      await planAccessService.assertCanUsePaidPrograms(ctx.organizationId);
+    }
     const updated = await service.updateProgram(ctx, programId, body);
     return c.json({ program: updated }, 200);
   });
@@ -686,8 +701,9 @@ export function createApp(deps?: AppDependencies) {
   // Program Lifecycle Transitions
   app.post('/api/v1/programs/:programId/publish', async (c) => {
     c.header('Cache-Control', 'no-store');
-    const { service, ctx } = getServices(c);
+    const { service, planAccessService, ctx } = getServices(c);
     const programId = c.req.param('programId');
+    await planAccessService.assertCanPublishProgram(ctx.organizationId);
     const updated = await service.publishProgram(ctx, programId);
     return c.json({ program: updated }, 200);
   });
@@ -824,8 +840,11 @@ export function createApp(deps?: AppDependencies) {
 
   app.put('/api/v1/storefront/profile', async (c) => {
     c.header('Cache-Control', 'no-store');
-    const { service, ctx } = getServices(c);
+    const { service, planAccessService, ctx } = getServices(c);
     const body = await c.req.json();
+    if (body?.themeSettings) {
+      await planAccessService.assertCanCustomizeStorefront(ctx.organizationId);
+    }
     const profile = await service.updateWorkspaceProfile(ctx, body);
     return c.json({ profile }, 200);
   });
@@ -867,8 +886,21 @@ export function createApp(deps?: AppDependencies) {
     requireEntitlement('promotorClass'),
     requireRole(['owner', 'admin'])
   );
+  app.use(
+    '/api/v1/billing',
+    sessionMiddleware,
+    requireOrganization(),
+    requireRole(['owner', 'admin'])
+  );
+  app.use(
+    '/api/v1/billing/*',
+    sessionMiddleware,
+    requireOrganization(),
+    requireRole(['owner', 'admin'])
+  );
 
   registerClassRoutes(app);
+  registerCommerceRoutes(app);
 
   return app;
 }

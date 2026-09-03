@@ -3,7 +3,7 @@ import { createApp } from '../src/app';
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { provisionPromotorUser } from '../src/auth/provisioning';
-import { productEntitlements, programs, modules, lessons, organizations } from '../src/db/schema';
+import { productEntitlements, programs, modules, lessons, organizations, organizationSubscriptions } from '../src/db/schema';
 import { eq } from 'drizzle-orm';
 
 const port = Number(process.env.PORT || 8787);
@@ -44,6 +44,24 @@ async function ensureSeedData() {
           .update(productEntitlements)
           .set({ promotorClass: true, promotorFlow: true })
           .where(eq(productEntitlements.organizationId, currentOrgId));
+
+        const existingSub = await db
+          .select()
+          .from(organizationSubscriptions)
+          .where(eq(organizationSubscriptions.organizationId, currentOrgId))
+          .limit(1);
+
+        if (existingSub.length === 0) {
+          await db.insert(organizationSubscriptions).values({
+            organizationId: currentOrgId,
+            planCode: 'SOLO',
+            status: 'ACTIVE',
+            billingCycle: 'MONTHLY',
+            provider: 'NONE',
+            currentPeriodStart: new Date().toISOString(),
+            currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+          });
+        }
 
         const existingProg = await db
           .select()

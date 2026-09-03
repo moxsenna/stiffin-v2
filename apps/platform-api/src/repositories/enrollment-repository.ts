@@ -40,6 +40,7 @@ export interface EnrollmentRepository {
   listByProgram(organizationId: string, programId: string): Promise<EnrollmentRow[]>;
   listByOrg(organizationId: string, filter?: { programId?: string; contactId?: string }): Promise<EnrollmentRow[]>;
   create(input: CreateEnrollmentInput): Promise<EnrollmentRow>;
+  createIdempotent(input: CreateEnrollmentInput): Promise<{ enrollment: EnrollmentRow; isNew: boolean }>;
   update(organizationId: string, id: string, input: UpdateEnrollmentInput): Promise<EnrollmentRow | null>;
   updateProgress(organizationId: string, id: string, input: UpdateEnrollmentInput): Promise<EnrollmentRow | null>;
 }
@@ -129,6 +130,43 @@ export function createEnrollmentRepository(db: NodePgDatabase): EnrollmentReposi
         })
         .returning();
       return created;
+    },
+
+    async createIdempotent(input: CreateEnrollmentInput): Promise<{ enrollment: EnrollmentRow; isNew: boolean }> {
+      const [inserted] = await db
+        .insert(enrollments)
+        .values({
+          organizationId: input.organizationId,
+          programId: input.programId,
+          contactId: input.contactId,
+          status: input.status ?? 'ENROLLED',
+          enrolledAt: input.enrolledAt,
+          startedAt: input.startedAt,
+          completedAt: input.completedAt,
+          lastActivityAt: input.lastActivityAt,
+          progressPercent: input.progressPercent ?? 0,
+          intentScore: input.intentScore ?? 0,
+          intentLabel: input.intentLabel ?? 'COLD',
+          learningStatus: input.learningStatus ?? 'NOT_STARTED',
+        })
+        .onConflictDoNothing({
+          target: [enrollments.organizationId, enrollments.programId, enrollments.contactId],
+        })
+        .returning();
+
+      if (inserted) {
+        return { enrollment: inserted, isNew: true };
+      }
+
+      const existing = await this.findByProgramAndContact(
+        input.organizationId,
+        input.programId,
+        input.contactId
+      );
+      if (!existing) {
+        throw new Error('Enrollment race resolution failed');
+      }
+      return { enrollment: existing, isNew: false };
     },
 
     async update(organizationId: string, id: string, input: UpdateEnrollmentInput) {

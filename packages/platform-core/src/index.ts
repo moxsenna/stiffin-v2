@@ -84,3 +84,28 @@ export function formatTimeAgo(dateInput: string | Date): string {
   if (secondsAgo < 86400) return `${Math.floor(secondsAgo / 3600)}j lalu`;
   return `${Math.floor(secondsAgo / 86400)}h lalu`;
 }
+
+/**
+ * Formats integer IDR currency amount (e.g. 149000 -> "Rp 149.000").
+ */
+export function formatIDR(amount: number): string {
+  if (typeof amount !== 'number' || isNaN(amount) || amount < 0) {
+    return 'Rp 0';
+  }
+  return `Rp ${Math.round(amount).toLocaleString('id-ID')}`;
+}
+
+const ORDER_REF_CHARS = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+/**
+ * Generates human-safe public order reference (e.g. "TLR-8F4K2Q").
+ */
+export function generateOrderReference(prefix = 'TLR'): string {
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    const idx = Math.floor(Math.random() * ORDER_REF_CHARS.length);
+    code += ORDER_REF_CHARS[idx];
+  }
+  return `${prefix}-${code}`;
+}
+

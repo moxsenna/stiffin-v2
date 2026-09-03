@@ -39,6 +39,8 @@ import { createAftercareService } from '../services/aftercare-service';
 import { createMessagingService } from '../services/messaging-service';
 import { createAvailabilityService } from '../services/flow/availability-service';
 import { createContactPrivacyService } from '../services/contact-privacy-service';
+import { createSubscriptionRepository } from '../repositories/subscription-repository';
+import { createPlanAccessService } from '../services/billing/plan-access-service';
 import { createEntitlementRepository } from '../repositories/entitlement-repository';
 import type { OrganizationContext } from '../core/organization-context';
 import type { AuthenticatedActor } from '../auth/types';
@@ -108,6 +110,11 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
     const { ctx, actor, db } = getRequestContext(c);
     const raw = await c.req.json().catch(() => ({}));
     const body = parseBody(CreateFlowContactRequestSchema, raw);
+
+    const subRepo = createSubscriptionRepository(db);
+    const planAccessService = createPlanAccessService(subRepo);
+    await planAccessService.assertCanAddContact(ctx.organizationId);
+
     const service = createContactFlowService(db);
     const result = await service.createFlowContact(ctx, body, actor);
     return c.json(result, 201);

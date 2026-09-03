@@ -1151,3 +1151,331 @@ export const LearnersListResponseSchema = z.object({
 });
 export type LearnersListResponse = z.infer<typeof LearnersListResponseSchema>;
 
+// ==========================================
+// 12. Talira Billing & Subscription Catalog (§3, §4, §5)
+// ==========================================
+
+export const PAID_LEARNER_PLATFORM_FEE_IDR = 3000;
+
+export const TaliraPlanCodeSchema = z.enum(['FREE', 'SOLO', 'STUDIO']);
+export type TaliraPlanCode = z.infer<typeof TaliraPlanCodeSchema>;
+
+export const TaliraSubscriptionStatusSchema = z.enum([
+  'ACTIVE',
+  'PAST_DUE',
+  'GRACE_PERIOD',
+  'CANCELED',
+]);
+export type TaliraSubscriptionStatus = z.infer<typeof TaliraSubscriptionStatusSchema>;
+
+export const TaliraBillingCycleSchema = z.enum(['MONTHLY', 'YEARLY', 'NONE']);
+export type TaliraBillingCycle = z.infer<typeof TaliraBillingCycleSchema>;
+
+export const TaliraBillingProviderSchema = z.enum(['NONE', 'PAYCORE']);
+export type TaliraBillingProvider = z.infer<typeof TaliraBillingProviderSchema>;
+
+export const TaliraPlanDefinitionSchema = z.object({
+  code: TaliraPlanCodeSchema,
+  name: z.string(),
+  priceMonthly: z.number().int().nonnegative(),
+  priceYearly: z.number().int().nonnegative(),
+  maxOperators: z.number().int().positive(),
+  maxPublishedPrograms: z.number().int().positive(),
+  maxActiveLearners: z.number().int().positive(),
+  maxContacts: z.number().int().positive(),
+  paidPrograms: z.boolean(),
+  storefrontAdvancedBranding: z.boolean(),
+  removeTaliraBranding: z.boolean(),
+  classEnabled: z.boolean(),
+  flowEnabled: z.boolean(),
+  classFlowIntegrationEnabled: z.boolean(),
+});
+export type TaliraPlanDefinition = z.infer<typeof TaliraPlanDefinitionSchema>;
+
+export const TALIRA_PLANS: Record<TaliraPlanCode, TaliraPlanDefinition> = {
+  FREE: {
+    code: 'FREE',
+    name: 'Talira Free',
+    priceMonthly: 0,
+    priceYearly: 0,
+    maxOperators: 1,
+    maxPublishedPrograms: 1,
+    maxActiveLearners: 50,
+    maxContacts: 250,
+    paidPrograms: false,
+    storefrontAdvancedBranding: false,
+    removeTaliraBranding: false,
+    classEnabled: true,
+    flowEnabled: true,
+    classFlowIntegrationEnabled: true,
+  },
+  SOLO: {
+    code: 'SOLO',
+    name: 'Talira Solo',
+    priceMonthly: 149000,
+    priceYearly: 1490000,
+    maxOperators: 1,
+    maxPublishedPrograms: 10,
+    maxActiveLearners: 500,
+    maxContacts: 2500,
+    paidPrograms: true,
+    storefrontAdvancedBranding: true,
+    removeTaliraBranding: true,
+    classEnabled: true,
+    flowEnabled: true,
+    classFlowIntegrationEnabled: true,
+  },
+  STUDIO: {
+    code: 'STUDIO',
+    name: 'Talira Studio (Reserved)',
+    priceMonthly: 499000,
+    priceYearly: 4990000,
+    maxOperators: 5,
+    maxPublishedPrograms: 50,
+    maxActiveLearners: 5000,
+    maxContacts: 25000,
+    paidPrograms: true,
+    storefrontAdvancedBranding: true,
+    removeTaliraBranding: true,
+    classEnabled: true,
+    flowEnabled: true,
+    classFlowIntegrationEnabled: true,
+  },
+};
+
+export const OrganizationSubscriptionSchema = z.object({
+  id: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  planCode: TaliraPlanCodeSchema,
+  status: TaliraSubscriptionStatusSchema,
+  billingCycle: TaliraBillingCycleSchema,
+  provider: TaliraBillingProviderSchema,
+  providerCustomerId: z.string().nullable().optional(),
+  providerSubscriptionId: z.string().nullable().optional(),
+  currentPeriodStart: z.string().nullable().optional(),
+  currentPeriodEnd: z.string().nullable().optional(),
+  graceEndsAt: z.string().nullable().optional(),
+  cancelAtPeriodEnd: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type OrganizationSubscription = z.infer<typeof OrganizationSubscriptionSchema>;
+
+export const PlanUsageSchema = z.object({
+  publishedPrograms: z.number().int().nonnegative(),
+  activeLearners: z.number().int().nonnegative(),
+  contacts: z.number().int().nonnegative(),
+});
+export type PlanUsage = z.infer<typeof PlanUsageSchema>;
+
+export const PlanLimitsSchema = z.object({
+  maxPublishedPrograms: z.number().int().positive(),
+  maxActiveLearners: z.number().int().positive(),
+  maxContacts: z.number().int().positive(),
+  canUsePaidPrograms: z.boolean(),
+  canCustomizeStorefront: z.boolean(),
+  canRemoveTaliraBranding: z.boolean(),
+});
+export type PlanLimits = z.infer<typeof PlanLimitsSchema>;
+
+export const OrganizationPlanAccessSchema = z.object({
+  subscription: OrganizationSubscriptionSchema,
+  plan: TaliraPlanDefinitionSchema,
+  usage: PlanUsageSchema,
+  limits: PlanLimitsSchema,
+  isGracePeriod: z.boolean(),
+  effectivePaidProgramsAllowed: z.boolean(),
+});
+export type OrganizationPlanAccess = z.infer<typeof OrganizationPlanAccessSchema>;
+
+export const CreateSubscriptionCheckoutRequestSchema = z.object({
+  planCode: z.enum(['SOLO']),
+  billingCycle: z.enum(['MONTHLY', 'YEARLY']),
+  returnUrl: z.string().url().optional(),
+});
+export type CreateSubscriptionCheckoutRequest = z.infer<typeof CreateSubscriptionCheckoutRequestSchema>;
+
+export const CreateSubscriptionCheckoutResponseSchema = z.object({
+  checkoutUrl: z.string().url(),
+  orderId: z.string(),
+  externalOrderId: z.string(),
+  amount: z.number().int().positive(),
+  currency: z.literal('IDR'),
+  planCode: TaliraPlanCodeSchema,
+  billingCycle: z.enum(['MONTHLY', 'YEARLY']),
+});
+export type CreateSubscriptionCheckoutResponse = z.infer<typeof CreateSubscriptionCheckoutResponseSchema>;
+
+// ==========================================
+// 13. Commerce & Orders Domain (§11, §12, §13, §14, §15, §23, §24)
+// ==========================================
+
+export const CommerceSourceChannelSchema = z.enum(['STOREFRONT', 'WHATSAPP', 'OPERATOR']);
+export type CommerceSourceChannel = z.infer<typeof CommerceSourceChannelSchema>;
+
+export const CommercePaymentModeSchema = z.enum(['PAYCORE', 'MANUAL_BANK']);
+export type CommercePaymentMode = z.infer<typeof CommercePaymentModeSchema>;
+
+export const CommerceOrderStatusSchema = z.enum([
+  'PENDING',
+  'PAID',
+  'APPROVED',
+  'REJECTED',
+  'EXPIRED',
+  'REFUNDED',
+  'FAILED',
+]);
+export type CommerceOrderStatus = z.infer<typeof CommerceOrderStatusSchema>;
+
+export const PaymentRecordStatusSchema = z.enum([
+  'PENDING',
+  'SUCCESS',
+  'FAILED',
+  'EXPIRED',
+  'REFUNDED',
+]);
+export type PaymentRecordStatus = z.infer<typeof PaymentRecordStatusSchema>;
+
+export const PlatformFeeStatusSchema = z.enum(['PENDING', 'BILLABLE', 'BILLED', 'REVERSED']);
+export type PlatformFeeStatus = z.infer<typeof PlatformFeeStatusSchema>;
+
+export const CommerceOrderSchema = z.object({
+  id: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  programId: z.string().uuid(),
+  contactId: z.string().uuid(),
+  reference: z.string(),
+  sourceChannel: CommerceSourceChannelSchema,
+  paymentMode: CommercePaymentModeSchema,
+  amount: z.number().int().nonnegative(),
+  currency: z.literal('IDR'),
+  status: CommerceOrderStatusSchema,
+  paymentRecordId: z.string().uuid().nullable().optional(),
+  enrollmentId: z.string().uuid().nullable().optional(),
+  buyerName: z.string().optional(),
+  buyerPhone: z.string().optional(),
+  buyerEmail: z.string().optional().nullable(),
+  programTitle: z.string().optional(),
+  createdAt: z.string(),
+  paidAt: z.string().nullable().optional(),
+  approvedAt: z.string().nullable().optional(),
+  approvedByUserId: z.string().uuid().nullable().optional(),
+  rejectedAt: z.string().nullable().optional(),
+  rejectedByUserId: z.string().uuid().nullable().optional(),
+  rejectionReason: z.string().nullable().optional(),
+  refundedAt: z.string().nullable().optional(),
+  updatedAt: z.string(),
+});
+export type CommerceOrder = z.infer<typeof CommerceOrderSchema>;
+
+export const PaymentRecordSchema = z.object({
+  id: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  orderId: z.string().uuid(),
+  provider: z.enum(['PAYCORE', 'MANUAL_BANK']),
+  providerPaymentId: z.string().nullable().optional(),
+  providerReference: z.string().nullable().optional(),
+  paymentMethod: z.string().nullable().optional(),
+  grossAmount: z.number().int().positive(),
+  currency: z.literal('IDR'),
+  processorFee: z.number().int().nullable().optional(),
+  status: PaymentRecordStatusSchema,
+  rawMetadata: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type PaymentRecord = z.infer<typeof PaymentRecordSchema>;
+
+export const PlatformFeeEntrySchema = z.object({
+  id: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  orderId: z.string().uuid(),
+  feeType: z.literal('PAID_LEARNER_TRANSACTION'),
+  amount: z.literal(3000),
+  currency: z.literal('IDR'),
+  status: PlatformFeeStatusSchema,
+  providerChargeId: z.string().nullable().optional(),
+  billedAt: z.string().nullable().optional(),
+  reversedAt: z.string().nullable().optional(),
+  idempotencyKey: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type PlatformFeeEntry = z.infer<typeof PlatformFeeEntrySchema>;
+
+export const PublicPaidCheckoutRequestSchema = z.object({
+  name: z.string().min(1, 'Nama lengkap wajib diisi').max(256),
+  phone: z.string().min(8, 'Nomor telepon tidak valid').max(32),
+  email: z.string().email('Format email tidak valid').max(256).optional().nullable(),
+  sourceChannel: CommerceSourceChannelSchema.default('STOREFRONT'),
+  returnUrl: z.string().url().optional(),
+});
+export type PublicPaidCheckoutRequest = z.infer<typeof PublicPaidCheckoutRequestSchema>;
+
+export const PublicPaidCheckoutResponseSchema = z.object({
+  orderId: z.string().uuid(),
+  reference: z.string(),
+  amount: z.number().int().positive(),
+  currency: z.literal('IDR'),
+  checkoutUrl: z.string().url(),
+  providerOrderId: z.string(),
+  expiresAt: z.string().nullable().optional(),
+});
+export type PublicPaidCheckoutResponse = z.infer<typeof PublicPaidCheckoutResponseSchema>;
+
+export const PublicOrderStatusResponseSchema = z.object({
+  orderId: z.string().uuid(),
+  reference: z.string(),
+  programTitle: z.string(),
+  amount: z.number().int().positive(),
+  currency: z.literal('IDR'),
+  status: CommerceOrderStatusSchema,
+  checkoutUrl: z.string().url().nullable().optional(),
+  paidAt: z.string().nullable().optional(),
+  hasAccess: z.boolean(),
+  accessToken: z.string().nullable().optional(),
+});
+export type PublicOrderStatusResponse = z.infer<typeof PublicOrderStatusResponseSchema>;
+
+export const ListOrdersQuerySchema = z.object({
+  status: CommerceOrderStatusSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+export type ListOrdersQuery = z.infer<typeof ListOrdersQuerySchema>;
+
+export const OrderItemSummarySchema = z.object({
+  id: z.string().uuid(),
+  reference: z.string(),
+  buyerName: z.string(),
+  buyerPhone: z.string(),
+  buyerEmail: z.string().nullable().optional(),
+  programId: z.string().uuid(),
+  programTitle: z.string(),
+  amount: z.number().int().nonnegative(),
+  currency: z.literal('IDR'),
+  sourceChannel: CommerceSourceChannelSchema,
+  paymentMode: CommercePaymentModeSchema,
+  status: CommerceOrderStatusSchema,
+  paymentStatus: PaymentRecordStatusSchema.nullable().optional(),
+  paymentMethod: z.string().nullable().optional(),
+  platformFee: z.number().int(),
+  enrollmentId: z.string().uuid().nullable().optional(),
+  createdAt: z.string(),
+  paidAt: z.string().nullable().optional(),
+  approvedAt: z.string().nullable().optional(),
+});
+export type OrderItemSummary = z.infer<typeof OrderItemSummarySchema>;
+
+export const ListOrdersResponseSchema = z.object({
+  orders: z.array(OrderItemSummarySchema),
+  total: z.number().int().nonnegative(),
+});
+export type ListOrdersResponse = z.infer<typeof ListOrdersResponseSchema>;
+
+export const RejectOrderRequestSchema = z.object({
+  reason: z.string().min(1, 'Alasan penolakan wajib diisi').max(500),
+});
+export type RejectOrderRequest = z.infer<typeof RejectOrderRequestSchema>;
+
+

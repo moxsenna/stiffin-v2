@@ -71,6 +71,13 @@
       "when": 1787400000000,
       "tag": "0009_canonical_milestone_events_provenance",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1787500000000,
+      "tag": "0010_talira_billing_and_commerce",
+      "breakpoints": true
     }
   ]
 }

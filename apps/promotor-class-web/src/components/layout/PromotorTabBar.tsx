@@ -17,6 +17,7 @@ function isTabActive(pathname: string, href: string): boolean {
   if (href === '/app/more') {
     return (
       pathname.startsWith('/app/more') ||
+      pathname.startsWith('/app/orders') ||
       pathname.startsWith('/app/activity') ||
       pathname.startsWith('/app/settings') ||
       pathname.startsWith('/app/storefront') ||

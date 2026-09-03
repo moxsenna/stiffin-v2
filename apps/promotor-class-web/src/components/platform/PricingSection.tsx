@@ -2,9 +2,13 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { TALIRA_PLANS } from '@promotor/contracts';
 
 export function PricingSection() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
+
+  const freePlan = TALIRA_PLANS.FREE;
+  const soloPlan = TALIRA_PLANS.SOLO;
 
   return (
     <section
@@ -18,6 +22,18 @@ export function PricingSection() {
     >
       <div className="container">
         <div style={{ maxWidth: '780px', margin: '0 auto 36px', textAlign: 'center' }}>
+          <div
+            style={{
+              fontSize: '12px',
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: 'var(--color-primary)',
+              marginBottom: '10px',
+            }}
+          >
+            Satu Langganan, Dua Solusi Terpadu
+          </div>
           <h2
             style={{
               fontSize: 'clamp(28px, 4vw, 40px)',
@@ -31,7 +47,7 @@ export function PricingSection() {
             Investasi transparan untuk pertumbuhan bisnis edukasi Anda.
           </h2>
           <p style={{ fontSize: '16px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-            Mulai dari paket gratis selamanya untuk memvalidasi lead magnet pertama Anda. Upgrade saat Anda siap mendominasi pasar.
+            Talira adalah satu ekosistem: <strong>Talira Class</strong> (LMS & Program Edukasi) dan <strong>Talira Flow</strong> (CRM & Pipeline Prospek) sudah termasuk bersama dalam satu paket.
           </p>
 
           {/* Billing Cycle Switcher */}
@@ -79,7 +95,7 @@ export function PricingSection() {
                 transition: 'all 0.15s ease',
               }}
             >
-              Tahunan <span style={{ fontSize: '11px', opacity: 0.9 }}>· Hemat 25%</span>
+              Tahunan <span style={{ fontSize: '11px', opacity: 0.9 }}>· Hemat 17%</span>
             </button>
           </div>
         </div>
@@ -95,7 +111,7 @@ export function PricingSection() {
             alignItems: 'stretch',
           }}
         >
-          {/* Plan 1: Starter */}
+          {/* Plan 1: Free */}
           <div
             style={{
               backgroundColor: '#FFFFFF',
@@ -110,10 +126,10 @@ export function PricingSection() {
           >
             <div>
               <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '6px' }}>
-                Starter
+                Talira Free
               </div>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
-                Ideal untuk promotor baru yang ingin membuat 1 program lead magnet pengantar.
+                Mulai validasi materi edukasi pengantar Anda tanpa biaya investasi awal.
               </p>
 
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '28px' }}>
@@ -125,11 +141,15 @@ export function PricingSection() {
               <div style={{ display: 'grid', gap: '12px', borderTop: '1px solid var(--color-divider)', paddingTop: '20px', marginBottom: '32px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)' }}>
                   <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>✓</span>
-                  1 Program Lead Magnet Aktif
+                  1 Program Terpublikasi Aktif
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)' }}>
                   <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>✓</span>
-                  Peserta & Akses Belajar Tanpa Batas
+                  Hingga 50 Peserta Belajar Aktif
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)' }}>
+                  <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>✓</span>
+                  Hingga 250 Kontak CRM
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)' }}>
                   <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>✓</span>
@@ -137,11 +157,7 @@ export function PricingSection() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)' }}>
                   <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>✓</span>
-                  Pendaftaran WhatsApp-First
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)' }}>
-                  <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>✓</span>
-                  Generator Draf Pesan WhatsApp Dasar
+                  Koneksi Terpadu Talira Class & Flow
                 </div>
               </div>
             </div>
@@ -168,7 +184,7 @@ export function PricingSection() {
             </Link>
           </div>
 
-          {/* Plan 2: Pro Promotor (Highlighted) */}
+          {/* Plan 2: Solo (Highlighted) */}
           <div
             style={{
               backgroundColor: '#FFFFFF',
@@ -198,49 +214,54 @@ export function PricingSection() {
                 textTransform: 'uppercase',
               }}
             >
-              Paling Populer
+              Rekomendasi Utama
             </div>
 
             <div>
               <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '6px' }}>
-                Pro Promotor
+                Talira Solo
               </div>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
-                Untuk praktisi aktif yang mengelola program aftersales dan multi-program edukasi.
+                Untuk promotor aktif yang ingin menjual kelas berbayar dan mengelola multi-program edukasi.
               </p>
 
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '28px' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '8px' }}>
                 <span style={{ fontSize: '36px', fontWeight: 850, color: 'var(--color-primary)' }}>
-                  {billingCycle === 'annual' ? 'Rp119.000' : 'Rp149.000'}
+                  {billingCycle === 'annual' ? 'Rp 1.490.000' : 'Rp 149.000'}
                 </span>
-                <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>/ bulan</span>
+                <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+                  {billingCycle === 'annual' ? '/ tahun' : '/ bulan'}
+                </span>
+              </div>
+              <div style={{ fontSize: '11.5px', color: '#6B7280', marginBottom: '24px' }}>
+                + Rp3.000 flat per transaksi kelas berbayar (0% komisi persentase)
               </div>
 
               {/* Feature List */}
               <div style={{ display: 'grid', gap: '12px', borderTop: '1px solid var(--color-divider)', paddingTop: '20px', marginBottom: '32px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)', fontWeight: 650 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)', fontWeight: 700 }}>
                   <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>✓</span>
-                  Semua Fitur Starter
+                  Buka Penjualan Kelas Berbayar
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)' }}>
                   <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>✓</span>
-                  <strong>Unlimited Program</strong> (Gratis, Aftersales & Berbayar)
+                  Hingga 10 Program Terpublikasi
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)' }}>
                   <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>✓</span>
-                  Deteksi Sinyal Intent Mendalam & Analisis Kebutuhan
+                  Hingga 500 Peserta Belajar Aktif
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)' }}>
                   <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>✓</span>
-                  Sinkronisasi Otomatis dengan CRM PromotorFlow
+                  Hingga 2.500 Kontak CRM Terhubung
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)' }}>
                   <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>✓</span>
-                  Export Data Kontak & Rekap Jawaban Refleksi
+                  Kustomisasi Tema & Branding Storefront
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)' }}>
                   <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>✓</span>
-                  Prioritas Layanan Bantuan & Update Fitur
+                  Siklus Ekosistem Penuh (Class + Flow)
                 </div>
               </div>
             </div>
@@ -259,11 +280,11 @@ export function PricingSection() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 2px 8px rgba(40, 99, 68, 0.25)',
+                boxShadow: 'var(--shadow-md)',
                 transition: 'background-color 0.15s ease',
               }}
             >
-              Pilih Paket Pro Promotor →
+              Mulai Paket Solo Sekarang
             </Link>
           </div>
         </div>
