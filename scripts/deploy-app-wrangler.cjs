@@ -42,7 +42,9 @@ if (appName === 'api') {
     : `pnpm --filter ${pkgName} exec wrangler deploy`;
 
   console.log('1. Deploying platform-api Worker via Wrangler...');
-  execSync(wranglerCmd, { cwd: projectRoot, stdio: 'inherit' });
+  const deployEnv = { ...process.env };
+  delete deployEnv.CLOUDFLARE_API_TOKEN;
+  execSync(wranglerCmd, { cwd: projectRoot, stdio: 'inherit', env: deployEnv });
   console.log(`\n✅ Platform API deployment to Cloudflare (${targetEnv.toUpperCase()}) completed!\n`);
   process.exit(0);
 }
@@ -113,9 +115,13 @@ const wranglerCmd = targetEnv === 'staging'
   ? `pnpm --filter ${pkgName} exec wrangler deploy --env staging`
   : `pnpm --filter ${pkgName} exec wrangler deploy`;
 
+const deployEnv = { ...process.env };
+delete deployEnv.CLOUDFLARE_API_TOKEN;
+
 execSync(wranglerCmd, {
   cwd: projectRoot,
   stdio: 'inherit',
+  env: deployEnv,
 });
 
 console.log(`\n✅ Deployment of ${pkgName} to Cloudflare (${targetEnv.toUpperCase()}) completed successfully!\n`);

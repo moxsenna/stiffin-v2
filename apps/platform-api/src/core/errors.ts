@@ -38,5 +38,11 @@ export class DomainError extends Error {
 }
 
 export function isDomainError(err: unknown): err is DomainError {
-  return err instanceof DomainError;
+  return (
+    err instanceof DomainError ||
+    (typeof err === 'object' &&
+      err !== null &&
+      (err as any).name === 'DomainError' &&
+      typeof (err as any).code === 'string')
+  );
 }
