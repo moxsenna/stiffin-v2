@@ -431,7 +431,7 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
 
       // 4. Filter supported event type
       if (event.event_type !== 'payment.succeeded') {
-        await deps.commerceRepo.updateWebhookEventResult('PAYCORE', event.event_id, 'IGNORED', 'Non-success event');
+        await deps.commerceRepo.updateWebhookEventResult('PAYCORE', event.event_id, 'FAILED', 'Non-success event ignored');
         return { status: 'ignored' };
       }
 

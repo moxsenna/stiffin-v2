@@ -83,7 +83,7 @@ describe('P0 — Talira Billing & Commerce Least Privilege Grants', () => {
       // INSERT
       const insRes = await client.query(
         `INSERT INTO public.provider_webhook_events (provider, provider_event_id, event_type, processing_result)
-         VALUES ('PAYCORE', $1, 'payment.succeeded', 'TEST')
+         VALUES ('PAYCORE', $1, 'payment.succeeded', 'PROCESSING')
          RETURNING id, provider_event_id`,
         [testEvtId]
       );
