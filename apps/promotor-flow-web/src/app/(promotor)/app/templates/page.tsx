@@ -18,7 +18,7 @@ export default function TemplatesPage() {
 
   return (
     <AppShell showBottomNav={true}>
-     <PageHeader kicker="PromotorFlow" title="Template Pesan WhatsApp" sub="Draft pesan standar untuk tindak lanjut cepat." />
+     <PageHeader kicker="Talira Flow" title="Template Pesan WhatsApp" sub="Draft pesan standar untuk tindak lanjut cepat." />
 
      {!templates && <LoadingRows rows={3} />}
 

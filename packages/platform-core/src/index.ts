@@ -84,3 +84,52 @@ export function formatTimeAgo(dateInput: string | Date): string {
   if (secondsAgo < 86400) return `${Math.floor(secondsAgo / 3600)}j lalu`;
   return `${Math.floor(secondsAgo / 86400)}h lalu`;
 }
+
+/**
+ * Formats monetary integer IDR to standard Indonesian display (e.g. "Rp 349.000")
+ */
+export function formatIDR(amount: number): string {
+  if (typeof amount !== 'number' || isNaN(amount)) return 'Rp 0';
+  const formatted = Math.round(amount).toLocaleString('id-ID');
+  return `Rp ${formatted}`;
+}
+
+/**
+ * Generates a short, human-readable, unique, stable purchase reference (e.g. "TLR-8F4K2Q")
+ */
+export function generatePurchaseReference(): string {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let result = '';
+  for (let i = 0; i < 6; i++) {
+    const randomIndex = Math.floor(Math.random() * chars.length);
+    result += chars[randomIndex];
+  }
+  return `TLR-${result}`;
+}
+
+/**
+ * Builds canonical WhatsApp deep link for purchase and transfer confirmation
+ */
+export function buildPurchaseWhatsAppUrl(
+  phoneE164: string,
+  data: {
+    buyerName: string;
+    programTitle: string;
+    priceAmount?: number;
+    purchaseReference: string;
+    purchaseMethod: 'BANK_TRANSFER' | 'WHATSAPP';
+  }
+): string {
+  const cleanPhone = phoneE164.replace(/\+/g, '').replace(/[\s\-\(\)]/g, '');
+  let message = '';
+
+  if (data.purchaseMethod === 'BANK_TRANSFER') {
+    message = `Halo, saya ${data.buyerName}. Saya sudah melakukan transfer untuk program ${data.programTitle}.\n\nKode pesanan: ${data.purchaseReference}`;
+  } else {
+    const priceText = data.priceAmount ? ` seharga ${formatIDR(data.priceAmount)}` : '';
+    message = `Halo, saya ${data.buyerName}. Saya ingin membeli program ${data.programTitle}${priceText}.\n\nKode pesanan: ${data.purchaseReference}`;
+  }
+
+  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+}
+

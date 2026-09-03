@@ -54,7 +54,7 @@ export const AppShell: React.FC<AppShellProps>= ({ children, showBottomNav = tru
          <div className="desktop-nav-brand">
            <Wordmark flow />
            <div style={{ marginTop: 8, font: '400 11px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>
-             PromotorFlow
+             Talira Flow
             </div>
          </div>
          <nav className="desktop-nav-group" aria-label="Navigasi utama">

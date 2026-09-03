@@ -17,6 +17,8 @@ export type AuthVariables = {
 
 export type AuthBindings = CreateAuthEnv & { HYPERDRIVE?: { connectionString: string } };
 
+let schemaMigrationEnsured = false;
+
 /**
  * Request-scoped lifecycle middleware: creates the pg Client from the
  * Hyperdrive binding, connects, builds the Drizzle db and a fresh Better Auth
@@ -33,6 +35,61 @@ export const authLifecycle = createMiddleware<{ Bindings: AuthBindings; Variable
     const client = new Client({ connectionString });
     await client.connect();
     try {
+      if (!schemaMigrationEnsured) {
+        try {
+          await client.query(`
+            ALTER TABLE "programs" ADD COLUMN IF NOT EXISTS "bank_transfer_enabled" boolean DEFAULT false NOT NULL;
+            ALTER TABLE "programs" ADD COLUMN IF NOT EXISTS "whatsapp_enabled" boolean DEFAULT false NOT NULL;
+
+            CREATE TABLE IF NOT EXISTS "organization_bank_accounts" (
+              "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+              "organization_id" uuid NOT NULL,
+              "bank_name" text NOT NULL,
+              "account_number" text NOT NULL,
+              "account_holder_name" text NOT NULL,
+              "is_active" boolean DEFAULT true NOT NULL,
+              "sort_order" integer DEFAULT 0 NOT NULL,
+              "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+              "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS "organization_payment_settings" (
+              "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+              "organization_id" uuid NOT NULL,
+              "sales_whatsapp_number" text,
+              "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+              "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS "program_purchase_requests" (
+              "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+              "organization_id" uuid NOT NULL,
+              "program_id" uuid NOT NULL,
+              "contact_id" uuid NOT NULL,
+              "purchase_reference" text NOT NULL,
+              "purchase_method" text NOT NULL,
+              "status" text DEFAULT 'PENDING' NOT NULL,
+              "price_amount" integer DEFAULT 0 NOT NULL,
+              "currency" text DEFAULT 'IDR' NOT NULL,
+              "buyer_name" text NOT NULL,
+              "buyer_phone" text NOT NULL,
+              "buyer_note" text,
+              "bank_account_id" uuid,
+              "approved_at" timestamp with time zone,
+              "approved_by_user_id" uuid,
+              "rejected_at" timestamp with time zone,
+              "rejected_by_user_id" uuid,
+              "rejection_reason" text,
+              "enrollment_id" uuid,
+              "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+              "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+            );
+          `);
+          schemaMigrationEnsured = true;
+        } catch (mErr: any) {
+          console.error('[schemaMigrationEnsured error]:', mErr?.message || mErr);
+        }
+      }
       const db = drizzle(client);
       // Fail-closed: missing required auth config yields a sanitized 503 with
       // no raw secret/config leakage. The test-only rate-limit seam is never

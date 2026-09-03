@@ -185,6 +185,8 @@ export function createProgramService(
           status: 'draft',
           pricing,
           priceAmount,
+          bankTransferEnabled: data.bankTransferEnabled ?? false,
+          whatsAppEnabled: data.whatsAppEnabled ?? false,
         },
         {
           coverVariant: data.coverVariant ?? 'cover-a',
@@ -218,6 +220,8 @@ export function createProgramService(
         accessType: parsed.data.accessType,
         pricing: parsed.data.pricing,
         priceAmount: parsed.data.priceAmount,
+        bankTransferEnabled: parsed.data.bankTransferEnabled,
+        whatsAppEnabled: parsed.data.whatsAppEnabled,
       });
 
       if (!updated) throw new DomainError('NOT_FOUND', 'Program not found');

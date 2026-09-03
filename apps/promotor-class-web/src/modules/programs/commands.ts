@@ -42,3 +42,39 @@ export async function reorderModulesCommand(programId: string, moduleIdsOrder: s
 export async function saveLessonCommand(programId: string, moduleId: string, lesson: Lesson) {
   return getProgramRepository().saveLesson(programId, moduleId, lesson);
 }
+
+export async function presignCoverUploadCommand(params: {
+  programId?: string;
+  fileName: string;
+  contentType: string;
+  contentLength: number;
+}) {
+  return getProgramRepository().presignCoverUpload(params);
+}
+
+export async function confirmCoverUploadCommand(params: {
+  programId: string;
+  key: string;
+  contentType: string;
+  contentLength?: number;
+}) {
+  return getProgramRepository().confirmCoverUpload(params);
+}
+
+export async function deleteCoverImageCommand(programId: string) {
+  return getProgramRepository().deleteCoverImage(programId);
+}
+
+export async function directUploadToR2(uploadUrl: string, file: File | Blob, contentType: string) {
+  const res = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': contentType,
+    },
+    body: file,
+  });
+  if (!res.ok) {
+    throw new Error(`Upload langsung ke R2 gagal: ${res.status} ${res.statusText}`);
+  }
+  return true;
+}

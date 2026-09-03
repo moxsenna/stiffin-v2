@@ -127,7 +127,10 @@ export const ProgramSchema = z.object({
   status: ProgramStatusSchema,
   pricing: ProgramPricingSchema,
   priceAmount: z.number().default(0),
+  bankTransferEnabled: z.boolean().default(false),
+  whatsAppEnabled: z.boolean().default(false),
   publishedAt: z.string().optional().nullable(),
+  coverImageUrl: z.string().optional().nullable(),
   presentation: ProgramPublicPresentationSchema.optional().nullable(),
   modules: z.array(ModuleSchema),
   createdAt: z.string(),
@@ -135,6 +138,297 @@ export const ProgramSchema = z.object({
 });
 
 export type Program = z.infer<typeof ProgramSchema>;
+
+// ==========================================
+// 3b. Storefront Brand Customization Contracts
+// ==========================================
+export const HexColorSchema = z
+  .string()
+  .regex(/^#[0-9a-fA-F]{6}$/, 'Must be a valid 6-character hex color (#RRGGBB)');
+
+export type HexColor = z.infer<typeof HexColorSchema>;
+
+export const StorefrontStylePresetSchema = z.enum(['MODERNIST', 'SOFT', 'MINIMAL', 'EDITORIAL']);
+export type StorefrontStylePreset = z.infer<typeof StorefrontStylePresetSchema>;
+
+export const StorefrontFontPresetSchema = z.enum(['ARCHIVO', 'INTER', 'MANROPE', 'LORA']);
+export type StorefrontFontPreset = z.infer<typeof StorefrontFontPresetSchema>;
+
+export const StorefrontRadiusPresetSchema = z.enum(['SHARP', 'SOFT', 'ROUNDED']);
+export type StorefrontRadiusPreset = z.infer<typeof StorefrontRadiusPresetSchema>;
+
+export const StorefrontButtonPresetSchema = z.enum(['SOLID', 'OUTLINE', 'SOFT']);
+export type StorefrontButtonPreset = z.infer<typeof StorefrontButtonPresetSchema>;
+
+export const StorefrontLayoutPresetSchema = z.enum(['LIST', 'GRID']);
+export type StorefrontLayoutPreset = z.infer<typeof StorefrontLayoutPresetSchema>;
+
+export const HeroAlignmentSchema = z.enum(['LEFT', 'CENTER']);
+export type HeroAlignment = z.infer<typeof HeroAlignmentSchema>;
+
+export const StorefrontThemeSchema = z.object({
+  id: z.string().uuid().optional(),
+  organizationId: z.string().uuid(),
+  brandName: z.string().min(1, 'Brand name cannot be empty').max(100),
+  tagline: z.string().max(255).optional().nullable(),
+  logoUrl: z.string().url().regex(/^https:\/\//, 'Logo URL must use HTTPS').optional().nullable(),
+  primaryColor: HexColorSchema,
+  accentColor: HexColorSchema,
+  backgroundColor: HexColorSchema,
+  surfaceColor: HexColorSchema,
+  textColor: HexColorSchema,
+  mutedTextColor: HexColorSchema,
+  stylePreset: StorefrontStylePresetSchema,
+  fontPreset: StorefrontFontPresetSchema,
+  radiusPreset: StorefrontRadiusPresetSchema,
+  buttonPreset: StorefrontButtonPresetSchema,
+  layoutPreset: StorefrontLayoutPresetSchema,
+  heroAlignment: HeroAlignmentSchema,
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+export type StorefrontTheme = z.infer<typeof StorefrontThemeSchema>;
+
+export const UpdateStorefrontThemeRequestSchema = z.object({
+  brandName: z.string().min(1, 'Brand name cannot be empty').max(100),
+  tagline: z.string().max(255).optional().nullable(),
+  logoUrl: z.string().url().regex(/^https:\/\//, 'Logo URL must use HTTPS').optional().nullable(),
+  primaryColor: HexColorSchema,
+  accentColor: HexColorSchema,
+  backgroundColor: HexColorSchema,
+  surfaceColor: HexColorSchema,
+  textColor: HexColorSchema,
+  mutedTextColor: HexColorSchema,
+  stylePreset: StorefrontStylePresetSchema,
+  fontPreset: StorefrontFontPresetSchema,
+  radiusPreset: StorefrontRadiusPresetSchema,
+  buttonPreset: StorefrontButtonPresetSchema,
+  layoutPreset: StorefrontLayoutPresetSchema,
+  heroAlignment: HeroAlignmentSchema,
+});
+export type UpdateStorefrontThemeRequest = z.infer<typeof UpdateStorefrontThemeRequestSchema>;
+
+export const PublicStorefrontThemeSchema = z.object({
+  brandName: z.string(),
+  tagline: z.string().optional().nullable(),
+  logoUrl: z.string().optional().nullable(),
+  primaryColor: HexColorSchema,
+  accentColor: HexColorSchema,
+  backgroundColor: HexColorSchema,
+  surfaceColor: HexColorSchema,
+  textColor: HexColorSchema,
+  mutedTextColor: HexColorSchema,
+  stylePreset: StorefrontStylePresetSchema,
+  fontPreset: StorefrontFontPresetSchema,
+  radiusPreset: StorefrontRadiusPresetSchema,
+  buttonPreset: StorefrontButtonPresetSchema,
+  layoutPreset: StorefrontLayoutPresetSchema,
+  heroAlignment: HeroAlignmentSchema,
+});
+export type PublicStorefrontTheme = z.infer<typeof PublicStorefrontThemeSchema>;
+
+export const TALIRA_DEFAULT_STOREFRONT_THEME: PublicStorefrontTheme = {
+  brandName: 'Talira Class',
+  tagline: null,
+  logoUrl: null,
+  primaryColor: '#201e1d',
+  accentColor: '#ec3013',
+  backgroundColor: '#f3f2f2',
+  surfaceColor: '#ffffff',
+  textColor: '#201e1d',
+  mutedTextColor: '#5a5954',
+  stylePreset: 'MODERNIST',
+  fontPreset: 'ARCHIVO',
+  radiusPreset: 'SHARP',
+  buttonPreset: 'SOLID',
+  layoutPreset: 'LIST',
+  heroAlignment: 'LEFT',
+};
+
+export const STYLE_PRESET_TOKENS: Record<StorefrontStylePreset, Omit<PublicStorefrontTheme, 'brandName' | 'tagline' | 'logoUrl'>> = {
+  MODERNIST: {
+    primaryColor: '#201e1d',
+    accentColor: '#ec3013',
+    backgroundColor: '#f3f2f2',
+    surfaceColor: '#ffffff',
+    textColor: '#201e1d',
+    mutedTextColor: '#5a5954',
+    stylePreset: 'MODERNIST',
+    fontPreset: 'ARCHIVO',
+    radiusPreset: 'SHARP',
+    buttonPreset: 'SOLID',
+    layoutPreset: 'LIST',
+    heroAlignment: 'LEFT',
+  },
+  SOFT: {
+    primaryColor: '#2d3a34',
+    accentColor: '#437a65',
+    backgroundColor: '#f7f6f2',
+    surfaceColor: '#ffffff',
+    textColor: '#242c28',
+    mutedTextColor: '#637069',
+    stylePreset: 'SOFT',
+    fontPreset: 'MANROPE',
+    radiusPreset: 'ROUNDED',
+    buttonPreset: 'SOFT',
+    layoutPreset: 'GRID',
+    heroAlignment: 'CENTER',
+  },
+  MINIMAL: {
+    primaryColor: '#111827',
+    accentColor: '#4b5563',
+    backgroundColor: '#fafafa',
+    surfaceColor: '#ffffff',
+    textColor: '#111827',
+    mutedTextColor: '#6b7280',
+    stylePreset: 'MINIMAL',
+    fontPreset: 'INTER',
+    radiusPreset: 'SOFT',
+    buttonPreset: 'SOLID',
+    layoutPreset: 'LIST',
+    heroAlignment: 'LEFT',
+  },
+  EDITORIAL: {
+    primaryColor: '#1c1917',
+    accentColor: '#c2410c',
+    backgroundColor: '#f5f2eb',
+    surfaceColor: '#ffffff',
+    textColor: '#1c1917',
+    mutedTextColor: '#57534e',
+    stylePreset: 'EDITORIAL',
+    fontPreset: 'LORA',
+    radiusPreset: 'SHARP',
+    buttonPreset: 'OUTLINE',
+    layoutPreset: 'LIST',
+    heroAlignment: 'CENTER',
+  },
+};
+
+// ==========================================
+// 3c. Color, Contrast & Token Utilities
+// ==========================================
+export function parseHexColor(hex: string): { r: number; g: number; b: number } | null {
+  const match = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/.exec(hex.trim());
+  if (!match) return null;
+  return {
+    r: parseInt(match[1], 16),
+    g: parseInt(match[2], 16),
+    b: parseInt(match[3], 16),
+  };
+}
+
+export function getLuminance(hex: string): number {
+  const rgb = parseHexColor(hex);
+  if (!rgb) return 0;
+  const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+export function getContrastRatio(hex1: string, hex2: string): number {
+  const lum1 = getLuminance(hex1);
+  const lum2 = getLuminance(hex2);
+  const lighter = Math.max(lum1, lum2);
+  const darker = Math.min(lum1, lum2);
+  return Number(((lighter + 0.05) / (darker + 0.05)).toFixed(2));
+}
+
+export function getReadableTextColor(bgHex: string): '#FFFFFF' | '#111827' {
+  const contrastWithWhite = getContrastRatio('#FFFFFF', bgHex);
+  const contrastWithDark = getContrastRatio('#111827', bgHex);
+  return contrastWithWhite >= contrastWithDark ? '#FFFFFF' : '#111827';
+}
+
+export function validateThemeContrast(theme: PublicStorefrontTheme): {
+  isAccessible: boolean;
+  issues: string[];
+  contrastRatios: {
+    textOnBackground: number;
+    textOnSurface: number;
+    mutedOnBackground: number;
+    mutedOnSurface: number;
+    primaryBtnContrast: number;
+    accentBtnContrast: number;
+  };
+} {
+  const textOnBackground = getContrastRatio(theme.textColor, theme.backgroundColor);
+  const textOnSurface = getContrastRatio(theme.textColor, theme.surfaceColor);
+  const mutedOnBackground = getContrastRatio(theme.mutedTextColor, theme.backgroundColor);
+  const mutedOnSurface = getContrastRatio(theme.mutedTextColor, theme.surfaceColor);
+
+  const primaryBtnFg = getReadableTextColor(theme.primaryColor);
+  const primaryBtnContrast = getContrastRatio(primaryBtnFg, theme.primaryColor);
+
+  const accentBtnFg = getReadableTextColor(theme.accentColor);
+  const accentBtnContrast = getContrastRatio(accentBtnFg, theme.accentColor);
+
+  const issues: string[] = [];
+  if (textOnBackground < 4.5) {
+    issues.push(`Kontras teks pada latar belakang (${textOnBackground}:1) di bawah standar WCAG AA 4.5:1`);
+  }
+  if (textOnSurface < 4.5) {
+    issues.push(`Kontras teks pada kartu/permukaan (${textOnSurface}:1) di bawah standar WCAG AA 4.5:1`);
+  }
+  if (mutedOnBackground < 3.0) {
+    issues.push(`Kontras teks sekunder pada latar belakang (${mutedOnBackground}:1) di bawah 3:1`);
+  }
+  if (mutedOnSurface < 3.0) {
+    issues.push(`Kontras teks sekunder pada kartu/permukaan (${mutedOnSurface}:1) di bawah 3:1`);
+  }
+
+  return {
+    isAccessible: issues.length === 0,
+    issues,
+    contrastRatios: {
+      textOnBackground,
+      textOnSurface,
+      mutedOnBackground,
+      mutedOnSurface,
+      primaryBtnContrast,
+      accentBtnContrast,
+    },
+  };
+}
+
+export const FONT_PRESET_FAMILY_MAP: Record<StorefrontFontPreset, string> = {
+  ARCHIVO: "'Archivo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  INTER: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  MANROPE: "'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  LORA: "'Lora', Georgia, 'Times New Roman', Cambria, serif",
+};
+
+export const RADIUS_PRESET_VALUE_MAP: Record<StorefrontRadiusPreset, { sm: string; md: string; lg: string; pill: string }> = {
+  SHARP: { sm: '0px', md: '0px', lg: '0px', pill: '0px' },
+  SOFT: { sm: '4px', md: '6px', lg: '8px', pill: '9999px' },
+  ROUNDED: { sm: '8px', md: '12px', lg: '16px', pill: '9999px' },
+};
+
+export function generateStorefrontCssVariables(theme: PublicStorefrontTheme): Record<string, string> {
+  const font = FONT_PRESET_FAMILY_MAP[theme.fontPreset] || FONT_PRESET_FAMILY_MAP.ARCHIVO;
+  const radius = RADIUS_PRESET_VALUE_MAP[theme.radiusPreset] || RADIUS_PRESET_VALUE_MAP.SHARP;
+  const primaryFg = getReadableTextColor(theme.primaryColor);
+  const accentFg = getReadableTextColor(theme.accentColor);
+
+  return {
+    '--brand-primary': theme.primaryColor,
+    '--brand-primary-fg': primaryFg,
+    '--brand-accent': theme.accentColor,
+    '--brand-accent-fg': accentFg,
+    '--brand-bg': theme.backgroundColor,
+    '--brand-surface': theme.surfaceColor,
+    '--brand-text': theme.textColor,
+    '--brand-muted': theme.mutedTextColor,
+    '--brand-radius-sm': radius.sm,
+    '--brand-radius': radius.md,
+    '--brand-radius-lg': radius.lg,
+    '--brand-font': font,
+    '--brand-btn-preset': theme.buttonPreset,
+    '--brand-layout-preset': theme.layoutPreset,
+    '--brand-hero-align': theme.heroAlignment,
+  };
+}
 
 export const PublicWorkspaceProfileSchema = z.object({
   workspaceSlug: z.string(),
@@ -148,6 +442,7 @@ export const PublicWorkspaceProfileSchema = z.object({
   whatsappPhoneE164: PhoneE164Schema.optional().nullable(),
   avatarUrl: z.string().optional().nullable(),
   logoUrl: z.string().optional().nullable(),
+  theme: PublicStorefrontThemeSchema.optional().nullable(),
   stats: z.object({
     familiesHelped: z.string().optional(),
     programCount: z.union([z.string(), z.number()]).optional(),
@@ -184,6 +479,8 @@ export const PublicProgramSummarySchema = z.object({
   accessType: AccessTypeSchema,
   pricing: ProgramPricingSchema,
   priceAmount: z.number(),
+  bankTransferEnabled: z.boolean().default(false),
+  whatsAppEnabled: z.boolean().default(false),
   publishedAt: z.string().optional().nullable(),
   totalLessonsCount: z.number(),
   totalModulesCount: z.number(),
@@ -506,16 +803,44 @@ export interface IntegrationHealth {
 // ==========================================
 // 8. B3 Program Management DTO Schemas
 // ==========================================
+export const PresignCoverUploadRequestSchema = z.object({
+  fileName: z.string().min(1, 'Nama file wajib diisi'),
+  contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  contentLength: z.number().int().min(1).max(2097152, 'Ukuran file maks 2MB (2097152 bytes)'),
+});
+export type PresignCoverUploadRequest = z.infer<typeof PresignCoverUploadRequestSchema>;
+
+export const PresignCoverUploadResponseSchema = z.object({
+  key: z.string(),
+  uploadUrl: z.string(),
+  publicUrl: z.string(),
+  contentType: z.string(),
+  contentLength: z.number(),
+  expiresAt: z.string(),
+  maxBytes: z.number(),
+});
+export type PresignCoverUploadResponse = z.infer<typeof PresignCoverUploadResponseSchema>;
+
+export const ConfirmCoverUploadRequestSchema = z.object({
+  key: z.string().min(1),
+  contentType: z.string(),
+  contentLength: z.number().optional(),
+});
+export type ConfirmCoverUploadRequest = z.infer<typeof ConfirmCoverUploadRequestSchema>;
+
 export const CreateProgramRequestSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   subtitle: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
   programType: ActiveProgramTypeSchema,
   priceAmount: z.number().min(0).optional(),
+  bankTransferEnabled: z.boolean().optional(),
+  whatsAppEnabled: z.boolean().optional(),
   heroEyebrow: z.string().optional().nullable(),
   durationLabel: z.string().optional().nullable(),
   coverVariant: z.enum(['cover-a', 'cover-b', 'cover-c']).optional(),
   imageUrl: z.string().optional().nullable(),
+  coverImageUrl: z.string().optional().nullable(),
   outcomes: z.array(LearningOutcomeSchema).optional(),
 });
 export type CreateProgramRequest = z.infer<typeof CreateProgramRequestSchema>;
@@ -528,6 +853,8 @@ export const UpdateProgramRequestSchema = z.object({
   accessType: AccessTypeSchema.optional(),
   pricing: ProgramPricingSchema.optional(),
   priceAmount: z.number().min(0).optional(),
+  bankTransferEnabled: z.boolean().optional(),
+  whatsAppEnabled: z.boolean().optional(),
 });
 export type UpdateProgramRequest = z.infer<typeof UpdateProgramRequestSchema>;
 
@@ -1150,4 +1477,158 @@ export const LearnersListResponseSchema = z.object({
   total: z.number().int().nonnegative(),
 });
 export type LearnersListResponse = z.infer<typeof LearnersListResponseSchema>;
+
+// ==========================================
+// 3c. Manual Paid Program Commerce Contracts
+// ==========================================
+export const PurchaseMethodSchema = z.enum(['BANK_TRANSFER', 'WHATSAPP']);
+export type PurchaseMethod = z.infer<typeof PurchaseMethodSchema>;
+
+export const PurchaseStatusSchema = z.enum(['PENDING', 'APPROVED', 'REJECTED']);
+export type PurchaseStatus = z.infer<typeof PurchaseStatusSchema>;
+
+export const ProgramAccessTypeSchema = z.enum(['FREE', 'PAID']);
+export type ProgramAccessType = z.infer<typeof ProgramAccessTypeSchema>;
+
+export const CurrencySchema = z.literal('IDR');
+export type Currency = z.infer<typeof CurrencySchema>;
+
+export const OrganizationBankAccountSchema = z.object({
+  id: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  bankName: z.string().min(1, 'Nama bank tidak boleh kosong').max(100),
+  accountNumber: z.string().min(1, 'Nomor rekening tidak boleh kosong').max(50),
+  accountHolderName: z.string().min(1, 'Nama pemilik rekening tidak boleh kosong').max(100),
+  isActive: z.boolean().default(true),
+  sortOrder: z.number().int().default(0),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+export type OrganizationBankAccount = z.infer<typeof OrganizationBankAccountSchema>;
+
+export const CreateBankAccountRequestSchema = z.object({
+  bankName: z.string().min(1, 'Nama bank wajib diisi').max(100),
+  accountNumber: z.string().min(1, 'Nomor rekening wajib diisi').max(50),
+  accountHolderName: z.string().min(1, 'Nama pemilik rekening wajib diisi').max(100),
+  isActive: z.boolean().optional().default(true),
+  sortOrder: z.number().int().optional(),
+});
+export type CreateBankAccountRequest = z.infer<typeof CreateBankAccountRequestSchema>;
+
+export const UpdateBankAccountRequestSchema = z.object({
+  bankName: z.string().min(1, 'Nama bank wajib diisi').max(100).optional(),
+  accountNumber: z.string().min(1, 'Nomor rekening wajib diisi').max(50).optional(),
+  accountHolderName: z.string().min(1, 'Nama pemilik rekening wajib diisi').max(100).optional(),
+  isActive: z.boolean().optional(),
+  sortOrder: z.number().int().optional(),
+});
+export type UpdateBankAccountRequest = z.infer<typeof UpdateBankAccountRequestSchema>;
+
+export const OrganizationPaymentSettingsSchema = z.object({
+  id: z.string().uuid().optional(),
+  organizationId: z.string().uuid(),
+  salesWhatsAppNumber: PhoneE164Schema.optional().nullable(),
+  bankAccounts: z.array(OrganizationBankAccountSchema).default([]),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+export type OrganizationPaymentSettings = z.infer<typeof OrganizationPaymentSettingsSchema>;
+
+export const UpdatePaymentSettingsRequestSchema = z.object({
+  salesWhatsAppNumber: PhoneE164Schema.optional().nullable(),
+});
+export type UpdatePaymentSettingsRequest = z.infer<typeof UpdatePaymentSettingsRequestSchema>;
+
+export const PublicPaymentInfoSchema = z.object({
+  salesWhatsAppNumber: PhoneE164Schema.optional().nullable(),
+  bankAccounts: z.array(
+    z.object({
+      id: z.string(),
+      bankName: z.string(),
+      accountNumber: z.string(),
+      accountHolderName: z.string(),
+    })
+  ),
+});
+export type PublicPaymentInfo = z.infer<typeof PublicPaymentInfoSchema>;
+
+export const ProgramPurchaseRequestSchema = z.object({
+  id: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  programId: z.string().uuid(),
+  contactId: z.string().uuid(),
+  purchaseReference: z.string().min(1),
+  purchaseMethod: PurchaseMethodSchema,
+  status: PurchaseStatusSchema,
+  priceAmount: z.number().int().nonnegative(),
+  currency: CurrencySchema.default('IDR'),
+  buyerName: z.string().min(1),
+  buyerPhone: PhoneE164Schema,
+  buyerNote: z.string().optional().nullable(),
+  bankAccountId: z.string().uuid().optional().nullable(),
+  bankAccountDetails: z
+    .object({
+      bankName: z.string(),
+      accountNumber: z.string(),
+      accountHolderName: z.string(),
+    })
+    .optional()
+    .nullable(),
+  programTitle: z.string().optional(),
+  programSlug: z.string().optional(),
+  approvedAt: z.string().optional().nullable(),
+  approvedByUserId: z.string().uuid().optional().nullable(),
+  rejectedAt: z.string().optional().nullable(),
+  rejectedByUserId: z.string().uuid().optional().nullable(),
+  rejectionReason: z.string().optional().nullable(),
+  enrollmentId: z.string().uuid().optional().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type ProgramPurchaseRequest = z.infer<typeof ProgramPurchaseRequestSchema>;
+
+export const CreatePublicPurchaseRequestSchema = z.object({
+  name: z.string().min(1, 'Nama wajib diisi').max(100),
+  phone: z.string().min(1, 'Nomor WhatsApp wajib diisi').max(30),
+  purchaseMethod: PurchaseMethodSchema,
+  buyerNote: z.string().max(500).optional().nullable(),
+  bankAccountId: z.string().uuid().optional().nullable(),
+});
+export type CreatePublicPurchaseRequest = z.infer<typeof CreatePublicPurchaseRequestSchema>;
+
+export const CreatePublicPurchaseResponseSchema = z.object({
+  purchaseRequest: ProgramPurchaseRequestSchema,
+  paymentInstructions: z
+    .object({
+      programTitle: z.string(),
+      priceAmount: z.number().int(),
+      formattedPrice: z.string(),
+      purchaseReference: z.string(),
+      bankAccounts: z.array(
+        z.object({
+          id: z.string(),
+          bankName: z.string(),
+          accountNumber: z.string(),
+          accountHolderName: z.string(),
+        })
+      ),
+      whatsappConfirmationUrl: z.string().optional().nullable(),
+    })
+    .optional()
+    .nullable(),
+  whatsappPurchaseUrl: z.string().optional().nullable(),
+});
+export type CreatePublicPurchaseResponse = z.infer<typeof CreatePublicPurchaseResponseSchema>;
+
+export const RejectPurchaseRequestSchema = z.object({
+  reason: z.string().max(255).optional().nullable(),
+});
+export type RejectPurchaseRequest = z.infer<typeof RejectPurchaseRequestSchema>;
+
+export const OrdersListResponseSchema = z.object({
+  orders: z.array(ProgramPurchaseRequestSchema),
+  total: z.number().int().nonnegative(),
+});
+export type OrdersListResponse = z.infer<typeof OrdersListResponseSchema>;
+
 

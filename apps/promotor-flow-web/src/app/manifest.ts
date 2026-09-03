@@ -3,9 +3,9 @@ import { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/app',
-    name: 'PromotorFlow — Pipeline & Daily Execution OS',
-    short_name: 'PromotorFlow',
-    description: 'Sistem operasional harian promotor untuk kelola prospek, booking, dan aftercare STIFIn',
+    name: 'Talira Flow — Asisten Bisnis & CRM Promotor',
+    short_name: 'Talira Flow',
+    description: 'Sistem operasional harian promotor untuk kelola prospek, booking, dan aftercare',
     start_url: '/app',
     scope: '/',
     display: 'standalone',
@@ -31,6 +31,11 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',
+      },
+      {
+        src: '/icons/apple-touch-icon.png',
+        sizes: '180x180',
+        type: 'image/png',
       },
     ],
   };

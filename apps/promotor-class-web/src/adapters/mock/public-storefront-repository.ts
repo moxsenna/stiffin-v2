@@ -5,7 +5,10 @@ import {
   ProgramPublicPresentation,
   PublicProgramCatalogItem,
   PublicProgramDetail,
+  StorefrontTheme,
+  UpdateStorefrontThemeRequest,
 } from '@/modules/public-storefront/types';
+import { TALIRA_DEFAULT_STOREFRONT_THEME } from '@promotor/contracts';
 
 export const MOCK_RINA_PROFILE: PublicWorkspaceProfile = {
   workspaceSlug: 'rina',
@@ -155,6 +158,8 @@ export class MockPublicStorefrontRepository implements PublicStorefrontRepositor
           accessType: program.accessType,
           pricing: program.pricing,
           priceAmount: program.priceAmount,
+          bankTransferEnabled: program.bankTransferEnabled ?? false,
+          whatsAppEnabled: program.whatsAppEnabled ?? false,
           publishedAt: program.publishedAt,
           totalModulesCount: program.modules.length,
           totalLessonsCount,
@@ -223,6 +228,8 @@ export class MockPublicStorefrontRepository implements PublicStorefrontRepositor
         accessType: program.accessType,
         pricing: program.pricing,
         priceAmount: program.priceAmount,
+        bankTransferEnabled: program.bankTransferEnabled ?? false,
+        whatsAppEnabled: program.whatsAppEnabled ?? false,
         publishedAt: program.publishedAt,
         totalModulesCount: program.modules.length,
         totalLessonsCount,
@@ -274,6 +281,63 @@ export class MockPublicStorefrontRepository implements PublicStorefrontRepositor
     const current = await this.getStorefrontProfile();
     const slug = current?.workspaceSlug || 'rina';
     return this.updatePublicWorkspaceProfile(slug, profile);
+  }
+
+  async getStorefrontTheme(): Promise<StorefrontTheme> {
+    const profile = await this.getStorefrontProfile();
+    const theme = (profile?.theme as any) || TALIRA_DEFAULT_STOREFRONT_THEME;
+    return {
+      organizationId: 'mock-org-id',
+      brandName: profile?.displayName || 'Talira Class',
+      tagline: profile?.tagline || null,
+      logoUrl: profile?.logoUrl || null,
+      ...theme,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  async updateStorefrontTheme(theme: UpdateStorefrontThemeRequest): Promise<StorefrontTheme> {
+    const current = await this.getStorefrontProfile();
+    const slug = current?.workspaceSlug || 'rina';
+    await this.updatePublicWorkspaceProfile(slug, {
+      displayName: theme.brandName,
+      tagline: theme.tagline,
+      logoUrl: theme.logoUrl,
+      theme,
+    });
+    return {
+      organizationId: 'mock-org-id',
+      ...theme,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  async resetStorefrontTheme(): Promise<StorefrontTheme> {
+    const current = await this.getStorefrontProfile();
+    return this.updateStorefrontTheme({
+      ...TALIRA_DEFAULT_STOREFRONT_THEME,
+      brandName: current?.displayName || 'Talira Class',
+      tagline: current?.tagline || null,
+      logoUrl: current?.logoUrl || null,
+    });
+  }
+
+  async presignWorkspaceAsset(
+    kind: 'avatar' | 'logo',
+    params: { fileName: string; contentType: string; contentLength: number }
+  ) {
+    const key = `workspace/mock-org/${kind}/${Date.now()}-${params.fileName}`;
+    return {
+      key,
+      uploadUrl: `https://mock.r2.dev/upload/${key}`,
+      publicUrl: `/images/${params.fileName}`,
+      contentType: params.contentType,
+      contentLength: params.contentLength,
+      expiresAt: new Date(Date.now() + 600000).toISOString(),
+      maxBytes: 2097152,
+    };
   }
 }
 

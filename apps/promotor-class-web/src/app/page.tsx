@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 
+import { DemoAccessCard } from '@/components/platform/DemoAccessCard';
+
 export default function RootPage() {
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -50,28 +52,20 @@ export default function RootPage() {
           }}
         >
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'var(--ink)', minWidth: 0 }}>
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                backgroundColor: 'var(--accent)',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 800,
-                fontSize: 13,
-                flexShrink: 0,
-              }}
-            >
-              PC
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, minWidth: 0 }}>
-              <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.03em', whiteSpace: 'nowrap' }}>PromotorClass</span>
-              <span style={{ fontSize: 10, fontWeight: 650, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)', whiteSpace: 'nowrap' }}>Education OS</span>
+            <img
+              src="/icon.webp"
+              alt="Talira Class"
+              width={34}
+              height={34}
+              style={{ width: 34, height: 34, objectFit: 'contain', flexShrink: 0 }}
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1, minWidth: 0 }}>
+              <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.03em', whiteSpace: 'nowrap' }}>Talira Class</span>
+              <span style={{ fontSize: 10, fontWeight: 650, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)', whiteSpace: 'nowrap' }}>Client Education OS</span>
             </div>
           </Link>
           <nav style={{ display: 'none', alignItems: 'center', gap: 22 }} className="landing-nav-links">
+            <a href="#akses-demo" style={{ fontSize: 14, fontWeight: 750, color: 'var(--accent-dark)', textDecoration: 'none' }}>⚡ Akun Demo</a>
             <a href="#fitur" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>Fitur</a>
             <a href="#cara-kerja" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>Cara Kerja</a>
             <a href="#harga" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>Harga</a>
@@ -121,6 +115,7 @@ export default function RootPage() {
         {mobileMenuOpen && (
           <div style={{ borderTop: '1px solid var(--line)', backgroundColor: 'var(--surface)' }}>
             <nav style={{ display: 'flex', flexDirection: 'column', padding: '8px 16px 16px' }}>
+              <a href="#akses-demo" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--accent-dark)', fontWeight: 750, fontSize: 15, textDecoration: 'none', borderBottom: '1px solid var(--line)' }}>⚡ Akun Demo Staging</a>
               <a href="#fitur" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--ink)', fontWeight: 600, fontSize: 15, textDecoration: 'none', borderBottom: '1px solid var(--line)' }}>Fitur</a>
               <a href="#cara-kerja" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--ink)', fontWeight: 600, fontSize: 15, textDecoration: 'none', borderBottom: '1px solid var(--line)' }}>Cara Kerja</a>
               <a href="#harga" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--ink)', fontWeight: 600, fontSize: 15, textDecoration: 'none', borderBottom: '1px solid var(--line)' }}>Harga</a>
@@ -143,10 +138,14 @@ export default function RootPage() {
         <p style={{ fontSize: 'clamp(16px,2vw,19px)', color: 'var(--muted-strong)', lineHeight: 1.6, maxWidth: 740, margin: '0 auto 32px', fontWeight: 450 }}>
           LMS pertama untuk promotor STIFIn. Bangun program edukasi, lacak <strong>progres & refleksi</strong>, skor <strong>intent HOT/WARM/COLD</strong>, dan kirim follow-up WA 1-tap — tanpa pindah tools.
         </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginBottom: 48 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginBottom: 36 }}>
           <Link href="/login" style={{ padding: '14px 28px', backgroundColor: 'var(--accent)', color: '#fff', fontWeight: 800, fontSize: 15, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>Mulai Gratis — Buat Program Pertama →</Link>
-          <a href="#cara-kerja" style={{ padding: '14px 28px', backgroundColor: 'var(--surface)', color: 'var(--ink)', border: '2px solid var(--ink)', fontWeight: 750, fontSize: 15, textDecoration: 'none' }}>Lihat Cara Kerja</a>
+          <a href="#akses-demo" style={{ padding: '14px 28px', backgroundColor: 'var(--surface)', color: 'var(--ink)', border: '2px solid var(--ink)', fontWeight: 750, fontSize: 15, textDecoration: 'none' }}>⚡ Akses Akun Demo</a>
         </div>
+
+        {/* Prominent Demo Access Card */}
+        <DemoAccessCard />
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 16, maxWidth: 860, margin: '0 auto', padding: '16px', backgroundColor: 'var(--surface-muted)', border: '1px solid var(--line)', textAlign: 'center' }}>
           <div style={{ minWidth: 0, overflowWrap: 'anywhere' }}><div style={{ fontSize: 'clamp(20px,4vw,28px)', fontWeight: 900, color: 'var(--accent)', wordBreak: 'break-word' }}>3</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600, overflowWrap: 'anywhere' }}>Langkah: Program → Belajar → Follow-up</div></div>
           <div style={{ minWidth: 0, overflowWrap: 'anywhere' }}><div style={{ fontSize: 'clamp(18px,3.5vw,24px)', fontWeight: 900, color: 'var(--accent)', wordBreak: 'break-word' }}>HOT/WARM/COLD</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600, overflowWrap: 'anywhere' }}>Intent Otomatis per Peserta</div></div>
@@ -187,7 +186,7 @@ export default function RootPage() {
           {[
             { n: '01', t: 'Buat Program & Share Link', d: 'Publikasikan program, dapatkan link storefront otomatis. Bagikan ke Instagram/WA. Peserta daftar, kontak & enrollment terbentuk.' },
             { n: '02', t: 'Peserta Belajar & Refleksi', d: 'Materi teks & video, refleksi pengunci, progres terukur. Sistem hitung intent dan tandai yang perlu perhatian.' },
-            { n: '03', t: 'Follow-up 1-Tap di Flow', d: 'Learner HOT muncul di Beranda promotor. Buka di Flow, kirim WA personal, booking tes, aftercare D+7 otomatis.' },
+            { n: '03', t: 'Follow-up 1-Tap di Flow', d: 'Learner HOT muncul di Beranda promotor. Buka di Talira Flow, kirim WA personal, booking tes, aftercare D+7 otomatis.' },
           ].map((s) => (
             <div key={s.n} style={{ border: '1px solid var(--line)', padding: 24, backgroundColor: 'var(--surface)' }}>
               <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.14em', color: 'var(--accent)', marginBottom: 8 }}>{s.n}</div>
@@ -200,7 +199,7 @@ export default function RootPage() {
 
       <section style={{ padding: '48px 24px', backgroundColor: 'var(--ink)', color: '#fff', textAlign: 'center' }}>
         <h2 style={{ fontSize: 'clamp(26px,4vw,36px)', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: 12 }}>Siap Ubah Edukasi Menjadi Pipeline?</h2>
-        <p style={{ fontSize: 16, color: '#94a3b8', maxWidth: 640, margin: '0 auto 24px', lineHeight: 1.6 }}>Bergabung dengan promotor yang sudah pakai PromotorClass — gratis untuk memulai, tanpa kartu kredit.</p>
+        <p style={{ fontSize: 16, color: '#94a3b8', maxWidth: 640, margin: '0 auto 24px', lineHeight: 1.6 }}>Bergabung dengan promotor yang sudah pakai Talira Class — gratis untuk memulai, tanpa kartu kredit.</p>
         <Link href="/login" style={{ display: 'inline-flex', padding: '14px 32px', backgroundColor: 'var(--accent)', color: '#fff', fontWeight: 800, fontSize: 15, textDecoration: 'none' }}>Buat Program Pertama Gratis →</Link>
         <div style={{ marginTop: 12, fontSize: 12, color: '#64748b' }}>Gratis • Setup 5 menit • Support STIFIn</div>
       </section>
@@ -224,7 +223,7 @@ export default function RootPage() {
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14, color: '#e2e8f0' }}>
               <li>✓ Program tanpa batas</li>
               <li>✓ Aftercare & lifecycle lengkap</li>
-              <li>✓ Sinkron PromotorFlow + WA 1-tap</li>
+              <li>✓ Sinkron Talira Flow + WA 1-tap</li>
             </ul>
             <Link href="/login" style={{ display: 'block', marginTop: 20, padding: '12px', backgroundColor: 'var(--accent)', color: '#fff', textAlign: 'center', fontWeight: 800, textDecoration: 'none' }}>Pilih Pro →</Link>
           </div>
@@ -246,7 +245,7 @@ export default function RootPage() {
       </section>
 
       <footer style={{ padding: '32px 24px', borderTop: '1px solid var(--line)', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
-        © 2026 PromotorClass — STIFIn Platform • <Link href="/login" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Masuk Promotor</Link> • <Link href="/learn" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Portal Learner</Link>
+        © 2026 Talira Class — Client Education OS • <Link href="/login" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Masuk Promotor</Link> • <Link href="/learn" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Portal Learner</Link>
       </footer>
 
       <style>{`@media(max-width:840px){.landing-nav-links{display:none!important}}`}</style>

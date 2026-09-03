@@ -7,8 +7,9 @@ import {
   lessons,
   programPresentations,
   workspaceProfiles,
+  storefrontThemes,
 } from '../db/schema';
-import type {
+import {
   PublicWorkspaceProfile,
   PublicProgramCatalogItem,
   PublicProgramDetail,
@@ -16,6 +17,8 @@ import type {
   PublicModulePreview,
   PublicLessonPreview,
   ProgramPublicPresentation,
+  PublicStorefrontTheme,
+  TALIRA_DEFAULT_STOREFRONT_THEME,
 } from '@promotor/contracts';
 
 export interface PublicContentRepository {
@@ -84,6 +87,8 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
       accessType: progRow.accessType as any,
       pricing: progRow.pricing as any,
       priceAmount: progRow.priceAmount,
+      bankTransferEnabled: progRow.bankTransferEnabled ?? false,
+      whatsAppEnabled: progRow.whatsAppEnabled ?? false,
       publishedAt: progRow.publishedAt ?? undefined,
       totalModulesCount: moduleRows.length,
       totalLessonsCount,
@@ -158,6 +163,8 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
       accessType: progRow.accessType as any,
       pricing: progRow.pricing as any,
       priceAmount: progRow.priceAmount,
+      bankTransferEnabled: progRow.bankTransferEnabled ?? false,
+      whatsAppEnabled: progRow.whatsAppEnabled ?? false,
       publishedAt: progRow.publishedAt ?? undefined,
       totalModulesCount: moduleRows.length,
       totalLessonsCount,
@@ -211,6 +218,54 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
           )
         );
 
+      // Resolve tenant storefront theme fail-safely
+      let themeRow = null;
+      try {
+        const [row] = await db
+          .select()
+          .from(storefrontThemes)
+          .where(eq(storefrontThemes.organizationId, org.id))
+          .limit(1);
+        themeRow = row;
+      } catch {
+        themeRow = null;
+      }
+
+      const statsTheme = (profileRow?.stats as any)?.storefrontTheme;
+
+      const publicTheme: PublicStorefrontTheme = themeRow
+        ? {
+            brandName: themeRow.brandName,
+            tagline: themeRow.tagline,
+            logoUrl: themeRow.logoUrl,
+            primaryColor: themeRow.primaryColor,
+            accentColor: themeRow.accentColor,
+            backgroundColor: themeRow.backgroundColor,
+            surfaceColor: themeRow.surfaceColor,
+            textColor: themeRow.textColor,
+            mutedTextColor: themeRow.mutedTextColor,
+            stylePreset: themeRow.stylePreset as any,
+            fontPreset: themeRow.fontPreset as any,
+            radiusPreset: themeRow.radiusPreset as any,
+            buttonPreset: themeRow.buttonPreset as any,
+            layoutPreset: themeRow.layoutPreset as any,
+            heroAlignment: themeRow.heroAlignment as any,
+          }
+        : statsTheme
+        ? {
+            ...TALIRA_DEFAULT_STOREFRONT_THEME,
+            ...statsTheme,
+            brandName: statsTheme.brandName || profileRow.displayName || 'Talira Class',
+            tagline: statsTheme.tagline ?? profileRow.tagline ?? null,
+            logoUrl: statsTheme.logoUrl ?? profileRow.logoUrl ?? null,
+          }
+        : {
+            ...TALIRA_DEFAULT_STOREFRONT_THEME,
+            brandName: profileRow.displayName || 'Talira Class',
+            tagline: profileRow.tagline || null,
+            logoUrl: profileRow.logoUrl || null,
+          };
+
       return {
         workspaceSlug: org.slug,
         displayName: profileRow.displayName,
@@ -223,6 +278,7 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
         whatsappPhoneE164: profileRow.whatsappPhoneE164 ?? undefined,
         avatarUrl: profileRow.avatarUrl ?? undefined,
         logoUrl: profileRow.logoUrl ?? undefined,
+        theme: publicTheme,
         stats: {
           familiesHelped: profileRow.stats.familiesHelped,
           location: profileRow.stats.location,
@@ -237,7 +293,20 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
 
       const rows = await db
         .select({
-          program: programs,
+          program: {
+            id: programs.id,
+            organizationId: programs.organizationId,
+            slug: programs.slug,
+            title: programs.title,
+            subtitle: programs.subtitle,
+            description: programs.description,
+            programType: programs.programType,
+            accessType: programs.accessType,
+            pricing: programs.pricing,
+            priceAmount: programs.priceAmount,
+            status: programs.status,
+            publishedAt: programs.publishedAt,
+          },
           presentation: programPresentations,
         })
         .from(programs)
@@ -284,7 +353,20 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
 
       const [row] = await db
         .select({
-          program: programs,
+          program: {
+            id: programs.id,
+            organizationId: programs.organizationId,
+            slug: programs.slug,
+            title: programs.title,
+            subtitle: programs.subtitle,
+            description: programs.description,
+            programType: programs.programType,
+            accessType: programs.accessType,
+            pricing: programs.pricing,
+            priceAmount: programs.priceAmount,
+            status: programs.status,
+            publishedAt: programs.publishedAt,
+          },
           presentation: programPresentations,
         })
         .from(programs)

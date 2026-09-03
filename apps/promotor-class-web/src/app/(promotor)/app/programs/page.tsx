@@ -34,7 +34,7 @@ export default function ProgramsPage() {
   return (
     <PromotorShell>
      <PageHeader
-        kicker="PromotorClass"
+        kicker="Talira Class"
         title="Program"
         sub={programs ? `${programs.length} program · materi edukasi, gratis & berbayar` : 'Memuat program...'}
         action={
@@ -89,14 +89,14 @@ export default function ProgramsPage() {
                <span>{prog.modules.reduce((acc, m) =>acc + m.lessons.length, 0)} pelajaran</span>
              </div>
 
-             <div style={{ marginTop: 12, display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
-               <Link href={`/app/programs/${prog.id}`} className="btn btn-secondary btn-sm">
-                 Kelola Kurikulum & Materi
+              <div style={{ marginTop: 12, display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+                <Link href={`/app/programs/${prog.id}`} className="btn btn-secondary btn-sm">
+                  Kelola Kurikulum & Materi
                 </Link>
-               <Link href={`/p/${workspaceSlug}/${prog.programSlug}`} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
-                 Lihat Landing ↗
+                <Link href={`/p/${prog.workspaceSlug || workspaceSlug}/${prog.programSlug || (prog as any).slug}`} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
+                  Lihat Landing ↗
                 </Link>
-             </div>
+              </div>
            </div>
          ))}
           <div style={{ padding: 18 }}>

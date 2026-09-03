@@ -8,6 +8,8 @@ import type {
   UpdateProgramRequest,
   UpdateProgramPresentationRequest,
   UpdateWorkspaceProfileRequest,
+  StorefrontTheme,
+  UpdateStorefrontThemeRequest,
   UpsertLessonRequest,
   CreateFlowContactRequest,
   UpdateFlowContactProfileRequest,
@@ -56,6 +58,18 @@ import type {
   ProgramAnalyticsResponse,
   LearnersListResponse,
   IntegrationHealth,
+  OrganizationBankAccount,
+  CreateBankAccountRequest,
+  UpdateBankAccountRequest,
+  OrganizationPaymentSettings,
+  UpdatePaymentSettingsRequest,
+  PublicPaymentInfo,
+  ProgramPurchaseRequest,
+  CreatePublicPurchaseRequest,
+  CreatePublicPurchaseResponse,
+  OrdersListResponse,
+  PurchaseStatus,
+  PurchaseMethod,
 } from '@promotor/contracts';
 
 export interface ApiClientConfig {
@@ -318,6 +332,37 @@ export class PromotorClassContentApiClient {
     return res.presentation;
   }
 
+  async presignProgramCover(
+    programId: string,
+    data: { fileName: string; contentType: string; contentLength: number }
+  ): Promise<{ key: string; uploadUrl: string; publicUrl: string; contentType: string; contentLength: number; expiresAt: string; maxBytes: number }> {
+    return this.client.post(`/api/v1/programs/${encodeURIComponent(programId)}/cover/presign`, data);
+  }
+
+  async presignNewProgramCover(
+    data: { fileName: string; contentType: string; contentLength: number }
+  ): Promise<{ key: string; uploadUrl: string; publicUrl: string; contentType: string; contentLength: number; expiresAt: string; maxBytes: number }> {
+    return this.client.post('/api/v1/uploads/cover/presign', data);
+  }
+
+  async presignWorkspaceAsset(
+    kind: 'avatar' | 'logo',
+    data: { fileName: string; contentType: string; contentLength: number }
+  ): Promise<{ key: string; uploadUrl: string; publicUrl: string; contentType: string; contentLength: number; expiresAt: string; maxBytes: number }> {
+    return this.client.post(`/api/v1/uploads/workspace/${encodeURIComponent(kind)}/presign`, data);
+  }
+
+  async confirmProgramCover(
+    programId: string,
+    data: { key: string; contentType: string; contentLength?: number }
+  ): Promise<{ key: string; publicUrl: string; contentType: string; contentLength: number }> {
+    return this.client.post(`/api/v1/programs/${encodeURIComponent(programId)}/cover/confirm`, data);
+  }
+
+  async deleteProgramCover(programId: string): Promise<{ success: boolean }> {
+    return this.client.delete(`/api/v1/programs/${encodeURIComponent(programId)}/cover`);
+  }
+
   async updateProgramPresentation(
     programId: string,
     patch: UpdateProgramPresentationRequest
@@ -339,6 +384,21 @@ export class PromotorClassContentApiClient {
     return res.profile;
   }
 
+  async getStorefrontTheme(): Promise<StorefrontTheme> {
+    const res = await this.client.get<{ theme: StorefrontTheme }>('/api/v1/class/storefront/theme');
+    return res.theme;
+  }
+
+  async updateStorefrontTheme(body: UpdateStorefrontThemeRequest): Promise<StorefrontTheme> {
+    const res = await this.client.put<{ success: boolean; theme: StorefrontTheme }>('/api/v1/class/storefront/theme', body);
+    return res.theme;
+  }
+
+  async resetStorefrontTheme(): Promise<StorefrontTheme> {
+    const res = await this.client.post<{ success: boolean; theme: StorefrontTheme }>('/api/v1/class/storefront/theme/reset', {});
+    return res.theme;
+  }
+
   // B4 Registration & Enrollment
   async registerPublicLearner(
     workspaceSlug: string,
@@ -347,6 +407,24 @@ export class PromotorClassContentApiClient {
   ): Promise<PublicRegisterLearnerResponse> {
     return this.client.post(
       `/api/v1/public/${encodeURIComponent(workspaceSlug)}/programs/${encodeURIComponent(programSlug)}/register`,
+      data
+    );
+  }
+
+  // Manual Paid Program Commerce
+  async getPublicPaymentInfo(workspaceSlug: string): Promise<PublicPaymentInfo> {
+    return this.client.get<PublicPaymentInfo>(
+      `/api/v1/public/${encodeURIComponent(workspaceSlug)}/payment-info`
+    );
+  }
+
+  async createPublicPurchaseRequest(
+    workspaceSlug: string,
+    programSlug: string,
+    data: CreatePublicPurchaseRequest
+  ): Promise<CreatePublicPurchaseResponse> {
+    return this.client.post<CreatePublicPurchaseResponse>(
+      `/api/v1/public/${encodeURIComponent(workspaceSlug)}/programs/${encodeURIComponent(programSlug)}/purchase-requests`,
       data
     );
   }
@@ -493,6 +571,60 @@ export class PromotorClassContentApiClient {
       }
       return { promotorFlow: 'UNAVAILABLE' };
     }
+  }
+
+  // ==========================================
+  // Manual Paid Program Commerce (§10, §11, §12)
+  // ==========================================
+
+  async listOrders(query?: { status?: PurchaseStatus; method?: PurchaseMethod }): Promise<OrdersListResponse> {
+    const params = new URLSearchParams();
+    if (query?.status) params.append('status', query.status);
+    if (query?.method) params.append('method', query.method);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return this.client.get<OrdersListResponse>(`/api/v1/class/orders${qs}`);
+  }
+
+  async getOrderById(id: string): Promise<{ order: ProgramPurchaseRequest }> {
+    return this.client.get<{ order: ProgramPurchaseRequest }>(`/api/v1/class/orders/${encodeURIComponent(id)}`);
+  }
+
+  async approveOrder(id: string): Promise<{ order: ProgramPurchaseRequest; enrollmentId: string; wasAlreadyApproved: boolean }> {
+    return this.client.post<{ order: ProgramPurchaseRequest; enrollmentId: string; wasAlreadyApproved: boolean }>(
+      `/api/v1/class/orders/${encodeURIComponent(id)}/approve`
+    );
+  }
+
+  async rejectOrder(id: string, reason?: string | null): Promise<{ order: ProgramPurchaseRequest }> {
+    return this.client.post<{ order: ProgramPurchaseRequest }>(
+      `/api/v1/class/orders/${encodeURIComponent(id)}/reject`,
+      { reason }
+    );
+  }
+
+  async getPaymentSettings(): Promise<{ settings: OrganizationPaymentSettings }> {
+    return this.client.get<{ settings: OrganizationPaymentSettings }>('/api/v1/class/settings/payments');
+  }
+
+  async updatePaymentSettings(data: UpdatePaymentSettingsRequest): Promise<{ settings: OrganizationPaymentSettings }> {
+    return this.client.put<{ settings: OrganizationPaymentSettings }>('/api/v1/class/settings/payments', data);
+  }
+
+  async createBankAccount(data: CreateBankAccountRequest): Promise<{ bankAccount: OrganizationBankAccount }> {
+    return this.client.post<{ bankAccount: OrganizationBankAccount }>('/api/v1/class/settings/payments/bank-accounts', data);
+  }
+
+  async updateBankAccount(id: string, data: UpdateBankAccountRequest): Promise<{ bankAccount: OrganizationBankAccount }> {
+    return this.client.put<{ bankAccount: OrganizationBankAccount }>(
+      `/api/v1/class/settings/payments/bank-accounts/${encodeURIComponent(id)}`,
+      data
+    );
+  }
+
+  async deleteBankAccount(id: string): Promise<{ success: boolean }> {
+    return this.client.delete<{ success: boolean }>(
+      `/api/v1/class/settings/payments/bank-accounts/${encodeURIComponent(id)}`
+    );
   }
 }
 

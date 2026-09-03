@@ -100,6 +100,9 @@ export function createEnrollmentService(
       if (program.accessType !== 'public') {
         throw new DomainError('FORBIDDEN', 'Program ini tidak terbuka untuk pendaftaran publik langsung');
       }
+      if (program.pricing === 'one_time') {
+        throw new DomainError('FORBIDDEN', 'Program berbayar memerlukan proses pemesanan melalui jalur pembelian');
+      }
 
       // 4. Check whether contact already exists before matchOrCreate
       const phoneNorm = normalizePhone(input.phoneRaw.trim());

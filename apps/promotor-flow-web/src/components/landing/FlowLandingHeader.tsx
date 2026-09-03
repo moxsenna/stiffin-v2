@@ -50,24 +50,21 @@ export const FlowLandingHeader: React.FC = () => {
             color: 'var(--color-text-primary)',
           }}
         >
-          <div
+          <img
+            src="/icon.webp"
+            alt="Talira Flow"
+            width={36}
+            height={36}
             style={{
               width: '36px',
               height: '36px',
-              borderRadius: 'var(--radius-sm)',
-              backgroundColor: 'var(--color-primary)',
-              color: '#FFFFFF',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: 'var(--shadow-xs)',
+              objectFit: 'contain',
+              flexShrink: 0,
             }}
-          >
-            <LightningIcon size={20} color="#FFFFFF" />
-          </div>
+          />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: '17px', fontWeight: 850, letterSpacing: '-0.03em', color: 'var(--color-text-primary)' }}>
-              PromotorFlow
+              Talira Flow
             </span>
             <span style={{ fontSize: '10.5px', fontWeight: 650, color: 'var(--color-text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
               Execution OS
@@ -80,10 +77,13 @@ export const FlowLandingHeader: React.FC = () => {
           style={{
             display: 'none',
             alignItems: 'center',
-            gap: '32px',
+            gap: '24px',
           }}
           className="landing-nav-links"
         >
+          <a href="#akses-demo" style={{ color: 'var(--color-primary)', fontWeight: 750, fontSize: '14px', textDecoration: 'none' }}>
+            ⚡ Akun Demo
+          </a>
           <a href="#fitur" style={{ color: 'var(--color-text-secondary)', fontWeight: 600, fontSize: '14px', textDecoration: 'none' }}>
             Fitur Utama
           </a>
@@ -194,6 +194,9 @@ export const FlowLandingHeader: React.FC = () => {
       {mobileMenuOpen && (
         <div className="landing-mobile-menu" style={{ borderTop: '1px solid var(--color-divider)', backgroundColor: 'var(--color-surface)' }}>
           <nav style={{ display: 'flex', flexDirection: 'column', padding: '8px 24px 16px' }}>
+            <a href="#akses-demo" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: 'var(--color-primary)', fontWeight: 750, fontSize: '15px', textDecoration: 'none', borderBottom: '1px solid var(--color-divider)' }}>
+              ⚡ Akun Demo Staging
+            </a>
             <a href="#fitur" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: 'var(--color-text-primary)', fontWeight: 600, fontSize: '15px', textDecoration: 'none', borderBottom: '1px solid var(--color-divider)' }}>
               Fitur Utama
             </a>

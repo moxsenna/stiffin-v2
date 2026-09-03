@@ -26,30 +26,27 @@ export function PlatformFooter() {
           {/* Brand Col */}
           <div style={{ maxWidth: '300px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-              <span
+              <img
+                src="/icon.webp"
+                alt="Talira Class"
+                width={32}
+                height={32}
                 style={{
                   width: '32px',
                   height: '32px',
-                  borderRadius: '8px',
-                  backgroundColor: 'var(--color-primary)',
-                  color: '#FFFFFF',
-                  display: 'grid',
-                  placeItems: 'center',
-                  fontWeight: 800,
-                  fontSize: '15px',
+                  objectFit: 'contain',
+                  flexShrink: 0,
                 }}
-              >
-                P
-              </span>
+              />
               <span style={{ fontWeight: 800, fontSize: '16px', color: '#FFFFFF' }}>
-                PromotorClass
+                Talira Class
               </span>
             </div>
             <p style={{ fontSize: '13px', lineHeight: 1.6, color: '#888883', marginBottom: '16px' }}>
-              Client Education OS untuk Promotor STIFIn, praktisi parenting, dan coach profesional di Indonesia.
+              Client Education OS untuk promotor, praktisi parenting, dan coach profesional di Indonesia.
             </p>
             <div style={{ fontSize: '12px', color: '#666661' }}>
-              Bagian dari ekosistem Promotor Suite (PromotorClass + PromotorFlow).
+              Bagian dari ekosistem Talira Suite (Talira Class + Talira Flow).
             </div>
           </div>
 
@@ -106,7 +103,7 @@ export function PlatformFooter() {
           }}
         >
           <div>
-            © {new Date().getFullYear()} PromotorClass. Seluruh hak cipta dilindungi undang-undang.
+            © {new Date().getFullYear()} Talira Class. Seluruh hak cipta dilindungi undang-undang.
           </div>
           <div style={{ display: 'flex', gap: '20px' }}>
             <span>Privasi Data Peserta Terjamin</span>

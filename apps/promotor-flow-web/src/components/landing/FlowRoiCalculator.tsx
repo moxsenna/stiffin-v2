@@ -37,7 +37,7 @@ export const FlowRoiCalculator: React.FC = () => {
               lineHeight: 1.2,
             }}
           >
-            Kalkulator Dampak Bisnis PromotorFlow
+            Kalkulator Dampak Bisnis Talira Flow
           </h2>
           <p style={{ fontSize: '15.5px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
             Geser angka di bawah untuk melihat estimasi penambahan omzet dan waktu kerja yang dapat Anda selamatkan setiap bulan.
@@ -195,7 +195,7 @@ export const FlowRoiCalculator: React.FC = () => {
                 boxShadow: 'var(--shadow-sm)',
               }}
             >
-              Mulai Pakai PromotorFlow Sekarang →
+              Mulai Pakai Talira Flow Sekarang →
             </Link>
           </div>
         </div>

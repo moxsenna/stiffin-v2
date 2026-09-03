@@ -27,7 +27,7 @@ export function InteractiveEngineDemo() {
               color: 'var(--color-text-main)',
             }}
           >
-            Bagaimana PromotorClass mengubah materi menjadi klien nyata.
+            Bagaimana Talira Class mengubah materi menjadi klien nyata.
           </h2>
           <p style={{ fontSize: '16px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
             Bukan sekadar statistik view atau persentase video. Setiap interaksi peserta diterjemahkan menjadi konteks percakapan personal yang siap difollow-up.
@@ -225,7 +225,7 @@ export function InteractiveEngineDemo() {
                   Tahu Persis Kapan Calon Klien Membutuhkan Anda
                 </h3>
                 <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6, marginBottom: '18px' }}>
-                  Ketika peserta mengisi refleksi atau menyelesaikan modul, PromotorClass menganalisis tingkat keterlibatan dan menandai peserta sebagai <strong>High Intent Lead</strong>.
+                  Ketika peserta mengisi refleksi atau menyelesaikan modul, Talira Class menganalisis tingkat keterlibatan dan menandai peserta sebagai <strong>High Intent Lead</strong>.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)' }}>
@@ -292,7 +292,7 @@ export function InteractiveEngineDemo() {
                   Follow-Up Tanpa Terasa Seperti Spam
                 </h3>
                 <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6, marginBottom: '18px' }}>
-                  PromotorClass menyusun draf pesan WhatsApp yang menyebutkan materi dan refleksi spesifik dari peserta. Peserta merasa didengar dan diapresiasi, bukan di-hard sell.
+                  Talira Class menyusun draf pesan WhatsApp yang menyebutkan materi dan refleksi spesifik dari peserta. Peserta merasa didengar dan diapresiasi, bukan di-hard sell.
                 </p>
                 <div style={{ padding: '12px 16px', backgroundColor: '#EAF5F2', borderRadius: '10px', border: '1px solid #B8D4C5', fontSize: '13px', color: '#167A68' }}>
                   <strong>Hasil Konversi:</strong> 94% calon klien merespons positif karena pesan relevan dengan masalah nyata yang mereka hadapi saat ini.

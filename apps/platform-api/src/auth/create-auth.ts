@@ -52,6 +52,9 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
     'https://promotor-flow-staging.moxsenna.workers.dev',
     'https://stiffin-promotor-class.moxsenna.workers.dev',
     'https://stiffin-promotor-flow.moxsenna.workers.dev',
+    'https://stiffin-promotor-class.senna.my.id',
+    'https://stiffin-promotor-flow.senna.my.id',
+    'https://stiffin-promotor-api.senna.my.id',
     ...(env.BETTER_AUTH_TRUSTED_ORIGINS ?? '')
       .split(',')
       .map((s) => s.trim())

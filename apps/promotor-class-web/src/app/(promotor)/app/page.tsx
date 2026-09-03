@@ -68,7 +68,7 @@ export default function PromotorHomePage() {
   return (
     <PromotorShell>
      <PageHeader
-        kicker="PromotorClass"
+        kicker="Talira Class"
         title="Beranda"
         sub={signals ? `${signals.length} peserta perlu perhatian` : 'Memuat sinyal belajar...'}
         action={

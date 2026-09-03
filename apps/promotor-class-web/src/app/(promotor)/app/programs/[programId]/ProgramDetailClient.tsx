@@ -14,6 +14,8 @@ import {
   deleteLessonCommand,
 } from '@/modules/programs/commands';
 import { Program, Module, Lesson } from '@promotor/contracts';
+import { ImageUpload } from '@/components/promotor/ImageUpload';
+import { ProgramCover } from '@/components/public/ProgramCover';
 
 export function ProgramDetailClient() {
   const params = useParams();
@@ -21,6 +23,7 @@ export function ProgramDetailClient() {
   const [program, setProgram] = useState<Program | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showCoverModal, setShowCoverModal] = useState(false);
 
   // Modals & Drawers state
   const [showAddModuleModal, setShowAddModuleModal] = useState(false);
@@ -299,9 +302,25 @@ export function ProgramDetailClient() {
               </p>
            </div>
 
-           {/* Quick Actions */}
+            {/* Quick Actions */}
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-             <button
+              <button
+                onClick={() => setShowCoverModal(true)}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: '0px',
+                  border: '1px solid var(--color-divider)',
+                  backgroundColor: 'var(--color-surface)',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  color: 'var(--color-text-main)',
+                  cursor: 'pointer',
+                }}
+              >
+                Cover Program
+              </button>
+
+              <button
                 onClick={handleToggleStatus}
                 style={{
                   padding: '8px 14px',
@@ -314,11 +333,11 @@ export function ProgramDetailClient() {
                   cursor: 'pointer',
                 }}
               >
-               {program.status === 'published' ? 'Ubah ke Draf' : 'Terbitkan'}
+                {program.status === 'published' ? 'Ubah ke Draf' : 'Terbitkan'}
               </button>
 
-             <button
-                onClick={() =>setShowShareModal(true)}
+              <button
+                onClick={() => setShowShareModal(true)}
                 className="touch-target-primary"
                 style={{
                   padding: '0 16px',
@@ -329,9 +348,9 @@ export function ProgramDetailClient() {
                   fontSize: '13px',
                 }}
               >
-               Bagikan Tautan 
+                Bagikan Tautan
               </button>
-           </div>
+            </div>
          </div>
 
          <div
@@ -832,6 +851,75 @@ export function ProgramDetailClient() {
            </div>
          </div>
        )}
+
+        {/* Cover Image Upload Modal (R2 Presigned Direct) */}
+        {showCoverModal && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 3000,
+              backgroundColor: 'rgba(0, 0, 0, 0.45)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '16px',
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: 'var(--surface)',
+                border: '2px solid var(--ink)',
+                padding: '24px',
+                maxWidth: '520px',
+                width: '100%',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Ubah Cover Program (Cloudflare R2)</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowCoverModal(false)}
+                  style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer' }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p style={{ fontSize: '13px', color: 'var(--muted-strong)', marginBottom: '16px' }}>
+                Unggah gambar cover beresolusi tinggi untuk ditampilkan pada katalog dan halaman storefront publik.
+              </p>
+
+              <ImageUpload
+                programId={program.id}
+                currentImageUrl={(program as any).coverImageUrl || (program as any).presentation?.imageUrl}
+                onUploaded={({ publicUrl }) => {
+                  showToast('Cover program berhasil diunggah langsung ke R2!');
+                  setProgram((prev) => (prev ? { ...prev, coverImageUrl: publicUrl } : prev));
+                  loadProgramData();
+                }}
+                onRemoved={() => {
+                  showToast('Cover program dihapus.');
+                  setProgram((prev) => (prev ? { ...prev, coverImageUrl: undefined } : prev));
+                  loadProgramData();
+                }}
+              />
+
+              <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowCoverModal(false)}
+                  className="btn btn-secondary btn-sm"
+                >
+                  Selesai
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Share Modal */}
         {showShareModal && (

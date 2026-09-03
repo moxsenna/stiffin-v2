@@ -40,8 +40,8 @@ export const LivePipelineDemo: React.FC = () => {
       leadContext: 'Sumber: Website Storefront · Telah menyelesaikan modul edukasi "Mengenal 5 Mesin Kecerdasan" (Score: 85/100)',
       actionTitle: 'Kirim link pemilihan jadwal tes tatap muka (On-Site / Home Visit)',
       actionDue: 'Jatuh tempo: 10:00 WIB',
-      whatsappDraft: 'Halo Pak Dimas! Senang melihat Bapak sudah menyimak materi pengantar STIFIn. Untuk memetakan potensi Bapak dan keluarga secara presisi, silakan pilih slot jadwal tes yang paling pas melalui link ini: https://promotorflow.id/p/stifin-consulting/book',
-      impactExplanation: 'Integrasi sinyal belajar PromotorClass memfilter prospek yang sudah teredukasi dan siap bayar.',
+      whatsappDraft: 'Halo Pak Dimas! Senang melihat Bapak sudah menyimak materi pengantar STIFIn. Untuk memetakan potensi Bapak dan keluarga secara presisi, silakan pilih slot jadwal tes yang paling pas melalui link ini: https://talira.id/p/stifin-consulting/book',
+      impactExplanation: 'Integrasi sinyal belajar Talira Class memfilter prospek yang sudah teredukasi dan siap bayar.',
     },
     {
       id: 'BOOKED',
@@ -95,7 +95,7 @@ export const LivePipelineDemo: React.FC = () => {
             Simulasi Pipeline Interaktif: Dari Chat Menjadi Klien Setia
           </h2>
           <p style={{ fontSize: '15.5px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-            Klik tahapan pipeline di bawah untuk melihat bagaimana PromotorFlow mengotomatiskan tindakan harian dan draf pesan Anda.
+            Klik tahapan pipeline di bawah untuk melihat bagaimana Talira Flow mengotomatiskan tindakan harian dan draf pesan Anda.
           </p>
         </div>
 

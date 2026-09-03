@@ -15,6 +15,8 @@ import { getPublicWorkspaceQuery, listPublicProgramsQuery } from '@/modules/publ
 
 import { capturePrototypeReferralCode } from '@/lib/referral-capture';
 
+import { StorefrontThemeProvider } from '@/components/theme/StorefrontThemeProvider';
+
 interface StorefrontClientProps {
   profile: PublicWorkspaceProfile;
   catalog: PublicProgramCatalogItem[];
@@ -26,17 +28,17 @@ export function StorefrontClient({ profile: initialProfile, catalog: initialCata
   const [profile, setProfile] = useState<PublicWorkspaceProfile>(initialProfile);
   const [catalog, setCatalog] = useState<PublicProgramCatalogItem[]>(initialCatalog);
 
-  useEffect(() =>{
+  useEffect(() => {
     if (initialProfile.workspaceSlug) {
       setLastPublicWorkspaceSlug(initialProfile.workspaceSlug);
 
-      // Re-fetch client state from LocalStorage if customized
-      getPublicWorkspaceQuery(initialProfile.workspaceSlug).then(p =>{
+      // Re-fetch client state from LocalStorage/API if customized
+      getPublicWorkspaceQuery(initialProfile.workspaceSlug).then(p => {
         if (p) setProfile(p);
       });
 
-      listPublicProgramsQuery(initialProfile.workspaceSlug).then(c =>{
-        if (c && c.length >0) setCatalog(c);
+      listPublicProgramsQuery(initialProfile.workspaceSlug).then(c => {
+        if (c && c.length > 0) setCatalog(c);
       });
     }
 
@@ -45,33 +47,29 @@ export function StorefrontClient({ profile: initialProfile, catalog: initialCata
     }
   }, [initialProfile.workspaceSlug, refCode]);
 
-  const featuredItem = catalog.find(item =>item.presentation.featured) || catalog[0];
+  const featuredItem = catalog.find(item => item.presentation.featured) || catalog[0];
 
   return (
-    <div
-      className="page-wrapper-with-bottom-nav"
-      style={{
-        backgroundColor: 'var(--color-surface-muted)',
-        minHeight: '100vh',
-        color: 'var(--color-text-main)',
-      }}
-    >
-     <PublicHeader
-        workspaceSlug={profile.workspaceSlug}
-        displayName={profile.displayName}
-        tagline={profile.tagline}
-      />
+    <StorefrontThemeProvider theme={profile.theme}>
+      <div className="page-wrapper-with-bottom-nav">
+        <PublicHeader
+          workspaceSlug={profile.workspaceSlug}
+          displayName={profile.theme?.brandName || profile.displayName}
+          tagline={profile.theme?.tagline || profile.tagline}
+          logoUrl={profile.theme?.logoUrl || profile.logoUrl}
+        />
 
-     <main>
-       <WorkspaceHero profile={profile} featuredItem={featuredItem} />
-       <ValueStrip />
-       <ProgramCatalog items={catalog} workspaceSlug={profile.workspaceSlug} />
-       <PromoterProfile profile={profile} />
-     </main>
+        <main>
+          <WorkspaceHero profile={profile} featuredItem={featuredItem} />
+          <ValueStrip />
+          <ProgramCatalog items={catalog} workspaceSlug={profile.workspaceSlug} />
+          <PromoterProfile profile={profile} />
+        </main>
 
-     <PublicFooter displayName={profile.displayName.split(' ')[0]} />
+        <PublicFooter displayName={(profile.theme?.brandName || profile.displayName).split(' ')[0]} />
 
-     <LearnerTabBar workspaceSlug={profile.workspaceSlug} />
-   </div>
- );
+        <LearnerTabBar workspaceSlug={profile.workspaceSlug} />
+      </div>
+    </StorefrontThemeProvider>
+  );
 }

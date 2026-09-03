@@ -50,10 +50,10 @@ export const FrictionVsFlow: React.FC = () => {
               lineHeight: 1.2,
             }}
           >
-            Mengapa Promotor STIFIn Berkinerja Tinggi Beralih ke PromotorFlow?
+            Mengapa Promotor STIFIn Berkinerja Tinggi Beralih ke Talira Flow?
           </h2>
           <p style={{ fontSize: '15.5px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-            Bandingkan cara lama yang menguras energi dan membuat prospek bocor dengan sistem operasi eksekusi otomatis PromotorFlow.
+            Bandingkan cara lama yang menguras energi dan membuat prospek bocor dengan sistem operasi eksekusi otomatis Talira Flow.
           </p>
         </div>
 
@@ -105,7 +105,7 @@ export const FrictionVsFlow: React.FC = () => {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                   <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Dengan PromotorFlow
+                    Dengan Talira Flow
                   </span>
                 </div>
                 <div style={{ fontWeight: 800, fontSize: '15px', color: 'var(--color-primary)', marginBottom: '4px' }}>

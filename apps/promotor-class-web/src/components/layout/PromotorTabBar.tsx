@@ -3,12 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BerandaIcon, ProgramIcon, LearnerIcon, LainnyaIcon } from './nav-icons';
+import { BerandaIcon, ProgramIcon, LearnerIcon, PesananIcon, LainnyaIcon } from './nav-icons';
 
 const TABS = [
   { label: 'Beranda', href: '/app', Icon: BerandaIcon },
   { label: 'Program', href: '/app/programs', Icon: ProgramIcon },
   { label: 'Learner', href: '/app/learners', Icon: LearnerIcon },
+  { label: 'Pesanan', href: '/app/orders', Icon: PesananIcon },
   { label: 'Lainnya', href: '/app/more', Icon: LainnyaIcon },
 ];
 

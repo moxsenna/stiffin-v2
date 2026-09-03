@@ -23,91 +23,93 @@ export function ProgramCard({ item, workspaceSlug }: ProgramCardProps) {
 
   const moduleCount = program.totalModulesCount || 0;
   const lessonCount = program.totalLessonsCount || 0;
-  const lessonMeta = lessonCount >0 ? `${lessonCount} materi` : `${moduleCount} modul`;
+  const lessonMeta = lessonCount > 0 ? `${lessonCount} materi` : `${moduleCount} modul`;
 
   return (
     <article
       style={{
-        borderTop: '1px solid var(--color-divider-subtle)',
-        paddingTop: '14px',
+        borderTop: '1px solid var(--color-divider-subtle, #e5e7eb)',
+        paddingTop: '16px',
         display: 'flex',
         flexDirection: 'column',
       }}
     >
-     <Link
+      <Link
         href={`/p/${workspaceSlug}/${program.programSlug}`}
         style={{ textDecoration: 'none', color: 'inherit' }}
       >
-       <ProgramCover
+        <ProgramCover
           title={program.title}
           publicLabel={presentation.heroEyebrow}
           variant={presentation.coverVariant}
+          imageUrl={presentation.imageUrl || (program as any).coverImageUrl}
         />
 
-       <div
+        <div
           style={{
             fontSize: '11px',
-            fontWeight: 820,
+            fontWeight: 800,
             letterSpacing: '0.06em',
             textTransform: 'uppercase',
-            color: 'var(--accent-dark)',
+            color: 'var(--brand-accent, var(--accent-dark))',
             marginBottom: '8px',
           }}
         >
-         {presentation.heroEyebrow}
+          {presentation.heroEyebrow}
         </div>
 
-       <h3
+        <h3
           style={{
-            fontSize: '21px',
+            fontSize: '20px',
             letterSpacing: '-0.02em',
             marginBottom: '8px',
-            lineHeight: 1.2,
+            lineHeight: 1.25,
             fontWeight: 750,
+            color: 'var(--brand-text, #111827)',
           }}
         >
-         {program.title}
+          {program.title}
         </h3>
 
-       <p
+        <p
           style={{
-            color: 'var(--color-text-muted)',
+            color: 'var(--brand-muted, #5a5954)',
             fontSize: '14px',
             lineHeight: 1.55,
             marginBottom: '14px',
             minHeight: '44px',
           }}
         >
-         {presentation.shortOutcome || program.description || program.subtitle}
+          {presentation.shortOutcome || program.description || program.subtitle}
         </p>
 
-       {/* Restrained metadata row */}
+        {/* Metadata row */}
         <div
           style={{
             display: 'flex',
             gap: '10px',
             flexWrap: 'wrap',
             fontSize: '12px',
-            color: '#5a5954',
+            color: 'var(--brand-muted, #5a5954)',
             marginBottom: '14px',
           }}
         >
-         <span>{presentation.durationLabel}</span>
-         <span>·</span>
-         <span>{lessonMeta}</span>
-         <span>·</span>
-         <span style={{ fontWeight: 700 }}>{priceMeta}</span>
-       </div>
-     </Link>
+          <span>{presentation.durationLabel}</span>
+          <span>·</span>
+          <span>{lessonMeta}</span>
+          <span>·</span>
+          <span style={{ fontWeight: 700, color: 'var(--brand-text, #111827)' }}>{priceMeta}</span>
+        </div>
+      </Link>
 
-     <div style={{ marginTop: 'auto', paddingTop: '4px' }}>
-       <Link
+      <div style={{ marginTop: 'auto', paddingTop: '4px' }}>
+        <Link
           href={`/p/${workspaceSlug}/${program.programSlug}`}
           style={{
             border: 0,
             backgroundColor: 'transparent',
-            color: 'var(--accent-dark)',
-            fontWeight: 760,
+            color: 'var(--brand-accent, var(--accent-dark))',
+            fontWeight: 700,
             padding: '8px 0',
             fontSize: '14px',
             textDecoration: 'none',
@@ -116,21 +118,21 @@ export function ProgramCard({ item, workspaceSlug }: ProgramCardProps) {
             gap: '6px',
           }}
         >
-         Lihat program →
+          Lihat program →
         </Link>
-       {registrationStatusNotice && (
+        {registrationStatusNotice && (
           <div
             style={{
               fontSize: '11px',
-              color: 'var(--color-text-muted)',
+              color: 'var(--brand-muted, #64748b)',
               marginTop: '4px',
               fontStyle: 'italic',
             }}
           >
-           {registrationStatusNotice}
+            {registrationStatusNotice}
           </div>
-       )}
+        )}
       </div>
-   </article>
- );
+    </article>
+  );
 }

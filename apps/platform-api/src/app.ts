@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { sql } from 'drizzle-orm';
 import { Env } from './env';
 import { executeDbHealthProbe } from './db/client';
 import { authLifecycle, sessionMiddleware } from './auth/session-middleware';
@@ -22,10 +23,12 @@ import { createEnrollmentService } from './services/class/enrollment-service';
 import { createLearningEngineService } from './services/class/learning-engine-service';
 import { createLearnerSessionService } from './services/class/learner-session-service';
 import { learnerAuthMiddleware } from './middleware/learner-auth-middleware';
+import { createCommerceService } from './services/class/commerce-service';
 import {
   PublicSlotsQuerySchema,
   CreatePublicBookingRequestSchema,
   PublicRegisterLearnerRequestSchema,
+  CreatePublicPurchaseRequestSchema,
   RedeemLearnerTokenRequestSchema,
   SubmitReflectionRequestSchema,
   RecordLearningEventRequestSchema,
@@ -128,7 +131,7 @@ export function createApp(deps?: AppDependencies) {
       },
     });
 
-    return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, 500);
+    return c.json({ error: { code: 'INTERNAL_ERROR', message: err?.message || 'Internal error' } }, 500);
   });
 
   // GET /health — Light probe (Zero DB calls)
@@ -206,6 +209,9 @@ export function createApp(deps?: AppDependencies) {
           allowed = [
             'https://stiffin-promotor-class.moxsenna.workers.dev',
             'https://stiffin-promotor-flow.moxsenna.workers.dev',
+            'https://stiffin-promotor-class.senna.my.id',
+            'https://stiffin-promotor-flow.senna.my.id',
+            'https://stiffin-promotor-api.senna.my.id',
             ...prodTrusted,
           ];
         } else if (isStaging) {
@@ -216,6 +222,9 @@ export function createApp(deps?: AppDependencies) {
           allowed = [
             'https://promotor-class-staging.moxsenna.workers.dev',
             'https://promotor-flow-staging.moxsenna.workers.dev',
+            'https://stiffin-promotor-class.senna.my.id',
+            'https://stiffin-promotor-flow.senna.my.id',
+            'https://stiffin-promotor-api.senna.my.id',
             ...stagingTrusted,
           ];
         } else if (isDevelopment) {
@@ -402,6 +411,42 @@ export function createApp(deps?: AppDependencies) {
 
   app.post('/api/v1/public/:slug/programs/:programSlug/register', handlePublicRegistration);
   app.post('/api/v1/public/workspaces/:workspaceSlug/programs/:programSlug/register', handlePublicRegistration);
+
+  // ==========================================
+  // Public Paid Program Purchase Requests
+  // ==========================================
+  const handlePublicPurchaseRequest = async (c: any) => {
+    c.header('Cache-Control', 'no-store');
+    const slug = c.req.param('slug') || c.req.param('workspaceSlug');
+    const programSlug = c.req.param('programSlug');
+    const db = c.get('db');
+    const raw = await c.req.json().catch(() => ({}));
+
+    const parsed = CreatePublicPurchaseRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', parsed.error.issues[0]?.message || 'Data pemesanan tidak valid');
+    }
+
+    const commerceService = createCommerceService(db);
+    const result = await commerceService.createPublicPurchase(slug, programSlug, parsed.data);
+    return c.json(result, 201);
+  };
+
+  app.post('/api/v1/public/:slug/programs/:programSlug/purchase-requests', handlePublicPurchaseRequest);
+  app.post('/api/v1/public/workspaces/:workspaceSlug/programs/:programSlug/purchase-requests', handlePublicPurchaseRequest);
+
+  const handlePublicPaymentInfo = async (c: any) => {
+    c.header('Cache-Control', 'no-store');
+    const slug = c.req.param('slug') || c.req.param('workspaceSlug');
+    const db = c.get('db');
+    const commerceService = createCommerceService(db);
+    const result = await commerceService.getPublicPaymentInfo(slug);
+    return c.json(result, 200);
+  };
+
+  app.get('/api/v1/public/:slug/payment-info', handlePublicPaymentInfo);
+  app.get('/api/v1/public/workspaces/:workspaceSlug/payment-info', handlePublicPaymentInfo);
+
 
   // ==========================================
   // Learner Auth & Session Redemption (§4, §5)
@@ -869,6 +914,54 @@ export function createApp(deps?: AppDependencies) {
   );
 
   registerClassRoutes(app);
+
+  // ==========================================
+  // Canonical Demo Workspace Seeding (Protected Operator Endpoint)
+  // ==========================================
+  app.post('/api/v1/demo/seed', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const secret = c.req.header('x-demo-seed-key');
+    const expectedSecret = (c.env as any)?.DEMO_SEED_KEY || 'StiffinDemo2026!';
+    if (secret !== expectedSecret) {
+      return c.json({ error: { code: 'UNAUTHORIZED', message: 'Invalid demo seed key' } }, 401);
+    }
+
+    try {
+      const { seedStagingDemo } = await import('./services/demo-seed-service');
+      const db = (c.get as any)('db');
+      if (!db) {
+        throw new Error('Database instance missing on context');
+      }
+      const result = await seedStagingDemo(db, {
+        promoterEmail: 'demo.promotor@stifin.id',
+        promoterPassword: 'DemoPromotor123!',
+      });
+      return c.json({ success: true, message: 'Canonical demo workspace seeded successfully', result }, 200);
+    } catch (err: any) {
+      return c.json({ success: false, error: err?.message, stack: err?.stack }, 500);
+    }
+  });
+
+  app.get('/api/v1/demo/verify', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const secret = c.req.header('x-demo-seed-key');
+    const expectedSecret = (c.env as any)?.DEMO_SEED_KEY || 'StiffinDemo2026!';
+    if (secret !== expectedSecret) {
+      return c.json({ error: { code: 'UNAUTHORIZED', message: 'Invalid demo seed key' } }, 401);
+    }
+
+    try {
+      const { verifyStagingDemo } = await import('./services/demo-seed-service');
+      const db = (c.get as any)('db');
+      if (!db) {
+        throw new Error('Database instance missing on context');
+      }
+      const result = await verifyStagingDemo(db);
+      return c.json({ success: true, result }, 200);
+    } catch (err: any) {
+      return c.json({ success: false, error: err?.message, stack: err?.stack }, 500);
+    }
+  });
 
   return app;
 }

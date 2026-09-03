@@ -14,6 +14,8 @@ import { SignalRepositoryPort } from '@/modules/signals/ports';
 import { EventRepositoryPort } from '@/modules/events/ports';
 import { PromotorFlowAdapterPort } from '@/modules/promotorflow/ports';
 import { ReferralRepositoryPort } from '@/modules/referrals/ports';
+import { OrderRepositoryPort } from '@/modules/orders/ports';
+import { PaymentRepositoryPort } from '@/modules/payments/ports';
 
 import { MockProgramRepository } from './mock/program-repository';
 import { MockPublicStorefrontRepository } from './mock/public-storefront-repository';
@@ -25,6 +27,8 @@ import { MockSignalRepository } from './mock/signal-repository';
 import { MockEventRepository } from './mock/event-repository';
 import { promotorFlowAdapter as mockPromotorFlowAdapter } from './mock/promotorflow-adapter';
 import { mockReferralRepository } from './mock/referral-repository';
+import { MockOrderRepository } from './mock/order-repository';
+import { MockPaymentRepository } from './mock/payment-repository';
 
 import { HttpProgramRepository } from './http/program-repository';
 import { HttpPublicStorefrontRepository } from './http/public-storefront-repository';
@@ -34,6 +38,8 @@ import { HttpContactRepository } from './http/contact-repository';
 import { HttpReflectionRepository } from './http/reflection-repository';
 import { HttpSignalRepository } from './http/signal-repository';
 import { HttpEventRepository } from './http/event-repository';
+import { HttpOrderRepository } from './http/order-repository';
+import { HttpPaymentRepository } from './http/payment-repository';
 
 let programRepoInstance: ProgramRepositoryPort | null = null;
 let storefrontRepoInstance: PublicStorefrontRepositoryPort | null = null;
@@ -44,6 +50,8 @@ let reflectionRepoInstance: ReflectionRepositoryPort | null = null;
 let signalRepoInstance: SignalRepositoryPort | null = null;
 let eventRepoInstance: EventRepositoryPort | null = null;
 let flowAdapterInstance: PromotorFlowAdapterPort | null = null;
+let orderRepoInstance: OrderRepositoryPort | null = null;
+let paymentRepoInstance: PaymentRepositoryPort | null = null;
 
 export function getApiMode(): 'http' | 'mock' {
   const mode = process.env.NEXT_PUBLIC_API_MODE;
@@ -204,6 +212,30 @@ export function getReferralRepository(): ReferralRepositoryPort {
   return mockReferralRepository;
 }
 
+export function getOrderRepository(): OrderRepositoryPort {
+  if (!orderRepoInstance) {
+    const mode = getApiMode();
+    if (mode === 'http') {
+      orderRepoInstance = new HttpOrderRepository(getApiClient());
+    } else {
+      orderRepoInstance = new MockOrderRepository();
+    }
+  }
+  return orderRepoInstance;
+}
+
+export function getPaymentRepository(): PaymentRepositoryPort {
+  if (!paymentRepoInstance) {
+    const mode = getApiMode();
+    if (mode === 'http') {
+      paymentRepoInstance = new HttpPaymentRepository(getApiClient());
+    } else {
+      paymentRepoInstance = new MockPaymentRepository();
+    }
+  }
+  return paymentRepoInstance;
+}
+
 export function resetAdapterInstances(): void {
   programRepoInstance = null;
   storefrontRepoInstance = null;
@@ -214,6 +246,8 @@ export function resetAdapterInstances(): void {
   signalRepoInstance = null;
   eventRepoInstance = null;
   flowAdapterInstance = null;
+  orderRepoInstance = null;
+  paymentRepoInstance = null;
 }
 
 export async function resetDemoState(): Promise<void> {

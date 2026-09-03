@@ -5,7 +5,7 @@ import React from 'react';
 export const FlowTestimonials: React.FC = () => {
   const testimonials = [
     {
-      quote: 'Dulu sering sekali chat orang tua yang tanya tes STIFIn tenggelam karena sehari masuk puluhan DM. Dengan Today Queue PromotorFlow, tidak ada satu pun prospek yang luput.',
+      quote: 'Dulu sering sekali chat orang tua yang tanya tes STIFIn tenggelam karena sehari masuk puluhan DM. Dengan Today Queue Talira Flow, tidak ada satu pun prospek yang luput.',
       role: 'Promotor Senior & Parenting Coach',
       city: 'Jakarta Selatan',
       initials: 'P1',
@@ -49,7 +49,7 @@ export const FlowTestimonials: React.FC = () => {
             Cerita Sukses dari Para Praktisi & Promotor STIFIn
           </h2>
           <p style={{ fontSize: '15.5px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-            Lihat bagaimana PromotorFlow mengubah operasional harian para konsultan biometrik di berbagai kota di Indonesia.
+            Lihat bagaimana Talira Flow mengubah operasional harian para konsultan biometrik di berbagai kota di Indonesia.
           </p>
         </div>
 

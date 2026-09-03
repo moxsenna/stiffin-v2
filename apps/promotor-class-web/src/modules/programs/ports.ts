@@ -6,11 +6,32 @@ export interface CreateProgramDetailedInput {
   description: string;
   programType: 'lead_magnet' | 'aftersales' | 'paid' | 'private';
   priceAmount?: number;
+  bankTransferEnabled?: boolean;
+  whatsAppEnabled?: boolean;
   heroEyebrow?: string;
   durationLabel?: string;
   coverVariant?: string;
   imageUrl?: string;
+  coverImageUrl?: string;
+  coverImageKey?: string;
   outcomes?: Array<{ title: string; description: string }>;
+}
+
+export interface PresignCoverResult {
+  key: string;
+  uploadUrl: string;
+  publicUrl: string;
+  contentType: string;
+  contentLength: number;
+  expiresAt: string;
+  maxBytes: number;
+}
+
+export interface ConfirmCoverResult {
+  key: string;
+  publicUrl: string;
+  contentType: string;
+  contentLength: number;
 }
 
 export interface ProgramRepositoryPort {
@@ -27,4 +48,7 @@ export interface ProgramRepositoryPort {
   deleteLesson(programId: string, moduleId: string, lessonId: string): Promise<Program>;
   reorderModules(programId: string, moduleIdsOrder: string[]): Promise<Program>;
   saveLesson(programId: string, moduleId: string, lesson: Lesson): Promise<Program>;
+  presignCoverUpload(params: { programId?: string; fileName: string; contentType: string; contentLength: number }): Promise<PresignCoverResult>;
+  confirmCoverUpload(params: { programId: string; key: string; contentType: string; contentLength?: number }): Promise<ConfirmCoverResult>;
+  deleteCoverImage(programId: string): Promise<void>;
 }

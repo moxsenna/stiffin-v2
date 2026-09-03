@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 export function FaqSection() {
   const faqs = [
     {
-      q: 'Apakah saya membutuhkan keahlian teknis atau koding untuk menggunakan PromotorClass?',
+      q: 'Apakah saya membutuhkan keahlian teknis atau koding untuk menggunakan Talira Class?',
       a: 'Sama sekali tidak. Anda hanya perlu mengisi judul program, memasukkan link video (YouTube unlisted / Vimeo / Google Drive), dan menuliskan 1 pertanyaan refleksi. Dalam kurang dari 2 menit, storefront personal Anda sudah langsung aktif dan siap dibagikan.',
     },
     {
@@ -13,16 +13,16 @@ export function FaqSection() {
       a: 'Peserta cukup memasukkan nama dan nomor WhatsApp di halaman storefront Anda. Begitu tombol diklik, modul langsung terbuka di peramban (browser) smartphone peserta. Tidak ada download aplikasi, tidak ada buat password yang sering membuat peserta lupa atau batal belajar.',
     },
     {
-      q: 'Mengapa PromotorClass lebih efektif dibanding membagikan link Google Drive atau grup WhatsApp?',
-      a: 'Link Google Drive sering hilang di riwayat chat, dan Anda tidak tahu apakah peserta benar-benar menontonnya. Di grup WhatsApp, peserta pasif cenderung diam. PromotorClass memberikan ruang belajar mandiri yang rapi, mencatat progres belajar, dan memicu refleksi aktif sehingga peserta merasa terikat dengan materi Anda.',
+      q: 'Mengapa Talira Class lebih efektif dibanding membagikan link Google Drive atau grup WhatsApp?',
+      a: 'Link Google Drive sering hilang di riwayat chat, dan Anda tidak tahu apakah peserta benar-benar menontonnya. Di grup WhatsApp, peserta pasif cenderung diam. Talira Class memberikan ruang belajar mandiri yang rapi, mencatat progres belajar, dan memicu refleksi aktif sehingga peserta merasa terikat dengan materi Anda.',
     },
     {
       q: 'Bagaimana cara sistem mendeteksi sinyal niat beli (intent lead)?',
       a: 'Ketika peserta menyelesaikan materi dan mengisi form refleksi mengenai masalah nyata mereka (misal: kendala belajar anak, kebingungan memilih jurusan, atau stres komunikasi pasangan), sistem menganalisis konteks tersebut dan menandai peserta di dashboard Anda dengan rekomendasi follow-up yang relevan.',
     },
     {
-      q: 'Apakah saya bisa menggunakan PromotorClass untuk program pendampingan aftersales tes STIFIn?',
-      a: 'Ya, ini salah satu keunggulan utama PromotorClass. Anda dapat membuat program "30 Hari Pendampingan Pasca Tes" yang hanya bisa diakses oleh klien yang sudah melakukan tes, sehingga mereka mendapatkan panduan bertahap dan merasakan nilai maksimal dari sesi konsultasi Anda.',
+      q: 'Apakah saya bisa menggunakan Talira Class untuk program pendampingan aftersales tes STIFIn?',
+      a: 'Ya, ini salah satu keunggulan utama Talira Class. Anda dapat membuat program "30 Hari Pendampingan Pasca Tes" yang hanya bisa diakses oleh klien yang sudah melakukan tes, sehingga mereka mendapatkan panduan bertahap dan merasakan nilai maksimal dari sesi konsultasi Anda.',
     },
   ];
 

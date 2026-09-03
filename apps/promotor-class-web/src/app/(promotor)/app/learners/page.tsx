@@ -93,7 +93,7 @@ export default function LearnersPage() {
   return (
     <PromotorShell>
      <PageHeader
-        kicker="PromotorClass"
+        kicker="Talira Class"
         title="Daftar Peserta & Follow-up"
         sub={contacts ? `${filteredContacts.length} peserta pembelajaran` : 'Memuat peserta...'}
       />

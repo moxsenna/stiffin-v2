@@ -37,14 +37,14 @@ function LoginForm() {
       }
 
       if (session.entitlements && !session.entitlements.promotorFlow) {
-        setErrorMessage('Akun Anda tidak memiliki akses ke PromotorFlow.');
+        setErrorMessage('Akun Anda tidak memiliki akses ke Talira Flow.');
         setIsLoading(false);
         return;
       }
 
       router.replace(returnTo);
     } catch (err: any) {
-      setErrorMessage(err?.message || 'Terjadi kesalahan sistem saat masuk.');
+      setErrorMessage(err?.message || 'Email atau kata sandi tidak valid');
       setIsLoading(false);
     }
   };
@@ -64,10 +64,10 @@ function LoginForm() {
        <div style={{ marginBottom: 28 }}>
          <Wordmark flow />
          <h1 style={{ font: '800 26px/1.1 var(--font-sans)', letterSpacing: '-0.03em', marginTop: 18 }}>
-           Masuk ke PromotorFlow
+           Masuk ke Talira Flow
           </h1>
          <p style={{ font: '400 13px/1.5 var(--font-sans)', color: 'var(--muted-strong)', marginTop: 6 }}>
-           Sistem eksekusi pipeline harian promotor STIFIn
+           Sistem eksekusi pipeline & CRM harian promotor
           </p>
        </div>
 
@@ -108,17 +108,45 @@ function LoginForm() {
               />
            </div>
 
-           <button type="submit" disabled={isLoading} className="btn btn-primary btn-block">
-             {isLoading ? 'Memverifikasi...' : 'Masuk'}
+            <button type="submit" disabled={isLoading} className="btn btn-primary btn-block">
+              {isLoading ? 'Memverifikasi...' : 'Masuk'}
             </button>
-         </form>
-       </div>
+          </form>
 
-       <div style={{ marginTop: 20, font: '400 12px/1.5 var(--font-sans)', color: 'var(--muted)' }}>
-         Butuh bantuan akses akun? Hubungi administrator cabang Anda.
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--color-divider)', textAlign: 'center' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('demo.promotor@stifin.id');
+                setPassword('DemoPromotor123!');
+              }}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                backgroundColor: 'var(--color-canvas)',
+                border: '1px dashed var(--color-border-strong)',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '12px',
+                fontWeight: 700,
+                color: 'var(--color-text-primary)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+              }}
+            >
+              <span>⚡</span>
+              <span>Gunakan Akun Demo (1-Klik Isi)</span>
+            </button>
+          </div>
         </div>
-     </div>
-   </div>
+
+        <div style={{ marginTop: 20, font: '400 12px/1.5 var(--font-sans)', color: 'var(--color-text-tertiary)' }}>
+          Akun Demo: <strong>demo.promotor@stifin.id</strong> • Sandi: <strong>DemoPromotor123!</strong>
+        </div>
+      </div>
+    </div>
  );
 }
 

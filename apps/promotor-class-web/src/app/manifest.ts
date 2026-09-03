@@ -3,9 +3,9 @@ import { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'PromotorClass',
-    short_name: 'PromotorClass',
-    description: 'Client Education OS & Intent Signal Engine untuk Promotor STIFIn',
+    name: 'Talira Class',
+    short_name: 'Talira Class',
+    description: 'Client Education OS & Intent Signal Engine untuk Promotor',
     start_url: '/learn',
     scope: '/',
     display: 'standalone',
