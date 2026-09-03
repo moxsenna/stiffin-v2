@@ -679,9 +679,25 @@ describe('Talira Commercial Engine — CommerceService & Webhook Engine', () => 
       validateReturnUrl('https://promotor.id/order/status'),
       'https://promotor.id/order/status'
     );
+    assert.strictEqual(
+      validateReturnUrl('https://stiffin-promotor-class.moxsenna.workers.dev/p/demo/pesanan/123'),
+      'https://stiffin-promotor-class.moxsenna.workers.dev/p/demo/pesanan/123'
+    );
+    assert.strictEqual(
+      validateReturnUrl('http://localhost:3000/orders/TLR-123'),
+      'http://localhost:3000/orders/TLR-123'
+    );
     assert.throws(() => validateReturnUrl('javascript:alert(1)'), /Protokol returnUrl harus HTTP atau HTTPS/);
     assert.throws(() => validateReturnUrl('data:text/html,evil'), /Protokol returnUrl harus HTTP atau HTTPS/);
     assert.throws(() => validateReturnUrl('https://evil.com\\@good.com'), /Format returnUrl tidak valid/);
     assert.throws(() => validateReturnUrl('//evil.com'), /Format returnUrl tidak valid/);
+    assert.throws(
+      () => validateReturnUrl('https://malicious-phishing-site.com/steal-creds'),
+      /Domain returnUrl tidak diizinkan/
+    );
+    assert.throws(
+      () => validateReturnUrl('https://other.promotor.id/return', 'expected.promotor.id'),
+      /Domain returnUrl tidak diizinkan/
+    );
   });
 });

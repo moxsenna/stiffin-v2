@@ -50,7 +50,7 @@ export const commerceOrders = pgTable(
     check('commerce_orders_order_type_check', sql`${t.orderType} IN ('PROGRAM_PURCHASE', 'SUBSCRIPTION_PURCHASE')`),
     check('commerce_orders_source_channel_check', sql`${t.sourceChannel} IN ('STOREFRONT', 'WHATSAPP', 'OPERATOR')`),
     check('commerce_orders_payment_mode_check', sql`${t.paymentMode} IN ('PAYCORE', 'MANUAL_BANK')`),
-    check('commerce_orders_status_check', sql`${t.status} IN ('PENDING', 'PAID', 'APPROVED', 'REJECTED', 'EXPIRED', 'REFUNDED')`),
+    check('commerce_orders_status_check', sql`${t.status} IN ('PENDING', 'PAID', 'APPROVED', 'REJECTED', 'EXPIRED', 'REFUNDED', 'FAILED')`),
   ]
 );
 

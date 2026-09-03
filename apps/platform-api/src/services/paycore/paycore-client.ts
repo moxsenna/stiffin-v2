@@ -73,7 +73,7 @@ export interface PaycoreCreateOrderInput {
   customer: {
     name: string;
     email?: string;
-    phone: string;
+    phone?: string;
   };
   returnUrl?: string;
   fulfillmentData?: Record<string, unknown>;
@@ -203,7 +203,7 @@ export function createPaycoreClient(config: PaycoreConfig): PaycoreClient {
         customer: {
           name: input.customer.name,
           email: input.customer.email || undefined,
-          phone: input.customer.phone,
+          phone: input.customer.phone || undefined,
         },
         return_url: input.returnUrl || undefined,
         fulfillment_data: input.fulfillmentData || {},

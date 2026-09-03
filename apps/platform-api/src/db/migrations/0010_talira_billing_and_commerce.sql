@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS "commerce_orders" (
 	CONSTRAINT "commerce_orders_order_type_check" CHECK ("order_type" IN ('PROGRAM_PURCHASE', 'SUBSCRIPTION_PURCHASE')),
 	CONSTRAINT "commerce_orders_source_channel_check" CHECK ("source_channel" IN ('STOREFRONT', 'WHATSAPP', 'OPERATOR')),
 	CONSTRAINT "commerce_orders_payment_mode_check" CHECK ("payment_mode" IN ('PAYCORE', 'MANUAL_BANK')),
-	CONSTRAINT "commerce_orders_status_check" CHECK ("status" IN ('PENDING', 'PAID', 'APPROVED', 'REJECTED', 'EXPIRED', 'REFUNDED'))
+	CONSTRAINT "commerce_orders_status_check" CHECK ("status" IN ('PENDING', 'PAID', 'APPROVED', 'REJECTED', 'EXPIRED', 'REFUNDED', 'FAILED'))
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS "commerce_orders_reference_unique" ON "commerce_orders" ("reference");

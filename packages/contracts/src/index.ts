@@ -1323,6 +1323,7 @@ export const CommerceOrderStatusSchema = z.enum([
   'REJECTED',
   'EXPIRED',
   'REFUNDED',
+  'FAILED',
 ]);
 export type CommerceOrderStatus = z.infer<typeof CommerceOrderStatusSchema>;
 

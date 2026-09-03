@@ -22,6 +22,15 @@ import { LearningEventRepository } from '../../repositories/learning-event-repos
 
 export const MANUAL_BANK_ENABLED = false;
 
+const ALLOWED_RETURN_HOST_PATTERNS = [
+  'workers.dev',
+  'pages.dev',
+  'stiffin.id',
+  'promotor.id',
+  'talira.id',
+  'appvibe.biz.id',
+];
+
 export function validateReturnUrl(returnUrl: string | undefined, expectedHost?: string): string | undefined {
   if (!returnUrl) return undefined;
   try {
@@ -33,8 +42,17 @@ export function validateReturnUrl(returnUrl: string | undefined, expectedHost?: 
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       throw new DomainError('VALIDATION_ERROR', 'Protokol returnUrl harus HTTP atau HTTPS');
     }
-    if (expectedHost && parsed.host !== expectedHost && !parsed.host.endsWith('.workers.dev') && !parsed.host.includes('localhost') && !parsed.host.includes('127.0.0.1')) {
-      throw new DomainError('VALIDATION_ERROR', 'Domain returnUrl tidak diizinkan');
+    const host = parsed.hostname;
+    const isLocal = host === 'localhost' || host === '127.0.0.1';
+
+    if (expectedHost) {
+      if (host !== expectedHost && !isLocal) {
+        throw new DomainError('VALIDATION_ERROR', 'Domain returnUrl tidak diizinkan');
+      }
+    } else {
+      if (!isLocal && !ALLOWED_RETURN_HOST_PATTERNS.some((p) => host === p || host.endsWith('.' + p))) {
+        throw new DomainError('VALIDATION_ERROR', 'Domain returnUrl tidak diizinkan');
+      }
     }
     return parsed.toString();
   } catch (err: any) {
@@ -331,8 +349,8 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
       const externalOrderId = generateOrderReference('SUB');
       const sanitizedReturnUrl = validateReturnUrl(input.returnUrl);
 
-      // Validate operator contact: do not fabricate fake billing numbers
-      const customerPhone = user.phone?.trim() ? normalizePhone(user.phone.trim()) : '08000000000';
+      // Validate operator contact: phone is optional in Paycore schema; do not fabricate fake numbers
+      const customerPhone = user.phone?.trim() ? normalizePhone(user.phone.trim()) : undefined;
 
       // 1. Persist local expected subscription checkout truth BEFORE external gateway call
       const order = await deps.commerceRepo.createOrder({

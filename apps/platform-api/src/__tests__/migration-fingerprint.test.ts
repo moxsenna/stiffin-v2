@@ -29,7 +29,7 @@ const CANONICAL = {
   '0007_v01_release_hardening': '8f89f04930012997f41eaf037149c0356e048b8c79ab7bf089813edea5bf2915',
   '0008_canonical_events_tightening': '483a6152b3725990e78efd9d5d2c9f2887a109645fe72e22e13b229f179da2cc',
   '0009_canonical_milestone_events_provenance': '79eb3fa894c9298cd2be0e02a6eb5414801e0ed9cfc8a619aac31595ad20e192',
-  '0010_talira_billing_and_commerce': 'ecf9a7f595957c70f475e34cd072d14f9fa8ac1a5867d83bd8e74ad36d07b7d9',
+  '0010_talira_billing_and_commerce': '5f3e61356ae3716d79cfe3b06b5391d793b5a30a1f976897da101e0243fe92e0',
 } as const;
 
 // Known Windows CRLF working-tree hashes — noncanonical diagnostics.
@@ -44,7 +44,7 @@ const CRLF_KNOWN = {
   '0007_v01_release_hardening': 'cd842d66c2e788ecee8402ee10d9add0b7260ead4eb1348ba4fa0902233e58b7',
   '0008_canonical_events_tightening': 'f6180b00374d10bcb32b0c3b9db5b9fa09e2ef1ac3ea70e5665d5d72e3dd2c00',
   '0009_canonical_milestone_events_provenance': 'c40d05c8773568e72e0e2d904f0b68ec3240113d5491bc4bf580ba3f10127ad6',
-  '0010_talira_billing_and_commerce': 'b1166ad0e63e7e33e5a5ed7468ff108cac085ce28e13c309bfc31c426e720cd2',
+  '0010_talira_billing_and_commerce': '699f9616691608d3b22629cbc60633a4e67745aa66bb9b466b94d69d7ccc1fe0',
 } as const;
 
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
