@@ -50,6 +50,7 @@ function getCommerceServices(c: any) {
     enrollmentService,
     learningEventRepo,
     appUuid: paycoreConfig.appUuid,
+    appEnv,
   });
 
   return {

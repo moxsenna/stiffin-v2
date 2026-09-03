@@ -673,30 +673,82 @@ describe('Talira Commercial Engine — CommerceService & Webhook Engine', () => 
     );
   });
 
-  it('validateReturnUrl sanitizes safe URLs and rejects dangerous ones', () => {
+  it('validateReturnUrl sanitizes safe URLs, enforces host allowlist, and rejects attacker domains', () => {
     assert.strictEqual(validateReturnUrl(undefined), undefined);
+
+    // 1. Allowed first-party and controlled domains
     assert.strictEqual(
       validateReturnUrl('https://promotor.id/order/status'),
       'https://promotor.id/order/status'
     );
     assert.strictEqual(
+      validateReturnUrl('https://kelas.promotor.id/order/status'),
+      'https://kelas.promotor.id/order/status'
+    );
+    assert.strictEqual(
+      validateReturnUrl('https://stiffin.id/checkout/done'),
+      'https://stiffin.id/checkout/done'
+    );
+    assert.strictEqual(
+      validateReturnUrl('https://talira.id/billing'),
+      'https://talira.id/billing'
+    );
+    assert.strictEqual(
       validateReturnUrl('https://stiffin-promotor-class.moxsenna.workers.dev/p/demo/pesanan/123'),
       'https://stiffin-promotor-class.moxsenna.workers.dev/p/demo/pesanan/123'
     );
-    assert.strictEqual(
-      validateReturnUrl('http://localhost:3000/orders/TLR-123'),
-      'http://localhost:3000/orders/TLR-123'
-    );
+
+    // 2. Dangerous protocols and formatting bypasses
     assert.throws(() => validateReturnUrl('javascript:alert(1)'), /Protokol returnUrl harus HTTP atau HTTPS/);
     assert.throws(() => validateReturnUrl('data:text/html,evil'), /Protokol returnUrl harus HTTP atau HTTPS/);
     assert.throws(() => validateReturnUrl('https://evil.com\\@good.com'), /Format returnUrl tidak valid/);
     assert.throws(() => validateReturnUrl('//evil.com'), /Format returnUrl tidak valid/);
+
+    // 3. Reject arbitrary external domains
     assert.throws(
       () => validateReturnUrl('https://malicious-phishing-site.com/steal-creds'),
       /Domain returnUrl tidak diizinkan/
     );
+
+    // 4. Reject generic Cloudflare pages.dev and workers.dev public multi-tenant suffixes
     assert.throws(
-      () => validateReturnUrl('https://other.promotor.id/return', 'expected.promotor.id'),
+      () => validateReturnUrl('https://attacker.pages.dev/steal-tokens'),
+      /Domain returnUrl tidak diizinkan/
+    );
+    assert.throws(
+      () => validateReturnUrl('https://evil.workers.dev/capture-session'),
+      /Domain returnUrl tidak diizinkan/
+    );
+    assert.throws(
+      () => validateReturnUrl('https://unrelated-account.workers.dev/callback'),
+      /Domain returnUrl tidak diizinkan/
+    );
+
+    // 5. Localhost policy: allowed in development/testing, rejected in production
+    assert.strictEqual(
+      validateReturnUrl('http://localhost:3000/orders/TLR-123', { appEnv: 'development' }),
+      'http://localhost:3000/orders/TLR-123'
+    );
+    assert.strictEqual(
+      validateReturnUrl('http://127.0.0.1:3000/orders/TLR-123', { appEnv: 'test' }),
+      'http://127.0.0.1:3000/orders/TLR-123'
+    );
+    assert.throws(
+      () => validateReturnUrl('http://localhost:3000/orders/TLR-123', { appEnv: 'production' }),
+      /Domain returnUrl tidak diizinkan/
+    );
+    assert.throws(
+      () => validateReturnUrl('http://127.0.0.1:3000/orders/TLR-123', { appEnv: 'production' }),
+      /Domain returnUrl tidak diizinkan/
+    );
+
+    // 6. Strict expectedHost enforcement
+    assert.strictEqual(
+      validateReturnUrl('https://expected.promotor.id/return', { expectedHost: 'expected.promotor.id' }),
+      'https://expected.promotor.id/return'
+    );
+    assert.throws(
+      () => validateReturnUrl('https://other.promotor.id/return', { expectedHost: 'expected.promotor.id' }),
       /Domain returnUrl tidak diizinkan/
     );
   });

@@ -22,17 +22,64 @@ import { LearningEventRepository } from '../../repositories/learning-event-repos
 
 export const MANUAL_BANK_ENABLED = false;
 
-const ALLOWED_RETURN_HOST_PATTERNS = [
-  'workers.dev',
-  'pages.dev',
+export interface ValidateReturnUrlOptions {
+  expectedHost?: string;
+  appEnv?: string;
+  allowedExtraHosts?: string[];
+}
+
+/**
+ * Exact first-party and Talira-controlled hostnames/domains.
+ * Generic public multi-tenant suffixes like 'workers.dev' and 'pages.dev'
+ * MUST NEVER appear here to prevent arbitrary third-party deployments (e.g. attacker.pages.dev)
+ * from being accepted as trusted return destinations.
+ */
+const TALIRA_CONTROLLED_DOMAINS = [
   'stiffin.id',
   'promotor.id',
   'talira.id',
   'appvibe.biz.id',
+  'moxsenna.workers.dev',
 ];
 
-export function validateReturnUrl(returnUrl: string | undefined, expectedHost?: string): string | undefined {
+export function isAllowedReturnHost(host: string, options?: ValidateReturnUrlOptions): boolean {
+  const normalizedHost = host.toLowerCase().trim();
+  const isLocal = normalizedHost === 'localhost' || normalizedHost === '127.0.0.1';
+
+  if (isLocal) {
+    // In production, localhost/127.0.0.1 is strictly forbidden
+    return options?.appEnv !== 'production';
+  }
+
+  // If caller provided an expectedHost, it MUST match expectedHost (case-insensitive)
+  if (options?.expectedHost) {
+    return normalizedHost === options.expectedHost.toLowerCase().trim();
+  }
+
+  // Explicit extra allowed hosts from server-side config
+  if (options?.allowedExtraHosts?.some((h) => normalizedHost === h.toLowerCase().trim())) {
+    return true;
+  }
+
+  // Exact match or subdomain of Talira-controlled domains
+  for (const domain of TALIRA_CONTROLLED_DOMAINS) {
+    if (normalizedHost === domain || normalizedHost.endsWith('.' + domain)) {
+      return true;
+    }
+  }
+
+  // Generic workers.dev, pages.dev, or arbitrary host -> strictly rejected
+  return false;
+}
+
+export function validateReturnUrl(
+  returnUrl: string | undefined,
+  options?: ValidateReturnUrlOptions | string
+): string | undefined {
   if (!returnUrl) return undefined;
+  const opts: ValidateReturnUrlOptions =
+    typeof options === 'string' ? { expectedHost: options } : options || {};
+
   try {
     const trimmed = returnUrl.trim();
     if (trimmed.includes('\\') || trimmed.startsWith('//')) {
@@ -42,18 +89,11 @@ export function validateReturnUrl(returnUrl: string | undefined, expectedHost?: 
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       throw new DomainError('VALIDATION_ERROR', 'Protokol returnUrl harus HTTP atau HTTPS');
     }
-    const host = parsed.hostname;
-    const isLocal = host === 'localhost' || host === '127.0.0.1';
 
-    if (expectedHost) {
-      if (host !== expectedHost && !isLocal) {
-        throw new DomainError('VALIDATION_ERROR', 'Domain returnUrl tidak diizinkan');
-      }
-    } else {
-      if (!isLocal && !ALLOWED_RETURN_HOST_PATTERNS.some((p) => host === p || host.endsWith('.' + p))) {
-        throw new DomainError('VALIDATION_ERROR', 'Domain returnUrl tidak diizinkan');
-      }
+    if (!isAllowedReturnHost(parsed.hostname, opts)) {
+      throw new DomainError('VALIDATION_ERROR', 'Domain returnUrl tidak diizinkan');
     }
+
     return parsed.toString();
   } catch (err: any) {
     if (err instanceof DomainError) throw err;
@@ -73,6 +113,8 @@ export interface CommerceServiceDependencies {
   learningEventRepo: LearningEventRepository;
   clock?: () => Date;
   appUuid?: string;
+  appEnv?: string;
+  allowedReturnHosts?: string[];
 }
 
 export interface ClaimOrderAccessResult {
@@ -169,7 +211,10 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
       await deps.planAccessService.assertCanUsePaidPrograms(org.id);
 
       // Validate returnUrl strictly
-      const sanitizedReturnUrl = validateReturnUrl(input.returnUrl);
+      const sanitizedReturnUrl = validateReturnUrl(input.returnUrl, {
+        appEnv: deps.appEnv,
+        allowedExtraHosts: deps.allowedReturnHosts,
+      });
 
       // Match or create buyer contact
       const contact = await deps.contactRepo.matchOrCreate({
@@ -347,7 +392,10 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
       const plan = TALIRA_PLANS.SOLO;
       const amount = input.billingCycle === 'YEARLY' ? plan.priceYearly : plan.priceMonthly;
       const externalOrderId = generateOrderReference('SUB');
-      const sanitizedReturnUrl = validateReturnUrl(input.returnUrl);
+      const sanitizedReturnUrl = validateReturnUrl(input.returnUrl, {
+        appEnv: deps.appEnv,
+        allowedExtraHosts: deps.allowedReturnHosts,
+      });
 
       // Validate operator contact: phone is optional in Paycore schema; do not fabricate fake numbers
       const customerPhone = user.phone?.trim() ? normalizePhone(user.phone.trim()) : undefined;
