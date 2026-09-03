@@ -15,6 +15,10 @@ export type DomainErrorCode =
   | 'PAYMENT_REQUIRED'
   | 'PLAN_LIMIT_REACHED'
   | 'FEATURE_REQUIRES_UPGRADE'
+  | 'CONFIGURATION_ERROR'
+  | 'PAYMENT_GATEWAY_ERROR'
+  | 'INVALID_STATE'
+  | 'FEATURE_DISABLED'
   | 'INTERNAL_ERROR';
 
 export class DomainError extends Error {

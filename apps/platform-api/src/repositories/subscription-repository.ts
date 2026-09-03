@@ -1,5 +1,5 @@
-﻿import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { eq, and, count, countDistinct } from 'drizzle-orm';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { eq, and, count, countDistinct, inArray } from 'drizzle-orm';
 import { organizationSubscriptions, OrganizationSubscriptionRow } from '../db/schema/organization-subscriptions';
 import { programs } from '../db/schema/programs';
 import { enrollments } from '../db/schema/enrollments';
@@ -86,7 +86,12 @@ export function createSubscriptionRepository(db: NodePgDatabase): SubscriptionRe
       const [learnerResult] = await db
         .select({ value: countDistinct(enrollments.contactId) })
         .from(enrollments)
-        .where(and(eq(enrollments.organizationId, organizationId), eq(enrollments.status, 'active')));
+        .where(
+          and(
+            eq(enrollments.organizationId, organizationId),
+            inArray(enrollments.status, ['ENROLLED', 'STARTED'])
+          )
+        );
 
       const [contactResult] = await db
         .select({ value: count() })

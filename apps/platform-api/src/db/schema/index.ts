@@ -36,4 +36,5 @@ export * from './commerce-orders';
 export * from './payment-records';
 export * from './platform-fee-entries';
 export * from './organization-bank-accounts';
+export * from './provider-webhook-events';
 

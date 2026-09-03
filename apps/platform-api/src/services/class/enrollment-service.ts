@@ -8,6 +8,8 @@ import { createContactRepository } from '../../repositories/contact-repository';
 import { createEnrollmentRepository, EnrollmentRepository } from '../../repositories/enrollment-repository';
 import { createLearnerAccessRepository, LearnerAccessRepository } from '../../repositories/learner-access-repository';
 import { createLearningEventRepository, LearningEventRepository } from '../../repositories/learning-event-repository';
+import { createSubscriptionRepository } from '../../repositories/subscription-repository';
+import { createPlanAccessService, PlanAccessService } from '../billing/plan-access-service';
 import { EnrollmentRow } from '../../db/schema/enrollments';
 
 export interface PublicRegistrationInput {
@@ -44,11 +46,17 @@ export interface EnrollmentServiceOptions {
   enrollmentRepo?: EnrollmentRepository;
   learnerAccessRepo?: LearnerAccessRepository;
   learningEventRepo?: LearningEventRepository;
+  planAccessService?: PlanAccessService;
 }
 
 export interface EnrollmentService {
   registerPublicLearner(input: PublicRegistrationInput): Promise<PublicRegistrationResult>;
   enrollContact(input: ManualEnrollmentInput): Promise<EnrollmentRow>;
+  enrollContactAndIssueAccess(input: ManualEnrollmentInput): Promise<{
+    enrollment: EnrollmentRow;
+    accessToken: string;
+    isNewEnrollment: boolean;
+  }>;
   redeemLearnerToken(tokenRaw: string): Promise<{ contactId: string; organizationId: string }>;
   getEnrollmentById(organizationId: string, enrollmentId: string): Promise<EnrollmentRow | null>;
   listEnrollmentsByOrg(organizationId: string, filter?: { programId?: string; contactId?: string }): Promise<EnrollmentRow[]>;
@@ -118,10 +126,20 @@ export function createEnrollmentService(
         );
       }
 
+      const planAccess =
+        options?.planAccessService ??
+        (db && typeof db.select === 'function'
+          ? createPlanAccessService(createSubscriptionRepository(db), clock)
+          : null);
+
       // 4. Check whether contact already exists before matchOrCreate
       const phoneNorm = normalizePhone(input.phoneRaw.trim());
       const existingContact = await contactRepo.findByPhone({ organizationId: org.id }, phoneNorm);
       const isNewContact = !existingContact;
+
+      if (isNewContact && planAccess) {
+        await planAccess.assertCanAddContact(org.id);
+      }
 
       let contact;
       try {
@@ -135,12 +153,17 @@ export function createEnrollmentService(
         throw new DomainError('VALIDATION_ERROR', err?.message || 'Format data kontak tidak valid');
       }
 
-      // 5. Idempotently create or retrieve existing Enrollment
+      // 5. Check whether existing enrollment already exists
+      const existingEnrollment = await enrollmentRepo.findByProgramAndContact(org.id, program.id, contact.id);
+      if (!existingEnrollment && planAccess) {
+        await planAccess.assertCanAddLearner(org.id);
+      }
+
+      // Race-safely create or retrieve existing Enrollment
+      let enrollment: EnrollmentRow;
       let isNewEnrollment = false;
-      let enrollment = await enrollmentRepo.findByProgramAndContact(org.id, program.id, contact.id);
-      if (!enrollment) {
-        isNewEnrollment = true;
-        enrollment = await enrollmentRepo.create({
+      if (typeof enrollmentRepo.createIdempotent === 'function') {
+        const res = await enrollmentRepo.createIdempotent({
           organizationId: org.id,
           programId: program.id,
           contactId: contact.id,
@@ -151,6 +174,26 @@ export function createEnrollmentService(
           intentLabel: 'COLD',
           learningStatus: 'NOT_STARTED',
         });
+        enrollment = res.enrollment;
+        isNewEnrollment = res.isNew;
+      } else {
+        if (!existingEnrollment) {
+          isNewEnrollment = true;
+          enrollment = await enrollmentRepo.create({
+            organizationId: org.id,
+            programId: program.id,
+            contactId: contact.id,
+            status: 'ENROLLED',
+            enrolledAt: nowIso,
+            progressPercent: 0,
+            intentScore: 10,
+            intentLabel: 'COLD',
+            learningStatus: 'NOT_STARTED',
+          });
+        } else {
+          isNewEnrollment = false;
+          enrollment = existingEnrollment;
+        }
       }
 
       // 6. Emit canonical events (§16)
@@ -201,7 +244,17 @@ export function createEnrollmentService(
     },
 
     async enrollContact(input: ManualEnrollmentInput): Promise<EnrollmentRow> {
-      const nowIso = clock().toISOString();
+      const res = await this.enrollContactAndIssueAccess(input);
+      return res.enrollment;
+    },
+
+    async enrollContactAndIssueAccess(input: ManualEnrollmentInput): Promise<{
+      enrollment: EnrollmentRow;
+      accessToken: string;
+      isNewEnrollment: boolean;
+    }> {
+      const now = clock();
+      const nowIso = now.toISOString();
 
       // 1. Verify Contact belongs to organization
       const contact = await contactRepo.findById({ organizationId: input.organizationId }, input.contactId);
@@ -215,39 +268,77 @@ export function createEnrollmentService(
         throw new DomainError('NOT_FOUND', 'Program edukasi tidak ditemukan');
       }
 
-      // 3. Idempotently create or reuse Enrollment
-      const existing = await enrollmentRepo.findByProgramAndContact(
-        input.organizationId,
-        input.programId,
-        input.contactId
-      );
-      if (existing) {
-        return existing;
+      // 3. Race-safely create or retrieve existing Enrollment
+      let enrollment: EnrollmentRow;
+      let isNew = false;
+      if (typeof enrollmentRepo.createIdempotent === 'function') {
+        const res = await enrollmentRepo.createIdempotent({
+          organizationId: input.organizationId,
+          programId: input.programId,
+          contactId: input.contactId,
+          status: 'ENROLLED',
+          enrolledAt: nowIso,
+          progressPercent: 0,
+          intentScore: 10,
+          intentLabel: 'COLD',
+          learningStatus: 'NOT_STARTED',
+        });
+        enrollment = res.enrollment;
+        isNew = res.isNew;
+      } else {
+        const existing = await enrollmentRepo.findByProgramAndContact(
+          input.organizationId,
+          input.programId,
+          input.contactId
+        );
+        if (existing) {
+          enrollment = existing;
+          isNew = false;
+        } else {
+          enrollment = await enrollmentRepo.create({
+            organizationId: input.organizationId,
+            programId: input.programId,
+            contactId: input.contactId,
+            status: 'ENROLLED',
+            enrolledAt: nowIso,
+            progressPercent: 0,
+            intentScore: 10,
+            intentLabel: 'COLD',
+            learningStatus: 'NOT_STARTED',
+          });
+          isNew = true;
+        }
       }
 
-      const created = await enrollmentRepo.create({
+      // 4. Emit canonical learner.enrolled event EXACTLY ONCE (sole domain owner)
+      if (isNew) {
+        await learningEventRepo.create({
+          organizationId: input.organizationId,
+          enrollmentId: enrollment.id,
+          contactId: input.contactId,
+          eventType: 'learner.enrolled',
+          payload: { programId: program.id, programSlug: program.programSlug },
+          occurredAt: nowIso,
+        });
+      }
+
+      // 5. Generate Opaque High-Entropy Learner Access Token
+      const rawToken = randomBytes(32).toString('hex');
+      const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+      const expiresAt = new Date(now.getTime() + tokenExpiryDays * 24 * 60 * 60 * 1000).toISOString();
+
+      await learnerAccessRepo.createToken({
         organizationId: input.organizationId,
-        programId: input.programId,
         contactId: input.contactId,
-        status: 'ENROLLED',
-        enrolledAt: nowIso,
-        progressPercent: 0,
-        intentScore: 10,
-        intentLabel: 'COLD',
-        learningStatus: 'NOT_STARTED',
+        tokenHash,
+        expiresAt,
       });
 
-      // Emit canonical learner.enrolled event (§16)
-      await learningEventRepo.create({
-        organizationId: input.organizationId,
-        enrollmentId: created.id,
-        contactId: input.contactId,
-        eventType: 'learner.enrolled',
-        payload: { programId: program.id, manual: true },
-        occurredAt: nowIso,
-      });
-
-      return created;
+      return {
+        enrollment,
+        accessToken: rawToken,
+        isNewEnrollment: isNew,
+      };
     },
 
     async redeemLearnerToken(tokenRaw: string): Promise<{ contactId: string; organizationId: string }> {

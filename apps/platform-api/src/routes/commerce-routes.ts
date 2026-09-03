@@ -11,8 +11,8 @@ import {
 import { createCommerceRepository } from '../repositories/commerce-repository';
 import { createSubscriptionRepository } from '../repositories/subscription-repository';
 import { createPlanAccessService } from '../services/billing/plan-access-service';
-import { createPaycoreClient } from '../services/paycore/paycore-client';
-import { createCommerceService } from '../services/commerce/commerce-service';
+import { createPaycoreClient, validatePaycoreConfig } from '../services/paycore/paycore-client';
+import { createCommerceService, MANUAL_BANK_ENABLED } from '../services/commerce/commerce-service';
 import { createProgramRepository } from '../repositories/program-repository';
 import { createContactRepository } from '../repositories/contact-repository';
 import { createOrganizationRepository } from '../repositories/organization-repository';
@@ -24,18 +24,14 @@ import { normalizePhone, normalizeEmail } from '@promotor/platform-core';
 function getCommerceServices(c: any) {
   const db = c.get('db');
   const env = c.env || {};
+  const appEnv = env.APP_ENV || 'production';
+
+  const paycoreConfig = validatePaycoreConfig(env, appEnv);
+  const paycoreClient = createPaycoreClient(paycoreConfig);
 
   const commerceRepo = createCommerceRepository(db);
   const subscriptionRepo = createSubscriptionRepository(db);
   const planAccessService = createPlanAccessService(subscriptionRepo);
-
-  const paycoreClient = createPaycoreClient({
-    baseUrl: env.PAYCORE_BASE_URL || 'http://localhost:8787',
-    appUuid: env.PAYCORE_APP_UUID || '00000000-0000-0000-0000-000000000000',
-    keyId: env.PAYCORE_KEY_ID || 'key_default',
-    appSecret: env.PAYCORE_APP_SECRET || 'secret_default',
-    webhookSecret: env.PAYCORE_WEBHOOK_SECRET || 'whsec_default',
-  });
 
   const programRepo = createProgramRepository(db);
   const contactRepo = createContactRepository(db, normalizePhone, normalizeEmail);
@@ -53,6 +49,7 @@ function getCommerceServices(c: any) {
     orgRepo,
     enrollmentService,
     learningEventRepo,
+    appUuid: paycoreConfig.appUuid,
   });
 
   return {
@@ -81,7 +78,7 @@ export function registerCommerceRoutes(app: Hono<AppEnv>) {
   });
 
   // ==========================================
-  // 2. Public Paid Checkout & Order Status
+  // 2. Public Paid Checkout, Order Status & Claim Access
   // ==========================================
   app.post('/api/v1/public/:slug/programs/:programSlug/checkout', async (c) => {
     c.header('Cache-Control', 'no-store');
@@ -110,6 +107,45 @@ export function registerCommerceRoutes(app: Hono<AppEnv>) {
     const { commerceService } = getCommerceServices(c);
     const result = await commerceService.getOrderStatusByReference(slug, programSlug, reference);
     return c.json(result, 200);
+  });
+
+  app.post('/api/v1/public/:slug/programs/:programSlug/orders/:reference/claim-access', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const slug = c.req.param('slug');
+    const programSlug = c.req.param('programSlug');
+    const reference = c.req.param('reference');
+
+    const rawJson = await c.req.json();
+    const phone = typeof rawJson?.phone === 'string' ? rawJson.phone : '';
+    if (!phone.trim()) {
+      throw new DomainError('VALIDATION_ERROR', 'Nomor WhatsApp pemesan wajib diisi');
+    }
+
+    const { commerceService } = getCommerceServices(c);
+    const result = await commerceService.claimOrderAccess(slug, programSlug, reference, phone);
+
+    // Set learner session cookie
+    const isProduction = (c.env as any)?.APP_ENV === 'production';
+    const isStaging = (c.env as any)?.APP_ENV === 'staging';
+    const cookieParts = [
+      `learner_session=${encodeURIComponent(result.accessToken)}`,
+      'Path=/',
+      'HttpOnly',
+      'SameSite=Lax',
+      'Max-Age=2592000', // 30 days
+    ];
+    if (isProduction || isStaging) {
+      cookieParts.push('Secure');
+    }
+    c.header('Set-Cookie', cookieParts.join('; '));
+
+    return c.json({
+      success: true,
+      accessToken: result.accessToken,
+      contactId: result.contactId,
+      organizationId: result.organizationId,
+      programId: result.programId,
+    }, 200);
   });
 
   // ==========================================

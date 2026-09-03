@@ -1,4 +1,5 @@
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { DomainError } from '../../core/errors';
 
 export interface PaycoreConfig {
   baseUrl: string;
@@ -6,6 +7,61 @@ export interface PaycoreConfig {
   keyId: string;
   appSecret: string;
   webhookSecret: string;
+}
+
+const FORBIDDEN_PLACEHOLDERS = new Set([
+  'secret_default',
+  'whsec_default',
+  'key_default',
+  '00000000-0000-0000-0000-000000000000',
+  'dummy',
+  'placeholder',
+]);
+
+export function validatePaycoreConfig(
+  env: Record<string, unknown> | undefined,
+  appEnv = 'production'
+): PaycoreConfig {
+  if (!env) {
+    throw new DomainError('CONFIGURATION_ERROR', 'Konfigurasi environment Paycore tidak ditemukan');
+  }
+
+  const baseUrl = typeof env.PAYCORE_BASE_URL === 'string' ? env.PAYCORE_BASE_URL.trim() : '';
+  const appUuid = typeof env.PAYCORE_APP_UUID === 'string' ? env.PAYCORE_APP_UUID.trim() : '';
+  const keyId = typeof env.PAYCORE_KEY_ID === 'string' ? env.PAYCORE_KEY_ID.trim() : '';
+  const appSecret = typeof env.PAYCORE_APP_SECRET === 'string' ? env.PAYCORE_APP_SECRET.trim() : '';
+  const webhookSecret = typeof env.PAYCORE_WEBHOOK_SECRET === 'string' ? env.PAYCORE_WEBHOOK_SECRET.trim() : '';
+
+  if (!baseUrl) throw new DomainError('CONFIGURATION_ERROR', 'PAYCORE_BASE_URL wajib diisi');
+  if (!appUuid) throw new DomainError('CONFIGURATION_ERROR', 'PAYCORE_APP_UUID wajib diisi');
+  if (!keyId) throw new DomainError('CONFIGURATION_ERROR', 'PAYCORE_KEY_ID wajib diisi');
+  if (!appSecret) throw new DomainError('CONFIGURATION_ERROR', 'PAYCORE_APP_SECRET wajib diisi');
+  if (!webhookSecret) throw new DomainError('CONFIGURATION_ERROR', 'PAYCORE_WEBHOOK_SECRET wajib diisi');
+
+  if (FORBIDDEN_PLACEHOLDERS.has(appSecret.toLowerCase())) {
+    throw new DomainError('CONFIGURATION_ERROR', 'PAYCORE_APP_SECRET tidak boleh menggunakan nilai default atau dummy');
+  }
+  if (FORBIDDEN_PLACEHOLDERS.has(webhookSecret.toLowerCase())) {
+    throw new DomainError('CONFIGURATION_ERROR', 'PAYCORE_WEBHOOK_SECRET tidak boleh menggunakan nilai default atau dummy');
+  }
+  if (FORBIDDEN_PLACEHOLDERS.has(keyId.toLowerCase())) {
+    throw new DomainError('CONFIGURATION_ERROR', 'PAYCORE_KEY_ID tidak boleh menggunakan nilai default atau dummy');
+  }
+  if (FORBIDDEN_PLACEHOLDERS.has(appUuid.toLowerCase())) {
+    throw new DomainError('CONFIGURATION_ERROR', 'PAYCORE_APP_UUID tidak boleh menggunakan nilai dummy');
+  }
+
+  const isProductionOrStaging = appEnv === 'production' || appEnv === 'staging';
+  if (isProductionOrStaging) {
+    if (!baseUrl.startsWith('https://')) {
+      throw new DomainError('CONFIGURATION_ERROR', 'PAYCORE_BASE_URL harus menggunakan protokol HTTPS pada staging/production');
+    }
+    if (baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
+      throw new DomainError('CONFIGURATION_ERROR', 'PAYCORE_BASE_URL tidak boleh mengarah ke localhost pada staging/production');
+    }
+  }
+
+  return { baseUrl, appUuid, keyId, appSecret, webhookSecret };
 }
 
 export interface PaycoreCreateOrderInput {
@@ -121,6 +177,17 @@ export interface PaycoreClient {
 }
 
 export function createPaycoreClient(config: PaycoreConfig): PaycoreClient {
+  if (!config.baseUrl || !config.appUuid || !config.keyId || !config.appSecret || !config.webhookSecret) {
+    throw new DomainError('CONFIGURATION_ERROR', 'PaycoreClient requires complete configuration');
+  }
+  if (
+    FORBIDDEN_PLACEHOLDERS.has(config.appSecret.toLowerCase()) ||
+    FORBIDDEN_PLACEHOLDERS.has(config.webhookSecret.toLowerCase()) ||
+    FORBIDDEN_PLACEHOLDERS.has(config.appUuid.toLowerCase())
+  ) {
+    throw new DomainError('CONFIGURATION_ERROR', 'PaycoreClient cannot be instantiated with dummy default secrets');
+  }
+
   return {
     async createOrder(input: PaycoreCreateOrderInput): Promise<PaycoreCreateOrderOutput> {
       const path = '/v1/orders';

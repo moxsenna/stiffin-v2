@@ -13,13 +13,13 @@ export const commerceOrders = pgTable(
     organizationId: uuid('organization_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
+    orderType: text('order_type').notNull().default('PROGRAM_PURCHASE'),
     programId: uuid('program_id')
-      .notNull()
       .references(() => programs.id, { onDelete: 'cascade' }),
     contactId: uuid('contact_id')
-      .notNull()
       .references(() => contacts.id, { onDelete: 'cascade' }),
     reference: text('reference').notNull(),
+    providerOrderId: text('provider_order_id'),
     sourceChannel: text('source_channel').notNull().default('STOREFRONT'),
     paymentMode: text('payment_mode').notNull().default('PAYCORE'),
     amount: integer('amount').notNull().default(0),
@@ -27,6 +27,7 @@ export const commerceOrders = pgTable(
     status: text('status').notNull().default('PENDING'),
     paymentRecordId: uuid('payment_record_id'),
     enrollmentId: uuid('enrollment_id').references(() => enrollments.id, { onDelete: 'set null' }),
+    metadata: text('metadata'),
     paidAt: timestamp('paid_at', { withTimezone: true, mode: 'string' }),
     approvedAt: timestamp('approved_at', { withTimezone: true, mode: 'string' }),
     approvedByUserId: uuid('approved_by_user_id').references(() => users.id, { onDelete: 'set null' }),
@@ -39,12 +40,14 @@ export const commerceOrders = pgTable(
   },
   (t) => [
     uniqueIndex('commerce_orders_reference_unique').on(t.reference),
+    index('commerce_orders_provider_order_idx').on(t.providerOrderId),
     index('commerce_orders_org_idx').on(t.organizationId),
     index('commerce_orders_org_status_idx').on(t.organizationId, t.status),
     index('commerce_orders_program_idx').on(t.programId),
     index('commerce_orders_contact_idx').on(t.contactId),
     check('commerce_orders_amount_non_negative', sql`${t.amount} >= 0`),
     check('commerce_orders_currency_idr', sql`${t.currency} = 'IDR'`),
+    check('commerce_orders_order_type_check', sql`${t.orderType} IN ('PROGRAM_PURCHASE', 'SUBSCRIPTION_PURCHASE')`),
     check('commerce_orders_source_channel_check', sql`${t.sourceChannel} IN ('STOREFRONT', 'WHATSAPP', 'OPERATOR')`),
     check('commerce_orders_payment_mode_check', sql`${t.paymentMode} IN ('PAYCORE', 'MANUAL_BANK')`),
     check('commerce_orders_status_check', sql`${t.status} IN ('PENDING', 'PAID', 'APPROVED', 'REJECTED', 'EXPIRED', 'REFUNDED')`),

@@ -46,3 +46,8 @@ psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
 # Apply least-privilege runtime grants for V0.1 release hardening
 psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
   -f docs/sql/grants_v01.sql
+
+# Apply least-privilege runtime grants for Talira billing and commerce (0010)
+psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$DB_NAME" \
+  -f docs/sql/grants_billing.sql
+

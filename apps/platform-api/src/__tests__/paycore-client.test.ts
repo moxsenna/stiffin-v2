@@ -5,6 +5,7 @@ import {
   buildPaycoreWebhookSignature,
   verifyPaycoreWebhookSignature,
   createPaycoreClient,
+  validatePaycoreConfig,
 } from '../services/paycore/paycore-client';
 
 describe('Paycore Integration — Crypto & Webhook Signatures', () => {
@@ -83,5 +84,94 @@ describe('Paycore Integration — Crypto & Webhook Signatures', () => {
     assert.strictEqual(verifyPaycoreWebhookSignature('', null, null, 'secret'), false);
     assert.strictEqual(verifyPaycoreWebhookSignature('{}', undefined, 'sha256=abc', 'secret'), false);
     assert.strictEqual(verifyPaycoreWebhookSignature('{}', new Date().toISOString(), undefined, 'secret'), false);
+  });
+});
+
+describe('Paycore Configuration — Fail-Closed Invariants', () => {
+  const validBase = {
+    PAYCORE_BASE_URL: 'https://paycore.internal.promotorflow.id',
+    PAYCORE_APP_UUID: '11111111-2222-3333-4444-555555555555',
+    PAYCORE_KEY_ID: 'pk_live_real_key_001',
+    PAYCORE_APP_SECRET: 'sec_live_abcdef1234567890abcdef',
+    PAYCORE_WEBHOOK_SECRET: 'whsec_live_9876543210fedcba',
+  };
+
+  it('rejects undefined environment', () => {
+    assert.throws(() => validatePaycoreConfig(undefined), /Konfigurasi environment Paycore/);
+  });
+
+  it('rejects missing baseUrl', () => {
+    assert.throws(() => validatePaycoreConfig({ ...validBase, PAYCORE_BASE_URL: '' }), /PAYCORE_BASE_URL/);
+  });
+
+  it('rejects missing appUuid', () => {
+    assert.throws(() => validatePaycoreConfig({ ...validBase, PAYCORE_APP_UUID: '' }), /PAYCORE_APP_UUID/);
+  });
+
+  it('rejects missing keyId', () => {
+    assert.throws(() => validatePaycoreConfig({ ...validBase, PAYCORE_KEY_ID: '' }), /PAYCORE_KEY_ID/);
+  });
+
+  it('rejects missing appSecret', () => {
+    assert.throws(() => validatePaycoreConfig({ ...validBase, PAYCORE_APP_SECRET: '' }), /PAYCORE_APP_SECRET/);
+  });
+
+  it('rejects missing webhookSecret', () => {
+    assert.throws(() => validatePaycoreConfig({ ...validBase, PAYCORE_WEBHOOK_SECRET: '' }), /PAYCORE_WEBHOOK_SECRET/);
+  });
+
+  it('rejects forbidden dummy default secrets fail-closed', () => {
+    assert.throws(
+      () => validatePaycoreConfig({ ...validBase, PAYCORE_APP_SECRET: 'secret_default' }),
+      /tidak boleh menggunakan nilai default/
+    );
+    assert.throws(
+      () => validatePaycoreConfig({ ...validBase, PAYCORE_WEBHOOK_SECRET: 'whsec_default' }),
+      /tidak boleh menggunakan nilai default/
+    );
+    assert.throws(
+      () => validatePaycoreConfig({ ...validBase, PAYCORE_KEY_ID: 'key_default' }),
+      /tidak boleh menggunakan nilai default/
+    );
+    assert.throws(
+      () => validatePaycoreConfig({ ...validBase, PAYCORE_APP_UUID: '00000000-0000-0000-0000-000000000000' }),
+      /tidak boleh menggunakan nilai dummy/
+    );
+  });
+
+  it('rejects insecure HTTP and localhost in production/staging', () => {
+    assert.throws(
+      () => validatePaycoreConfig({ ...validBase, PAYCORE_BASE_URL: 'http://api.paycore.id' }, 'production'),
+      /harus menggunakan protokol HTTPS/
+    );
+    assert.throws(
+      () => validatePaycoreConfig({ ...validBase, PAYCORE_BASE_URL: 'https://localhost:8787' }, 'production'),
+      /tidak boleh mengarah ke localhost/
+    );
+    assert.throws(
+      () => validatePaycoreConfig({ ...validBase, PAYCORE_BASE_URL: 'https://127.0.0.1:8787' }, 'staging'),
+      /tidak boleh mengarah ke localhost/
+    );
+  });
+
+  it('accepts valid configuration and returns trimmed config object', () => {
+    const config = validatePaycoreConfig(validBase, 'production');
+    assert.strictEqual(config.baseUrl, 'https://paycore.internal.promotorflow.id');
+    assert.strictEqual(config.appUuid, '11111111-2222-3333-4444-555555555555');
+    assert.strictEqual(config.keyId, 'pk_live_real_key_001');
+  });
+
+  it('createPaycoreClient throws immediately on dummy secrets', () => {
+    assert.throws(
+      () =>
+        createPaycoreClient({
+          baseUrl: 'https://example.com',
+          appUuid: '00000000-0000-0000-0000-000000000000',
+          keyId: 'key_default',
+          appSecret: 'secret_default',
+          webhookSecret: 'whsec_default',
+        }),
+      /PaycoreClient cannot be instantiated with dummy default secrets/
+    );
   });
 });

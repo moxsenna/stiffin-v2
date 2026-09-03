@@ -27,9 +27,11 @@ CREATE INDEX IF NOT EXISTS "org_subscriptions_status_idx" ON "organization_subsc
 CREATE TABLE IF NOT EXISTS "commerce_orders" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"organization_id" uuid NOT NULL,
-	"program_id" uuid NOT NULL,
-	"contact_id" uuid NOT NULL,
+	"order_type" text DEFAULT 'PROGRAM_PURCHASE' NOT NULL,
+	"program_id" uuid,
+	"contact_id" uuid,
 	"reference" text NOT NULL,
+	"provider_order_id" text,
 	"source_channel" text DEFAULT 'STOREFRONT' NOT NULL,
 	"payment_mode" text DEFAULT 'PAYCORE' NOT NULL,
 	"amount" integer DEFAULT 0 NOT NULL,
@@ -37,6 +39,7 @@ CREATE TABLE IF NOT EXISTS "commerce_orders" (
 	"status" text DEFAULT 'PENDING' NOT NULL,
 	"payment_record_id" uuid,
 	"enrollment_id" uuid,
+	"metadata" text,
 	"paid_at" timestamp with time zone,
 	"approved_at" timestamp with time zone,
 	"approved_by_user_id" uuid,
@@ -54,12 +57,14 @@ CREATE TABLE IF NOT EXISTS "commerce_orders" (
 	CONSTRAINT "commerce_orders_rejected_by_fk" FOREIGN KEY ("rejected_by_user_id") REFERENCES "users"("id") ON DELETE set null,
 	CONSTRAINT "commerce_orders_amount_non_negative" CHECK ("amount" >= 0),
 	CONSTRAINT "commerce_orders_currency_idr" CHECK ("currency" = 'IDR'),
+	CONSTRAINT "commerce_orders_order_type_check" CHECK ("order_type" IN ('PROGRAM_PURCHASE', 'SUBSCRIPTION_PURCHASE')),
 	CONSTRAINT "commerce_orders_source_channel_check" CHECK ("source_channel" IN ('STOREFRONT', 'WHATSAPP', 'OPERATOR')),
 	CONSTRAINT "commerce_orders_payment_mode_check" CHECK ("payment_mode" IN ('PAYCORE', 'MANUAL_BANK')),
 	CONSTRAINT "commerce_orders_status_check" CHECK ("status" IN ('PENDING', 'PAID', 'APPROVED', 'REJECTED', 'EXPIRED', 'REFUNDED'))
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS "commerce_orders_reference_unique" ON "commerce_orders" ("reference");
+CREATE INDEX IF NOT EXISTS "commerce_orders_provider_order_idx" ON "commerce_orders" ("provider_order_id");
 CREATE INDEX IF NOT EXISTS "commerce_orders_org_idx" ON "commerce_orders" ("organization_id");
 CREATE INDEX IF NOT EXISTS "commerce_orders_org_status_idx" ON "commerce_orders" ("organization_id", "status");
 CREATE INDEX IF NOT EXISTS "commerce_orders_program_idx" ON "commerce_orders" ("program_id");
@@ -134,3 +139,21 @@ CREATE TABLE IF NOT EXISTS "organization_bank_accounts" (
 );
 
 CREATE INDEX IF NOT EXISTS "org_bank_accounts_org_idx" ON "organization_bank_accounts" ("organization_id");
+
+CREATE TABLE IF NOT EXISTS "provider_webhook_events" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"provider" text NOT NULL,
+	"provider_event_id" text NOT NULL,
+	"event_type" text NOT NULL,
+	"received_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"processed_at" timestamp with time zone,
+	"processing_result" text DEFAULT 'PROCESSING' NOT NULL,
+	"details" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "provider_webhook_events_provider_check" CHECK ("provider" IN ('PAYCORE')),
+	CONSTRAINT "provider_webhook_events_result_check" CHECK ("processing_result" IN ('PROCESSING', 'SUCCESS', 'DUPLICATE', 'FAILED', 'RECONCILIATION_FAILED'))
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "provider_webhook_events_provider_event_unique" ON "provider_webhook_events" ("provider", "provider_event_id");
+CREATE INDEX IF NOT EXISTS "provider_webhook_events_result_idx" ON "provider_webhook_events" ("processing_result");
+

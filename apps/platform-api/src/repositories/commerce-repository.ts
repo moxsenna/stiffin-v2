@@ -1,8 +1,9 @@
-﻿import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq, and, desc, count } from 'drizzle-orm';
 import { commerceOrders, CommerceOrderRow, NewCommerceOrderRow } from '../db/schema/commerce-orders';
 import { paymentRecords, PaymentRecordRow, NewPaymentRecordRow } from '../db/schema/payment-records';
 import { platformFeeEntries, PlatformFeeEntryRow, NewPlatformFeeEntryRow } from '../db/schema/platform-fee-entries';
+import { providerWebhookEvents, ProviderWebhookEventRow } from '../db/schema/provider-webhook-events';
 import { contacts } from '../db/schema/contacts';
 import { programs } from '../db/schema/programs';
 
@@ -10,6 +11,7 @@ export interface CommerceRepository {
   createOrder(data: NewCommerceOrderRow): Promise<CommerceOrderRow>;
   getOrderById(orderId: string): Promise<CommerceOrderRow | null>;
   getOrderByReference(reference: string): Promise<CommerceOrderRow | null>;
+  getOrderByProviderOrderId(providerOrderId: string): Promise<CommerceOrderRow | null>;
   listOrders(
     organizationId: string,
     filter?: { status?: string; limit?: number; offset?: number }
@@ -45,6 +47,19 @@ export interface CommerceRepository {
     status: string,
     extra?: Partial<Omit<PlatformFeeEntryRow, 'id' | 'createdAt'>>
   ): Promise<PlatformFeeEntryRow | null>;
+  recordWebhookEvent(event: {
+    provider: string;
+    providerEventId: string;
+    eventType: string;
+    processingResult: string;
+    details?: string;
+  }): Promise<{ isNew: boolean; event?: ProviderWebhookEventRow }>;
+  updateWebhookEventResult(
+    provider: string,
+    providerEventId: string,
+    processingResult: string,
+    details?: string
+  ): Promise<void>;
 }
 
 export function createCommerceRepository(db: NodePgDatabase): CommerceRepository {
@@ -68,6 +83,15 @@ export function createCommerceRepository(db: NodePgDatabase): CommerceRepository
         .select()
         .from(commerceOrders)
         .where(eq(commerceOrders.reference, reference))
+        .limit(1);
+      return order || null;
+    },
+
+    async getOrderByProviderOrderId(providerOrderId: string): Promise<CommerceOrderRow | null> {
+      const [order] = await db
+        .select()
+        .from(commerceOrders)
+        .where(eq(commerceOrders.providerOrderId, providerOrderId))
         .limit(1);
       return order || null;
     },
@@ -100,10 +124,11 @@ export function createCommerceRepository(db: NodePgDatabase): CommerceRepository
           paymentStatus: paymentRecords.status,
           paymentMethod: paymentRecords.paymentMethod,
           platformFeeAmount: platformFeeEntries.amount,
+          platformFeeStatus: platformFeeEntries.status,
         })
         .from(commerceOrders)
-        .innerJoin(contacts, eq(commerceOrders.contactId, contacts.id))
-        .innerJoin(programs, eq(commerceOrders.programId, programs.id))
+        .leftJoin(contacts, eq(commerceOrders.contactId, contacts.id))
+        .leftJoin(programs, eq(commerceOrders.programId, programs.id))
         .leftJoin(paymentRecords, eq(commerceOrders.paymentRecordId, paymentRecords.id))
         .leftJoin(platformFeeEntries, eq(commerceOrders.id, platformFeeEntries.orderId))
         .where(combinedWhere)
@@ -114,13 +139,13 @@ export function createCommerceRepository(db: NodePgDatabase): CommerceRepository
       return {
         orders: rows.map((r) => ({
           order: r.order,
-          buyerName: r.buyerName,
-          buyerPhone: r.buyerPhone,
+          buyerName: r.buyerName ?? 'Promotor Subscription',
+          buyerPhone: r.buyerPhone ?? '-',
           buyerEmail: r.buyerEmail,
-          programTitle: r.programTitle,
+          programTitle: r.programTitle ?? (r.order.orderType === 'SUBSCRIPTION_PURCHASE' ? 'Langganan Talira Solo' : '-'),
           paymentStatus: r.paymentStatus,
           paymentMethod: r.paymentMethod,
-          platformFee: r.platformFeeAmount ?? 3000,
+          platformFee: (r.platformFeeStatus === 'BILLABLE' || r.platformFeeStatus === 'BILLED') ? (r.platformFeeAmount ?? 3000) : 0,
         })),
         total: Number(totalResult?.value ?? 0),
       };
@@ -215,6 +240,66 @@ export function createCommerceRepository(db: NodePgDatabase): CommerceRepository
         .where(eq(platformFeeEntries.orderId, orderId))
         .returning();
       return updated || null;
+    },
+
+    async recordWebhookEvent(event: {
+      provider: string;
+      providerEventId: string;
+      eventType: string;
+      processingResult: string;
+      details?: string;
+    }): Promise<{ isNew: boolean; event?: ProviderWebhookEventRow }> {
+      const [inserted] = await db
+        .insert(providerWebhookEvents)
+        .values({
+          provider: event.provider,
+          providerEventId: event.providerEventId,
+          eventType: event.eventType,
+          processingResult: event.processingResult,
+          details: event.details,
+        })
+        .onConflictDoNothing({
+          target: [providerWebhookEvents.provider, providerWebhookEvents.providerEventId],
+        })
+        .returning();
+
+      if (inserted) {
+        return { isNew: true, event: inserted };
+      }
+
+      const [existing] = await db
+        .select()
+        .from(providerWebhookEvents)
+        .where(
+          and(
+            eq(providerWebhookEvents.provider, event.provider),
+            eq(providerWebhookEvents.providerEventId, event.providerEventId)
+          )
+        )
+        .limit(1);
+
+      return { isNew: false, event: existing };
+    },
+
+    async updateWebhookEventResult(
+      provider: string,
+      providerEventId: string,
+      processingResult: string,
+      details?: string
+    ): Promise<void> {
+      await db
+        .update(providerWebhookEvents)
+        .set({
+          processingResult,
+          details,
+          processedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(providerWebhookEvents.provider, provider),
+            eq(providerWebhookEvents.providerEventId, providerEventId)
+          )
+        );
     },
   };
 }

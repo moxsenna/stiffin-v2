@@ -1,4 +1,4 @@
-﻿import { describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { createPlanAccessService } from '../services/billing/plan-access-service';
 import { DomainError } from '../core/errors';
@@ -123,5 +123,63 @@ describe('Talira Commercial Engine — PlanAccessService', () => {
     const access = await service.getPlanAccess('org-grace');
     assert.strictEqual(access.isGracePeriod, true);
     assert.strictEqual(access.effectivePaidProgramsAllowed, true);
+  });
+
+  it('FREE plan rejects learner addition when active learners >= 50', async () => {
+    const mockRepo: any = {
+      getSubscription: async () => ({
+        id: 'sub-free',
+        organizationId: 'org-free',
+        planCode: 'FREE',
+        status: 'ACTIVE',
+        billingCycle: 'NONE',
+        provider: 'NONE',
+      }),
+      countUsage: async () => ({
+        publishedPrograms: 1,
+        activeLearners: 50,
+        contacts: 100,
+      }),
+    };
+
+    const service = createPlanAccessService(mockRepo);
+    await assert.rejects(
+      async () => service.assertCanAddLearner('org-free'),
+      (err: any) => {
+        assert.ok(err instanceof DomainError);
+        assert.strictEqual(err.code, 'PLAN_LIMIT_REACHED');
+        assert.strictEqual(err.details?.feature, 'active_learners');
+        return true;
+      }
+    );
+  });
+
+  it('FREE plan rejects contact addition when contacts >= 250', async () => {
+    const mockRepo: any = {
+      getSubscription: async () => ({
+        id: 'sub-free',
+        organizationId: 'org-free',
+        planCode: 'FREE',
+        status: 'ACTIVE',
+        billingCycle: 'NONE',
+        provider: 'NONE',
+      }),
+      countUsage: async () => ({
+        publishedPrograms: 1,
+        activeLearners: 10,
+        contacts: 250,
+      }),
+    };
+
+    const service = createPlanAccessService(mockRepo);
+    await assert.rejects(
+      async () => service.assertCanAddContact('org-free'),
+      (err: any) => {
+        assert.ok(err instanceof DomainError);
+        assert.strictEqual(err.code, 'PLAN_LIMIT_REACHED');
+        assert.strictEqual(err.details?.feature, 'contacts');
+        return true;
+      }
+    );
   });
 });
