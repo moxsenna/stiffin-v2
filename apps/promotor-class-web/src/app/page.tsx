@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getSession } from '@/lib/auth';
+import { PricingSection } from '@/components/platform/PricingSection';
 
 export default function RootPage() {
   const router = useRouter();
@@ -205,38 +206,16 @@ export default function RootPage() {
         <div style={{ marginTop: 12, fontSize: 12, color: '#64748b' }}>Gratis • Setup 5 menit • Support STIFIn</div>
       </section>
 
-      <section id="harga" style={{ padding: '64px 24px', maxWidth: 1100, margin: '0 auto' }}>
-        <h2 style={{ fontSize: 28, fontWeight: 900, textAlign: 'center', marginBottom: 32 }}>Harga Simpel — Mulai Gratis</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 24 }}>
-          <div style={{ border: '1px solid var(--line)', padding: 32 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 800 }}>Gratis</h3>
-            <div style={{ fontSize: 32, fontWeight: 900, margin: '12px 0' }}>Rp 0 <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--muted)' }}>/ selamanya</span></div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14 }}>
-              <li>✓ 1 program aktif</li>
-              <li>✓ Intent scoring & refleksi</li>
-              <li>✓ Storefront publik</li>
-            </ul>
-            <Link href="/login" style={{ display: 'block', marginTop: 20, padding: '12px', border: '2px solid var(--ink)', textAlign: 'center', fontWeight: 800, textDecoration: 'none', color: 'var(--ink)' }}>Mulai Gratis</Link>
-          </div>
-          <div style={{ border: '2px solid var(--ink)', padding: 32, backgroundColor: 'var(--ink)', color: '#fff' }}>
-            <h3 style={{ fontSize: 18, fontWeight: 800 }}>Pro — Paling Populer</h3>
-            <div style={{ fontSize: 32, fontWeight: 900, margin: '12px 0' }}>Segera <span style={{ fontSize: 14, fontWeight: 500, color: '#94a3b8' }}>— hubungi kami</span></div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14, color: '#e2e8f0' }}>
-              <li>✓ Program tanpa batas</li>
-              <li>✓ Aftercare & lifecycle lengkap</li>
-              <li>✓ Sinkron PromotorFlow + WA 1-tap</li>
-            </ul>
-            <Link href="/login" style={{ display: 'block', marginTop: 20, padding: '12px', backgroundColor: 'var(--accent)', color: '#fff', textAlign: 'center', fontWeight: 800, textDecoration: 'none' }}>Pilih Pro →</Link>
-          </div>
-        </div>
-      </section>
+      <PricingSection />
 
       <section id="faq" style={{ padding: '48px 24px', maxWidth: 800, margin: '0 auto', borderTop: '1px solid var(--line)' }}>
         <h2 style={{ fontSize: 24, fontWeight: 900, textAlign: 'center', marginBottom: 24 }}>Pertanyaan Umum</h2>
         {[
-          { q: 'Apakah butuh kartu kredit untuk mulai?', a: 'Tidak. Paket gratis bisa langsung pakai tanpa kartu kredit.' },
-          { q: 'Apakah video harus di YouTube?', a: 'Ya, pakai YouTube unlisted/publik via embed resmi — tanpa hosting video terpisah.' },
-          { q: 'Bagaimana data peserta aman?', a: 'Tenant isolation + E.164 + sumber event terjaga, tidak ada duplikat kontak.' },
+          { q: 'Apakah butuh kartu kredit untuk mulai?', a: 'Tidak. Paket Talira Free bisa langsung digunakan tanpa kartu kredit.' },
+          { q: 'Berapa biaya langganan Talira Solo?', a: 'Paket Talira Solo berharga Rp 149.000/bulan atau Rp 1.490.000/tahun (hemat 17%). Pembayaran didukung transfer bank dan QRIS otomatis via gateway resmi. Terdapat biaya transaksi flat Rp3.000 per penjualan program kelas berbayar tanpa potongan persentase komisi.' },
+          { q: 'Apakah langganan mencakup PromotorFlow juga?', a: 'Ya. Talira adalah ekosistem satu pintu: Talira Class (LMS & Program Edukasi) dan Talira Flow (CRM & Pipeline WhatsApp) aktif bersama dalam satu akun langganan Anda.' },
+          { q: 'Apakah video materi harus di YouTube?', a: 'Ya, Anda dapat menggunakan video YouTube unlisted atau publik via embed resmi — tanpa biaya hosting video tambahan.' },
+          { q: 'Bagaimana keamanan data peserta?', a: 'Data peserta diisolasi per organisasi promotor secara multi-tenant terenkripsi dengan format nomor E.164 terstandardisasi.' },
         ].map((f) => (
           <div key={f.q} style={{ padding: '16px 0', borderBottom: '1px solid var(--line)' }}>
             <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{f.q}</div>

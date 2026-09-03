@@ -20,7 +20,7 @@ export function PricingSection() {
         borderBottom: '1px solid var(--color-divider)',
       }}
     >
-      <div className="container">
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px' }}>
         <div style={{ maxWidth: '780px', margin: '0 auto 36px', textAlign: 'center' }}>
           <div
             style={{
@@ -194,7 +194,7 @@ export function PricingSection() {
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
-              boxShadow: '0 12px 36px rgba(40, 99, 68, 0.12)',
+              boxShadow: '0 12px 36px rgba(37, 99, 235, 0.15)',
               position: 'relative',
             }}
           >
