@@ -6,9 +6,18 @@ import { TALIRA_PLANS } from '@promotor/contracts';
 
 export const FlowPricingSection: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
+  const [includeUpsell, setIncludeUpsell] = useState<boolean>(true);
 
-  const freePlan = TALIRA_PLANS.FREE;
-  const soloPlan = TALIRA_PLANS.SOLO;
+  const baseMonthly = 99000;
+  const baseAnnual = 990000;
+  const upsellMonthly = 50000;
+  const upsellAnnual = 200000;
+
+  const currentPrice = includeUpsell
+    ? (billingCycle === 'annual' ? baseAnnual + upsellAnnual : baseMonthly + upsellMonthly)
+    : (billingCycle === 'annual' ? baseAnnual : baseMonthly);
+
+  const formattedPrice = currentPrice.toLocaleString('id-ID');
 
   return (
     <section
@@ -207,61 +216,122 @@ export const FlowPricingSection: React.FC = () => {
                 borderRadius: '999px',
                 letterSpacing: '0.06em',
                 textTransform: 'uppercase',
+                whiteSpace: 'nowrap',
               }}
             >
-              Paling Populer & Hemat
+              {includeUpsell ? '★ Paling Populer · Ekosistem Lengkap' : 'PromotorFlow Solo Standalone'}
             </div>
 
             <div>
               <div style={{ fontSize: '18px', fontWeight: 800, color: '#111827', marginBottom: '6px' }}>
-                Talira Solo
+                {includeUpsell ? 'Talira Solo — Ekosistem Lengkap' : 'PromotorFlow Solo'}
               </div>
               <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '20px', lineHeight: 1.5 }}>
-                Solusi terpadu CRM PromotorFlow + LMS PromotorClass dengan penjualan kelas berbayar.
+                {includeUpsell
+                  ? 'CRM PromotorFlow + LMS PromotorClass terpadu dengan modul belajar & penjualan kelas berbayar.'
+                  : 'Fokus penuh pada CRM, antrean tindakan follow-up WhatsApp harian, dan konversi prospek STIFIn.'}
               </p>
 
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '6px' }}>
                 <span style={{ fontSize: '36px', fontWeight: 850, color: '#059669' }}>
-                  {billingCycle === 'annual' ? 'Rp 1.490.000' : 'Rp 149.000'}
+                  Rp {formattedPrice}
                 </span>
                 <span style={{ fontSize: '13px', color: '#6B7280' }}>
                   {billingCycle === 'annual' ? '/ tahun' : '/ bulan'}
                 </span>
               </div>
-              <div style={{ fontSize: '11.5px', color: '#6B7280', marginBottom: '24px' }}>
-                + Rp3.000 flat per transaksi kelas berbayar (0% komisi persentase)
+              <div style={{ fontSize: '11.5px', color: '#6B7280', marginBottom: '18px' }}>
+                {includeUpsell ? (
+                  billingCycle === 'annual'
+                    ? 'Rp 990.000 (Flow) + Rp 200.000 (Class Upsell — Hemat Rp 400.000!)'
+                    : 'Rp 99.000 (Flow) + Rp 50.000 (Class Upsell) · Hemat & praktis'
+                ) : (
+                  billingCycle === 'annual'
+                    ? 'Rp 990.000/tahun (setara Rp 82.500/bulan — hemat 2 bulan)'
+                    : 'Rp 99.000/bulan · Batalkan kapan saja'
+                )}
+              </div>
+
+              {/* Interactive Upsell Box */}
+              <div
+                onClick={() => setIncludeUpsell(!includeUpsell)}
+                style={{
+                  cursor: 'pointer',
+                  backgroundColor: includeUpsell ? '#F0FDF4' : '#F9FAFB',
+                  border: `2px solid ${includeUpsell ? '#059669' : '#E5E7EB'}`,
+                  borderRadius: '14px',
+                  padding: '14px 16px',
+                  marginBottom: '24px',
+                  transition: 'all 0.2s ease',
+                  userSelect: 'none',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                  <input
+                    type="checkbox"
+                    checked={includeUpsell}
+                    onChange={(e) => setIncludeUpsell(e.target.checked)}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ marginTop: '3px', accentColor: '#059669', width: '18px', height: '18px', cursor: 'pointer', flexShrink: 0 }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 800, color: '#111827' }}>
+                        + Tambah PromotorClass (LMS Edukasi)
+                      </span>
+                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#059669', backgroundColor: '#DCFCE7', padding: '2px 8px', borderRadius: '6px' }}>
+                        {billingCycle === 'annual' ? '+Rp 200.000/thn' : '+Rp 50.000/bln'}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '12px', color: '#4B5563', margin: '4px 0 0', lineHeight: 1.45 }}>
+                      Buka fitur jual kelas berbayar, modul materi video, form refleksi pengunci, dan sinyal belajar Hot/Warm otomatis.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div style={{ display: 'grid', gap: '12px', borderTop: '1px solid #F3F4F6', paddingTop: '20px', marginBottom: '32px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#111827', fontWeight: 700 }}>
                   <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
-                  Buka Penjualan Kelas Berbayar
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
-                  <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
                   Hingga 2.500 Kontak CRM Terhubung
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
                   <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
-                  Hingga 10 Program Kelas Terpublikasi
+                  Antrean Eksekusi Harian (Work Queue) & 1-Tap WA
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
                   <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
-                  Hingga 500 Peserta Belajar Aktif
+                  Halaman Booking Publik & Siklus Aftercare Otomatis
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
-                  <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
-                  Integrasi Sinyal Belajar Real-Time (Hot/Warm/Cold)
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
-                  <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
-                  Halaman Booking Publik & Siklus Aftercare
-                </div>
+                {includeUpsell ? (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#111827', fontWeight: 700 }}>
+                      <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
+                      Buka Penjualan Program Kelas Berbayar
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
+                      <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
+                      Hingga 10 Program Kelas & 500 Peserta Belajar
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#374151' }}>
+                      <span style={{ color: '#059669', fontWeight: 800 }}>✓</span>
+                      Integrasi Sinyal Belajar Real-Time (Hot/Warm/Cold)
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#6B7280', paddingLeft: '24px' }}>
+                      * + Rp3.000 flat per transaksi kelas berbayar (0% komisi persentase)
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12.5px', color: '#9CA3AF' }}>
+                    <span>—</span>
+                    <span>PromotorClass pada paket Free (1 program, 50 peserta)</span>
+                  </div>
+                )}
               </div>
             </div>
 
             <Link
-              href="/app"
+              href="/login"
               style={{
                 width: '100%',
                 minHeight: '48px',
@@ -277,7 +347,7 @@ export const FlowPricingSection: React.FC = () => {
                 boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)',
               }}
             >
-              Pilih Paket Solo Sekarang
+              {includeUpsell ? 'Pilih Paket Lengkap (Flow + Class) Sekarang' : 'Pilih PromotorFlow Solo Sekarang'}
             </Link>
           </div>
         </div>
