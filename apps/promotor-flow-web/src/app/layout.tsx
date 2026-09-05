@@ -2,10 +2,21 @@ import type { Metadata, Viewport } from 'next';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'PromotorFlow — Asisten Bisnis Promotor',
+  title: 'Ralivo Flow — Asisten Bisnis Promotor',
   description: 'Sistem operasional harian promotor untuk kelola prospek, booking, dan aftercare. Antrean Today 1-tap WA, booking 14-hari, aftercare D+7.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/icons/pwa-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   openGraph: {
-    title: 'PromotorFlow — Asisten Bisnis Promotor',
+    title: 'Ralivo Flow — Asisten Bisnis Promotor',
     description: 'Antrean Today, booking 14-hari, dan aftercare D+7 untuk promotor STIFIn.',
     type: 'website',
     locale: 'id_ID',

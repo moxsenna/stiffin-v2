@@ -3,8 +3,8 @@ import { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/app',
-    name: 'PromotorFlow — Pipeline & Daily Execution OS',
-    short_name: 'PromotorFlow',
+    name: 'Ralivo Flow — Pipeline & Daily Execution OS',
+    short_name: 'Ralivo Flow',
     description: 'Sistem operasional harian promotor untuk kelola prospek, booking, dan aftercare STIFIn',
     start_url: '/app',
     scope: '/',

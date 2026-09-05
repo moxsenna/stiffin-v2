@@ -50,29 +50,28 @@ export const FlowLandingHeader: React.FC = () => {
             color: 'var(--color-text-primary)',
           }}
         >
-          <div
+          <img
+            src="/images/ralivo-logo.webp"
+            alt="Ralivo"
+            width={120}
+            height={32}
+            style={{ height: '32px', width: 'auto', display: 'block' }}
+          />
+          <span
             style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: 'var(--radius-sm)',
-              backgroundColor: 'var(--color-primary)',
-              color: '#FFFFFF',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: 'var(--shadow-xs)',
+              fontSize: '11px',
+              fontWeight: 800,
+              color: '#059669',
+              backgroundColor: 'rgba(5, 150, 105, 0.08)',
+              border: '1px solid rgba(5, 150, 105, 0.2)',
+              padding: '2px 8px',
+              borderRadius: '6px',
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
             }}
           >
-            <LightningIcon size={20} color="#FFFFFF" />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '17px', fontWeight: 850, letterSpacing: '-0.03em', color: 'var(--color-text-primary)' }}>
-              PromotorFlow
-            </span>
-            <span style={{ fontSize: '10.5px', fontWeight: 650, color: 'var(--color-text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              Execution OS
-            </span>
-          </div>
+            Flow
+          </span>
         </Link>
 
         {/* Desktop Navigation Links */}

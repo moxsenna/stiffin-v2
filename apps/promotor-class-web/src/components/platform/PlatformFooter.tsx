@@ -26,23 +26,27 @@ export function PlatformFooter() {
           {/* Brand Col */}
           <div style={{ maxWidth: '300px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+              <img
+                src="/images/ralivo-logo-dark.webp"
+                alt="Ralivo"
+                width={120}
+                height={32}
+                style={{ height: '32px', width: 'auto', display: 'block' }}
+              />
               <span
                 style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
-                  backgroundColor: 'var(--color-primary)',
-                  color: '#FFFFFF',
-                  display: 'grid',
-                  placeItems: 'center',
+                  fontSize: '11px',
                   fontWeight: 800,
-                  fontSize: '15px',
+                  color: '#60A5FA',
+                  backgroundColor: 'rgba(96, 165, 250, 0.12)',
+                  border: '1px solid rgba(96, 165, 250, 0.25)',
+                  padding: '2px 8px',
+                  borderRadius: '6px',
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
                 }}
               >
-                P
-              </span>
-              <span style={{ fontWeight: 800, fontSize: '16px', color: '#FFFFFF' }}>
-                PromotorClass
+                Class
               </span>
             </div>
             <p style={{ fontSize: '13px', lineHeight: 1.6, color: '#888883', marginBottom: '16px' }}>

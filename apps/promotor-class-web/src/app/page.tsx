@@ -51,26 +51,28 @@ export default function RootPage() {
           }}
         >
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'var(--ink)', minWidth: 0 }}>
-            <div
+            <img
+              src="/images/ralivo-logo.webp"
+              alt="Ralivo"
+              width={120}
+              height={32}
+              style={{ height: '32px', width: 'auto', display: 'block' }}
+            />
+            <span
               style={{
-                width: 34,
-                height: 34,
-                backgroundColor: 'var(--accent)',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                fontSize: '11px',
                 fontWeight: 800,
-                fontSize: 13,
-                flexShrink: 0,
+                color: 'var(--accent)',
+                backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                border: '1px solid rgba(37, 99, 235, 0.2)',
+                padding: '2px 8px',
+                borderRadius: '6px',
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
               }}
             >
-              PC
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, minWidth: 0 }}>
-              <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.03em', whiteSpace: 'nowrap' }}>PromotorClass</span>
-              <span style={{ fontSize: 10, fontWeight: 650, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)', whiteSpace: 'nowrap' }}>Education OS</span>
-            </div>
+              Class
+            </span>
           </Link>
           <nav style={{ display: 'none', alignItems: 'center', gap: 22 }} className="landing-nav-links">
             <a href="#fitur" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>Fitur</a>
@@ -225,7 +227,7 @@ export default function RootPage() {
       </section>
 
       <footer style={{ padding: '32px 24px', borderTop: '1px solid var(--line)', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
-        © 2026 PromotorClass — STIFIn Platform • <Link href="/login" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Masuk Promotor</Link> • <Link href="/learn" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Portal Learner</Link>
+        © 2026 Ralivo Class — STIFIn Platform • <Link href="/login" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Masuk Promotor</Link> • <Link href="/learn" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Portal Learner</Link>
       </footer>
 
       <style>{`@media(max-width:840px){.landing-nav-links{display:none!important}}`}</style>

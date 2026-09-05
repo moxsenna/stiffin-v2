@@ -193,9 +193,28 @@ export function LifecycleStrip({ stages, currentIndex }: { stages: string[]; cur
 
 export function Wordmark({ flow, class: isClass }: { flow?: boolean; class?: boolean }) {
   return (
-    <div className="wordmark">
-     PROMOTOR<span className="wordmark-dot">·</span>
-     {flow ? 'FLOW' : isClass ? 'CLASS' : 'PLATFORM'}
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <img
+        src="/images/ralivo-logo.webp"
+        alt="Ralivo"
+        width={96}
+        height={26}
+        style={{ height: '26px', width: 'auto', display: 'block' }}
+      />
+      <span
+        style={{
+          fontSize: '10px',
+          fontWeight: 800,
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+          padding: '2px 6px',
+          borderRadius: '4px',
+          backgroundColor: flow ? 'rgba(5, 150, 105, 0.1)' : 'rgba(37, 99, 235, 0.1)',
+          color: flow ? '#059669' : '#2563EB',
+        }}
+      >
+        {flow ? 'FLOW' : isClass ? 'CLASS' : 'APP'}
+      </span>
     </div>
- );
+  );
 }

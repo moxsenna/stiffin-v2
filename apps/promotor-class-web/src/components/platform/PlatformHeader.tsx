@@ -49,31 +49,28 @@ export function PlatformHeader() {
             color: 'var(--color-text-main)',
           }}
         >
+          <img
+            src="/images/ralivo-logo.webp"
+            alt="Ralivo"
+            width={120}
+            height={32}
+            style={{ height: '32px', width: 'auto', display: 'block' }}
+          />
           <span
             style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              backgroundColor: 'var(--color-primary)',
-              color: '#FFFFFF',
-              display: 'grid',
-              placeItems: 'center',
+              fontSize: '11px',
               fontWeight: 800,
-              fontSize: '16px',
-              letterSpacing: '-0.02em',
-              boxShadow: '0 2px 6px rgba(40, 99, 68, 0.25)',
+              color: 'var(--color-primary)',
+              backgroundColor: 'rgba(37, 99, 235, 0.08)',
+              border: '1px solid rgba(37, 99, 235, 0.2)',
+              padding: '2px 8px',
+              borderRadius: '6px',
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
             }}
           >
-            P
+            Class
           </span>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontWeight: 800, fontSize: '16px', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-              PromotorClass
-            </span>
-            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 550 }}>
-              Client Education OS
-            </span>
-          </div>
         </Link>
 
         {/* Desktop Navigation Links */}

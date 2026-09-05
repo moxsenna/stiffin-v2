@@ -3,8 +3,8 @@ import { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'PromotorClass',
-    short_name: 'PromotorClass',
+    name: 'Ralivo Class',
+    short_name: 'Ralivo Class',
     description: 'Client Education OS & Intent Signal Engine untuk Promotor STIFIn',
     start_url: '/learn',
     scope: '/',

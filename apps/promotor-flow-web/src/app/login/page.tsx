@@ -64,11 +64,11 @@ function LoginForm() {
        <div style={{ marginBottom: 28 }}>
          <Wordmark flow />
          <h1 style={{ font: '800 26px/1.1 var(--font-sans)', letterSpacing: '-0.03em', marginTop: 18 }}>
-           Masuk ke PromotorFlow
-          </h1>
+           Masuk ke Ralivo Flow
+         </h1>
          <p style={{ font: '400 13px/1.5 var(--font-sans)', color: 'var(--muted-strong)', marginTop: 6 }}>
-           Sistem eksekusi pipeline harian promotor STIFIn
-          </p>
+           Sistem eksekusi pipeline harian promotor
+         </p>
        </div>
 
        <div style={{ background: 'var(--surface)', border: 'var(--sep-strong)', padding: 22 }}>

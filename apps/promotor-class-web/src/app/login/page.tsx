@@ -64,11 +64,11 @@ function LoginForm() {
        <div style={{ marginBottom: 28 }}>
          <Wordmark class />
          <h1 style={{ font: '800 26px/1.1 var(--font-sans)', letterSpacing: '-0.03em', marginTop: 18 }}>
-           Masuk ke PromotorClass
-          </h1>
+           Masuk ke Ralivo Class
+         </h1>
          <p style={{ font: '400 13px/1.5 var(--font-sans)', color: 'var(--muted-strong)', marginTop: 6 }}>
-           Platform edukasi dan storefront materi STIFIn
-          </p>
+           Platform edukasi dan storefront materi promotor
+         </p>
        </div>
 
        <div style={{ background: 'var(--surface)', border: 'var(--sep-strong)', padding: 22 }}>
