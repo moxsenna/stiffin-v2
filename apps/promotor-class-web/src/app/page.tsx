@@ -213,9 +213,9 @@ export default function RootPage() {
       <section id="faq" style={{ padding: '48px 24px', maxWidth: 800, margin: '0 auto', borderTop: '1px solid var(--line)' }}>
         <h2 style={{ fontSize: 24, fontWeight: 900, textAlign: 'center', marginBottom: 24 }}>Pertanyaan Umum</h2>
         {[
-          { q: 'Apakah butuh kartu kredit untuk mulai?', a: 'Tidak. Paket Talira Free bisa langsung digunakan tanpa kartu kredit.' },
-          { q: 'Berapa biaya langganan Talira Solo?', a: 'Paket Talira Solo berharga Rp 149.000/bulan atau Rp 1.490.000/tahun (hemat 17%). Pembayaran didukung transfer bank dan QRIS otomatis via gateway resmi. Terdapat biaya transaksi flat Rp3.000 per penjualan program kelas berbayar tanpa potongan persentase komisi.' },
-          { q: 'Apakah langganan mencakup PromotorFlow juga?', a: 'Ya. Talira adalah ekosistem satu pintu: Talira Class (LMS & Program Edukasi) dan Talira Flow (CRM & Pipeline WhatsApp) aktif bersama dalam satu akun langganan Anda.' },
+          { q: 'Apakah butuh kartu kredit untuk mulai?', a: 'Tidak. Paket Ralivo Free bisa langsung digunakan tanpa kartu kredit.' },
+          { q: 'Berapa biaya langganan Ralivo Solo?', a: 'Paket Ralivo Solo berharga Rp 149.000/bulan atau Rp 1.190.000/tahun (hemat s/d 33%). Pembayaran didukung transfer bank dan QRIS otomatis via gateway resmi. Terdapat biaya transaksi flat Rp3.000 per penjualan program kelas berbayar tanpa potongan persentase komisi.' },
+          { q: 'Apakah langganan mencakup Ralivo Flow juga?', a: 'Ya. Ralivo adalah ekosistem satu pintu: Ralivo Class (LMS & Program Edukasi) dan Ralivo Flow (CRM & Pipeline WhatsApp) aktif bersama dalam satu akun langganan Anda.' },
           { q: 'Apakah video materi harus di YouTube?', a: 'Ya, Anda dapat menggunakan video YouTube unlisted atau publik via embed resmi — tanpa biaya hosting video tambahan.' },
           { q: 'Bagaimana keamanan data peserta?', a: 'Data peserta diisolasi per organisasi promotor secara multi-tenant terenkripsi dengan format nomor E.164 terstandardisasi.' },
         ].map((f) => (

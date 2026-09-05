@@ -142,7 +142,7 @@ export function createCommerceRepository(db: NodePgDatabase): CommerceRepository
           buyerName: r.buyerName ?? 'Promotor Subscription',
           buyerPhone: r.buyerPhone ?? '-',
           buyerEmail: r.buyerEmail,
-          programTitle: r.programTitle ?? (r.order.orderType === 'SUBSCRIPTION_PURCHASE' ? 'Langganan Talira Solo' : '-'),
+          programTitle: r.programTitle ?? (r.order.orderType === 'SUBSCRIPTION_PURCHASE' ? 'Langganan Ralivo Solo' : '-'),
           paymentStatus: r.paymentStatus,
           paymentMethod: r.paymentMethod,
           platformFee: (r.platformFeeStatus === 'BILLABLE' || r.platformFeeStatus === 'BILLED') ? (r.platformFeeAmount ?? 3000) : 0,

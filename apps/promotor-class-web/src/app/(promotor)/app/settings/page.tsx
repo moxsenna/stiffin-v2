@@ -70,7 +70,7 @@ export default function SettingsPage() {
             Pengaturan Akun & Langganan
           </h1>
           <div style={{ fontSize: '13px', color: '#6B7280' }}>
-            Kelola paket langganan Talira, kapasitas akun, dan bantuan dukungan
+            Kelola paket langganan Ralivo, kapasitas akun, dan bantuan dukungan
           </div>
         </div>
 
@@ -99,7 +99,7 @@ export default function SettingsPage() {
                     marginBottom: '8px',
                   }}
                 >
-                  PAKET AKTIF: {planAccess?.plan?.name?.toUpperCase() || 'TALIRA FREE'}
+                  PAKET AKTIF: {planAccess?.plan?.name?.toUpperCase() || 'RALIVO FREE'}
                 </span>
                 <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', margin: 0 }}>
                   Kapasitas & Penggunaan Akun
@@ -172,7 +172,7 @@ export default function SettingsPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
                 <div>
                   <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', marginBottom: '6px' }}>
-                    Tingkatkan ke Talira Solo
+                    Tingkatkan ke Ralivo Solo
                   </h3>
                   <p style={{ fontSize: '13px', color: '#4B5563', maxWidth: '480px', lineHeight: 1.5, margin: 0 }}>
                     Buka akses ke fitur penjualan <strong>Kelas Berbayar</strong>, kustomisasi branding storefront penuh, hingga 10 program terpublikasi, 500 peserta aktif, dan 2.500 kontak CRM.
@@ -275,7 +275,7 @@ export default function SettingsPage() {
               Membutuhkan bantuan teknis, pertanyaan seputar pembayaran, atau konsultasi pengaturan program?
             </p>
             <a
-              href="https://wa.me/6281234567890?text=Halo%20Tim%20Support%20Talira,%20saya%20butuh%20bantuan%20terkait%20akun%20saya"
+              href="https://wa.me/6281234567890?text=Halo%20Tim%20Support%20Ralivo,%20saya%20butuh%20bantuan%20terkait%20akun%20saya"
               target="_blank"
               rel="noopener noreferrer"
               style={{

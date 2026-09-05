@@ -38,6 +38,8 @@ const TALIRA_CONTROLLED_DOMAINS = [
   'stiffin.id',
   'promotor.id',
   'talira.id',
+  'ralivo.id',
+  'ralivo.com',
   'appvibe.biz.id',
   'moxsenna.workers.dev',
 ];
@@ -423,7 +425,7 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
         paycoreOrder = await deps.paycoreClient.createOrder({
           externalOrderId,
           productKey: `TALIRA_SOLO_${input.billingCycle}`,
-          description: `Langganan Talira Solo (${input.billingCycle === 'YEARLY' ? '1 Tahun' : '1 Bulan'})`,
+          description: `Langganan Ralivo Solo (${input.billingCycle === 'YEARLY' ? '1 Tahun' : '1 Bulan'})`,
           amount,
           currency: 'IDR',
           customer: {

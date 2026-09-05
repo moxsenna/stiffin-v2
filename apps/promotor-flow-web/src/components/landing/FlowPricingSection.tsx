@@ -55,7 +55,7 @@ export const FlowPricingSection: React.FC = () => {
             Investasi Terjangkau dengan Hasil Nyata
           </h2>
           <p style={{ fontSize: '15.5px', color: 'var(--color-text-secondary, #4B5563)', lineHeight: 1.6 }}>
-            Langganan Talira mencakup <strong>Talira Flow</strong> (CRM & Pipeline WhatsApp) dan <strong>Talira Class</strong> (LMS & Program Edukasi).
+            Langganan Ralivo mencakup <strong>Ralivo Flow</strong> (CRM & Pipeline WhatsApp) dan <strong>Ralivo Class</strong> (LMS & Program Edukasi).
           </p>
 
           {/* Billing Cycle Toggle */}
@@ -221,7 +221,7 @@ export const FlowPricingSection: React.FC = () => {
           >
             <div>
               <div style={{ fontSize: '18px', fontWeight: 800, color: '#111827', marginBottom: '6px' }}>
-                Talira Free
+                Ralivo Free
               </div>
               <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '20px', lineHeight: 1.5 }}>
                 Mulai kelola prospek dan kenalkan materi edukasi pengantar Anda tanpa biaya investasi awal.
@@ -308,12 +308,12 @@ export const FlowPricingSection: React.FC = () => {
                 whiteSpace: 'nowrap',
               }}
             >
-              {includeUpsell ? '★ Paling Populer · Ekosistem Lengkap' : 'PromotorFlow Solo Standalone'}
+              {includeUpsell ? '★ Paling Populer · Ekosistem Lengkap' : 'Ralivo Flow Solo Standalone'}
             </div>
 
             <div>
               <div style={{ fontSize: '18px', fontWeight: 800, color: '#111827', marginBottom: '6px' }}>
-                {includeUpsell ? 'Talira Solo — Ekosistem Lengkap' : 'PromotorFlow Solo'}
+                {includeUpsell ? 'Ralivo Solo — Ekosistem Lengkap' : 'Ralivo Flow Solo'}
               </div>
               <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '20px', lineHeight: 1.5 }}>
                 {includeUpsell

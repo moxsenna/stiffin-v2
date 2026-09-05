@@ -56,7 +56,7 @@ export function PricingSection() {
             Investasi transparan untuk pertumbuhan bisnis edukasi Anda.
           </h2>
           <p style={{ fontSize: '16px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-            Talira adalah satu ekosistem: <strong>Talira Class</strong> (LMS & Program Edukasi) dan <strong>Talira Flow</strong> (CRM & Pipeline Prospek) sudah termasuk bersama dalam satu paket.
+            Ralivo adalah satu ekosistem: <strong>Ralivo Class</strong> (LMS & Program Edukasi) dan <strong>Ralivo Flow</strong> (CRM & Pipeline Prospek) sudah termasuk bersama dalam satu paket.
           </p>
 
           {/* Billing Cycle Switcher */}
@@ -224,7 +224,7 @@ export function PricingSection() {
           >
             <div>
               <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '6px' }}>
-                Talira Free
+                Ralivo Free
               </div>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
                 Mulai validasi materi edukasi pengantar Anda tanpa biaya investasi awal.
@@ -255,7 +255,7 @@ export function PricingSection() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)' }}>
                   <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>✓</span>
-                  Koneksi Terpadu Talira Class & Flow
+                  Koneksi Terpadu Ralivo Class & Flow
                 </div>
               </div>
             </div>
@@ -313,12 +313,12 @@ export function PricingSection() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {includeUpsell ? '★ Rekomendasi Utama · Ekosistem Lengkap' : 'PromotorClass Solo Standalone'}
+              {includeUpsell ? '★ Rekomendasi Utama · Ekosistem Lengkap' : 'Ralivo Class Solo Standalone'}
             </div>
 
             <div>
               <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '6px' }}>
-                {includeUpsell ? 'Talira Solo — Ekosistem Lengkap' : 'PromotorClass Solo'}
+                {includeUpsell ? 'Ralivo Solo — Ekosistem Lengkap' : 'Ralivo Class Solo'}
               </div>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
                 {includeUpsell
