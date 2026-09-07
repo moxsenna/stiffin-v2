@@ -14,6 +14,14 @@ export interface AppendActivityInput {
   occurredAt?: string;
 }
 
+export interface CreateNoteInput {
+  organizationId: string;
+  contactId: string;
+  body: string;
+  occurredAt?: Date | string;
+  actor?: AuthenticatedActor | null;
+}
+
 export interface ListActivitiesOrgOptions {
   limit?: number;
   before?: string;
@@ -25,7 +33,14 @@ export interface ActivityRepository {
     actor: AuthenticatedActor | null | undefined,
     input: AppendActivityInput
   ): Promise<ActivityRow>;
-  listByContact(ctx: OrganizationContext, contactId: string, limit?: number): Promise<ActivityRow[]>;
+  createNote(input: CreateNoteInput): Promise<{
+    id: string;
+    occurredAt: string;
+    eventType: string;
+    metadata: Record<string, unknown>;
+    metadataJson: Record<string, unknown>;
+  }>;
+  listByContact(ctx: OrganizationContext, contactId: string, limit?: number): Promise<(ActivityRow & { metadata?: unknown })[]>;
   listByOrg(ctx: OrganizationContext, opts?: ListActivitiesOrgOptions): Promise<ActivityRow[]>;
 }
 
@@ -91,11 +106,38 @@ export function createActivityRepository(db: DbHandle): ActivityRepository {
       return rows[0];
     },
 
+    async createNote(input) {
+      if (!input.organizationId) {
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
+      }
+      const ctx: OrganizationContext = { organizationId: input.organizationId };
+      const occurredAtStr = input.occurredAt
+        ? input.occurredAt instanceof Date
+          ? input.occurredAt.toISOString()
+          : input.occurredAt
+        : new Date().toISOString();
+
+      const row = await this.append(ctx, input.actor ?? null, {
+        contactId: input.contactId,
+        eventType: 'NOTE_ADDED',
+        metadataJson: { note: input.body },
+        occurredAt: occurredAtStr,
+      });
+
+      return {
+        id: row.id,
+        occurredAt: row.occurredAt,
+        eventType: row.eventType,
+        metadata: row.metadataJson as Record<string, unknown>,
+        metadataJson: row.metadataJson as Record<string, unknown>,
+      };
+    },
+
     async listByContact(ctx, contactId, limit = 100) {
       if (!isOrganizationContext(ctx)) {
         throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
-      return db
+      const rows = await db
         .select()
         .from(activities)
         .where(
@@ -106,6 +148,11 @@ export function createActivityRepository(db: DbHandle): ActivityRepository {
         )
         .orderBy(desc(activities.occurredAt))
         .limit(limit);
+
+      return rows.map((r) => ({
+        ...r,
+        metadata: r.metadataJson,
+      }));
     },
 
     async listByOrg(ctx, opts = {}) {

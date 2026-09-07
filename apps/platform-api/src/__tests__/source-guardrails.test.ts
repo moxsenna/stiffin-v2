@@ -9,9 +9,9 @@ import { createHash } from 'node:crypto';
  * 1. Runtime Worker code (src/) must never reference DATABASE_URL —
  *    that env var is migration tooling ONLY (owner role). The Worker
  *    reads env.HYPERDRIVE.connectionString exclusively.
- * 2. packages/contracts deliberate B3/B6/B6.1/B4/B5/V0.1 Hardening re-baseline (includes PromotorClass content models, Flow DTOs, B4 Registration & Enrollment, B5 Learning Engine, and V0.1 Hardening schemas).
+ * 2. packages/contracts deliberate B3/B6/B6.1/B4/B5/V0.1 Hardening & C2 Flow Notes re-baseline.
  */
-const CONTRACTS_BASELINE_HASH = '9c79474efbd04643827d1527a5bade65b7d6497835800b6d697d536faec14c92';
+const CONTRACTS_BASELINE_HASH = 'bdb4e825127db9e6baefe0eaca0ec8df2eae80ebc780df1b8bd372ea0ba4f91e';
 
 describe('B1 — source guardrails', () => {
   it('runtime src/ code never references DATABASE_URL', () => {

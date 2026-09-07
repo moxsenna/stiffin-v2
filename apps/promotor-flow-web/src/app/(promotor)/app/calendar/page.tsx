@@ -6,6 +6,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader, SectionHead, EmptyState, ErrorState, LoadingRows } from '@/components/ui';
 import { bookingQueries, contactQueries, clock } from '@/lib/container';
 import { FlowBooking } from '@promotor/promotor-flow-fixtures';
+import { CalendarButtons } from '@/components/calendar/CalendarButtons';
 
 type AgendaItem = { booking: FlowBooking; contactName: string };
 
@@ -78,12 +79,16 @@ export default function CalendarPage() {
       {bookings && visible.length >0 && (
         <>
          <SectionHead label="Booking" count={`${visible.length}`} />
-         {visible.map(({ booking, contactName }) =>(
-            <button
+         {visible.map(({ booking, contactName }) => (
+            <div
               key={booking.id}
-              type="button"
               className="agenda-row"
-              onClick={() =>router.push(`/app/contacts/${booking.contactId}`)}
+              onClick={() => router.push(`/app/contacts/${booking.contactId}`)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') router.push(`/app/contacts/${booking.contactId}`);
+              }}
             >
              <div className="agenda-time">{clock.formatTime(booking.startAt)}</div>
              <div className="agenda-body">
@@ -96,8 +101,17 @@ export default function CalendarPage() {
                    {booking.paymentStatus === 'PAID' ? 'Lunas (PAID)' : 'DP belum dibayar'}
                   </span>
                </div>
+               <CalendarButtons
+                 event={{
+                   title: `${booking.serviceTitle} — ${contactName}`,
+                   startAt: booking.startAt,
+                   endAt: booking.endAt,
+                   details: 'Jadwal dari Ralivo Flow',
+                   location: (booking as any).locationText ?? booking.locationAddress ?? undefined,
+                 }}
+               />
              </div>
-           </button>
+           </div>
          ))}
         </>
      )}

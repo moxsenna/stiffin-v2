@@ -15,8 +15,8 @@ export const FlowFaqSection: React.FC = () => {
       answer: 'Tidak perlu. PromotorFlow dibangun dengan teknologi Progressive Web App (PWA) modern. Anda dapat membukanya langsung melalui browser di smartphone, tablet, maupun laptop. Anda juga dapat menambahkan icon PromotorFlow ke Home Screen ponsel dengan 1-klik untuk pengalaman native tanpa memakan memori penyimpanan.',
     },
     {
-      question: 'Bagaimana integrasi PromotorFlow dengan platform PromotorClass?',
-      answer: 'Sangat mulus! Jika Anda mengaktifkan paket Ekosistem Lengkap, setiap aktivitas belajar peserta di modul PromotorClass (seperti penyelesaian video materi atau lembar refleksi) akan otomatis mengirimkan sinyal intent (Hot/Warm/Cold) ke antrean tindakan Hari Ini di PromotorFlow Anda secara real-time.',
+      question: 'Apa itu Ralivo Class dan bagaimana integrasinya dengan Ralivo Flow?',
+      answer: 'Ralivo Class adalah Learning Management System (LMS) khusus promotor STIFIn untuk membangun kelas online dan portal edukasi mandiri. Integrasinya berjalan otomatis: saat peserta belajar dan mengisi refleksi pengunci di Ralivo Class, sistem mengkalkulasi skor kesiapan mereka (Intent HOT/WARM/COLD). Peserta berstatus HOT langsung dialirkan ke antrean tindakan Hari Ini (Today Work Queue) di Ralivo Flow lengkap dengan draf pesan personal agar Anda bisa segera closing sesi tes via WhatsApp.',
     },
     {
       question: 'Apakah link booking jadwal bisa saya pasang di bio Instagram atau pesan otomatis WhatsApp?',

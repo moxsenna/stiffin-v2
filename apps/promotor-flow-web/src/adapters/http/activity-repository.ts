@@ -20,14 +20,21 @@ export class HttpActivityRepository implements ActivityRepositoryPort {
   }
 
   private mapToFlowActivity(a: any): FlowActivity {
+    const meta = (a.metadataJson ?? a.metadata ?? {}) as Record<string, any>;
+    const title =
+      a.title ??
+      (a.eventType === 'NOTE_ADDED'
+        ? 'Catatan'
+        : a.eventType ?? 'Aktivitas');
+    const detail = a.detail ?? meta.note ?? meta.text ?? undefined;
     return {
       id: a.id,
       organizationId: a.organizationId,
       contactId: a.contactId,
-      title: a.title,
-      detail: a.detail ?? undefined,
+      title,
+      detail,
       type: (a.eventType || a.type || 'NOTE_ADDED') as FlowActivity['type'],
-      timestamp: a.createdAt ?? new Date().toISOString(),
+      timestamp: a.occurredAt ?? a.createdAt ?? new Date().toISOString(),
     };
   }
 }

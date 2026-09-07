@@ -1,4 +1,5 @@
 import { ContactRepositoryPort } from './ports';
+import { ActivityRepositoryPort } from '../activities/ports';
 import { FlowContact } from '@promotor/promotor-flow-fixtures';
 import { normalizePhone } from '@promotor/platform-core';
 
@@ -16,7 +17,10 @@ export interface CreateContactResult {
   isExisting: boolean;
 }
 
-export function createContactCommands(repo: ContactRepositoryPort) {
+export function createContactCommands(
+  repo: ContactRepositoryPort,
+  activityRepo?: ActivityRepositoryPort
+) {
   return {
     async createContact(input: CreateContactInput): Promise<CreateContactResult> {
       const phoneE164 = normalizePhone(input.rawPhone);
@@ -54,6 +58,36 @@ export function createContactCommands(repo: ContactRepositoryPort) {
 
     async updateContactIdentity(contactId: string, updates: Partial<FlowContact>): Promise<FlowContact> {
       return repo.updateContact(contactId, updates);
+    },
+
+    async addContactNote(contactId: string, body: string, organizationId?: string): Promise<any> {
+      const trimmed = body ? body.trim() : '';
+      if (!trimmed) {
+        throw new Error('Catatan tidak boleh kosong.');
+      }
+      if (trimmed.length > 1000) {
+        throw new Error('Catatan maksimal 1000 karakter.');
+      }
+
+      if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+        if (activityRepo) {
+          await activityRepo.appendActivity({
+            organizationId: organizationId || '',
+            contactId,
+            title: 'Catatan',
+            detail: trimmed,
+            timestamp: new Date().toISOString(),
+            type: 'NOTE_ADDED',
+          });
+        }
+        return { success: true };
+      }
+
+      if (repo.addNote) {
+        return await repo.addNote(contactId, trimmed);
+      }
+
+      throw new Error('Metode addNote tidak didukung pada repository kontak ini.');
     },
   };
 }

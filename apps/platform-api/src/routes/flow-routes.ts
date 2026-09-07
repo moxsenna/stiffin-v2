@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, isNull } from 'drizzle-orm';
 import type { AppEnv } from '../app';
 import { DomainError } from '../core/errors';
 import {
@@ -27,13 +27,15 @@ import {
   WhatsAppOpenedRequestSchema,
   ConfirmWhatsAppSentRequestSchema,
   ReplaceAvailabilityRulesRequestSchema,
+  CreateContactNoteRequestSchema,
 } from '@promotor/contracts';
-import { nextActions } from '../db/schema';
+import { contacts, nextActions } from '../db/schema';
 import { createContactFlowService } from '../services/contact-flow-service';
 import { createContactLifecycleService } from '../services/contact-lifecycle-service';
 import { createNextActionService } from '../services/next-action-service';
 import { createBookingService } from '../services/booking-service';
 import { createServiceRepository } from '../repositories/service-repository';
+import { createActivityRepository } from '../repositories/activity-repository';
 import { createTemplateService } from '../services/template-service';
 import { createAftercareService } from '../services/aftercare-service';
 import { createMessagingService } from '../services/messaging-service';
@@ -168,6 +170,40 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
     return c.json({ activities }, 200);
   });
 
+  flow.post('/contacts/:id/notes', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, actor, db } = getRequestContext(c);
+    const contactId = c.req.param('id');
+    const raw = await c.req.json().catch(() => ({}));
+    const body = parseBody(CreateContactNoteRequestSchema, raw);
+
+    const [existingContact] = await db
+      .select({ id: contacts.id })
+      .from(contacts)
+      .where(
+        and(
+          eq(contacts.id, contactId),
+          eq(contacts.organizationId, ctx.organizationId),
+          isNull(contacts.deletedAt)
+        )
+      )
+      .limit(1);
+
+    if (!existingContact) {
+      throw new DomainError('NOT_FOUND', 'Active tenant contact not found');
+    }
+
+    const activityRepo = createActivityRepository(db);
+    const activity = await activityRepo.createNote({
+      organizationId: ctx.organizationId,
+      contactId,
+      body: body.body,
+      occurredAt: new Date(),
+      actor,
+    });
+    return c.json({ activity }, 201);
+  });
+
   flow.get('/contacts/:id/primary-next-action', async (c) => {
     c.header('Cache-Control', 'no-store');
     const { ctx, db } = getRequestContext(c);
@@ -220,7 +256,7 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
       .where(and(...conditions))
       .orderBy(desc(nextActions.createdAt));
 
-    return c.json({ nextActions: rows }, 200);
+    return c.json({ nextActions: rows, actions: rows }, 200);
   });
 
   flow.post('/next-actions', async (c) => {
@@ -324,7 +360,12 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
     const { ctx, actor, db } = getRequestContext(c);
     const actionId = c.req.param('id');
     const raw = await c.req.json().catch(() => ({}));
-    const body = parseBody(CompleteAftercareActionRequestSchema, raw);
+    const rawObj = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
+    const normalizedRaw = {
+      outcome: rawObj.outcome,
+      notes: rawObj.notes ?? rawObj.outcomeNotes ?? null,
+    };
+    const body = parseBody(CompleteAftercareActionRequestSchema, normalizedRaw);
     const service = createAftercareService(db);
     const result = await service.completeAftercare(ctx, actionId, body, actor);
     return c.json(result, 200);

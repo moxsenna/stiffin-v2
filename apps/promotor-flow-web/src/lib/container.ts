@@ -71,7 +71,10 @@ const contactLookupFn = async (contactId: string) => {
 
 // Export application domain services (queries & commands)
 export const contactQueries = createContactQueries(contactRepo);
-export const contactCommands = createContactCommands(contactRepo);
+export const contactCommands = createContactCommands(contactRepo, activityRepo);
+export const addContactNoteCommand = async (contactId: string, body: string, organizationId?: string) => {
+  return contactCommands.addContactNote(contactId, body, organizationId);
+};
 
 export const lifecycleQueries = createLifecycleQueries();
 export const lifecycleCommands = createLifecycleCommands(lifecycleRepo, activityRepo);

@@ -33,6 +33,7 @@ import type {
   ConfirmWhatsAppSentRequest,
   AvailabilityRuleDto,
   ReplaceAvailabilityRulesRequest,
+  CreateContactNoteRequest,
   PublicSlotsQuery,
   CreatePublicBookingRequest,
   PublicRegisterLearnerRequest,
@@ -617,6 +618,10 @@ export class PromotorFlowApiClient {
 
   async getContactActivities(id: string): Promise<{ activities: any[] }> {
     return this.client.get(`/api/v1/flow/contacts/${encodeURIComponent(id)}/activities`);
+  }
+
+  async addContactNote(id: string, data: CreateContactNoteRequest): Promise<{ activity: any }> {
+    return this.client.post(`/api/v1/flow/contacts/${encodeURIComponent(id)}/notes`, data);
   }
 
   async getContactPrimaryNextAction(id: string): Promise<{ nextAction: any | null }> {

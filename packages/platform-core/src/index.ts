@@ -109,3 +109,58 @@ export function generateOrderReference(prefix = 'TLR'): string {
   return `${prefix}-${code}`;
 }
 
+export interface CalendarEvent {
+  title: string;
+  startAt: string;
+  endAt?: string | null;
+  details?: string | null;
+  location?: string | null;
+}
+
+function toGoogleStamp(iso: string): string {
+  return new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+}
+
+function toIcsStamp(iso: string): string {
+  return new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+}
+
+function escapeIcs(text: string): string {
+  return text.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+}
+
+export function buildGoogleCalendarUrl(ev: CalendarEvent): string {
+  const end = ev.endAt ?? new Date(new Date(ev.startAt).getTime() + 60 * 60_000).toISOString();
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: ev.title,
+    dates: `${toGoogleStamp(ev.startAt)}/${toGoogleStamp(end)}`,
+  });
+  if (ev.details) params.set('details', ev.details);
+  if (ev.location) params.set('location', ev.location);
+  return `https://calendar.google.com/calendar/render?${params.toString().replace(/\+/g, '%20')}`;
+}
+
+export function buildIcsContent(ev: CalendarEvent): string {
+  const end = ev.endAt ?? new Date(new Date(ev.startAt).getTime() + 60 * 60_000).toISOString();
+  const slug = ev.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Ralivo Flow//Calendar Export//ID',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:ralivo-${toIcsStamp(ev.startAt)}-${slug}@ralivo`,
+    `DTSTAMP:${toIcsStamp(new Date().toISOString())}`,
+    `DTSTART:${toIcsStamp(ev.startAt)}`,
+    `DTEND:${toIcsStamp(end)}`,
+    `SUMMARY:${escapeIcs(ev.title)}`,
+    ev.details ? `DESCRIPTION:${escapeIcs(ev.details)}` : null,
+    ev.location ? `LOCATION:${escapeIcs(ev.location)}` : null,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].filter((l): l is string => l !== null);
+  return lines.join('\r\n');
+}
+
+

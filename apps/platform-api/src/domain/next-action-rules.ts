@@ -254,6 +254,8 @@ export function calculateRemindBookingRule(
   };
 }
 
+export const DEFAULT_AFTERCARE_TITLE = 'Tanyakan penerapan hasil tes di rumah/sekolah (D+7)';
+
 /**
  * Canonical idempotency key builder for NA-009 Aftercare.
  */
@@ -275,6 +277,7 @@ export function calculateAftercareRule(
   dueAt: Date;
   priority: number;
   idempotencyKey: string;
+  title: string;
 } {
   const compMs = (typeof completedAt === 'string' ? new Date(completedAt) : completedAt).getTime();
   return {
@@ -282,6 +285,7 @@ export function calculateAftercareRule(
     dueAt: new Date(compMs + 7 * 24 * 3600_000),
     priority: BASE_PRIORITIES.AFTERCARE,
     idempotencyKey: buildAftercareIdempotencyKey(bookingId),
+    title: DEFAULT_AFTERCARE_TITLE,
   };
 }
 
