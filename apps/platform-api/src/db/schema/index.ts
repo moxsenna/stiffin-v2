@@ -30,6 +30,7 @@ export * from './reflection-responses';
 export * from './learning-events';
 export * from './learning-signals';
 export * from './learner-sessions';
+export * from './learner-otp-challenges';
 export * from './integration-outbox';
 export * from './organization-subscriptions';
 export * from './commerce-orders';

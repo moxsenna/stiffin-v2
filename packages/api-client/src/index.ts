@@ -368,6 +368,17 @@ export class PromotorClassContentApiClient {
     return this.client.post('/api/v1/public/learner/redeem-token', payload);
   }
 
+  async requestLearnerOtp(phoneRaw: string): Promise<{ expiresAt: string; devCode?: string }> {
+    return this.client.post('/api/v1/learner/auth/otp/request', { phoneRaw });
+  }
+
+  async verifyLearnerOtp(
+    phoneRaw: string,
+    code: string
+  ): Promise<{ contactId: string; organizationId: string; workspaceSlug: string }> {
+    return this.client.post('/api/v1/learner/auth/otp/verify', { phoneRaw, code });
+  }
+
   async getLearnerPrograms(): Promise<{ programs: Array<CanonicalEnrollmentDto & { programTitle: string; programSlug: string }> }> {
     return this.client.get('/api/v1/learner/programs');
   }

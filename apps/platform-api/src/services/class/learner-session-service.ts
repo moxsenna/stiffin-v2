@@ -12,6 +12,10 @@ export interface LearnerSessionService {
     contactId: string;
     organizationId: string;
   }>;
+  createSessionForContact(organizationId: string, contactId: string): Promise<{
+    sessionToken: string;
+    session: LearnerSessionRow;
+  }>;
   validateSession(rawSessionToken: string): Promise<{
     isValid: boolean;
     session?: LearnerSessionRow;
@@ -69,6 +73,23 @@ export function createLearnerSessionService(
         contactId: tokenRow.contactId,
         organizationId: tokenRow.organizationId,
       };
+    },
+
+    async createSessionForContact(organizationId: string, contactId: string) {
+      if (!organizationId || !contactId) {
+        throw new DomainError('VALIDATION_ERROR', 'organizationId dan contactId wajib diisi');
+      }
+      const now = getNow();
+      const rawSessionToken = 'lsess_' + crypto.randomBytes(32).toString('hex');
+      const sessionTokenHash = sha256(rawSessionToken);
+      const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const session = await sessionRepo.createSession({
+        organizationId,
+        contactId,
+        tokenHash: sessionTokenHash,
+        expiresAt,
+      });
+      return { sessionToken: rawSessionToken, session };
     },
 
     async validateSession(rawSessionToken: string) {

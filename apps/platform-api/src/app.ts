@@ -21,12 +21,16 @@ import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { createEnrollmentService } from './services/class/enrollment-service';
 import { createLearningEngineService } from './services/class/learning-engine-service';
 import { createLearnerSessionService } from './services/class/learner-session-service';
+import { createLearnerOtpService } from './services/class/learner-otp-service';
+import { createFonnteOtpSender, createLogOtpSender } from './services/class/otp-sender';
 import { learnerAuthMiddleware } from './middleware/learner-auth-middleware';
 import {
   PublicSlotsQuerySchema,
   CreatePublicBookingRequestSchema,
   PublicRegisterLearnerRequestSchema,
   RedeemLearnerTokenRequestSchema,
+  RequestLearnerOtpSchema,
+  VerifyLearnerOtpSchema,
   SubmitReflectionRequestSchema,
   UpdateLessonPositionRequestSchema,
   RecordLearningEventRequestSchema,
@@ -48,14 +52,22 @@ export type AppEnv = {
   Variables: { db: NodePgDatabase; auth: AuthInstance; authContext: AuthContext | null };
 };
 
-function domainErrorStatus(err: DomainError): 400 | 401 | 402 | 403 | 404 | 409 | 500 {
+function domainErrorStatus(err: DomainError): 400 | 401 | 402 | 403 | 404 | 409 | 429 | 500 | 503 {
   switch (err.code) {
     case 'NOT_FOUND':
+    case 'LEARNER_NOT_FOUND':
       return 404;
     case 'VALIDATION_ERROR':
     case 'INVALID_YOUTUBE_URL':
     case 'PROGRAM_NOT_PUBLISHED':
       return 400;
+    case 'OTP_INVALID':
+    case 'OTP_EXPIRED':
+      return 401;
+    case 'OTP_RATE_LIMITED':
+      return 429;
+    case 'OTP_DELIVERY_UNAVAILABLE':
+      return 503;
     case 'CONFLICT':
     case 'SLOT_UNAVAILABLE':
       return 409;
@@ -443,6 +455,80 @@ export function createApp(deps?: AppDependencies) {
 
   app.post('/api/v1/public/learner/redeem-token', handleRedeemToken);
   app.post('/api/v1/learner/auth/redeem', handleRedeemToken);
+
+  app.post('/api/v1/learner/auth/otp/request', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = RequestLearnerOtpSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', 'Nomor WhatsApp tidak valid');
+    }
+    const env = (c.env ?? {}) as Record<string, string | undefined>;
+    const channel = env.LEARNER_OTP_CHANNEL ?? 'log';
+    const appEnv = env.APP_ENV ?? 'development';
+    const isDev = appEnv === 'development' || appEnv === 'test';
+    let sender;
+    let devCode: string | undefined;
+    if (channel === 'fonnte') {
+      if (!env.FONNTE_TOKEN) {
+        throw new DomainError(
+          'OTP_DELIVERY_UNAVAILABLE',
+          'Layanan kode sedang tidak tersedia. Hubungi promotor Anda.'
+        );
+      }
+      sender = createFonnteOtpSender(env.FONNTE_TOKEN);
+    } else if (isDev) {
+      sender = {
+        async send(_phoneE164: string, code: string) {
+          devCode = code;
+        },
+      };
+    } else {
+      sender = createLogOtpSender();
+    }
+    const service = createLearnerOtpService(db, { sender });
+    const result = await service.requestChallenge({ phoneRaw: parsed.data.phoneRaw });
+    if (isDev) {
+      return c.json({ expiresAt: result.expiresAt, devCode: devCode ?? result.devCode }, 200);
+    }
+    return c.json({ expiresAt: result.expiresAt }, 200);
+  });
+
+  app.post('/api/v1/learner/auth/otp/verify', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = VerifyLearnerOtpSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', 'Kode verifikasi tidak valid');
+    }
+    const sessionService = createLearnerSessionService(db);
+    const service = createLearnerOtpService(db, {
+      createSession: (organizationId: string, contactId: string) =>
+        sessionService.createSessionForContact(organizationId, contactId),
+    });
+    const result = await service.verifyChallenge({
+      phoneRaw: parsed.data.phoneRaw,
+      code: parsed.data.code,
+    });
+
+    setCookie(c, 'promotor_learner_session', result.sessionToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'None',
+      path: '/',
+      maxAge: 30 * 24 * 3600,
+    });
+    return c.json(
+      {
+        contactId: result.contactId,
+        organizationId: result.organizationId,
+        workspaceSlug: result.workspaceSlug,
+      },
+      200
+    );
+  });
 
   app.post('/api/v1/learner/auth/logout', async (c) => {
     c.header('Cache-Control', 'no-store');
