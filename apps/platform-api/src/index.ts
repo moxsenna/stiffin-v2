@@ -60,7 +60,8 @@ export default {
       const sweepStart = performance.now();
       try {
         const sweepService = createInactivitySweepService(db);
-        const sweepResult = await sweepService.executeSweep({ batchSize: 100, maxPages: 10 });
+        const inactivityDays = Number(env?.INACTIVITY_SWEEP_DAYS ?? 7);
+        const sweepResult = await sweepService.executeSweep({ batchSize: 100, maxPages: 10, inactivityDays });
         logOperation({
           operation: 'SCHEDULED_INACTIVITY_SWEEP',
           result: sweepResult.errors.length === 0 ? 'SUCCESS' : 'PARTIAL',

@@ -9,7 +9,8 @@ import { getLearningSignalsQuery } from '@/modules/signals/queries';
 import { getContactsQuery } from '@/modules/contacts/queries';
 import { getReflectionsQuery } from '@/modules/reflections/queries';
 import { getEnrollmentsQuery } from '@/modules/enrollments/queries';
-import { LearningSignal, Contact, Reflection, Enrollment } from '@promotor/contracts';
+import { getPlatformApiClient } from '@/adapters';
+import { LearningSignal, Contact, Reflection, Enrollment, LearnerSummaryItem } from '@promotor/contracts';
 import { formatTimeAgo } from '@promotor/platform-core';
 
 type SignalWithAction = LearningSignal & {
@@ -17,6 +18,10 @@ type SignalWithAction = LearningSignal & {
   recommendedActionType?: string;
   metadata?: Record<string, unknown>;
 };
+
+function buildNudgeMessage(l: { name: string; programTitle: string }): string {
+  return `Halo Kak ${l.name} 😊 Semangat belajarnya! Terakhir Kakak berhenti di program "${l.programTitle}". Ada yang bisa saya bantu biar lancar lagi? Materinya menarik lho, tinggal sedikit lagi ✨`;
+}
 
 function signalTagClass(level: string): string {
   if (level === 'Minat tinggi') return 'tag tag-hot';
@@ -29,6 +34,7 @@ export default function PromotorHomePage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [enrollments] = useState<Enrollment[]>([]);
+  const [atRiskLearners, setAtRiskLearners] = useState<LearnerSummaryItem[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [whatsAppDraftContact, setWhatsAppDraftContact] = useState<Contact | null>(null);
@@ -37,18 +43,31 @@ export default function PromotorHomePage() {
 
   const isDevelopmentEnv = process.env.NODE_ENV === 'development';
 
+  const openWaSheet = ({ contactName, phoneE164, initialDraft }: { contactName: string; phoneE164?: string; initialDraft: string }) => {
+    setWhatsAppDraftContact({
+      id: `learner-atrisk-${Date.now()}`,
+      organizationId: '',
+      name: contactName,
+      phoneE164: phoneE164 || '',
+      createdAt: new Date().toISOString(),
+    });
+    setWhatsAppDraftMessage(initialDraft);
+  };
+
   const loadData = React.useCallback(async () =>{
     setLoadError(null);
     try {
-      const [sigData, conData, reflData, enrData] = await Promise.all([
+      const [sigData, conData, reflData, enrData, atRiskData] = await Promise.all([
         getLearningSignalsQuery(),
         getContactsQuery(),
         getReflectionsQuery(),
         getEnrollmentsQuery(),
+        getPlatformApiClient().listClassLearners({ learningStatus: 'AT_RISK' }).catch(() => ({ learners: [], total: 0 })),
       ]);
       setSignals(sigData as SignalWithAction[]);
       setContacts(conData);
       setReflections(reflData);
+      setAtRiskLearners(atRiskData?.learners ?? []);
       void enrData;
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Tidak dapat memuat sinyal belajar.');
@@ -162,6 +181,24 @@ export default function PromotorHomePage() {
           title="Tidak ada yang perlu perhatian"
           explanation="Sinyal belajar dari aktivitas peserta akan muncul di sini saat ada yang bisa ditindaklanjuti."
         />
+      )}
+
+      {(atRiskLearners.length > 0) && (
+        <section style={{ marginTop: 16 }}>
+          <SectionHead title="Learner Macet" subtitle={`Progres < 50% & tidak aktif — momen emas disapa via WA`} />
+          {atRiskLearners.map((l: any) => (
+            <div key={l.contactId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, border: '1px solid var(--border)', marginTop: 8 }}>
+              <div>
+                <strong style={{ font: '600 14px/1.3 var(--font-sans)' }}>{l.name}</strong>
+                <div className="kicker kicker-muted">{l.programTitle} · {l.progressPercent}% · macet {l.daysInactive ?? 'beberapa'} hari</div>
+              </div>
+              <button type="button" className="btn btn-accent btn-sm"
+                onClick={() => openWaSheet({ contactName: l.name, phoneE164: l.phoneE164 ?? l.phone, initialDraft: buildNudgeMessage(l) })}>
+                Kirim WA
+              </button>
+            </div>
+          ))}
+        </section>
       )}
 
       {activityItems.length > 0 && (

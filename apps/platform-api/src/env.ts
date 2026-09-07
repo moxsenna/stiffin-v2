@@ -9,6 +9,9 @@ export interface Env {
   /** Comma-separated additional trusted frontend origins. */
   BETTER_AUTH_TRUSTED_ORIGINS?: string;
 
+  /** Inactivity sweep threshold in days (default: 7). */
+  INACTIVITY_SWEEP_DAYS?: string;
+
   /** Paycore Integration Configuration (Cloudflare Worker bindings / env vars) */
   PAYCORE_BASE_URL?: string;
   PAYCORE_APP_UUID?: string;

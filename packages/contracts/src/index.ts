@@ -1154,6 +1154,7 @@ export const LearnerSummaryItemSchema = z.object({
   enrollmentId: z.string().uuid(),
   name: z.string(),
   phone: z.string(),
+  phoneE164: z.string().optional(),
   programId: z.string().uuid(),
   programTitle: z.string(),
   progressPercent: z.number().int().min(0).max(100),
@@ -1163,8 +1164,17 @@ export const LearnerSummaryItemSchema = z.object({
   learningStatus: z.enum(['ACTIVE', 'COMPLETED', 'INACTIVE', 'AT_RISK', 'NOT_STARTED', 'IN_PROGRESS']),
   lastActivityAt: z.string().nullable().optional(),
   enrolledAt: z.string(),
+  daysInactive: z.number().int().nonnegative().optional(),
 });
 export type LearnerSummaryItem = z.infer<typeof LearnerSummaryItemSchema>;
+
+export const LearnersListQuerySchema = z.object({
+  programId: z.string().uuid().optional(),
+  learningStatus: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'AT_RISK']).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+export type LearnersListQuery = z.infer<typeof LearnersListQuerySchema>;
 
 export const LearnersListResponseSchema = z.object({
   learners: z.array(LearnerSummaryItemSchema),

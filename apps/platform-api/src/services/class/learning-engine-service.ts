@@ -137,6 +137,7 @@ export interface LearnerSummaryItem {
   enrollmentId: string;
   name: string;
   phone: string;
+  phoneE164?: string;
   programId: string;
   programTitle: string;
   progressPercent: number;
@@ -146,6 +147,7 @@ export interface LearnerSummaryItem {
   learningStatus: CanonicalLearningStatus;
   lastActivityAt: string | null;
   enrolledAt: string;
+  daysInactive?: number;
 }
 
 export interface ProgramAnalyticsResult {
@@ -190,7 +192,7 @@ export interface LearningEngineService {
     positionSeconds: number;
   }): Promise<void>;
   getEnrollmentFullDetails(organizationId: string, enrollmentId: string, authenticatedContactId?: string): Promise<EnrollmentFullDetails>;
-  listLearners(organizationId: string, options?: { programId?: string; search?: string; limit?: number; offset?: number }): Promise<{ learners: LearnerSummaryItem[]; total: number }>;
+  listLearners(organizationId: string, options?: { programId?: string; search?: string; learningStatus?: CanonicalLearningStatus | 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'AT_RISK'; limit?: number; offset?: number }): Promise<{ learners: LearnerSummaryItem[]; total: number }>;
   getLearnerDetail(organizationId: string, contactId: string): Promise<Record<string, unknown>>;
   getProgramAnalytics(organizationId: string, programId: string): Promise<ProgramAnalyticsResult>;
   listSignals(organizationId: string, status?: string): Promise<LearningSignalRow[]>;
@@ -985,6 +987,7 @@ export function createLearningEngineService(
           enrollmentId: enrollments.id,
           name: contacts.name,
           phone: contacts.phoneE164,
+          phoneE164: contacts.phoneE164,
           programId: programs.id,
           programTitle: programs.title,
           progressPercent: enrollments.progressPercent,
@@ -1001,7 +1004,8 @@ export function createLearningEngineService(
         .where(
           and(
             eq(enrollments.organizationId, organizationId),
-            options.programId ? eq(enrollments.programId, options.programId) : undefined
+            options.programId ? eq(enrollments.programId, options.programId) : undefined,
+            options.learningStatus ? eq(enrollments.learningStatus, options.learningStatus) : undefined
           )
         )
         .orderBy(desc(enrollments.lastActivityAt))
@@ -1009,21 +1013,30 @@ export function createLearningEngineService(
         .offset(offset);
 
       return {
-        learners: rows.map((r) => ({
-          contactId: r.contactId,
-          enrollmentId: r.enrollmentId,
-          name: r.name,
-          phone: r.phone,
-          programId: r.programId,
-          programTitle: r.programTitle,
-          progressPercent: r.progressPercent,
-          intentScore: r.intentScore,
-          intentLabel: r.intentLabel as 'COLD' | 'WARM' | 'HOT',
-          intentBreakdown: parseIntentBreakdown(r.intentBreakdown),
-          learningStatus: r.learningStatus as CanonicalLearningStatus,
-          lastActivityAt: r.lastActivityAt ? new Date(r.lastActivityAt).toISOString() : null,
-          enrolledAt: new Date(r.enrolledAt).toISOString(),
-        })),
+        learners: rows.map((r) => {
+          let daysInactive: number | undefined = undefined;
+          if (r.lastActivityAt || r.enrolledAt) {
+            const refTime = new Date(r.lastActivityAt ?? r.enrolledAt).getTime();
+            daysInactive = Math.max(0, Math.floor((Date.now() - refTime) / (1000 * 60 * 60 * 24)));
+          }
+          return {
+            contactId: r.contactId,
+            enrollmentId: r.enrollmentId,
+            name: r.name,
+            phone: r.phone,
+            phoneE164: r.phoneE164,
+            programId: r.programId,
+            programTitle: r.programTitle,
+            progressPercent: r.progressPercent,
+            intentScore: r.intentScore,
+            intentLabel: r.intentLabel as 'COLD' | 'WARM' | 'HOT',
+            intentBreakdown: parseIntentBreakdown(r.intentBreakdown),
+            learningStatus: r.learningStatus as CanonicalLearningStatus,
+            lastActivityAt: r.lastActivityAt ? new Date(r.lastActivityAt).toISOString() : null,
+            enrolledAt: new Date(r.enrolledAt).toISOString(),
+            daysInactive,
+          };
+        }),
         total: rows.length,
       };
     },

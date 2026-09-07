@@ -9,6 +9,11 @@
   "observability": {
     "enabled": true
   },
+  "triggers": {
+    "crons": [
+      "0 2 * * *"
+    ]
+  },
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
@@ -18,7 +23,8 @@
   "vars": {
     "APP_ENV": "production",
     "BETTER_AUTH_URL": "https://stiffin-promotor-api.moxsenna.workers.dev",
-    "BETTER_AUTH_TRUSTED_ORIGINS": "https://stiffin-promotor-class.moxsenna.workers.dev,https://stiffin-promotor-flow.moxsenna.workers.dev"
+    "BETTER_AUTH_TRUSTED_ORIGINS": "https://stiffin-promotor-class.moxsenna.workers.dev,https://stiffin-promotor-flow.moxsenna.workers.dev",
+    "INACTIVITY_SWEEP_DAYS": "7"
   },
   "env": {
     "staging": {
@@ -32,7 +38,8 @@
       "vars": {
         "APP_ENV": "staging",
         "BETTER_AUTH_URL": "https://stiffin-promotor-api-staging.moxsenna.workers.dev",
-        "BETTER_AUTH_TRUSTED_ORIGINS": "https://promotor-class-staging.moxsenna.workers.dev,https://promotor-flow-staging.moxsenna.workers.dev"
+        "BETTER_AUTH_TRUSTED_ORIGINS": "https://promotor-class-staging.moxsenna.workers.dev,https://promotor-flow-staging.moxsenna.workers.dev",
+        "INACTIVITY_SWEEP_DAYS": "7"
       }
     }
   }

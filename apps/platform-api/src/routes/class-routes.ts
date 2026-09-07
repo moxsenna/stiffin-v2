@@ -5,6 +5,7 @@ import type { AppEnv } from '../app';
 import { DomainError } from '../core/errors';
 import {
   CreateManualEnrollmentRequestSchema,
+  LearnersListQuerySchema,
 } from '@promotor/contracts';
 import { createEnrollmentService } from '../services/class/enrollment-service';
 import { createPromotorClassAdapter } from '../services/class/promotor-class-adapter';
@@ -236,13 +237,22 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
   // 8. List Learners for Operator View (§27)
   app.get('/api/v1/class/learners', async (c) => {
     const { ctx, db } = getRequestContext(c);
-    const programId = c.req.query('programId');
-    const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!, 10) : undefined;
-    const offset = c.req.query('offset') ? parseInt(c.req.query('offset')!, 10) : undefined;
+    const raw = c.req.query();
+    const queryParsed = LearnersListQuerySchema.safeParse({
+      programId: raw.programId || undefined,
+      learningStatus: raw.learningStatus || undefined,
+      limit: raw.limit,
+      offset: raw.offset,
+    });
+    if (!queryParsed.success) {
+      throw new DomainError('VALIDATION_ERROR', queryParsed.error.issues[0]?.message || 'Query parameter learningStatus tidak valid');
+    }
+    const { programId, learningStatus, limit, offset } = queryParsed.data;
 
     const learningService = createLearningEngineService(db);
     const result = await learningService.listLearners(ctx.organizationId, {
-      programId: programId || undefined,
+      programId,
+      learningStatus,
       limit,
       offset,
     });
