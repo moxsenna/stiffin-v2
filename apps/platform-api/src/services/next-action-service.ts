@@ -489,7 +489,7 @@ export function createNextActionService(
           contactId: input.contactId,
           bookingId: input.bookingId,
           actionType: 'AFTERCARE',
-          title: 'Aftercare D+7 layanan',
+          title: rule.title,
           dueAt: rule.dueAt.toISOString(),
           priority: rule.priority,
           status: 'PENDING',

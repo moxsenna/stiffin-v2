@@ -256,7 +256,7 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
       .where(and(...conditions))
       .orderBy(desc(nextActions.createdAt));
 
-    return c.json({ nextActions: rows }, 200);
+    return c.json({ nextActions: rows, actions: rows }, 200);
   });
 
   flow.post('/next-actions', async (c) => {
@@ -360,7 +360,12 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
     const { ctx, actor, db } = getRequestContext(c);
     const actionId = c.req.param('id');
     const raw = await c.req.json().catch(() => ({}));
-    const body = parseBody(CompleteAftercareActionRequestSchema, raw);
+    const rawObj = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
+    const normalizedRaw = {
+      outcome: rawObj.outcome,
+      notes: rawObj.notes ?? rawObj.outcomeNotes ?? null,
+    };
+    const body = parseBody(CompleteAftercareActionRequestSchema, normalizedRaw);
     const service = createAftercareService(db);
     const result = await service.completeAftercare(ctx, actionId, body, actor);
     return c.json(result, 200);

@@ -343,7 +343,7 @@ export const SEED_NEXT_ACTIONS: FlowNextAction[] = [
     organizationId: 'org_rina_stifin',
     contactId: 'contact_reni',
     actionType: 'AFTERCARE',
-    title: 'Tanya pemahaman hasil',
+    title: 'Tanyakan penerapan hasil tes di rumah/sekolah (D+7)',
     subtitle: 'Klien · Tes Personal, 5 Agu',
     dueAt: '2026-08-12T09:00:00+07:00', // Today (D+7 after 5 Aug)
     status: 'PENDING',
