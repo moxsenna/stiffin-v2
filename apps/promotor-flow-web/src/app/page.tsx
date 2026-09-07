@@ -6,6 +6,7 @@ import { FlowHero } from '@/components/landing/FlowHero';
 import { FrictionVsFlow } from '@/components/landing/FrictionVsFlow';
 import { LivePipelineDemo } from '@/components/landing/LivePipelineDemo';
 import { FlowFeatureGrid } from '@/components/landing/FlowFeatureGrid';
+import { FlowClassIntegrationSection } from '@/components/landing/FlowClassIntegrationSection';
 import { FlowRoiCalculator } from '@/components/landing/FlowRoiCalculator';
 import { FlowTestimonials } from '@/components/landing/FlowTestimonials';
 import { FlowPricingSection } from '@/components/landing/FlowPricingSection';
@@ -22,6 +23,7 @@ export default function LandingPage() {
         <FrictionVsFlow />
         <LivePipelineDemo />
         <FlowFeatureGrid />
+        <FlowClassIntegrationSection />
         <FlowRoiCalculator />
         <FlowTestimonials />
         <FlowPricingSection />

@@ -77,6 +77,7 @@ export default function RootPage() {
           <nav style={{ display: 'none', alignItems: 'center', gap: 22 }} className="landing-nav-links">
             <a href="#fitur" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>Fitur</a>
             <a href="#cara-kerja" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>Cara Kerja</a>
+            <a href="#flow" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>Ralivo Flow</a>
             <a href="#harga" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>Harga</a>
             <a href="#faq" style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted-strong)', textDecoration: 'none' }}>FAQ</a>
           </nav>
@@ -126,6 +127,7 @@ export default function RootPage() {
             <nav style={{ display: 'flex', flexDirection: 'column', padding: '8px 16px 16px' }}>
               <a href="#fitur" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--ink)', fontWeight: 600, fontSize: 15, textDecoration: 'none', borderBottom: '1px solid var(--line)' }}>Fitur</a>
               <a href="#cara-kerja" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--ink)', fontWeight: 600, fontSize: 15, textDecoration: 'none', borderBottom: '1px solid var(--line)' }}>Cara Kerja</a>
+              <a href="#flow" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--ink)', fontWeight: 600, fontSize: 15, textDecoration: 'none', borderBottom: '1px solid var(--line)' }}>Ralivo Flow</a>
               <a href="#harga" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--ink)', fontWeight: 600, fontSize: 15, textDecoration: 'none', borderBottom: '1px solid var(--line)' }}>Harga</a>
               <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--ink)', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>FAQ</a>
               <Link href="/login" onClick={() => setMobileMenuOpen(false)} style={{ marginTop: 12, padding: '14px', border: '2px solid var(--ink)', textAlign: 'center', fontWeight: 700, textDecoration: 'none', color: 'var(--ink)' }}>Masuk</Link>
@@ -201,6 +203,129 @@ export default function RootPage() {
         </div>
       </section>
 
+      <section id="flow" style={{ padding: '72px 24px', backgroundColor: 'var(--surface-muted)', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', maxWidth: 820, margin: '0 auto 48px' }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '6px 14px',
+                backgroundColor: 'rgba(5, 150, 105, 0.08)',
+                border: '1px solid rgba(5, 150, 105, 0.25)',
+                color: '#059669',
+                fontSize: 12.5,
+                fontWeight: 800,
+                marginBottom: 16,
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+              }}
+            >
+              <span style={{ width: 8, height: 8, backgroundColor: '#059669', display: 'inline-block' }} />
+              Sinergi Ekosistem: Ralivo Class + Ralivo Flow
+            </div>
+
+            <h2 style={{ fontSize: 'clamp(26px,4vw,38px)', fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.2, marginBottom: 14 }}>
+              Konversi Minat Belajar Menjadi Closing Tes Nyata dengan <span style={{ color: '#059669' }}>Ralivo Flow</span>
+            </h2>
+
+            <p style={{ fontSize: 15.5, color: 'var(--muted-strong)', lineHeight: 1.65, margin: 0 }}>
+              Edukasi di Ralivo Class baru langkah awal. <strong>Ralivo Flow</strong> adalah sistem operasi eksekusi harian promotor STIFIn yang memastikan setiap peserta yang teredukasi segera dikonversi menjadi sesi tes berbayar melalui antrean WhatsApp 1-tap, booking kalender mandiri, dan siklus Aftercare D+7.
+            </p>
+          </div>
+
+          {/* 4 Feature Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 24, marginBottom: 40 }}>
+            {[
+              {
+                b: 'Daily Execution OS',
+                t: 'Antrean Tindakan Hari Ini (Today Work Queue)',
+                d: 'Peserta yang menyelesaikan materi atau mengirim refleksi HOT di Class langsung muncul di antrean harian Flow. Draf pesan WA kontekstual siap dikirim dalam 1 klik tanpa bingung menyusun kata.',
+                h: ['Prioritas aksi harian otomatis', 'Draf pesan WA kontekstual materi', 'Peringatan prospek tertunda (Overdue)'],
+              },
+              {
+                b: 'Self-Booking 14-Hari',
+                t: 'Halaman Booking Kalender Publik',
+                d: 'Hilangkan drama bolak-balik tanya jadwal. Cukup bagikan 1 tautan booking ke learner yang siap tes, biarkan mereka memilih slot jam konsultasi yang masih kosong sesuai ketersediaan Anda.',
+                h: ['Pilih slot waktu 14-hari ke depan', 'Kunci slot real-time (anti bentrok)', 'Struk instruksi persiapan tes otomatis'],
+              },
+              {
+                b: 'Customer Lifecycle',
+                t: 'Pusat Komando CRM 6-Tahap',
+                d: 'Lacak perjalanan setiap keluarga dari NEW, CONTACTED, INTERESTED, BOOKED, COMPLETED, hingga LOST. Seluruh catatan kendala belajar anak & histori pembayaran tersimpan rapi.',
+                h: ['Pipeline visual 6-tahap jelas', 'Catatan profil keluarga terpusat', 'Audit alasan prospek batal (Lost Reason)'],
+              },
+              {
+                b: 'Retensi & Repeat Order',
+                t: 'Siklus Otomatis Aftercare D+7',
+                d: 'Hubungan dengan klien tidak berakhir setelah tes STIFIn. Flow otomatis menjadwalkan tindakan evaluasi tepat 7 hari pasca tes — momen emas untuk menawarkan kelas lanjutan di Ralivo Class!',
+                h: ['Pengingat Aftercare D+7 otomatis', 'Peluang upsell kelas parenting/mentoring', 'Pintu masuk permohonan referral keluarga'],
+              },
+            ].map((c) => (
+              <div key={c.t} style={{ backgroundColor: 'var(--canvas)', border: '1px solid var(--line)', padding: '26px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 18 }}>
+                <div>
+                  <div style={{ display: 'inline-block', fontSize: 11, fontWeight: 800, color: '#059669', backgroundColor: 'rgba(5, 150, 105, 0.08)', padding: '3px 8px', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                    {c.b}
+                  </div>
+                  <h3 style={{ fontSize: 17.5, fontWeight: 850, marginBottom: 10, lineHeight: 1.3 }}>{c.t}</h3>
+                  <p style={{ fontSize: 13.5, color: 'var(--muted-strong)', lineHeight: 1.6, margin: 0 }}>{c.d}</p>
+                </div>
+                <div style={{ borderTop: '1px solid var(--line)', paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 7 }}>
+                  {c.h.map((x) => (
+                    <div key={x} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, fontWeight: 600 }}>
+                      <span style={{ color: '#059669' }}>✓</span>
+                      <span>{x}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Workflow Diagram */}
+          <div style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--line)', padding: '32px 24px', marginBottom: 36 }}>
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <h3 style={{ fontSize: 19, fontWeight: 850, marginBottom: 6 }}>Alur Sinergi Terpadu: Class ke Flow</h3>
+              <p style={{ fontSize: 13.5, color: 'var(--muted-strong)', margin: 0 }}>Bagaimana Ralivo Class dan Ralivo Flow bekerja bergandengan tangan untuk melipatgandakan omset tes STIFIn Anda.</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
+              {[
+                { n: '01', p: 'Ralivo Class', c: '#2563EB', t: 'Calon Klien Belajar', d: 'Mengikuti modul video & refleksi pengunci di portal storefront Anda.' },
+                { n: '02', p: 'Ralivo Class', c: '#2563EB', t: 'Intent Engine HOT', d: 'Sistem menganalisis pemahaman peserta dan mengirim sinyal HOT ke Flow.' },
+                { n: '03', p: 'Ralivo Flow', c: '#059669', t: '1-Tap Follow-up WA', d: 'Promotor hubungi via draf personal & bagikan link booking jadwal tes.' },
+                { n: '04', p: 'Ralivo Flow', c: '#059669', t: 'Closing & Retensi D+7', d: 'Sesi tes selesai, otomatis dijadwalkan aftercare & penawaran kelas lanjutan.' },
+              ].map((s) => (
+                <div key={s.n} style={{ padding: 18, backgroundColor: 'var(--canvas)', border: '1px solid var(--line)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--muted)' }}>{s.n}</span>
+                    <span style={{ fontSize: 10.5, fontWeight: 800, color: s.c, backgroundColor: s.c === '#2563EB' ? 'rgba(37,99,235,0.08)' : 'rgba(5,150,105,0.08)', border: `1px solid ${s.c === '#2563EB' ? 'rgba(37,99,235,0.2)' : 'rgba(5,150,105,0.2)'}`, padding: '2px 6px', borderRadius: 4 }}>{s.p}</span>
+                  </div>
+                  <div style={{ fontWeight: 800, fontSize: 14.5, marginBottom: 4 }}>{s.t}</div>
+                  <div style={{ fontSize: 12.5, color: 'var(--muted-strong)', lineHeight: 1.5 }}>{s.d}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Callout Banner */}
+          <div style={{ padding: '24px 28px', backgroundColor: 'var(--surface)', border: '1px solid rgba(5, 150, 105, 0.25)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+            <div style={{ maxWidth: 720 }}>
+              <div style={{ fontSize: 16, fontWeight: 850, color: 'var(--ink)', marginBottom: 4 }}>
+                Satu Akun, Satu Langganan — Ekosistem Terpadu Ralivo
+              </div>
+              <div style={{ fontSize: 13.5, color: 'var(--muted-strong)', lineHeight: 1.6 }}>
+                Database kontak berbasis standar E.164 tersinkronisasi secara otomatis. Saat Anda berlangganan <strong>Ralivo Solo</strong>, Anda langsung mendapatkan akses penuh ke <strong>Ralivo Class</strong> dan <strong>Ralivo Flow</strong> tanpa biaya tambahan.
+              </div>
+            </div>
+            <a href="#harga" style={{ padding: '10px 20px', backgroundColor: '#059669', color: '#fff', fontWeight: 800, fontSize: 13.5, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              Lihat Paket Terpadu →
+            </a>
+          </div>
+        </div>
+      </section>
+
       <section style={{ padding: '48px 24px', backgroundColor: 'var(--ink)', color: '#fff', textAlign: 'center' }}>
         <h2 style={{ fontSize: 'clamp(26px,4vw,36px)', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: 12 }}>Siap Ubah Edukasi Menjadi Pipeline?</h2>
         <p style={{ fontSize: 16, color: '#94a3b8', maxWidth: 640, margin: '0 auto 24px', lineHeight: 1.6 }}>Bergabung dengan promotor yang sudah pakai PromotorClass — gratis untuk memulai, tanpa kartu kredit.</p>
@@ -215,7 +340,7 @@ export default function RootPage() {
         {[
           { q: 'Apakah butuh kartu kredit untuk mulai?', a: 'Tidak. Paket Ralivo Free bisa langsung digunakan tanpa kartu kredit.' },
           { q: 'Berapa biaya langganan Ralivo Solo?', a: 'Paket Ralivo Solo berharga Rp 149.000/bulan atau Rp 1.190.000/tahun (hemat s/d 33%). Pembayaran didukung transfer bank dan QRIS otomatis via gateway resmi. Terdapat biaya transaksi flat Rp3.000 per penjualan program kelas berbayar tanpa potongan persentase komisi.' },
-          { q: 'Apakah langganan mencakup Ralivo Flow juga?', a: 'Ya. Ralivo adalah ekosistem satu pintu: Ralivo Class (LMS & Program Edukasi) dan Ralivo Flow (CRM & Pipeline WhatsApp) aktif bersama dalam satu akun langganan Anda.' },
+          { q: 'Apa itu Ralivo Flow dan apakah sudah termasuk dalam langganan?', a: 'Ya, sudah termasuk! Ralivo Flow adalah sistem CRM dan antrean eksekusi WhatsApp harian untuk promotor STIFIn. Ketika peserta belajar di Ralivo Class dan menunjukkan minat tinggi (HOT), data mereka otomatis masuk ke Today Work Queue di Ralivo Flow untuk di-follow up 1-tap dan diarahkan ke booking jadwal tes STIFIn. Keduanya sudah tergabung dalam satu paket langganan Ralivo Solo.' },
           { q: 'Apakah video materi harus di YouTube?', a: 'Ya, Anda dapat menggunakan video YouTube unlisted atau publik via embed resmi — tanpa biaya hosting video tambahan.' },
           { q: 'Bagaimana keamanan data peserta?', a: 'Data peserta diisolasi per organisasi promotor secara multi-tenant terenkripsi dengan format nomor E.164 terstandardisasi.' },
         ].map((f) => (

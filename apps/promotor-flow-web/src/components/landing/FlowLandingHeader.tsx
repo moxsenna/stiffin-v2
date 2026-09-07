@@ -86,6 +86,9 @@ export const FlowLandingHeader: React.FC = () => {
           <a href="#fitur" style={{ color: 'var(--color-text-secondary)', fontWeight: 600, fontSize: '14px', textDecoration: 'none' }}>
             Fitur Utama
           </a>
+          <a href="#class" style={{ color: 'var(--color-text-secondary)', fontWeight: 600, fontSize: '14px', textDecoration: 'none' }}>
+            Ralivo Class
+          </a>
           <a href="#simulasi" style={{ color: 'var(--color-text-secondary)', fontWeight: 600, fontSize: '14px', textDecoration: 'none' }}>
             Simulasi Pipeline
           </a>
@@ -195,6 +198,9 @@ export const FlowLandingHeader: React.FC = () => {
           <nav style={{ display: 'flex', flexDirection: 'column', padding: '8px 24px 16px' }}>
             <a href="#fitur" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: 'var(--color-text-primary)', fontWeight: 600, fontSize: '15px', textDecoration: 'none', borderBottom: '1px solid var(--color-divider)' }}>
               Fitur Utama
+            </a>
+            <a href="#class" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: 'var(--color-text-primary)', fontWeight: 600, fontSize: '15px', textDecoration: 'none', borderBottom: '1px solid var(--color-divider)' }}>
+              Ralivo Class
             </a>
             <a href="#simulasi" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: 'var(--color-text-primary)', fontWeight: 600, fontSize: '15px', textDecoration: 'none', borderBottom: '1px solid var(--color-divider)' }}>
               Simulasi Pipeline
