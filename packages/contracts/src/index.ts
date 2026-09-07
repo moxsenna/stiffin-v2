@@ -210,6 +210,12 @@ export const PublicProgramDetailSchema = z.object({
 });
 export type PublicProgramDetail = z.infer<typeof PublicProgramDetailSchema>;
 
+export const IntentBreakdownItemSchema = z.object({
+  label: z.string(),
+  points: z.number().int(),
+});
+export type IntentBreakdownItem = z.infer<typeof IntentBreakdownItemSchema>;
+
 export const EnrollmentSchema = z.object({
   id: z.string(),
   organizationId: z.string(),
@@ -220,6 +226,7 @@ export const EnrollmentSchema = z.object({
   completedAt: z.string().optional(),
   progressPercent: z.number().min(0).max(100),
   completedLessonIds: z.array(z.string()),
+  intentBreakdown: z.array(IntentBreakdownItemSchema).nullable().optional(),
   lessonProgress: z.record(
     z.string(),
     z.object({
@@ -963,6 +970,7 @@ export const CanonicalEnrollmentSchema = z.object({
   progressPercent: z.number().int().min(0).max(100),
   intentScore: z.number().int().min(0).max(100),
   intentLabel: z.enum(['COLD', 'WARM', 'HOT']),
+  intentBreakdown: z.array(IntentBreakdownItemSchema).nullable().optional(),
   learningStatus: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'AT_RISK']),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -1151,6 +1159,7 @@ export const LearnerSummaryItemSchema = z.object({
   progressPercent: z.number().int().min(0).max(100),
   intentScore: z.number().int().min(0).max(100),
   intentLabel: z.enum(['COLD', 'WARM', 'HOT']),
+  intentBreakdown: z.array(IntentBreakdownItemSchema).nullable().optional(),
   learningStatus: z.enum(['ACTIVE', 'COMPLETED', 'INACTIVE', 'AT_RISK', 'NOT_STARTED', 'IN_PROGRESS']),
   lastActivityAt: z.string().nullable().optional(),
   enrolledAt: z.string(),

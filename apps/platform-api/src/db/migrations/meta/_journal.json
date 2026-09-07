@@ -92,6 +92,13 @@
       "when": 1788795000000,
       "tag": "0012_lesson_last_position_seconds",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788796000000,
+      "tag": "0013_narrow_mathemanic",
+      "breakpoints": true
     }
   ]
 }

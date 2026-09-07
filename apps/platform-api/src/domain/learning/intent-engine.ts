@@ -23,6 +23,22 @@ export interface IntentScoringResult {
   };
 }
 
+export const INTENT_LABELS: Record<string, string> = {
+  enrollmentPoints: 'Terdaftar di program',
+  firstLessonPoints: 'Mulai pelajaran pertama',
+  progress50Points: 'Progres mencapai 50%',
+  progress80Points: 'Progres mencapai 80%',
+  completionPoints: 'Menyelesaikan program',
+  ctaPoints: 'Mengklik ajakan (CTA)',
+  // Aliases for brief key naming compatibility
+  isEnrolled: 'Terdaftar di program',
+  hasStarted: 'Mulai pelajaran pertama',
+  progress50: 'Progres mencapai 50%',
+  progress80: 'Progres mencapai 80%',
+  completion: 'Menyelesaikan program',
+  hasClickedCta: 'Mengklik ajakan (CTA)',
+};
+
 /**
  * Calculates deterministic canonical intent score (0..100).
  *

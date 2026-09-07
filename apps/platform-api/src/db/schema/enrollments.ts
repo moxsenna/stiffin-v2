@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, timestamp, uniqueIndex, index, check } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, integer, timestamp, uniqueIndex, index, check, jsonb } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { organizations } from './organizations';
 import { programs } from './programs';
@@ -25,6 +25,7 @@ export const enrollments = pgTable(
     progressPercent: integer('progress_percent').notNull().default(0),
     intentScore: integer('intent_score').notNull().default(0),
     intentLabel: text('intent_label').notNull().default('COLD'),
+    intentBreakdown: jsonb('intent_breakdown'),
     learningStatus: text('learning_status').notNull().default('NOT_STARTED'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),

@@ -2,8 +2,9 @@ import { eq, and, sql, desc } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DomainError } from '../../core/errors';
 import { calculateProgramProgress } from '../../domain/learning/progress-engine';
-import { calculateIntentScore } from '../../domain/learning/intent-engine';
+import { calculateIntentScore, INTENT_LABELS } from '../../domain/learning/intent-engine';
 import { calculateLearningStatus, CanonicalLearningStatus } from '../../domain/learning/learning-status-engine';
+import type { IntentBreakdownItem } from '@promotor/contracts';
 import { validateReflectionSubmission } from '../../domain/learning/reflection-validator';
 import { createEnrollmentRepository, EnrollmentRepository } from '../../repositories/enrollment-repository';
 import { createProgramRepository, ProgramRepository } from '../../repositories/program-repository';
@@ -101,6 +102,36 @@ export interface EnrollmentFullDetails {
   };
 }
 
+export function parseIntentBreakdown(raw: unknown): IntentBreakdownItem[] | null {
+  if (!raw) return null;
+  if (Array.isArray(raw)) {
+    const valid = raw.filter((item): item is IntentBreakdownItem =>
+      typeof item === 'object' &&
+      item !== null &&
+      typeof (item as any).label === 'string' &&
+      typeof (item as any).points === 'number'
+    );
+    return valid.length > 0 ? valid : (raw.length === 0 ? [] : null);
+  }
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        const valid = parsed.filter((item): item is IntentBreakdownItem =>
+          typeof item === 'object' &&
+          item !== null &&
+          typeof (item as any).label === 'string' &&
+          typeof (item as any).points === 'number'
+        );
+        return valid.length > 0 ? valid : (parsed.length === 0 ? [] : null);
+      }
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 export interface LearnerSummaryItem {
   contactId: string;
   enrollmentId: string;
@@ -111,6 +142,7 @@ export interface LearnerSummaryItem {
   progressPercent: number;
   intentScore: number;
   intentLabel: 'COLD' | 'WARM' | 'HOT';
+  intentBreakdown?: IntentBreakdownItem[] | null;
   learningStatus: CanonicalLearningStatus;
   lastActivityAt: string | null;
   enrolledAt: string;
@@ -344,12 +376,22 @@ export function createLearningEngineService(
       ? enrollment.startedAt ?? nowIso
       : enrollment.startedAt;
 
+    const formattedBreakdown: IntentBreakdownItem[] | null = intentResult.breakdown
+      ? Object.entries(intentResult.breakdown)
+          .filter(([, points]) => (points as number) > 0)
+          .map(([label, points]) => ({
+            label: INTENT_LABELS[label] ?? label,
+            points: points as number,
+          }))
+      : null;
+
     // 6. Update enrollment
     const updatedEnrollment = await enrollmentRepo.updateProgress(organizationId, enrollmentId, {
       status: newLifecycleStatus,
       progressPercent: progressResult.progressPercent,
       intentScore: intentResult.score,
       intentLabel: intentResult.label,
+      intentBreakdown: formattedBreakdown,
       learningStatus: canonicalLearningStatus,
       startedAt,
       completedAt,
@@ -896,6 +938,7 @@ export function createLearningEngineService(
           progressPercent: enrollments.progressPercent,
           intentScore: enrollments.intentScore,
           intentLabel: enrollments.intentLabel,
+          intentBreakdown: enrollments.intentBreakdown,
           learningStatus: enrollments.learningStatus,
           lastActivityAt: enrollments.lastActivityAt,
           enrolledAt: enrollments.enrolledAt,
@@ -924,6 +967,7 @@ export function createLearningEngineService(
           progressPercent: r.progressPercent,
           intentScore: r.intentScore,
           intentLabel: r.intentLabel as 'COLD' | 'WARM' | 'HOT',
+          intentBreakdown: parseIntentBreakdown(r.intentBreakdown),
           learningStatus: r.learningStatus as CanonicalLearningStatus,
           lastActivityAt: r.lastActivityAt ? new Date(r.lastActivityAt).toISOString() : null,
           enrolledAt: new Date(r.enrolledAt).toISOString(),
@@ -963,6 +1007,7 @@ export function createLearningEngineService(
         contact,
         enrollments: enrs.map((e) => ({
           ...e.enrollment,
+          intentBreakdown: parseIntentBreakdown(e.enrollment.intentBreakdown),
           programTitle: e.program.title,
           programSlug: e.program.slug,
         })),
