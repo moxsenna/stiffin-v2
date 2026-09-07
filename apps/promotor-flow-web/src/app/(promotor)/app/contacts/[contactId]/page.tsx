@@ -25,6 +25,7 @@ import { FlowContact, FlowNextAction, FlowBooking, FlowActivity, LifecycleStage 
 import { formatPhoneDisplay } from '@promotor/platform-core';
 import { ProductEntitlements, LearningContext, ProgramSummary } from '@promotor/contracts';
 import { FlowIntegrationHealth } from '@/modules/promotorclass/ports';
+import { CalendarButtons } from '@/components/calendar/CalendarButtons';
 
 const LIFECYCLE_STEPS = ['BARU', 'DIHUBUNGI', 'TERTARIK', 'FOLLOW-UP', 'BOOKED', 'SELESAI'];
 const LIFECYCLE_INDEX: Record<string, number>= {
@@ -70,6 +71,7 @@ export default function ContactDetailPage() {
   const [showLostModal, setShowLostModal] = useState(false);
   const [lostReasonInput, setLostReasonInput] = useState('');
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [confirmedBooking, setConfirmedBooking] = useState<FlowBooking | null>(null);
   const [activeWaModal, setActiveWaModal] = useState<{ draft: string; waUrl: string } | null>(null);
 
   const [showEnrollModal, setShowEnrollModal] = useState(false);
@@ -204,21 +206,26 @@ export default function ContactDetailPage() {
       paymentStatus: 'UNPAID',
       amount: 600000,
     });
+    let confirmed = created;
     if (created?.id) {
       try {
-        await bookingCommands.confirmBooking(created.id);
+        confirmed = await bookingCommands.confirmBooking(created.id);
       } catch {
         // booking stays PENDING if immediate confirmation is unavailable
       }
     }
-    setShowBookingModal(false);
     await loadData();
+    setConfirmedBooking(confirmed || created);
+    showToast('Booking berhasil dibuat');
   };
 
   const handleConfirmBooking = async () =>{
     if (!activeBooking) return;
-    await bookingCommands.confirmBooking(activeBooking.id);
+    const confirmed = await bookingCommands.confirmBooking(activeBooking.id);
     await loadData();
+    setConfirmedBooking(confirmed || activeBooking);
+    setShowBookingModal(true);
+    showToast('Booking berhasil dikonfirmasi');
   };
 
   const handleMarkPaid = async () =>{
@@ -427,6 +434,15 @@ export default function ContactDetailPage() {
                Tandai Layanan Selesai
               </button>
            </div>
+           <CalendarButtons
+             event={{
+               title: `${activeBooking.serviceTitle} — ${contact.name}`,
+               startAt: activeBooking.startAt,
+               endAt: activeBooking.endAt,
+               details: 'Jadwal dari Ralivo Flow',
+               location: (activeBooking as any).locationText ?? activeBooking.locationAddress ?? undefined,
+             }}
+           />
          </div>
        ) : (
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
@@ -664,18 +680,66 @@ export default function ContactDetailPage() {
      </BottomSheet>
 
      {/* Create booking confirm sheet */}
-      <BottomSheet open={showBookingModal} onClose={() =>setShowBookingModal(false)} labelledBy="booking-sheet-title">
-       <div id="booking-sheet-title" className="kicker kicker-muted">Booking baru</div>
-       <h2 className="sheet-title-lg" style={{ marginTop: 8 }}>Tes STIFIn Personal</h2>
-       <p className="sheet-explain">Jadwal diatur 2 hari dari sekarang, lokasi di tempat (on site), status pembayaran belum dibayar.</p>
-       <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-         <button type="button" className="btn btn-primary" onClick={handleCreateNewBooking}>
-           Konfirmasi Booking
-          </button>
-         <button type="button" className="btn btn-ghost" onClick={() =>setShowBookingModal(false)}>
-           Batal
-          </button>
+      <BottomSheet
+        open={showBookingModal}
+        onClose={() => {
+          setShowBookingModal(false);
+          setConfirmedBooking(null);
+        }}
+        labelledBy="booking-sheet-title"
+      >
+       <div id="booking-sheet-title" className="kicker kicker-muted">
+         {confirmedBooking ? 'Booking Terkonfirmasi' : 'Booking baru'}
        </div>
+       <h2 className="sheet-title-lg" style={{ marginTop: 8 }}>
+         {confirmedBooking ? confirmedBooking.serviceTitle : 'Tes STIFIn Personal'}
+       </h2>
+       {confirmedBooking ? (
+         <>
+           <p className="sheet-explain">
+             Jadwal berhasil dikonfirmasi untuk {clock.formatDayDate(confirmedBooking.startAt)} {clock.formatTime(confirmedBooking.startAt)}.
+           </p>
+           <CalendarButtons
+             event={{
+               title: `${confirmedBooking.serviceTitle} — ${contact.name}`,
+               startAt: confirmedBooking.startAt,
+               endAt: confirmedBooking.endAt,
+               details: 'Jadwal dari Ralivo Flow',
+               location: (confirmedBooking as any).locationText ?? confirmedBooking.locationAddress ?? undefined,
+             }}
+           />
+           <button
+             type="button"
+             className="btn btn-secondary btn-block"
+             style={{ marginTop: 16 }}
+             onClick={() => {
+               setShowBookingModal(false);
+               setConfirmedBooking(null);
+             }}
+           >
+             Tutup
+           </button>
+         </>
+       ) : (
+         <>
+           <p className="sheet-explain">Jadwal diatur 2 hari dari sekarang, lokasi di tempat (on site), status pembayaran belum dibayar.</p>
+           <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+             <button type="button" className="btn btn-primary" onClick={handleCreateNewBooking}>
+               Konfirmasi Booking
+             </button>
+             <button
+               type="button"
+               className="btn btn-ghost"
+               onClick={() => {
+                 setShowBookingModal(false);
+                 setConfirmedBooking(null);
+               }}
+             >
+               Batal
+             </button>
+           </div>
+         </>
+       )}
      </BottomSheet>
 
      {/* WhatsApp sheet */}
