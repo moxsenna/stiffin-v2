@@ -7,6 +7,7 @@ export interface CreateTemplateInput {
   title: string;
   category: string;
   templateText: string;
+  tone?: string | null;
   isActive?: boolean;
 }
 
@@ -14,7 +15,21 @@ export interface UpdateTemplatePatch {
   title?: string;
   category?: string;
   templateText?: string;
+  tone?: string | null;
   isActive?: boolean;
+}
+
+export function pickTemplateByTone<T extends { category: string; tone?: string | null; isActive?: boolean }>(
+  templates: T[],
+  category: string,
+  tone?: string | null
+): T | undefined {
+  const inCategory = templates.filter((t) => t.category === category && t.isActive !== false);
+  if (tone) {
+    const exact = inCategory.find((t) => t.tone === tone);
+    if (exact) return exact;
+  }
+  return inCategory.find((t) => t.tone == null) ?? inCategory[0];
 }
 
 export interface ListTemplatesOptions {
@@ -70,6 +85,7 @@ export function createTemplateService(
         title: input.title.trim(),
         category: input.category,
         templateText: input.templateText,
+        tone: input.tone,
         isActive: input.isActive ?? true,
       });
     },

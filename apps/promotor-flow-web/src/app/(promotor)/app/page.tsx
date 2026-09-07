@@ -202,6 +202,16 @@ export default function TodayPage() {
         phoneE164={activeWaItem?.item.contactPhone ?? ''}
         initialDraft={activeWaItem?.draft ?? ''}
         waUrl={activeWaItem?.waUrl ?? ''}
+        onRegenerateDraft={(t) =>
+          activeWaItem
+            ? messagingQueries.generateDraftMessage(
+                activeWaItem.item.action.actionType,
+                activeWaItem.item.contactName,
+                { serviceTitle: activeWaItem.item.action.title },
+                t
+              )
+            : ''
+        }
         onClose={() =>setActiveWaItem(null)}
         onConfirmSent={handleConfirmWASent}
       />

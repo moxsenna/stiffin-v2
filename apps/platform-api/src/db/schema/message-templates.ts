@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, timestamp, index, check } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, varchar, boolean, timestamp, index, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { organizations } from './organizations';
 
@@ -12,6 +12,7 @@ export const messageTemplates = pgTable(
     title: text('title').notNull(),
     category: text('category').notNull(),
     templateText: text('template_text').notNull(),
+    tone: varchar('tone', { length: 16 }),
     isActive: boolean('is_active').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),

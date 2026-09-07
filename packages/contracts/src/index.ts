@@ -786,6 +786,23 @@ export const MessageTemplateCategorySchema = z.enum([
 ]);
 export type MessageTemplateCategory = z.infer<typeof MessageTemplateCategorySchema>;
 
+export const MessageTemplateToneSchema = z.enum(['FORMAL', 'HANGAT', 'URGENT']);
+export type MessageTemplateTone = z.infer<typeof MessageTemplateToneSchema>;
+
+export const MessageTemplateSchema = z.object({
+  id: z.string(),
+  organizationId: z.string().optional(),
+  title: z.string(),
+  category: MessageTemplateCategorySchema,
+  templateText: z.string().optional(),
+  bodyText: z.string().optional(),
+  tone: MessageTemplateToneSchema.nullable().optional(),
+  isActive: z.boolean().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+export type MessageTemplateDto = z.infer<typeof MessageTemplateSchema>;
+
 export const ListMessageTemplatesQuerySchema = z.object({
   category: MessageTemplateCategorySchema.optional(),
 });
@@ -795,6 +812,7 @@ export const CreateMessageTemplateRequestSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   category: MessageTemplateCategorySchema,
   bodyText: z.string().min(1, 'bodyText is required'),
+  tone: MessageTemplateToneSchema.nullable().optional(),
   isActive: z.boolean().optional(),
 });
 export type CreateMessageTemplateRequest = z.infer<typeof CreateMessageTemplateRequestSchema>;
@@ -803,6 +821,7 @@ export const UpdateMessageTemplateRequestSchema = z.object({
   title: z.string().min(1).optional(),
   category: MessageTemplateCategorySchema.optional(),
   bodyText: z.string().min(1).optional(),
+  tone: MessageTemplateToneSchema.nullable().optional(),
   isActive: z.boolean().optional(),
 });
 export type UpdateMessageTemplateRequest = z.infer<typeof UpdateMessageTemplateRequestSchema>;

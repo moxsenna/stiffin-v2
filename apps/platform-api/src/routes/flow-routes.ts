@@ -446,6 +446,7 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
       title: body.title,
       category: body.category,
       templateText: (body as any).templateText ?? body.bodyText,
+      tone: body.tone,
       isActive: body.isActive,
     });
     return c.json({ template: created }, 201);
@@ -462,6 +463,7 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
       title: body.title,
       category: body.category,
       templateText: (body as any).templateText ?? body.bodyText,
+      tone: body.tone,
       isActive: body.isActive,
     });
     return c.json({ template: updated }, 200);
