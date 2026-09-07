@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, gte, isNull, lt, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import {
   learnerOtpChallenges,
@@ -56,6 +56,18 @@ export function createLearnerOtpRepository(db: NodePgDatabase) {
       return rows[0] ?? null;
     },
 
+    async expireActiveByPhone(phoneE164: string, now: Date): Promise<void> {
+      await db
+        .update(learnerOtpChallenges)
+        .set({ consumedAt: now })
+        .where(
+          and(
+            eq(learnerOtpChallenges.phoneE164, phoneE164),
+            isNull(learnerOtpChallenges.consumedAt)
+          )
+        );
+    },
+
     async atomicConsume(
       id: string,
       codeHash: string,
@@ -68,7 +80,9 @@ export function createLearnerOtpRepository(db: NodePgDatabase) {
           and(
             eq(learnerOtpChallenges.id, id),
             eq(learnerOtpChallenges.codeHash, codeHash),
-            isNull(learnerOtpChallenges.consumedAt)
+            isNull(learnerOtpChallenges.consumedAt),
+            lt(learnerOtpChallenges.attempts, 5),
+            gt(learnerOtpChallenges.expiresAt, now)
           )
         )
         .returning();

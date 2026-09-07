@@ -79,6 +79,7 @@ export function createLearnerOtpService(db: NodePgDatabase, deps: LearnerOtpDeps
 
       const code = generateCode();
       const expiresAt = new Date(getNow().getTime() + OTP_TTL_MS);
+      await otpRepo.expireActiveByPhone(phoneE164, getNow());
       await otpRepo.createChallenge({
         organizationId: learner.organizationId,
         contactId: learner.contactId,

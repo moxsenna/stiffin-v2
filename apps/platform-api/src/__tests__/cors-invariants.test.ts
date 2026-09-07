@@ -143,7 +143,7 @@ describe('P1-6 — CORS Environment Separation & Fail-Closed Invariants', () => 
   it('13. Static configuration test: production wrangler.jsonc does not leak localhost or staging', () => {
     const wranglerPath = path.resolve(process.cwd(), 'wrangler.jsonc');
     const content = fs.readFileSync(wranglerPath, 'utf8');
-    const config = JSON.parse(content);
+    const config = JSON.parse(content.replace(/^\s*\/\/.*$/gm, ''));
 
     assert.strictEqual(config.vars?.APP_ENV, 'production', 'Production wrangler.jsonc must have vars.APP_ENV = "production"');
     const trustedOrigins = config.vars?.BETTER_AUTH_TRUSTED_ORIGINS || '';

@@ -40,6 +40,8 @@ import type {
   PublicRegisterLearnerResponse,
   RedeemLearnerTokenRequest,
   RedeemLearnerTokenResponse,
+  RequestLearnerOtpResponse,
+  VerifyLearnerOtpResponse,
   CreateManualEnrollmentRequest,
   CanonicalEnrollmentDto,
   LearningContextResponse,
@@ -368,14 +370,14 @@ export class PromotorClassContentApiClient {
     return this.client.post('/api/v1/public/learner/redeem-token', payload);
   }
 
-  async requestLearnerOtp(phoneRaw: string): Promise<{ expiresAt: string; devCode?: string }> {
+  async requestLearnerOtp(phoneRaw: string): Promise<RequestLearnerOtpResponse> {
     return this.client.post('/api/v1/learner/auth/otp/request', { phoneRaw });
   }
 
   async verifyLearnerOtp(
     phoneRaw: string,
     code: string
-  ): Promise<{ contactId: string; organizationId: string; workspaceSlug: string }> {
+  ): Promise<VerifyLearnerOtpResponse> {
     return this.client.post('/api/v1/learner/auth/otp/verify', { phoneRaw, code });
   }
 

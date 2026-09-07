@@ -98,7 +98,7 @@ export default function LearnerLoginPage() {
             <button className="btn btn-primary btn-block" type="submit" disabled={busy} style={{ marginTop: 12 }}>
               {busy ? 'Memeriksa...' : 'Masuk ke Kelas Saya'}
             </button>
-            <button type="button" className="btn btn-ghost btn-block" style={{ marginTop: 8 }} onClick={() => setStep('PHONE')}>
+            <button type="button" className="btn btn-ghost btn-block" style={{ marginTop: 8 }} onClick={() => { setError(null); setCode(''); setStep('PHONE'); }}>
               Ganti nomor
             </button>
           </form>

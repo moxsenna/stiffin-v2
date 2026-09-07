@@ -466,7 +466,7 @@ export function createApp(deps?: AppDependencies) {
     }
     const env = (c.env ?? {}) as Record<string, string | undefined>;
     const channel = env.LEARNER_OTP_CHANNEL ?? 'log';
-    const appEnv = env.APP_ENV ?? 'development';
+    const appEnv = env.APP_ENV ?? 'production';
     const isDev = appEnv === 'development' || appEnv === 'test';
     let sender;
     let devCode: string | undefined;

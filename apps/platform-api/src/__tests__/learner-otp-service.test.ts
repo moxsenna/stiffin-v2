@@ -17,6 +17,11 @@ function makeDeps(overrides: Partial<{ contact: any; sent: string[] }> = {}) {
       sender,
       otpRepo: {
         async countRecentByPhone() { return 0; },
+        async expireActiveByPhone(phoneE164: string, at: Date) {
+          for (const r of challengeRows) {
+            if (r.phoneE164 === phoneE164 && r.consumedAt == null) r.consumedAt = at;
+          }
+        },
         async createChallenge(input: any) {
           const row = { id: 'ch1', ...input, consumedAt: null, attempts: 0 };
           challengeRows.push(row);
