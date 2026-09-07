@@ -1,4 +1,4 @@
-import { eq, and, sql, desc } from 'drizzle-orm';
+import { eq, and, sql, desc, isNull } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DomainError } from '../../core/errors';
 import { calculateProgramProgress } from '../../domain/learning/progress-engine';
@@ -18,7 +18,7 @@ import { createLocalPromotorFlowAdapter } from '../../adapters/local-promotor-fl
 import { EnrollmentRow } from '../../db/schema/enrollments';
 import { LessonProgressRow } from '../../db/schema/lesson-progress';
 import { ReflectionResponseRow } from '../../db/schema/reflection-responses';
-import { LearningSignalRow } from '../../db/schema/learning-signals';
+import { learningSignals, LearningSignalRow } from '../../db/schema/learning-signals';
 import { contacts } from '../../db/schema/contacts';
 import { programs } from '../../db/schema/programs';
 import { enrollments } from '../../db/schema/enrollments';
@@ -755,6 +755,58 @@ export function createLearningEngineService(
           payload: { lessonId: input.lessonId },
         }
       );
+
+      // Evaluate deep reflection signal (§Task B5)
+      const text = (input.responseText ?? '').trim();
+      if (text.length >= 80) {
+        const wordCount = text.split(/\s+/).filter(Boolean).length;
+        const excerpt = text.length > 100 ? `${text.slice(0, 99)}…` : text;
+
+        const existing = await db
+          .select({
+            id: learningSignals.id,
+            metadata: learningSignals.metadata,
+          })
+          .from(learningSignals)
+          .where(
+            and(
+              eq(learningSignals.enrollmentId, enrollment.id),
+              eq(learningSignals.type, 'REFLECTION_SUBMITTED'),
+              isNull(learningSignals.resolvedAt)
+            )
+          );
+
+        const alreadyExists = existing.some((s) => {
+          const meta = s.metadata as Record<string, unknown> | null;
+          return meta?.lessonId === input.lessonId;
+        });
+
+        if (!alreadyExists) {
+          const [reflSignal] = await db
+            .insert(learningSignals)
+            .values({
+              organizationId: input.organizationId,
+              contactId: enrollment.contactId,
+              programId: enrollment.programId,
+              enrollmentId: enrollment.id,
+              type: 'REFLECTION_SUBMITTED',
+              priority: 85,
+              reason: `Refleksi ${wordCount} kata di "${targetLesson?.title ?? ''}": "${excerpt}"`,
+              recommendedActionType: 'WHATSAPP_REPLY',
+              recommendedActionReason: 'Balas refleksi via WhatsApp saat antusiasme peserta masih tinggi',
+              status: 'ACTIVE',
+              metadata: {
+                lessonId: input.lessonId,
+                lessonTitle: targetLesson?.title ?? '',
+              },
+            })
+            .returning();
+
+          if (reflSignal) {
+            signalsCreated.push(reflSignal);
+          }
+        }
+      }
 
       return {
         enrollment: updatedEnrollment,

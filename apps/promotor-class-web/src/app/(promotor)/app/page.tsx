@@ -12,6 +12,12 @@ import { getEnrollmentsQuery } from '@/modules/enrollments/queries';
 import { LearningSignal, Contact, Reflection, Enrollment } from '@promotor/contracts';
 import { formatTimeAgo } from '@promotor/platform-core';
 
+type SignalWithAction = LearningSignal & {
+  type?: string;
+  recommendedActionType?: string;
+  metadata?: Record<string, unknown>;
+};
+
 function signalTagClass(level: string): string {
   if (level === 'Minat tinggi') return 'tag tag-hot';
   if (level === 'Minat sedang') return 'tag tag-warm';
@@ -19,13 +25,14 @@ function signalTagClass(level: string): string {
 }
 
 export default function PromotorHomePage() {
-  const [signals, setSignals] = useState<LearningSignal[] | null>(null);
+  const [signals, setSignals] = useState<SignalWithAction[] | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [enrollments] = useState<Enrollment[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [whatsAppDraftContact, setWhatsAppDraftContact] = useState<Contact | null>(null);
+  const [whatsAppDraftMessage, setWhatsAppDraftMessage] = useState<string | undefined>(undefined);
   const [isDevMode, setIsDevMode] = useState(false);
 
   const isDevelopmentEnv = process.env.NODE_ENV === 'development';
@@ -39,7 +46,7 @@ export default function PromotorHomePage() {
         getReflectionsQuery(),
         getEnrollmentsQuery(),
       ]);
-      setSignals(sigData);
+      setSignals(sigData as SignalWithAction[]);
       setContacts(conData);
       setReflections(reflData);
       void enrData;
@@ -124,60 +131,81 @@ export default function PromotorHomePage() {
                 <div className="row-meta">
                   Skor minat: {sig.intentScore}/100
                 </div>
-               <div style={{ marginTop: 12 }}>
-                 <button type="button" className="btn btn-primary btn-sm" onClick={() =>setSelectedContactId(sig.contactId)}>
-                   Lihat learner
+                <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button type="button" className="btn btn-primary btn-sm" onClick={() =>setSelectedContactId(sig.contactId)}>
+                    Lihat learner
                   </button>
-               </div>
-             </div>
-           );
+                  {sig.recommendedActionType === 'WHATSAPP_REPLY' && (
+                    <button
+                      type="button"
+                      className="btn btn-accent btn-sm"
+                      onClick={() =>{
+                        const learnerName = contact.name || 'Peserta';
+                        const lessonTitle = (sig.metadata?.lessonTitle as string | undefined) || 'materi';
+                        const draft = `Halo Kak ${learnerName}, terima kasih refleksinya di ${lessonTitle}! Sangat mendalam. Boleh saya bantu jalankan penerapannya di rumah? 😊`;
+                        setWhatsAppDraftMessage(draft);
+                        setWhatsAppDraftContact(contact);
+                      }}
+                    >
+                      Kirim WhatsApp
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
           })}
         </>
-     )}
+      )}
 
       {signals && signals.length === 0 && !loadError && (
         <EmptyState
           title="Tidak ada yang perlu perhatian"
           explanation="Sinyal belajar dari aktivitas peserta akan muncul di sini saat ada yang bisa ditindaklanjuti."
         />
-     )}
+      )}
 
-      {activityItems.length >0 && (
+      {activityItems.length > 0 && (
         <>
-         <SectionHead label="Aktivitas pembelajaran terbaru" />
-         <div style={{ padding: '10px 18px' }}>
-           {activityItems.slice(0, 10).map(act =>(
+          <SectionHead label="Aktivitas pembelajaran terbaru" />
+          <div style={{ padding: '10px 18px' }}>
+            {activityItems.slice(0, 10).map((act) => (
               <div key={act.id} className="timeline-row">
-               <div className="timeline-body">
-                 <div className="timeline-title">{act.summary}</div>
-               </div>
-               <div style={{ marginLeft: 'auto', font: '500 10px/1.4 var(--font-sans)', color: 'var(--muted-light)', flex: 'none' }} className="tabular-nums">
-                 {act.timeAgo}
+                <div className="timeline-body">
+                  <div className="timeline-title">{act.summary}</div>
                 </div>
-             </div>
-           ))}
+                <div style={{ marginLeft: 'auto', font: '500 10px/1.4 var(--font-sans)', color: 'var(--muted-light)', flex: 'none' }} className="tabular-nums">
+                  {act.timeAgo}
+                </div>
+              </div>
+            ))}
           </div>
-       </>
-     )}
+        </>
+      )}
       <div style={{ height: 24 }} />
 
-     {selectedContact && (
+      {selectedContact && (
         <LearnerDetail
           contact={selectedContact}
           onClose={() =>setSelectedContactId(null)}
-          onOpenWhatsAppDraft={c =>{
+          onOpenWhatsAppDraft={(c, msg) =>{
             setSelectedContactId(null);
+            setWhatsAppDraftMessage(msg);
             setWhatsAppDraftContact(c);
           }}
         />
-     )}
+      )}
 
       {whatsAppDraftContact && (
         <WhatsAppDraftSheet
+          key={whatsAppDraftContact.id + (whatsAppDraftMessage ?? '')}
           contact={whatsAppDraftContact}
-          onClose={() =>setWhatsAppDraftContact(null)}
+          initialMessage={whatsAppDraftMessage}
+          onClose={() =>{
+            setWhatsAppDraftContact(null);
+            setWhatsAppDraftMessage(undefined);
+          }}
         />
-     )}
+      )}
     </PromotorShell>
  );
 }
