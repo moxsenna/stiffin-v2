@@ -12,6 +12,12 @@ import { getEnrollmentFullDetailsQuery } from '@/modules/learning/queries';
 import { completeLessonCommand, submitReflectionCommand } from '@/modules/learning/commands';
 import { recordCtaClickCommand } from '@/modules/ctas/commands';
 import { getYoutubeEmbedUrl } from '@/lib/video/parse-youtube-url';
+import {
+  buildReflectionDraftKey,
+  saveReflectionDraft,
+  loadReflectionDraft,
+  clearReflectionDraft,
+} from '@/lib/reflection-draft';
 import { Enrollment, Program, Lesson } from '@promotor/contracts';
 
 export function LessonReaderClient() {
@@ -27,6 +33,24 @@ export function LessonReaderClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [accessDenied, setAccessDenied] = useState(false);
+
+  // Restore draft sekali per lesson
+  const draftKey = enrollment && lesson ? buildReflectionDraftKey(enrollmentId, lessonId) : null;
+  useEffect(() => {
+    if (!draftKey || lesson?.hasReflection === false) return;
+    const saved = loadReflectionDraft(draftKey);
+    if (saved && saved.length > 0) {
+      setReflectionAnswer((current) => (current.length === 0 ? saved : current));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftKey]);
+
+  // Debounced autosave 500ms
+  useEffect(() => {
+    if (!draftKey || lesson?.hasReflection === false) return;
+    const t = setTimeout(() => saveReflectionDraft(draftKey, reflectionAnswer), 500);
+    return () => clearTimeout(t);
+  }, [draftKey, reflectionAnswer, lesson]);
 
   useEffect(() =>{
     async function loadData() {
@@ -177,6 +201,8 @@ export function LessonReaderClient() {
         ? `/learn/programs/${enrollmentId}/completed`
         : `/learn/programs/${enrollmentId}`;
 
+      if (draftKey) clearReflectionDraft(draftKey);
+
       if (typeof window !== 'undefined') {
         window.location.href = targetUrl;
       } else {
@@ -313,6 +339,12 @@ export function LessonReaderClient() {
         {errorMsg && (
           <div className="field-error" role="alert" style={{ marginTop: 12 }}>{errorMsg}</div>
        )}
+
+        {lesson?.hasReflection !== false && (
+          <p style={{ font: '400 11px/1.4 var(--font-sans)', color: 'var(--muted-strong)' }}>
+            Draf tersimpan otomatis di perangkat ini.
+          </p>
+        )}
 
         <button
           onClick={handleComplete}
