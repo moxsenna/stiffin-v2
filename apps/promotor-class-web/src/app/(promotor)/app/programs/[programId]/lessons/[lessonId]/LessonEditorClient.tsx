@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { getProgramByIdQuery } from '@/modules/programs/queries';
 import { saveLessonCommand } from '@/modules/programs/commands';
+import { AttachmentRow, emptyAttachmentRow, normalizeAttachmentRows } from '@/modules/programs/attachments';
 import { Program, Lesson } from '@promotor/contracts';
 
 export function LessonEditorClient() {
@@ -23,15 +24,19 @@ export function LessonEditorClient() {
   const [hasCta, setHasCta] = useState(false);
   const [ctaLabel, setCtaLabel] = useState('Konsultasi via WhatsApp');
   const [ctaUrl, setCtaUrl] = useState('');
+  const [attachments, setAttachments] = useState<AttachmentRow[]>([]);
   const [moduleId, setModuleId] = useState('');
   const [lessonOrder, setLessonOrder] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() =>{
+  const updateRow = (idx: number, patch: Partial<AttachmentRow>) =>
+    setAttachments(attachments.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
+
+  useEffect(() => {
     getProgramByIdQuery(programId)
-      .then((prog: Program | undefined) =>{
+      .then((prog: Program | undefined) => {
         if (!prog) {
           setErrorMessage('Program tidak ditemukan.');
           return;
@@ -54,6 +59,13 @@ export function LessonEditorClient() {
               setHasCta(!!les.hasCta || !!les.ctaLabel);
               setCtaLabel(les.ctaLabel || 'Konsultasi via WhatsApp');
               setCtaUrl((les.ctaConfig as any)?.url || les.ctaUrl || '');
+              setAttachments(
+                (les.attachments ?? []).map((att) => ({
+                  kind: att.kind === 'image' ? ('image' as const) : ('download' as const),
+                  name: att.name ?? '',
+                  url: att.url ?? '',
+                }))
+              );
             }
           }
         }
@@ -61,16 +73,16 @@ export function LessonEditorClient() {
           setErrorMessage('Pelajaran tidak ditemukan dalam program ini.');
         }
       })
-      .catch((err) =>{
+      .catch((err) => {
         console.error('Error loading lesson:', err);
         setErrorMessage('Gagal memuat data pelajaran.');
       })
-      .finally(() =>{
+      .finally(() => {
         setInitialLoading(false);
       });
   }, [programId, lessonId]);
 
-  const handleSave = async (e: React.FormEvent) =>{
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -86,10 +98,17 @@ export function LessonEditorClient() {
 
     const trimmedText = textContent.trim();
     const trimmedVideo = videoYoutubeUrl.trim();
-    const hasAnyContent = Boolean(trimmedText || trimmedVideo || hasReflection || hasCta);
+    const payloadAttachments = normalizeAttachmentRows(attachments).map((r) => ({
+      kind: r.kind,
+      name: r.name,
+      url: r.url,
+    }));
+    const hasAnyContent = Boolean(
+      trimmedText || trimmedVideo || hasReflection || hasCta || payloadAttachments.length > 0
+    );
 
     if (!hasAnyContent) {
-      setErrorMessage('Pelajaran harus memiliki setidaknya materi teks, video YouTube, refleksi, atau tombol aksi (CTA).');
+      setErrorMessage('Pelajaran harus memiliki setidaknya materi teks, video YouTube, refleksi, tombol aksi (CTA), atau materi pendukung.');
       return;
     }
 
@@ -112,6 +131,7 @@ export function LessonEditorClient() {
         ctaLabel: hasCta ? ctaLabel.trim() || 'Konsultasi via WhatsApp' : undefined,
         ctaUrl: hasCta ? ctaUrl.trim() || 'https://wa.me/' : undefined,
         ctaConfig: hasCta ? { url: ctaUrl.trim() || 'https://wa.me/' } : undefined,
+        attachments: payloadAttachments as any,
       };
 
       await saveLessonCommand(programId, moduleId, updatedLesson);
@@ -248,6 +268,31 @@ export function LessonEditorClient() {
                 outline: 'none',
               }}
             />
+         </div>
+
+         {/* Materi Pendukung / Lampiran */}
+         <div style={{ marginTop: 16 }}>
+           <div className="field-label">Materi Pendukung (worksheet / handout / audio)</div>
+           <p className="kicker kicker-muted">Tempel link file (Google Drive, Dropbox, dsb). Pastikan link bisa diakses peserta.</p>
+           {attachments.map((att, idx) => (
+             <div key={idx} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 2fr 40px', gap: 8, marginTop: 8 }}>
+               <select className="input" value={att.kind} aria-label={`Tipe lampiran ${idx + 1}`}
+                 onChange={(e) => updateRow(idx, { kind: e.target.value as 'image' | 'download' })}>
+                 <option value="download">Unduhan</option>
+                 <option value="image">Gambar</option>
+               </select>
+               <input className="input" placeholder="Nama file" value={att.name} aria-label={`Nama lampiran ${idx + 1}`}
+                 onChange={(e) => updateRow(idx, { name: e.target.value })} />
+               <input className="input" placeholder="https://..." value={att.url} aria-label={`URL lampiran ${idx + 1}`}
+                 onChange={(e) => updateRow(idx, { url: e.target.value })} />
+               <button type="button" className="btn btn-ghost" aria-label={`Hapus lampiran ${idx + 1}`}
+                 onClick={() => setAttachments(attachments.filter((_, i) => i !== idx))}>✕</button>
+             </div>
+           ))}
+           <button type="button" className="btn btn-secondary btn-sm" style={{ marginTop: 8 }}
+             onClick={() => setAttachments([...attachments, emptyAttachmentRow()])}>
+             + Tambah Lampiran
+           </button>
          </div>
 
          {/* Reflection Setup */}
