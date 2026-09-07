@@ -9,11 +9,8 @@
   "observability": {
     "enabled": true
   },
-  "triggers": {
-    "crons": [
-      "0 2 * * *"
-    ]
-  },
+  // Cron dinonaktifkan sementara: akun CF Free limit 5 cron trigger/account.
+  // Sweep Learner Macet dijalankan manual via endpoint admin sampai upgrade Paid.
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
