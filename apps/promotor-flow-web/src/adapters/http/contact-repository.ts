@@ -51,6 +51,10 @@ export class HttpContactRepository implements ContactRepositoryPort {
     return this.mapToFlowContact(res);
   }
 
+  async addNote(contactId: string, body: string): Promise<any> {
+    return this.api.addContactNote(contactId, { body });
+  }
+
   private mapToFlowContact(c: any): FlowContact {
     const payload = c.context ?? c.contactFlow ?? c;
     const contact = payload.contact ?? payload;

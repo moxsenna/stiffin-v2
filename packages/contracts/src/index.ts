@@ -656,6 +656,11 @@ export const TransitionFlowContactStageRequestSchema = z.object({
 });
 export type TransitionFlowContactStageRequest = z.infer<typeof TransitionFlowContactStageRequestSchema>;
 
+export const CreateContactNoteRequestSchema = z.object({
+  body: z.string().trim().min(1, 'Catatan tidak boleh kosong').max(1000, 'Catatan maksimal 1000 karakter'),
+});
+export type CreateContactNoteRequest = z.infer<typeof CreateContactNoteRequestSchema>;
+
 export const ListFlowContactsQuerySchema = z.object({
   search: z.string().optional(),
   classification: ContactClassificationSchema.optional(),

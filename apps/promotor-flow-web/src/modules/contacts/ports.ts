@@ -6,4 +6,5 @@ export interface ContactRepositoryPort {
   findContactByPhone(phoneE164: string, organizationId?: string): Promise<FlowContact | null>;
   createContact(contact: Omit<FlowContact, 'createdAt' | 'updatedAt'>): Promise<FlowContact>;
   updateContact(contactId: string, updates: Partial<FlowContact>): Promise<FlowContact>;
+  addNote?(contactId: string, body: string): Promise<any>;
 }

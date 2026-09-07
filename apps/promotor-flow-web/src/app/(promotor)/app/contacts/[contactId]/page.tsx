@@ -3,11 +3,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
-import { PageHeader, SectionHead, ErrorState, LoadingRows, BottomSheet, LifecycleStrip } from '@/components/ui';
+import { PageHeader, SectionHead, ErrorState, LoadingRows, BottomSheet, LifecycleStrip, Toast, useToast } from '@/components/ui';
 import { WhatsAppBottomSheet } from '@/components/today/WhatsAppBottomSheet';
 import {
   contactQueries,
   contactCommands,
+  addContactNoteCommand,
   lifecycleCommands,
   nextActionQueries,
   nextActionCommands,
@@ -62,6 +63,9 @@ export default function ContactDetailPage() {
 
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notesText, setNotesText] = useState('');
+  const [toast, showToast] = useToast();
+  const [quickNote, setQuickNote] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
   const [showStageModal, setShowStageModal] = useState(false);
   const [showLostModal, setShowLostModal] = useState(false);
   const [lostReasonInput, setLostReasonInput] = useState('');
@@ -280,6 +284,22 @@ export default function ContactDetailPage() {
     await loadData();
   };
 
+  const handleSaveNote = async () => {
+    if (!quickNote.trim() || savingNote) return;
+    setSavingNote(true);
+    try {
+      await addContactNoteCommand(contactId, quickNote.trim(), contact?.organizationId);
+      setQuickNote('');
+      showToast('Catatan tersimpan ✓');
+      const evs = await activityQueries.listActivities(contactId);
+      setActivities(evs);
+    } catch (err: any) {
+      showToast(err?.message || 'Gagal menyimpan catatan.');
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
   const stageIdx = LIFECYCLE_INDEX[contact.stage.toUpperCase()] ?? -1;
 
   return (
@@ -484,7 +504,32 @@ export default function ContactDetailPage() {
        )}
       </div>
 
-     {/* Activity timeline */}
+      {/* Quick Activity Note Composer */}
+      <div style={{ padding: '0 18px' }}>
+        <section style={{ marginTop: 12 }}>
+          <div className="field-label">Catatan Cepat</div>
+          <textarea
+            className="textarea"
+            rows={2}
+            value={quickNote}
+            onChange={(e) => setQuickNote(e.target.value)}
+            placeholder="mis. Anak kelas 2 SMP, pemalu, suka melukis..."
+            aria-label="Catatan cepat"
+          />
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              disabled={quickNote.trim().length === 0 || savingNote}
+              onClick={handleSaveNote}
+            >
+              {savingNote ? 'Menyimpan...' : 'Simpan Catatan'}
+            </button>
+          </div>
+        </section>
+      </div>
+
+      {/* Activity timeline */}
       <SectionHead label="Aktivitas" count={`${activities.length}`} />
      <div style={{ padding: '10px 18px 24px' }}>
        {activities.length >0 ? (
@@ -645,6 +690,7 @@ export default function ContactDetailPage() {
           onConfirmSent={handleConfirmWaSent}
         />
      )}
+      <Toast message={toast} />
     </AppShell>
  );
 }
