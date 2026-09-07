@@ -356,6 +356,10 @@ export function ProgramDetailClient() {
            <Link href={`/p/${program.workspaceSlug}/${program.programSlug}`} target="_blank" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>
              Preview Halaman Landing ↗
             </Link>
+           <div>·</div>
+           <Link href={`/learn/preview/${program.id}`} target="_blank" className="btn btn-secondary btn-sm">
+             Lihat sebagai Peserta ↗
+            </Link>
          </div>
        </div>
 
