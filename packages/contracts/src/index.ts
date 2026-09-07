@@ -670,10 +670,13 @@ export const CreateContactNoteRequestSchema = z.object({
 export type CreateContactNoteRequest = z.infer<typeof CreateContactNoteRequestSchema>;
 
 export const ListFlowContactsQuerySchema = z.object({
-  search: z.string().optional(),
-  classification: ContactClassificationSchema.optional(),
-  limit: z.coerce.number().int().min(1).max(100).optional(),
-  offset: z.coerce.number().int().min(0).optional(),
+  search: z.string().max(120).optional(),
+  classification: z.enum(['PROSPECT', 'CLIENT']).optional(),
+  stage: ContactLifecycleStageSchema.optional(),
+  neverContacted: z.coerce.boolean().optional(),
+  followUpOverdue: z.coerce.boolean().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
 });
 export type ListFlowContactsQuery = z.infer<typeof ListFlowContactsQuerySchema>;
 

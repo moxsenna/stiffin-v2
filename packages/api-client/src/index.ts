@@ -603,10 +603,13 @@ export class PromotorFlowApiClient {
   }
 
   // Contacts
-  async listContacts(query?: ListFlowContactsQuery): Promise<{ contacts: any[]; total: number }> {
+  async listContacts(query?: Partial<ListFlowContactsQuery>): Promise<{ contacts: any[]; total: number }> {
     const q = new URLSearchParams();
     if (query?.search) q.set('search', query.search);
     if (query?.classification) q.set('classification', query.classification);
+    if (query?.stage) q.set('stage', query.stage);
+    if (query?.neverContacted !== undefined) q.set('neverContacted', String(query.neverContacted));
+    if (query?.followUpOverdue !== undefined) q.set('followUpOverdue', String(query.followUpOverdue));
     if (query?.limit !== undefined) q.set('limit', String(query.limit));
     if (query?.offset !== undefined) q.set('offset', String(query.offset));
     const qs = q.toString();
