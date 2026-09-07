@@ -15,6 +15,11 @@ export interface LearningRepositoryPort {
     lessonId: string,
     data: { responseText?: string | null; selectedOptions?: unknown }
   ): Promise<SubmitReflectionResponse>;
+  updateLessonPosition(
+    enrollmentId: string,
+    lessonId: string,
+    positionSeconds: number
+  ): Promise<{ ok: boolean }>;
   recordEvent(
     enrollmentId: string,
     data: { eventType: LearningEventType; payload?: Record<string, unknown> }

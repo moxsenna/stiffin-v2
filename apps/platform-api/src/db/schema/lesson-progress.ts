@@ -1,4 +1,4 @@
-import { pgTable, uuid, timestamp, boolean, uniqueIndex, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, timestamp, boolean, integer, uniqueIndex, index } from 'drizzle-orm/pg-core';
 import { organizations } from './organizations';
 import { enrollments } from './enrollments';
 import { lessons } from './lessons';
@@ -16,6 +16,7 @@ export const lessonProgress = pgTable(
     lessonId: uuid('lesson_id')
       .notNull()
       .references(() => lessons.id, { onDelete: 'cascade' }),
+    lastPositionSeconds: integer('last_position_seconds').notNull().default(0),
     isCompleted: boolean('is_completed').default(false).notNull(),
     completedAt: timestamp('completed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

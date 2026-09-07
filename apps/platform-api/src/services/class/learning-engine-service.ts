@@ -88,6 +88,7 @@ export interface EnrollmentFullDetails {
         ctaLabel: string | null;
         ctaTargetProgramId: string | null;
         ctaConfig: unknown | null;
+        lastPositionSeconds: number;
         isCompleted: boolean;
         completedAt: string | null;
         reflection?: {
@@ -149,6 +150,13 @@ export interface LearningEngineService {
     enrollment: EnrollmentRow;
     signalsCreated: LearningSignalRow[];
   }>;
+  recordLessonPosition(input: {
+    organizationId: string;
+    enrollmentId: string;
+    lessonId: string;
+    authenticatedContactId?: string;
+    positionSeconds: number;
+  }): Promise<void>;
   getEnrollmentFullDetails(organizationId: string, enrollmentId: string, authenticatedContactId?: string): Promise<EnrollmentFullDetails>;
   listLearners(organizationId: string, options?: { programId?: string; search?: string; limit?: number; offset?: number }): Promise<{ learners: LearnerSummaryItem[]; total: number }>;
   getLearnerDetail(organizationId: string, contactId: string): Promise<Record<string, unknown>>;
@@ -793,6 +801,22 @@ export function createLearningEngineService(
       };
     },
 
+    async recordLessonPosition(input) {
+      const { enrollment } = await validateEnrollmentAndLesson(
+        input.organizationId,
+        input.enrollmentId,
+        input.lessonId,
+        input.authenticatedContactId
+      );
+      await lessonProgressRepo.upsertPosition(
+        input.organizationId,
+        enrollment.id,
+        input.lessonId,
+        input.positionSeconds,
+        getNow()
+      );
+    },
+
     async getEnrollmentFullDetails(organizationId, enrollmentId, authenticatedContactId) {
       const { enrollment, program } = await validateEnrollmentAndLesson(
         organizationId,
@@ -831,6 +855,7 @@ export function createLearningEngineService(
             ctaUrl: l.ctaUrl ?? (l.ctaConfig as any)?.url ?? null,
             ctaTargetProgramId: l.ctaTargetProgramId ?? null,
             ctaConfig: l.ctaConfig ?? null,
+            lastPositionSeconds: prog?.lastPositionSeconds ?? 0,
             isCompleted: prog?.isCompleted ?? false,
             completedAt: prog?.completedAt ? new Date(prog.completedAt).toISOString() : null,
             reflection: ref

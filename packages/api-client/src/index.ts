@@ -46,6 +46,7 @@ import type {
   CompleteLessonResponse,
   SubmitReflectionRequest,
   SubmitReflectionResponse,
+  UpdateLessonPositionRequest,
   RecordLearningEventRequest,
   RecordLearningEventResponse,
   LearnerEnrollmentDetailsDto,
@@ -403,6 +404,17 @@ export class PromotorClassContentApiClient {
   ): Promise<SubmitReflectionResponse> {
     return this.client.post(
       `/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/reflection`,
+      data
+    );
+  }
+
+  async updateLearnerLessonPosition(
+    enrollmentId: string,
+    lessonId: string,
+    data: UpdateLessonPositionRequest
+  ): Promise<{ ok: boolean }> {
+    return this.client.put(
+      `/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/position`,
       data
     );
   }

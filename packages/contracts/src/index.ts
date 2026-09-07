@@ -83,6 +83,7 @@ export const LessonSchema = z.object({
   ctaUrl: z.string().optional().nullable(),
   ctaTargetProgramId: z.string().optional().nullable(),
   ctaConfig: z.record(z.string(), z.unknown()).optional().nullable(),
+  lastPositionSeconds: z.number().optional(),
 });
 
 export type Lesson = z.infer<typeof LessonSchema>;
@@ -1011,6 +1012,11 @@ export const SubmitReflectionRequestSchema = z.object({
 });
 export type SubmitReflectionRequest = z.infer<typeof SubmitReflectionRequestSchema>;
 
+export const UpdateLessonPositionRequestSchema = z.object({
+  positionSeconds: z.number().int().min(0).max(86_400, 'Durasi video tidak valid'),
+});
+export type UpdateLessonPositionRequest = z.infer<typeof UpdateLessonPositionRequestSchema>;
+
 export const SubmitReflectionResponseSchema = z.object({
   enrollmentId: z.string().uuid(),
   lessonId: z.string().uuid(),
@@ -1065,6 +1071,7 @@ export const LearnerEnrollmentDetailsSchema = z.object({
             ctaTargetProgramId: z.string().uuid().nullable().optional(),
             ctaConfig: z.unknown().nullable().optional(),
             isCompleted: z.boolean(),
+            lastPositionSeconds: z.number().default(0),
             completedAt: z.string().nullable().optional(),
             reflection: z
               .object({

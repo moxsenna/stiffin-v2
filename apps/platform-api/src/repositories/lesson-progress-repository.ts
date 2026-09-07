@@ -27,6 +27,13 @@ export interface LessonProgressRepository {
     lessonId: string,
     completedAt?: string | null
   ): Promise<{ progress: LessonProgressRow; isNewlyCompleted: boolean }>;
+  upsertPosition(
+    organizationId: string,
+    enrollmentId: string,
+    lessonId: string,
+    positionSeconds: number,
+    now: Date
+  ): Promise<void>;
 }
 
 export function createLessonProgressRepository(db: NodePgDatabase): LessonProgressRepository {
@@ -116,6 +123,27 @@ export function createLessonProgressRepository(db: NodePgDatabase): LessonProgre
         progress: row as LessonProgressRow,
         isNewlyCompleted: Boolean(row.isNewlyCompleted),
       };
+    },
+
+    async upsertPosition(organizationId, enrollmentId, lessonId, positionSeconds, now) {
+      await db
+        .insert(lessonProgress)
+        .values({
+          organizationId,
+          enrollmentId,
+          lessonId,
+          lastPositionSeconds: Math.floor(positionSeconds),
+          isCompleted: false,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: [lessonProgress.enrollmentId, lessonProgress.lessonId],
+          set: {
+            lastPositionSeconds: Math.floor(positionSeconds),
+            updatedAt: now,
+          },
+        });
     },
   };
 }

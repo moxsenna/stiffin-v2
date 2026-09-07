@@ -15,6 +15,15 @@ export async function submitReflectionCommand(
   return repo.submitReflection(enrollmentId, lessonId, data);
 }
 
+export async function submitLessonPositionCommand(
+  enrollmentId: string,
+  lessonId: string,
+  positionSeconds: number
+) {
+  const repo = getLearningRepository();
+  return repo.updateLessonPosition(enrollmentId, lessonId, positionSeconds);
+}
+
 export async function recordLearningEventCommand(
   enrollmentId: string,
   data: { eventType: LearningEventType; payload?: Record<string, unknown> }

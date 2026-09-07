@@ -28,6 +28,7 @@ import {
   PublicRegisterLearnerRequestSchema,
   RedeemLearnerTokenRequestSchema,
   SubmitReflectionRequestSchema,
+  UpdateLessonPositionRequestSchema,
   RecordLearningEventRequestSchema,
   RecordCtaClickRequestSchema,
 } from '@promotor/contracts';
@@ -573,6 +574,29 @@ export function createApp(deps?: AppDependencies) {
       intentScore: result.enrollment.intentScore,
       intentLabel: result.enrollment.intentLabel,
     }, 200);
+  });
+
+  app.put('/api/v1/learner/enrollments/:enrollmentId/lessons/:lessonId/position', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const enrollmentId = c.req.param('enrollmentId');
+    const lessonId = c.req.param('lessonId');
+    const learnerCtx = c.get('learnerContext' as any) as any;
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = UpdateLessonPositionRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      const details = parsed.error.issues.map((i) => i.message).join(', ');
+      throw new DomainError('VALIDATION_ERROR', `Posisi video tidak valid: ${details}`);
+    }
+    const learningService = createLearningEngineService(db);
+    await learningService.recordLessonPosition({
+      organizationId: learnerCtx.organizationId,
+      enrollmentId,
+      lessonId,
+      authenticatedContactId: learnerCtx.contactId,
+      positionSeconds: parsed.data.positionSeconds,
+    });
+    return c.json({ ok: true }, 200);
   });
 
   app.post('/api/v1/learner/enrollments/:enrollmentId/lessons/:lessonId/cta-click', async (c) => {

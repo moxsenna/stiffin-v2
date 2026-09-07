@@ -9,9 +9,10 @@ import { getActiveLearnerContactId } from '@/lib/session';
 import { getEnrollmentByIdQuery } from '@/modules/enrollments/queries';
 import { getProgramByIdQuery } from '@/modules/programs/queries';
 import { getEnrollmentFullDetailsQuery } from '@/modules/learning/queries';
-import { completeLessonCommand, submitReflectionCommand } from '@/modules/learning/commands';
+import { completeLessonCommand, submitReflectionCommand, submitLessonPositionCommand } from '@/modules/learning/commands';
 import { recordCtaClickCommand } from '@/modules/ctas/commands';
-import { getYoutubeEmbedUrl } from '@/lib/video/parse-youtube-url';
+import { extractYoutubeId, getYoutubeEmbedUrl } from '@/lib/video/parse-youtube-url';
+import { YoutubeLessonPlayer } from '@/components/learner/YoutubeLessonPlayer';
 import {
   buildReflectionDraftKey,
   saveReflectionDraft,
@@ -28,11 +29,12 @@ export function LessonReaderClient() {
 
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [program, setProgram] = useState<Program | null>(null);
-  const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [lesson, setLesson] = useState<(Lesson & { isCompleted?: boolean; lastPositionSeconds?: number }) | null>(null);
   const [reflectionAnswer, setReflectionAnswer] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [accessDenied, setAccessDenied] = useState(false);
+  const [showVideoDonePrompt, setShowVideoDonePrompt] = useState(false);
 
   // Restore draft sekali per lesson
   const draftKey = enrollment && lesson ? buildReflectionDraftKey(enrollmentId, lessonId) : null;
@@ -99,6 +101,9 @@ export function LessonReaderClient() {
                 setLesson({
                   ...l,
                   videoYoutubeUrl: l.videoUrl || l.videoYoutubeUrl,
+                  videoExternalId: l.videoExternalId || extractYoutubeId(l.videoUrl || l.videoYoutubeUrl || undefined) || undefined,
+                  lastPositionSeconds: l.lastPositionSeconds ?? 0,
+                  isCompleted: l.isCompleted === true,
                   hasReflection: !!l.reflectionType || !!l.reflectionPrompt || !!l.hasReflection,
                   reflectionPrompt: l.reflectionPrompt || undefined,
                   hasCta: !!l.ctaType || !!l.ctaLabel,
@@ -133,8 +138,13 @@ export function LessonReaderClient() {
           for (const mod of prog.modules) {
             for (const les of mod.lessons) {
               if (les.id === lessonId) {
-                setLesson(les);
                 const prevProgress = enr.lessonProgress?.[lessonId];
+                setLesson({
+                  ...les,
+                  videoExternalId: les.videoExternalId || extractYoutubeId(les.videoYoutubeUrl ?? undefined) || undefined,
+                  lastPositionSeconds: (prevProgress as any)?.lastPositionSeconds ?? 0,
+                  isCompleted: prevProgress?.completed ?? false,
+                });
                 if (prevProgress?.reflectionAnswer) {
                   setReflectionAnswer(prevProgress.reflectionAnswer);
                 }
@@ -220,7 +230,8 @@ export function LessonReaderClient() {
     await recordCtaClickCommand(enrollmentId, lessonId, ctaUrl);
   };
 
-  const embedVideoUrl = getYoutubeEmbedUrl(lesson.videoYoutubeUrl ?? undefined);
+  const savedPosition = lesson?.lastPositionSeconds ?? 0;
+  const videoId = lesson.videoExternalId || extractYoutubeId(lesson.videoYoutubeUrl ?? undefined) || '';
 
   let moduleLabel = '';
   for (const mod of program.modules) {
@@ -242,24 +253,32 @@ export function LessonReaderClient() {
      <article style={{ maxWidth: 700, margin: '0 auto', padding: '18px' }}>
        <h1 style={{ font: '800 21px/1.2 var(--font-sans)', letterSpacing: '-0.02em' }}>{lesson.title}</h1>
 
-       {embedVideoUrl && (
-          <div
-            style={{
-              position: 'relative',
-              paddingBottom: '56.25%',
-              height: 0,
-              overflow: 'hidden',
-              marginTop: 14,
-              backgroundColor: '#2d2b2b',
-              borderBottom: '2px solid var(--ink)',
-            }}
-          >
-           <iframe
-              src={embedVideoUrl}
-              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
-              allowFullScreen
-              title={`Video pelajaran: ${lesson.title}`}
-            />
+       {videoId && (
+         <div style={{ marginTop: 14 }}>
+           <YoutubeLessonPlayer
+             videoId={lesson.videoExternalId ?? videoId}
+             startSeconds={savedPosition}
+             isCompleted={lesson.isCompleted === true}
+             onEnded={() => setShowVideoDonePrompt(true)}
+             onPositionChange={(seconds) => {
+               submitLessonPositionCommand(enrollmentId, lessonId, seconds).catch(() => {});
+             }}
+           />
+           {showVideoDonePrompt && (
+             <div style={{ marginTop: 12, padding: 14, border: '1px solid var(--accent)', background: 'var(--accent-soft, #eff6ff)' }}>
+               <strong style={{ font: '700 14px/1.4 var(--font-sans)' }}>Video selesai.</strong>
+               <p style={{ font: '400 13px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>
+                 Lanjutkan ke refleksi di bawah untuk mengunci modul ini.
+               </p>
+               <button
+                 type="button"
+                 className="btn btn-primary btn-sm"
+                 onClick={() => document.getElementById('refleksi-section')?.scrollIntoView({ behavior: 'smooth' })}
+               >
+                 Isi Refleksi
+               </button>
+             </div>
+           )}
          </div>
        )}
 
@@ -297,7 +316,7 @@ export function LessonReaderClient() {
           </div>
        )}
 
-        <section style={{ marginTop: 22, border: 'var(--sep-strong)', padding: 16, background: 'var(--surface-muted)' }}>
+        <section id="refleksi-section" style={{ marginTop: 22, border: 'var(--sep-strong)', padding: 16, background: 'var(--surface-muted)' }}>
          <h3 className="kicker kicker-accent" style={{ fontSize: 10 }}>Refleksi Wajib *</h3>
          <p style={{ marginTop: 10, font: '600 14px/1.45 var(--font-sans)' }}>
            {lesson.reflectionPrompt || 'Tuliskan pemikiran dan hasil pengamatan Anda:'}
