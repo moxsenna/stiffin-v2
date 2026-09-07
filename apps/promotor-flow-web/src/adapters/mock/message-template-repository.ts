@@ -1,6 +1,8 @@
 import { MessageTemplateRepositoryPort } from '@/modules/messaging/ports';
 import { MessageTemplate, NextActionType } from '@promotor/promotor-flow-fixtures';
+import type { MessageTemplateTone } from '@promotor/contracts';
 import { MockStateStore } from './mock-state-store';
+import { pickTemplateByTone } from '@/modules/messaging/queries';
 
 export class MockMessageTemplateRepository implements MessageTemplateRepositoryPort {
   constructor(private store: MockStateStore) {}
@@ -9,8 +11,8 @@ export class MockMessageTemplateRepository implements MessageTemplateRepositoryP
     return this.store.getMessageTemplates();
   }
 
-  async getTemplateByCategory(category: NextActionType): Promise<MessageTemplate | null> {
-    const match = this.store.getMessageTemplates().find((t) => t.category === category);
-    return match || null;
+  async getTemplateByCategory(category: NextActionType, tone?: MessageTemplateTone | null): Promise<MessageTemplate | null> {
+    const templates = this.store.getMessageTemplates();
+    return pickTemplateByTone(templates, category, tone) ?? null;
   }
 }

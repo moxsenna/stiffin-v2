@@ -83,6 +83,7 @@ export const LessonSchema = z.object({
   ctaUrl: z.string().optional().nullable(),
   ctaTargetProgramId: z.string().optional().nullable(),
   ctaConfig: z.record(z.string(), z.unknown()).optional().nullable(),
+  lastPositionSeconds: z.number().optional(),
 });
 
 export type Lesson = z.infer<typeof LessonSchema>;
@@ -209,6 +210,12 @@ export const PublicProgramDetailSchema = z.object({
 });
 export type PublicProgramDetail = z.infer<typeof PublicProgramDetailSchema>;
 
+export const IntentBreakdownItemSchema = z.object({
+  label: z.string(),
+  points: z.number().int(),
+});
+export type IntentBreakdownItem = z.infer<typeof IntentBreakdownItemSchema>;
+
 export const EnrollmentSchema = z.object({
   id: z.string(),
   organizationId: z.string(),
@@ -219,6 +226,7 @@ export const EnrollmentSchema = z.object({
   completedAt: z.string().optional(),
   progressPercent: z.number().min(0).max(100),
   completedLessonIds: z.array(z.string()),
+  intentBreakdown: z.array(IntentBreakdownItemSchema).nullable().optional(),
   lessonProgress: z.record(
     z.string(),
     z.object({
@@ -662,10 +670,13 @@ export const CreateContactNoteRequestSchema = z.object({
 export type CreateContactNoteRequest = z.infer<typeof CreateContactNoteRequestSchema>;
 
 export const ListFlowContactsQuerySchema = z.object({
-  search: z.string().optional(),
-  classification: ContactClassificationSchema.optional(),
-  limit: z.coerce.number().int().min(1).max(100).optional(),
-  offset: z.coerce.number().int().min(0).optional(),
+  search: z.string().max(120).optional(),
+  classification: z.enum(['PROSPECT', 'CLIENT']).optional(),
+  stage: ContactLifecycleStageSchema.optional(),
+  neverContacted: z.coerce.boolean().optional(),
+  followUpOverdue: z.coerce.boolean().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
 });
 export type ListFlowContactsQuery = z.infer<typeof ListFlowContactsQuerySchema>;
 
@@ -778,6 +789,23 @@ export const MessageTemplateCategorySchema = z.enum([
 ]);
 export type MessageTemplateCategory = z.infer<typeof MessageTemplateCategorySchema>;
 
+export const MessageTemplateToneSchema = z.enum(['FORMAL', 'HANGAT', 'URGENT']);
+export type MessageTemplateTone = z.infer<typeof MessageTemplateToneSchema>;
+
+export const MessageTemplateSchema = z.object({
+  id: z.string(),
+  organizationId: z.string().optional(),
+  title: z.string(),
+  category: MessageTemplateCategorySchema,
+  templateText: z.string().optional(),
+  bodyText: z.string().optional(),
+  tone: MessageTemplateToneSchema.nullable().optional(),
+  isActive: z.boolean().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+export type MessageTemplateDto = z.infer<typeof MessageTemplateSchema>;
+
 export const ListMessageTemplatesQuerySchema = z.object({
   category: MessageTemplateCategorySchema.optional(),
 });
@@ -787,6 +815,7 @@ export const CreateMessageTemplateRequestSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   category: MessageTemplateCategorySchema,
   bodyText: z.string().min(1, 'bodyText is required'),
+  tone: MessageTemplateToneSchema.nullable().optional(),
   isActive: z.boolean().optional(),
 });
 export type CreateMessageTemplateRequest = z.infer<typeof CreateMessageTemplateRequestSchema>;
@@ -795,6 +824,7 @@ export const UpdateMessageTemplateRequestSchema = z.object({
   title: z.string().min(1).optional(),
   category: MessageTemplateCategorySchema.optional(),
   bodyText: z.string().min(1).optional(),
+  tone: MessageTemplateToneSchema.nullable().optional(),
   isActive: z.boolean().optional(),
 });
 export type UpdateMessageTemplateRequest = z.infer<typeof UpdateMessageTemplateRequestSchema>;
@@ -962,6 +992,7 @@ export const CanonicalEnrollmentSchema = z.object({
   progressPercent: z.number().int().min(0).max(100),
   intentScore: z.number().int().min(0).max(100),
   intentLabel: z.enum(['COLD', 'WARM', 'HOT']),
+  intentBreakdown: z.array(IntentBreakdownItemSchema).nullable().optional(),
   learningStatus: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'AT_RISK']),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -1010,6 +1041,11 @@ export const SubmitReflectionRequestSchema = z.object({
   selectedOptions: z.unknown().optional().nullable(),
 });
 export type SubmitReflectionRequest = z.infer<typeof SubmitReflectionRequestSchema>;
+
+export const UpdateLessonPositionRequestSchema = z.object({
+  positionSeconds: z.number().int().min(0).max(86_400, 'Durasi video tidak valid'),
+});
+export type UpdateLessonPositionRequest = z.infer<typeof UpdateLessonPositionRequestSchema>;
 
 export const SubmitReflectionResponseSchema = z.object({
   enrollmentId: z.string().uuid(),
@@ -1065,6 +1101,7 @@ export const LearnerEnrollmentDetailsSchema = z.object({
             ctaTargetProgramId: z.string().uuid().nullable().optional(),
             ctaConfig: z.unknown().nullable().optional(),
             isCompleted: z.boolean(),
+            lastPositionSeconds: z.number().default(0),
             completedAt: z.string().nullable().optional(),
             reflection: z
               .object({
@@ -1139,16 +1176,27 @@ export const LearnerSummaryItemSchema = z.object({
   enrollmentId: z.string().uuid(),
   name: z.string(),
   phone: z.string(),
+  phoneE164: z.string().optional(),
   programId: z.string().uuid(),
   programTitle: z.string(),
   progressPercent: z.number().int().min(0).max(100),
   intentScore: z.number().int().min(0).max(100),
   intentLabel: z.enum(['COLD', 'WARM', 'HOT']),
+  intentBreakdown: z.array(IntentBreakdownItemSchema).nullable().optional(),
   learningStatus: z.enum(['ACTIVE', 'COMPLETED', 'INACTIVE', 'AT_RISK', 'NOT_STARTED', 'IN_PROGRESS']),
   lastActivityAt: z.string().nullable().optional(),
   enrolledAt: z.string(),
+  daysInactive: z.number().int().nonnegative().optional(),
 });
 export type LearnerSummaryItem = z.infer<typeof LearnerSummaryItemSchema>;
+
+export const LearnersListQuerySchema = z.object({
+  programId: z.string().uuid().optional(),
+  learningStatus: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'AT_RISK']).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+export type LearnersListQuery = z.infer<typeof LearnersListQuerySchema>;
 
 export const LearnersListResponseSchema = z.object({
   learners: z.array(LearnerSummaryItemSchema),

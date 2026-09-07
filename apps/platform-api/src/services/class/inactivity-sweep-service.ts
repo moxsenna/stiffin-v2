@@ -14,6 +14,7 @@ export interface InactivitySweepOptions {
   clock?: () => Date;
   batchSize?: number;
   maxPages?: number;
+  inactivityDays?: number;
 }
 
 export interface InactivitySweepResult {
@@ -40,9 +41,10 @@ export function createInactivitySweepService(
       const nowIso = now.toISOString();
       const batchSize = opts?.batchSize ?? defaultOptions?.batchSize ?? 100;
       const maxPages = opts?.maxPages ?? defaultOptions?.maxPages ?? 10;
+      const inactivityDays = opts?.inactivityDays ?? defaultOptions?.inactivityDays ?? 7;
 
-      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const sevenDaysAgoIso = sevenDaysAgo.toISOString();
+      const thresholdDate = new Date(now.getTime() - inactivityDays * 24 * 60 * 60 * 1000);
+      const thresholdDateIso = thresholdDate.toISOString();
 
       let scannedCount = 0;
       let atRiskCount = 0;
@@ -56,7 +58,7 @@ export function createInactivitySweepService(
         const offset = page * batchSize;
 
         // Query active, incomplete enrollments with progress < 50%
-        // whose last activity (or enrollment timestamp) is older than 7 days
+        // whose last activity (or enrollment timestamp) is older than inactivityDays
         const candidateRows = await db
           .select({
             enrollmentId: enrollments.id,
@@ -77,7 +79,7 @@ export function createInactivitySweepService(
               inArray(enrollments.status, ['ENROLLED', 'STARTED']),
               sql`${enrollments.progressPercent} < 50`,
               sql`${enrollments.learningStatus} != 'COMPLETED'`,
-              sql`COALESCE(${enrollments.lastActivityAt}, ${enrollments.enrolledAt}) <= ${sevenDaysAgoIso}`
+              sql`COALESCE(${enrollments.lastActivityAt}, ${enrollments.enrolledAt}) <= ${thresholdDateIso}`
             )
           )
           .limit(batchSize)
@@ -93,7 +95,7 @@ export function createInactivitySweepService(
           try {
             const refTimeStr = candidate.lastActivityAt ?? candidate.enrolledAt ?? nowIso;
             const refTime = new Date(refTimeStr).getTime();
-            const diffDays = Math.max(7, Math.floor((now.getTime() - refTime) / (1000 * 60 * 60 * 24)));
+            const diffDays = Math.max(inactivityDays, Math.floor((now.getTime() - refTime) / (1000 * 60 * 60 * 24)));
 
             // 1. Atomically set learningStatus to AT_RISK if not completed
             await db

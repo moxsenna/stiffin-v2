@@ -1,4 +1,4 @@
-import { ContactRepositoryPort } from '@/modules/contacts/ports';
+import { ContactRepositoryPort, ContactFilterQuery } from '@/modules/contacts/ports';
 import { FlowContact } from '@promotor/promotor-flow-fixtures';
 import { PromotorFlowApiClient, ApiError } from '@promotor/api-client';
 
@@ -7,11 +7,38 @@ export class HttpContactRepository implements ContactRepositoryPort {
 
   async listContacts(
     search?: string,
-    filter?: 'ALL' | 'PROSPECT' | 'CLIENT',
+    filter?: ContactFilterQuery,
     _organizationId?: string
   ): Promise<FlowContact[]> {
-    const classification = filter === 'ALL' || !filter ? undefined : filter;
-    const res = await this.api.listContacts({ search, classification });
+    let classification: 'PROSPECT' | 'CLIENT' | undefined;
+    let stage: any = undefined;
+    let neverContacted: boolean | undefined = undefined;
+    let followUpOverdue: boolean | undefined = undefined;
+
+    if (typeof filter === 'string') {
+      if (filter === 'PROSPECT' || filter === 'CLIENT') {
+        classification = filter;
+      } else if (filter && filter !== 'ALL') {
+        const sp = new URLSearchParams(filter);
+        if (sp.has('classification')) classification = sp.get('classification') as any;
+        if (sp.has('stage')) stage = sp.get('stage') as any;
+        if (sp.has('neverContacted')) neverContacted = sp.get('neverContacted') === 'true';
+        if (sp.has('followUpOverdue')) followUpOverdue = sp.get('followUpOverdue') === 'true';
+      }
+    } else if (filter && typeof filter === 'object') {
+      classification = filter.classification;
+      stage = filter.stage;
+      neverContacted = filter.neverContacted;
+      followUpOverdue = filter.followUpOverdue;
+    }
+
+    const res = await this.api.listContacts({
+      search,
+      classification,
+      stage,
+      neverContacted,
+      followUpOverdue,
+    });
     return (res.contacts || []).map((c: any) => this.mapToFlowContact(c));
   }
 

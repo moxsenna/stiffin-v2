@@ -43,6 +43,7 @@ export class MockLearningRepository implements LearningRepositoryPort {
                 title: 'Lesson 1',
                 orderIndex: 0,
                 isCompleted: false,
+                lastPositionSeconds: 0,
               },
             ],
           },
@@ -80,6 +81,14 @@ export class MockLearningRepository implements LearningRepositoryPort {
       intentScore: 85,
       intentLabel: 'HOT',
     };
+  }
+
+  async updateLessonPosition(
+    _enrollmentId: string,
+    _lessonId: string,
+    _positionSeconds: number
+  ): Promise<{ ok: boolean }> {
+    return { ok: true };
   }
 
   async recordEvent(

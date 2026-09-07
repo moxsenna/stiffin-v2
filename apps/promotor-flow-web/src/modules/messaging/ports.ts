@@ -1,8 +1,9 @@
 import { MessageTemplate, NextActionType } from '@promotor/promotor-flow-fixtures';
+import type { MessageTemplateTone } from '@promotor/contracts';
 
 export interface MessageTemplateRepositoryPort {
   listTemplates(): Promise<MessageTemplate[]>;
-  getTemplateByCategory(category: NextActionType): Promise<MessageTemplate | null>;
+  getTemplateByCategory(category: NextActionType, tone?: MessageTemplateTone | null): Promise<MessageTemplate | null>;
 }
 
 export interface MessagingPort {

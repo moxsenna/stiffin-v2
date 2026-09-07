@@ -1,9 +1,9 @@
-import { ContactRepositoryPort } from './ports';
+import { ContactRepositoryPort, ContactFilterQuery } from './ports';
 import { FlowContact } from '@promotor/promotor-flow-fixtures';
 
 export function createContactQueries(repo: ContactRepositoryPort) {
   return {
-    async listContacts(search?: string, filter?: 'ALL' | 'PROSPECT' | 'CLIENT', organizationId?: string): Promise<FlowContact[]> {
+    async listContacts(search?: string, filter?: ContactFilterQuery, organizationId?: string): Promise<FlowContact[]> {
       return repo.listContacts(search, filter, organizationId);
     },
 

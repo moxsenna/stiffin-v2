@@ -31,17 +31,27 @@ export function PageHeader({ kicker, kickerAccent, title, sub, backLabel = 'Kemb
 }
 
 export interface SectionHeadProps {
-  label: string;
+  label?: string;
   count?: string;
+  title?: string;
+  subtitle?: string;
 }
 
-export function SectionHead({ label, count }: SectionHeadProps) {
+export function SectionHead({ label, count, title, subtitle }: SectionHeadProps) {
+  const displayLabel = title ?? label ?? '';
   return (
-    <div className="section-head">
-     <div className="kicker">{label}</div>
-     {count ? <div className="section-count">{count}</div>: null}
+    <div className="section-head" style={subtitle ? { alignItems: 'flex-start' } : undefined}>
+      <div>
+        <div className="kicker">{displayLabel}</div>
+        {subtitle ? (
+          <div className="kicker-muted" style={{ fontSize: '11px', marginTop: 2, textTransform: 'none', letterSpacing: 'normal' }}>
+            {subtitle}
+          </div>
+        ) : null}
+      </div>
+      {count ? <div className="section-count">{count}</div> : null}
     </div>
- );
+  );
 }
 
 export interface SegmentedControlProps {

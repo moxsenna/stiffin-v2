@@ -1,4 +1,4 @@
-import { ContactRepositoryPort } from '@/modules/contacts/ports';
+import { ContactRepositoryPort, ContactFilterQuery } from '@/modules/contacts/ports';
 import { FlowContact } from '@promotor/promotor-flow-fixtures';
 import { MockStateStore } from './mock-state-store';
 
@@ -11,16 +11,58 @@ export class MockContactRepository implements ContactRepositoryPort {
 
   async listContacts(
     search?: string,
-    filter?: 'ALL' | 'PROSPECT' | 'CLIENT',
+    filter?: ContactFilterQuery,
     organizationId?: string
   ): Promise<FlowContact[]> {
     const orgId = this.resolveOrgId(organizationId);
     let contacts = this.store.getContacts().filter((c) => c.organizationId === orgId);
 
-    if (filter === 'PROSPECT') {
-      contacts = contacts.filter((c) => c.classification === 'PROSPECT');
-    } else if (filter === 'CLIENT') {
-      contacts = contacts.filter((c) => c.classification === 'CLIENT');
+    let classification: 'PROSPECT' | 'CLIENT' | undefined;
+    let stage: string | undefined;
+    let neverContacted: boolean | undefined;
+    let followUpOverdue: boolean | undefined;
+
+    if (typeof filter === 'string') {
+      if (filter === 'PROSPECT' || filter === 'CLIENT') {
+        classification = filter;
+      } else if (filter && filter !== 'ALL') {
+        const sp = new URLSearchParams(filter);
+        if (sp.has('classification')) classification = sp.get('classification') as any;
+        if (sp.has('stage')) stage = sp.get('stage') as any;
+        if (sp.has('neverContacted')) neverContacted = sp.get('neverContacted') === 'true';
+        if (sp.has('followUpOverdue')) followUpOverdue = sp.get('followUpOverdue') === 'true';
+      }
+    } else if (filter && typeof filter === 'object') {
+      classification = filter.classification;
+      stage = filter.stage;
+      neverContacted = filter.neverContacted;
+      followUpOverdue = filter.followUpOverdue;
+    }
+
+    if (classification) {
+      contacts = contacts.filter((c) => c.classification === classification);
+    }
+    if (stage) {
+      contacts = contacts.filter((c) => c.stage === stage);
+    }
+    if (neverContacted) {
+      const waContactIds = new Set(
+        this.store
+          .getActivities()
+          .filter((a) => a.type === 'WA_SENT' || (a.type as string) === 'WHATSAPP_SENT')
+          .map((a) => a.contactId)
+      );
+      contacts = contacts.filter((c) => !waContactIds.has(c.id));
+    }
+    if (followUpOverdue) {
+      const nowIso = new Date().toISOString();
+      const overdueContactIds = new Set(
+        this.store
+          .getNextActions()
+          .filter((a) => a.status === 'PENDING' && a.dueAt < nowIso)
+          .map((a) => a.contactId)
+      );
+      contacts = contacts.filter((c) => overdueContactIds.has(c.id));
     }
 
     if (search && search.trim()) {

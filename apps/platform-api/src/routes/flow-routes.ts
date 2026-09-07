@@ -96,9 +96,24 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
   flow.get('/contacts', async (c) => {
     c.header('Cache-Control', 'no-store');
     const { ctx, db } = getRequestContext(c);
+    const rawNeverContacted = c.req.query('neverContacted');
+    const rawFollowUpOverdue = c.req.query('followUpOverdue');
     const query = parseBody(ListFlowContactsQuerySchema, {
       search: c.req.query('search') || undefined,
       classification: c.req.query('classification') || undefined,
+      stage: c.req.query('stage') || undefined,
+      neverContacted:
+        rawNeverContacted === 'false' || rawNeverContacted === '0'
+          ? false
+          : rawNeverContacted !== undefined
+          ? true
+          : undefined,
+      followUpOverdue:
+        rawFollowUpOverdue === 'false' || rawFollowUpOverdue === '0'
+          ? false
+          : rawFollowUpOverdue !== undefined
+          ? true
+          : undefined,
       limit: c.req.query('limit') || undefined,
       offset: c.req.query('offset') || undefined,
     });
@@ -446,6 +461,7 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
       title: body.title,
       category: body.category,
       templateText: (body as any).templateText ?? body.bodyText,
+      tone: body.tone,
       isActive: body.isActive,
     });
     return c.json({ template: created }, 201);
@@ -462,6 +478,7 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
       title: body.title,
       category: body.category,
       templateText: (body as any).templateText ?? body.bodyText,
+      tone: body.tone,
       isActive: body.isActive,
     });
     return c.json({ template: updated }, 200);

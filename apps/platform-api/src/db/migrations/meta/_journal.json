@@ -85,6 +85,27 @@
       "when": 1788753092344,
       "tag": "0011_slippery_bloodstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788795000000,
+      "tag": "0012_lesson_last_position_seconds",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788796000000,
+      "tag": "0013_narrow_mathemanic",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1788801648392,
+      "tag": "0014_icy_bucky",
+      "breakpoints": true
     }
   ]
 }

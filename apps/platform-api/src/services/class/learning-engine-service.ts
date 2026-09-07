@@ -1,9 +1,10 @@
-import { eq, and, sql, desc } from 'drizzle-orm';
+import { eq, and, sql, desc, isNull } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DomainError } from '../../core/errors';
 import { calculateProgramProgress } from '../../domain/learning/progress-engine';
-import { calculateIntentScore } from '../../domain/learning/intent-engine';
+import { calculateIntentScore, INTENT_LABELS } from '../../domain/learning/intent-engine';
 import { calculateLearningStatus, CanonicalLearningStatus } from '../../domain/learning/learning-status-engine';
+import type { IntentBreakdownItem } from '@promotor/contracts';
 import { validateReflectionSubmission } from '../../domain/learning/reflection-validator';
 import { createEnrollmentRepository, EnrollmentRepository } from '../../repositories/enrollment-repository';
 import { createProgramRepository, ProgramRepository } from '../../repositories/program-repository';
@@ -17,7 +18,7 @@ import { createLocalPromotorFlowAdapter } from '../../adapters/local-promotor-fl
 import { EnrollmentRow } from '../../db/schema/enrollments';
 import { LessonProgressRow } from '../../db/schema/lesson-progress';
 import { ReflectionResponseRow } from '../../db/schema/reflection-responses';
-import { LearningSignalRow } from '../../db/schema/learning-signals';
+import { learningSignals, LearningSignalRow } from '../../db/schema/learning-signals';
 import { contacts } from '../../db/schema/contacts';
 import { programs } from '../../db/schema/programs';
 import { enrollments } from '../../db/schema/enrollments';
@@ -88,6 +89,7 @@ export interface EnrollmentFullDetails {
         ctaLabel: string | null;
         ctaTargetProgramId: string | null;
         ctaConfig: unknown | null;
+        lastPositionSeconds: number;
         isCompleted: boolean;
         completedAt: string | null;
         reflection?: {
@@ -100,19 +102,52 @@ export interface EnrollmentFullDetails {
   };
 }
 
+export function parseIntentBreakdown(raw: unknown): IntentBreakdownItem[] | null {
+  if (!raw) return null;
+  if (Array.isArray(raw)) {
+    const valid = raw.filter((item): item is IntentBreakdownItem =>
+      typeof item === 'object' &&
+      item !== null &&
+      typeof (item as any).label === 'string' &&
+      typeof (item as any).points === 'number'
+    );
+    return valid.length > 0 ? valid : (raw.length === 0 ? [] : null);
+  }
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        const valid = parsed.filter((item): item is IntentBreakdownItem =>
+          typeof item === 'object' &&
+          item !== null &&
+          typeof (item as any).label === 'string' &&
+          typeof (item as any).points === 'number'
+        );
+        return valid.length > 0 ? valid : (parsed.length === 0 ? [] : null);
+      }
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 export interface LearnerSummaryItem {
   contactId: string;
   enrollmentId: string;
   name: string;
   phone: string;
+  phoneE164?: string;
   programId: string;
   programTitle: string;
   progressPercent: number;
   intentScore: number;
   intentLabel: 'COLD' | 'WARM' | 'HOT';
+  intentBreakdown?: IntentBreakdownItem[] | null;
   learningStatus: CanonicalLearningStatus;
   lastActivityAt: string | null;
   enrolledAt: string;
+  daysInactive?: number;
 }
 
 export interface ProgramAnalyticsResult {
@@ -149,8 +184,15 @@ export interface LearningEngineService {
     enrollment: EnrollmentRow;
     signalsCreated: LearningSignalRow[];
   }>;
+  recordLessonPosition(input: {
+    organizationId: string;
+    enrollmentId: string;
+    lessonId: string;
+    authenticatedContactId?: string;
+    positionSeconds: number;
+  }): Promise<void>;
   getEnrollmentFullDetails(organizationId: string, enrollmentId: string, authenticatedContactId?: string): Promise<EnrollmentFullDetails>;
-  listLearners(organizationId: string, options?: { programId?: string; search?: string; limit?: number; offset?: number }): Promise<{ learners: LearnerSummaryItem[]; total: number }>;
+  listLearners(organizationId: string, options?: { programId?: string; search?: string; learningStatus?: CanonicalLearningStatus | 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'AT_RISK'; limit?: number; offset?: number }): Promise<{ learners: LearnerSummaryItem[]; total: number }>;
   getLearnerDetail(organizationId: string, contactId: string): Promise<Record<string, unknown>>;
   getProgramAnalytics(organizationId: string, programId: string): Promise<ProgramAnalyticsResult>;
   listSignals(organizationId: string, status?: string): Promise<LearningSignalRow[]>;
@@ -336,12 +378,22 @@ export function createLearningEngineService(
       ? enrollment.startedAt ?? nowIso
       : enrollment.startedAt;
 
+    const formattedBreakdown: IntentBreakdownItem[] | null = intentResult.breakdown
+      ? Object.entries(intentResult.breakdown)
+          .filter(([, points]) => (points as number) > 0)
+          .map(([label, points]) => ({
+            label: INTENT_LABELS[label] ?? label,
+            points: points as number,
+          }))
+      : null;
+
     // 6. Update enrollment
     const updatedEnrollment = await enrollmentRepo.updateProgress(organizationId, enrollmentId, {
       status: newLifecycleStatus,
       progressPercent: progressResult.progressPercent,
       intentScore: intentResult.score,
       intentLabel: intentResult.label,
+      intentBreakdown: formattedBreakdown,
       learningStatus: canonicalLearningStatus,
       startedAt,
       completedAt,
@@ -706,6 +758,58 @@ export function createLearningEngineService(
         }
       );
 
+      // Evaluate deep reflection signal (§Task B5)
+      const text = (input.responseText ?? '').trim();
+      if (text.length >= 80) {
+        const wordCount = text.split(/\s+/).filter(Boolean).length;
+        const excerpt = text.length > 100 ? `${text.slice(0, 99)}…` : text;
+
+        const existing = await db
+          .select({
+            id: learningSignals.id,
+            metadata: learningSignals.metadata,
+          })
+          .from(learningSignals)
+          .where(
+            and(
+              eq(learningSignals.enrollmentId, enrollment.id),
+              eq(learningSignals.type, 'REFLECTION_SUBMITTED'),
+              isNull(learningSignals.resolvedAt)
+            )
+          );
+
+        const alreadyExists = existing.some((s) => {
+          const meta = s.metadata as Record<string, unknown> | null;
+          return meta?.lessonId === input.lessonId;
+        });
+
+        if (!alreadyExists) {
+          const [reflSignal] = await db
+            .insert(learningSignals)
+            .values({
+              organizationId: input.organizationId,
+              contactId: enrollment.contactId,
+              programId: enrollment.programId,
+              enrollmentId: enrollment.id,
+              type: 'REFLECTION_SUBMITTED',
+              priority: 85,
+              reason: `Refleksi ${wordCount} kata di "${targetLesson?.title ?? ''}": "${excerpt}"`,
+              recommendedActionType: 'WHATSAPP_REPLY',
+              recommendedActionReason: 'Balas refleksi via WhatsApp saat antusiasme peserta masih tinggi',
+              status: 'ACTIVE',
+              metadata: {
+                lessonId: input.lessonId,
+                lessonTitle: targetLesson?.title ?? '',
+              },
+            })
+            .returning();
+
+          if (reflSignal) {
+            signalsCreated.push(reflSignal);
+          }
+        }
+      }
+
       return {
         enrollment: updatedEnrollment,
         reflection,
@@ -793,6 +897,22 @@ export function createLearningEngineService(
       };
     },
 
+    async recordLessonPosition(input) {
+      const { enrollment } = await validateEnrollmentAndLesson(
+        input.organizationId,
+        input.enrollmentId,
+        input.lessonId,
+        input.authenticatedContactId
+      );
+      await lessonProgressRepo.upsertPosition(
+        input.organizationId,
+        enrollment.id,
+        input.lessonId,
+        input.positionSeconds,
+        getNow()
+      );
+    },
+
     async getEnrollmentFullDetails(organizationId, enrollmentId, authenticatedContactId) {
       const { enrollment, program } = await validateEnrollmentAndLesson(
         organizationId,
@@ -831,6 +951,7 @@ export function createLearningEngineService(
             ctaUrl: l.ctaUrl ?? (l.ctaConfig as any)?.url ?? null,
             ctaTargetProgramId: l.ctaTargetProgramId ?? null,
             ctaConfig: l.ctaConfig ?? null,
+            lastPositionSeconds: prog?.lastPositionSeconds ?? 0,
             isCompleted: prog?.isCompleted ?? false,
             completedAt: prog?.completedAt ? new Date(prog.completedAt).toISOString() : null,
             reflection: ref
@@ -866,11 +987,13 @@ export function createLearningEngineService(
           enrollmentId: enrollments.id,
           name: contacts.name,
           phone: contacts.phoneE164,
+          phoneE164: contacts.phoneE164,
           programId: programs.id,
           programTitle: programs.title,
           progressPercent: enrollments.progressPercent,
           intentScore: enrollments.intentScore,
           intentLabel: enrollments.intentLabel,
+          intentBreakdown: enrollments.intentBreakdown,
           learningStatus: enrollments.learningStatus,
           lastActivityAt: enrollments.lastActivityAt,
           enrolledAt: enrollments.enrolledAt,
@@ -881,7 +1004,8 @@ export function createLearningEngineService(
         .where(
           and(
             eq(enrollments.organizationId, organizationId),
-            options.programId ? eq(enrollments.programId, options.programId) : undefined
+            options.programId ? eq(enrollments.programId, options.programId) : undefined,
+            options.learningStatus ? eq(enrollments.learningStatus, options.learningStatus) : undefined
           )
         )
         .orderBy(desc(enrollments.lastActivityAt))
@@ -889,20 +1013,30 @@ export function createLearningEngineService(
         .offset(offset);
 
       return {
-        learners: rows.map((r) => ({
-          contactId: r.contactId,
-          enrollmentId: r.enrollmentId,
-          name: r.name,
-          phone: r.phone,
-          programId: r.programId,
-          programTitle: r.programTitle,
-          progressPercent: r.progressPercent,
-          intentScore: r.intentScore,
-          intentLabel: r.intentLabel as 'COLD' | 'WARM' | 'HOT',
-          learningStatus: r.learningStatus as CanonicalLearningStatus,
-          lastActivityAt: r.lastActivityAt ? new Date(r.lastActivityAt).toISOString() : null,
-          enrolledAt: new Date(r.enrolledAt).toISOString(),
-        })),
+        learners: rows.map((r) => {
+          let daysInactive: number | undefined = undefined;
+          if (r.lastActivityAt || r.enrolledAt) {
+            const refTime = new Date(r.lastActivityAt ?? r.enrolledAt).getTime();
+            daysInactive = Math.max(0, Math.floor((Date.now() - refTime) / (1000 * 60 * 60 * 24)));
+          }
+          return {
+            contactId: r.contactId,
+            enrollmentId: r.enrollmentId,
+            name: r.name,
+            phone: r.phone,
+            phoneE164: r.phoneE164,
+            programId: r.programId,
+            programTitle: r.programTitle,
+            progressPercent: r.progressPercent,
+            intentScore: r.intentScore,
+            intentLabel: r.intentLabel as 'COLD' | 'WARM' | 'HOT',
+            intentBreakdown: parseIntentBreakdown(r.intentBreakdown),
+            learningStatus: r.learningStatus as CanonicalLearningStatus,
+            lastActivityAt: r.lastActivityAt ? new Date(r.lastActivityAt).toISOString() : null,
+            enrolledAt: new Date(r.enrolledAt).toISOString(),
+            daysInactive,
+          };
+        }),
         total: rows.length,
       };
     },
@@ -938,6 +1072,7 @@ export function createLearningEngineService(
         contact,
         enrollments: enrs.map((e) => ({
           ...e.enrollment,
+          intentBreakdown: parseIntentBreakdown(e.enrollment.intentBreakdown),
           programTitle: e.program.title,
           programSlug: e.program.slug,
         })),

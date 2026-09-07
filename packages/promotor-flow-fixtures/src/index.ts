@@ -1,4 +1,4 @@
-import { Contact } from '@promotor/contracts';
+import { Contact, MessageTemplateTone } from '@promotor/contracts';
 
 export const SEED_ORGANIZATION = {
   id: 'org_rina_stifin',
@@ -109,6 +109,8 @@ export interface MessageTemplate {
   title: string;
   category: NextActionType;
   templateText: string;
+  tone?: MessageTemplateTone | null;
+  isActive?: boolean;
 }
 
 // Canonical Contacts: reusing exact IDs contact_ayu, contact_nina, contact_budi from PromotorClass
@@ -421,24 +423,49 @@ export const SEED_TEMPLATES: MessageTemplate[] = [
     title: 'Follow-up Prospek Baru',
     category: 'CONTACT_LEAD',
     templateText: 'Halo [Nama], salam kenal dari Mbak Rina (STIFIn Center). Terima kasih sudah bertanya tentang tes STIFIn. Apakah ada yang bisa saya bantu jelaskan terlebih dahulu?',
+    tone: null,
   },
   {
     id: 'tmpl_booking_confirm',
     title: 'Konfirmasi Booking Tes',
     category: 'CONFIRM_BOOKING',
     templateText: 'Halo [Nama], mengonfirmasi jadwal tes STIFIn Anda pada [Tanggal/Waktu] di [Lokasi]. Mohon beri tahu jika ada penyesuaian jadwal.',
+    tone: 'FORMAL',
   },
   {
     id: 'tmpl_payment_remind',
     title: 'Pengingat Pembayaran DP',
     category: 'REMIND_PAYMENT',
     templateText: 'Halo [Nama], untuk mengamankan slot tes STIFIn Anda pada [Tanggal], mohon melakukan transfer DP sebesar Rp [Amount] ke rekening BCA 1234567890 a.n. Rina.',
+    tone: 'FORMAL',
   },
   {
     id: 'tmpl_aftercare',
     title: 'Follow-up Aftercare (D+7)',
     category: 'AFTERCARE',
     templateText: 'Halo [Nama], bagaimana perkembangan dan penerapan hasil tes STIFIn sejauh ini di rumah? Jika ada pertanyaan atau kendala penerapan, silakan ceritakan ya.',
+    tone: 'HANGAT',
+  },
+  {
+    id: 'tmpl_followup_formal',
+    title: 'Follow-up Formal',
+    category: 'FOLLOW_UP',
+    templateText: 'Selamat siang Bapak/Ibu [Nama], menindaklanjuti rencana pelaksanaan tes STIFIn, apakah ada jadwal yang sekiranya cocok untuk diagendakan minggu ini?',
+    tone: 'FORMAL',
+  },
+  {
+    id: 'tmpl_followup_hangat',
+    title: 'Follow-up Hangat',
+    category: 'FOLLOW_UP',
+    templateText: 'Halo Kak [Nama], semoga kabarnya baik ya! Melanjutkan obrolan kita kemarin soal STIFIn, kira-kira ada yang mau diobrolin santai lagi?',
+    tone: 'HANGAT',
+  },
+  {
+    id: 'tmpl_followup_urgent',
+    title: 'Follow-up Urgent',
+    category: 'FOLLOW_UP',
+    templateText: 'Halo [Nama], slot tes STIFIn pekan ini tersisa sedikit sekali. Mohon konfirmasi ketersediaan jadwal hari ini agar slot tetap aman untuk Anda.',
+    tone: 'URGENT',
   },
 ];
 

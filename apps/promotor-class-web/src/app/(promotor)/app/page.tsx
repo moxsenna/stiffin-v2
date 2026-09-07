@@ -9,8 +9,19 @@ import { getLearningSignalsQuery } from '@/modules/signals/queries';
 import { getContactsQuery } from '@/modules/contacts/queries';
 import { getReflectionsQuery } from '@/modules/reflections/queries';
 import { getEnrollmentsQuery } from '@/modules/enrollments/queries';
-import { LearningSignal, Contact, Reflection, Enrollment } from '@promotor/contracts';
+import { getPlatformApiClient } from '@/adapters';
+import { LearningSignal, Contact, Reflection, Enrollment, LearnerSummaryItem } from '@promotor/contracts';
 import { formatTimeAgo } from '@promotor/platform-core';
+
+type SignalWithAction = LearningSignal & {
+  type?: string;
+  recommendedActionType?: string;
+  metadata?: Record<string, unknown>;
+};
+
+function buildNudgeMessage(l: { name: string; programTitle: string }): string {
+  return `Halo Kak ${l.name} 😊 Semangat belajarnya! Terakhir Kakak berhenti di program "${l.programTitle}". Ada yang bisa saya bantu biar lancar lagi? Materinya menarik lho, tinggal sedikit lagi ✨`;
+}
 
 function signalTagClass(level: string): string {
   if (level === 'Minat tinggi') return 'tag tag-hot';
@@ -19,29 +30,44 @@ function signalTagClass(level: string): string {
 }
 
 export default function PromotorHomePage() {
-  const [signals, setSignals] = useState<LearningSignal[] | null>(null);
+  const [signals, setSignals] = useState<SignalWithAction[] | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [enrollments] = useState<Enrollment[]>([]);
+  const [atRiskLearners, setAtRiskLearners] = useState<LearnerSummaryItem[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [whatsAppDraftContact, setWhatsAppDraftContact] = useState<Contact | null>(null);
+  const [whatsAppDraftMessage, setWhatsAppDraftMessage] = useState<string | undefined>(undefined);
   const [isDevMode, setIsDevMode] = useState(false);
 
   const isDevelopmentEnv = process.env.NODE_ENV === 'development';
 
+  const openWaSheet = ({ contactName, phoneE164, initialDraft }: { contactName: string; phoneE164?: string; initialDraft: string }) => {
+    setWhatsAppDraftContact({
+      id: `learner-atrisk-${Date.now()}`,
+      organizationId: '',
+      name: contactName,
+      phoneE164: phoneE164 || '',
+      createdAt: new Date().toISOString(),
+    });
+    setWhatsAppDraftMessage(initialDraft);
+  };
+
   const loadData = React.useCallback(async () =>{
     setLoadError(null);
     try {
-      const [sigData, conData, reflData, enrData] = await Promise.all([
+      const [sigData, conData, reflData, enrData, atRiskData] = await Promise.all([
         getLearningSignalsQuery(),
         getContactsQuery(),
         getReflectionsQuery(),
         getEnrollmentsQuery(),
+        getPlatformApiClient().listClassLearners({ learningStatus: 'AT_RISK' }).catch(() => ({ learners: [], total: 0 })),
       ]);
-      setSignals(sigData);
+      setSignals(sigData as SignalWithAction[]);
       setContacts(conData);
       setReflections(reflData);
+      setAtRiskLearners(atRiskData?.learners ?? []);
       void enrData;
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Tidak dapat memuat sinyal belajar.');
@@ -124,60 +150,99 @@ export default function PromotorHomePage() {
                 <div className="row-meta">
                   Skor minat: {sig.intentScore}/100
                 </div>
-               <div style={{ marginTop: 12 }}>
-                 <button type="button" className="btn btn-primary btn-sm" onClick={() =>setSelectedContactId(sig.contactId)}>
-                   Lihat learner
+                <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button type="button" className="btn btn-primary btn-sm" onClick={() =>setSelectedContactId(sig.contactId)}>
+                    Lihat learner
                   </button>
-               </div>
-             </div>
-           );
+                  {sig.recommendedActionType === 'WHATSAPP_REPLY' && (
+                    <button
+                      type="button"
+                      className="btn btn-accent btn-sm"
+                      onClick={() =>{
+                        const learnerName = contact.name || 'Peserta';
+                        const lessonTitle = (sig.metadata?.lessonTitle as string | undefined) || 'materi';
+                        const draft = `Halo Kak ${learnerName}, terima kasih refleksinya di ${lessonTitle}! Sangat mendalam. Boleh saya bantu jalankan penerapannya di rumah? 😊`;
+                        setWhatsAppDraftMessage(draft);
+                        setWhatsAppDraftContact(contact);
+                      }}
+                    >
+                      Kirim WhatsApp
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
           })}
         </>
-     )}
+      )}
 
       {signals && signals.length === 0 && !loadError && (
         <EmptyState
           title="Tidak ada yang perlu perhatian"
           explanation="Sinyal belajar dari aktivitas peserta akan muncul di sini saat ada yang bisa ditindaklanjuti."
         />
-     )}
+      )}
 
-      {activityItems.length >0 && (
+      {(atRiskLearners.length > 0) && (
+        <section style={{ marginTop: 16 }}>
+          <SectionHead title="Learner Macet" subtitle={`Progres < 50% & tidak aktif — momen emas disapa via WA`} />
+          {atRiskLearners.map((l: any) => (
+            <div key={l.contactId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, border: '1px solid var(--border)', marginTop: 8 }}>
+              <div>
+                <strong style={{ font: '600 14px/1.3 var(--font-sans)' }}>{l.name}</strong>
+                <div className="kicker kicker-muted">{l.programTitle} · {l.progressPercent}% · macet {l.daysInactive ?? 'beberapa'} hari</div>
+              </div>
+              <button type="button" className="btn btn-accent btn-sm"
+                onClick={() => openWaSheet({ contactName: l.name, phoneE164: l.phoneE164 ?? l.phone, initialDraft: buildNudgeMessage(l) })}>
+                Kirim WA
+              </button>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {activityItems.length > 0 && (
         <>
-         <SectionHead label="Aktivitas pembelajaran terbaru" />
-         <div style={{ padding: '10px 18px' }}>
-           {activityItems.slice(0, 10).map(act =>(
+          <SectionHead label="Aktivitas pembelajaran terbaru" />
+          <div style={{ padding: '10px 18px' }}>
+            {activityItems.slice(0, 10).map((act) => (
               <div key={act.id} className="timeline-row">
-               <div className="timeline-body">
-                 <div className="timeline-title">{act.summary}</div>
-               </div>
-               <div style={{ marginLeft: 'auto', font: '500 10px/1.4 var(--font-sans)', color: 'var(--muted-light)', flex: 'none' }} className="tabular-nums">
-                 {act.timeAgo}
+                <div className="timeline-body">
+                  <div className="timeline-title">{act.summary}</div>
                 </div>
-             </div>
-           ))}
+                <div style={{ marginLeft: 'auto', font: '500 10px/1.4 var(--font-sans)', color: 'var(--muted-light)', flex: 'none' }} className="tabular-nums">
+                  {act.timeAgo}
+                </div>
+              </div>
+            ))}
           </div>
-       </>
-     )}
+        </>
+      )}
       <div style={{ height: 24 }} />
 
-     {selectedContact && (
+      {selectedContact && (
         <LearnerDetail
           contact={selectedContact}
           onClose={() =>setSelectedContactId(null)}
-          onOpenWhatsAppDraft={c =>{
+          onOpenWhatsAppDraft={(c, msg) =>{
             setSelectedContactId(null);
+            setWhatsAppDraftMessage(msg);
             setWhatsAppDraftContact(c);
           }}
         />
-     )}
+      )}
 
       {whatsAppDraftContact && (
         <WhatsAppDraftSheet
+          key={whatsAppDraftContact.id + (whatsAppDraftMessage ?? '')}
           contact={whatsAppDraftContact}
-          onClose={() =>setWhatsAppDraftContact(null)}
+          initialMessage={whatsAppDraftMessage}
+          onClose={() =>{
+            setWhatsAppDraftContact(null);
+            setWhatsAppDraftMessage(undefined);
+          }}
         />
-     )}
+      )}
     </PromotorShell>
  );
 }

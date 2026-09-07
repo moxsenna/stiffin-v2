@@ -750,6 +750,16 @@ export default function ContactDetailPage() {
           phoneE164={contact.phoneE164}
           initialDraft={activeWaModal.draft}
           waUrl={activeWaModal.waUrl}
+          onRegenerateDraft={(t) =>
+            primaryAction
+              ? messagingQueries.generateDraftMessage(
+                  primaryAction.actionType,
+                  contact.name,
+                  { serviceTitle: primaryAction.title },
+                  t
+                )
+              : ''
+          }
           onClose={() =>setActiveWaModal(null)}
           onConfirmSent={handleConfirmWaSent}
         />

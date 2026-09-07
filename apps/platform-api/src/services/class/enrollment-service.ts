@@ -10,6 +10,7 @@ import { createLearnerAccessRepository, LearnerAccessRepository } from '../../re
 import { createLearningEventRepository, LearningEventRepository } from '../../repositories/learning-event-repository';
 import { createSubscriptionRepository } from '../../repositories/subscription-repository';
 import { createPlanAccessService, PlanAccessService } from '../billing/plan-access-service';
+import { INTENT_LABELS } from '../../domain/learning/intent-engine';
 import { EnrollmentRow } from '../../db/schema/enrollments';
 
 export interface PublicRegistrationInput {
@@ -172,6 +173,7 @@ export function createEnrollmentService(
           progressPercent: 0,
           intentScore: 10,
           intentLabel: 'COLD',
+          intentBreakdown: [{ label: INTENT_LABELS.enrollmentPoints, points: 10 }],
           learningStatus: 'NOT_STARTED',
         });
         enrollment = res.enrollment;
@@ -188,6 +190,7 @@ export function createEnrollmentService(
             progressPercent: 0,
             intentScore: 10,
             intentLabel: 'COLD',
+            intentBreakdown: [{ label: INTENT_LABELS.enrollmentPoints, points: 10 }],
             learningStatus: 'NOT_STARTED',
           });
         } else {
@@ -281,6 +284,7 @@ export function createEnrollmentService(
           progressPercent: 0,
           intentScore: 10,
           intentLabel: 'COLD',
+          intentBreakdown: [{ label: INTENT_LABELS.enrollmentPoints, points: 10 }],
           learningStatus: 'NOT_STARTED',
         });
         enrollment = res.enrollment;
@@ -304,6 +308,7 @@ export function createEnrollmentService(
             progressPercent: 0,
             intentScore: 10,
             intentLabel: 'COLD',
+            intentBreakdown: [{ label: INTENT_LABELS.enrollmentPoints, points: 10 }],
             learningStatus: 'NOT_STARTED',
           });
           isNew = true;

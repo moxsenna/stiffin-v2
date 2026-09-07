@@ -1,26 +1,29 @@
 'use client';
 
 import React from 'react';
-import { Contact, Enrollment, Program, LearningSignal } from '@promotor/contracts';
+import { Contact, Enrollment, Program, LearningSignal, IntentBreakdownItem } from '@promotor/contracts';
 import { formatPhoneDisplay } from '@promotor/platform-core';
 
 interface LearnerDetailProps {
   contact: Contact;
   enrollment?: Enrollment;
+  learner?: { intentBreakdown?: IntentBreakdownItem[] | null };
   program?: Program;
   signal?: LearningSignal;
-  onOpenWhatsAppDraft: (contact: Contact, message: string) =>void;
-  onClose?: () =>void;
+  onOpenWhatsAppDraft: (contact: Contact, message: string) => void;
+  onClose?: () => void;
 }
 
 export function LearnerDetail({
   contact,
   enrollment,
+  learner: learnerProp,
   program,
   signal,
   onOpenWhatsAppDraft,
   onClose,
 }: LearnerDetailProps) {
+  const learner = learnerProp ?? enrollment ?? {};
   const signalLevel = signal?.signalLevel || 'Minat sedang';
   const primaryReason = signal?.primaryReason || 'Memulai pembelajaran';
   const rawQuote = signal?.rawReflectionQuote;
@@ -47,15 +50,27 @@ export function LearnerDetail({
       </div>
 
      <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
-       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-         <div>
-           <div className="kicker kicker-muted">Intent score</div>
-           <div style={{ marginTop: 8, font: '800 40px/1 var(--font-sans)', letterSpacing: '-0.04em' }} className="tabular-nums">
-             {signal?.intentScore ?? '—'}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div>
+            <div className="kicker kicker-muted">Intent score</div>
+            <div style={{ marginTop: 8, font: '800 40px/1 var(--font-sans)', letterSpacing: '-0.04em' }} className="tabular-nums">
+              {signal?.intentScore ?? '—'}
             </div>
-         </div>
-         <span className={intentTagClass}>{signalLevel}</span>
-       </div>
+          </div>
+          <span className={intentTagClass}>{signalLevel}</span>
+        </div>
+        {(learner.intentBreakdown?.length ?? 0) > 0 && (
+          <details style={{ marginTop: 8 }}>
+            <summary style={{ font: '600 12px/1.4 var(--font-sans)', cursor: 'pointer' }}>Mengapa skor ini?</summary>
+            <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
+              {learner.intentBreakdown!.map((b, i) => (
+                <li key={i} style={{ font: '400 12px/1.5 var(--font-sans)' }}>
+                  {b.label} <strong>+{b.points}</strong>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
        {signal?.intentScore !== undefined && (
           <>
            <div className="progress progress-thick" style={{ marginTop: 12 }} role="progressbar" aria-valuenow={signal.intentScore} aria-valuemin={0} aria-valuemax={100} aria-label={`Intent score ${signal.intentScore}`}>

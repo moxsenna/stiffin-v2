@@ -1,9 +1,10 @@
-import { eq, and, or, ilike, isNull, desc } from 'drizzle-orm';
+import { eq, and, or, ilike, isNull, desc, sql } from 'drizzle-orm';
 import type { DbHandle } from '../db/client';
 import { isOrganizationContext, type OrganizationContext } from '../core/organization-context';
 import type { AuthenticatedActor } from '../auth/types';
 import { DomainError } from '../core/errors';
 import { normalizePhone, normalizeEmail } from '@promotor/platform-core';
+import type { ContactLifecycleStage } from '@promotor/contracts';
 import { contacts, contactFlowStates } from '../db/schema';
 import { createContactService } from './contact-service';
 import { createContactRepository } from '../repositories/contact-repository';
@@ -272,6 +273,9 @@ export function createContactFlowService(
       query: {
         search?: string;
         classification?: 'PROSPECT' | 'CLIENT';
+        stage?: ContactLifecycleStage;
+        neverContacted?: boolean;
+        followUpOverdue?: boolean;
         limit?: number;
         offset?: number;
       } = {}
@@ -300,6 +304,33 @@ export function createContactFlowService(
 
       if (query.classification) {
         baseConditions.push(eq(contactFlowStates.classification, query.classification));
+      }
+
+      if (query.stage) {
+        if (query.stage === 'NEW') {
+          baseConditions.push(or(eq(contactFlowStates.stage, 'NEW'), isNull(contactFlowStates.stage))!);
+        } else {
+          baseConditions.push(eq(contactFlowStates.stage, query.stage));
+        }
+      }
+
+      if (query.neverContacted) {
+        baseConditions.push(sql`NOT EXISTS (
+          SELECT 1 FROM activities a
+          WHERE a.contact_id = ${contacts.id}
+            AND a.organization_id = ${ctx.organizationId}
+            AND a.event_type IN ('WHATSAPP_SENT', 'WA_SENT')
+        )`);
+      }
+
+      if (query.followUpOverdue) {
+        baseConditions.push(sql`EXISTS (
+          SELECT 1 FROM next_actions na
+          WHERE na.contact_id = ${contacts.id}
+            AND na.organization_id = ${ctx.organizationId}
+            AND na.status = 'PENDING'
+            AND na.due_at < now()
+        )`);
       }
 
       const rows = await (db as any)

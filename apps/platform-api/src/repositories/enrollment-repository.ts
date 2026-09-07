@@ -14,6 +14,7 @@ export type CreateEnrollmentInput = {
   progressPercent?: number;
   intentScore?: number;
   intentLabel?: 'COLD' | 'WARM' | 'HOT';
+  intentBreakdown?: unknown;
   learningStatus?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'AT_RISK' | 'ACTIVE' | 'INACTIVE';
 };
 
@@ -25,6 +26,7 @@ export type UpdateEnrollmentInput = Partial<{
   progressPercent: number;
   intentScore: number;
   intentLabel: 'COLD' | 'WARM' | 'HOT';
+  intentBreakdown: unknown;
   learningStatus: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'AT_RISK' | 'ACTIVE' | 'INACTIVE';
 }>;
 
@@ -126,6 +128,7 @@ export function createEnrollmentRepository(db: NodePgDatabase): EnrollmentReposi
           progressPercent: input.progressPercent ?? 0,
           intentScore: input.intentScore ?? 0,
           intentLabel: input.intentLabel ?? 'COLD',
+          intentBreakdown: input.intentBreakdown ?? null,
           learningStatus: input.learningStatus ?? 'NOT_STARTED',
         })
         .returning();
@@ -147,6 +150,7 @@ export function createEnrollmentRepository(db: NodePgDatabase): EnrollmentReposi
           progressPercent: input.progressPercent ?? 0,
           intentScore: input.intentScore ?? 0,
           intentLabel: input.intentLabel ?? 'COLD',
+          intentBreakdown: input.intentBreakdown ?? null,
           learningStatus: input.learningStatus ?? 'NOT_STARTED',
         })
         .onConflictDoNothing({

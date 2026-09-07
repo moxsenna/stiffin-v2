@@ -28,6 +28,14 @@ export class HttpLearningRepository implements LearningRepositoryPort {
     return this.client.submitLearnerReflection(enrollmentId, lessonId, data);
   }
 
+  async updateLessonPosition(
+    enrollmentId: string,
+    lessonId: string,
+    positionSeconds: number
+  ): Promise<{ ok: boolean }> {
+    return this.client.updateLearnerLessonPosition(enrollmentId, lessonId, { positionSeconds });
+  }
+
   async recordEvent(
     enrollmentId: string,
     data: { eventType: LearningEventType; payload?: Record<string, unknown> }

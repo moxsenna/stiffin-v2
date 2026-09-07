@@ -46,6 +46,7 @@ import type {
   CompleteLessonResponse,
   SubmitReflectionRequest,
   SubmitReflectionResponse,
+  UpdateLessonPositionRequest,
   RecordLearningEventRequest,
   RecordLearningEventResponse,
   LearnerEnrollmentDetailsDto,
@@ -407,6 +408,17 @@ export class PromotorClassContentApiClient {
     );
   }
 
+  async updateLearnerLessonPosition(
+    enrollmentId: string,
+    lessonId: string,
+    data: UpdateLessonPositionRequest
+  ): Promise<{ ok: boolean }> {
+    return this.client.put(
+      `/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/position`,
+      data
+    );
+  }
+
   async recordLearnerEvent(
     enrollmentId: string,
     data: RecordLearningEventRequest
@@ -438,9 +450,10 @@ export class PromotorClassContentApiClient {
     return this.client.get('/api/v1/learner/me/enrollments');
   }
 
-  async listClassLearners(query?: { programId?: string; limit?: number; offset?: number }): Promise<LearnersListResponse> {
+  async listClassLearners(query?: { programId?: string; learningStatus?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'AT_RISK'; limit?: number; offset?: number }): Promise<LearnersListResponse> {
     const q = new URLSearchParams();
     if (query?.programId) q.set('programId', query.programId);
+    if (query?.learningStatus) q.set('learningStatus', query.learningStatus);
     if (query?.limit) q.set('limit', String(query.limit));
     if (query?.offset) q.set('offset', String(query.offset));
     const qs = q.toString() ? `?${q.toString()}` : '';
@@ -590,10 +603,13 @@ export class PromotorFlowApiClient {
   }
 
   // Contacts
-  async listContacts(query?: ListFlowContactsQuery): Promise<{ contacts: any[]; total: number }> {
+  async listContacts(query?: Partial<ListFlowContactsQuery>): Promise<{ contacts: any[]; total: number }> {
     const q = new URLSearchParams();
     if (query?.search) q.set('search', query.search);
     if (query?.classification) q.set('classification', query.classification);
+    if (query?.stage) q.set('stage', query.stage);
+    if (query?.neverContacted !== undefined) q.set('neverContacted', String(query.neverContacted));
+    if (query?.followUpOverdue !== undefined) q.set('followUpOverdue', String(query.followUpOverdue));
     if (query?.limit !== undefined) q.set('limit', String(query.limit));
     if (query?.offset !== undefined) q.set('offset', String(query.offset));
     const qs = q.toString();
@@ -838,9 +854,10 @@ export class PromotorFlowApiClient {
     return this.client.get('/api/v1/learner/me/enrollments');
   }
 
-  async listClassLearners(query?: { programId?: string; limit?: number; offset?: number }): Promise<LearnersListResponse> {
+  async listClassLearners(query?: { programId?: string; learningStatus?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'AT_RISK'; limit?: number; offset?: number }): Promise<LearnersListResponse> {
     const q = new URLSearchParams();
     if (query?.programId) q.set('programId', query.programId);
+    if (query?.learningStatus) q.set('learningStatus', query.learningStatus);
     if (query?.limit) q.set('limit', String(query.limit));
     if (query?.offset) q.set('offset', String(query.offset));
     const qs = q.toString() ? `?${q.toString()}` : '';
