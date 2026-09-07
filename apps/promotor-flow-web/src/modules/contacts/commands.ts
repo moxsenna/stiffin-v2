@@ -74,7 +74,7 @@ export function createContactCommands(
           await activityRepo.appendActivity({
             organizationId: organizationId || '',
             contactId,
-            title: 'Catatan Cepat Ditambahkan',
+            title: 'Catatan',
             detail: trimmed,
             timestamp: new Date().toISOString(),
             type: 'NOTE_ADDED',
@@ -87,18 +87,7 @@ export function createContactCommands(
         return await repo.addNote(contactId, trimmed);
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
-      const res = await fetch(`${baseUrl}/api/v1/flow/contacts/${encodeURIComponent(contactId)}/notes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: trimmed }),
-        credentials: 'include',
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.message || 'Gagal menyimpan catatan.');
-      }
-      return await res.json();
+      throw new Error('Metode addNote tidak didukung pada repository kontak ini.');
     },
   };
 }

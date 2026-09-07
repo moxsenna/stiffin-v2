@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, isNull } from 'drizzle-orm';
 import type { AppEnv } from '../app';
 import { DomainError } from '../core/errors';
 import {
@@ -29,7 +29,7 @@ import {
   ReplaceAvailabilityRulesRequestSchema,
   CreateContactNoteRequestSchema,
 } from '@promotor/contracts';
-import { nextActions } from '../db/schema';
+import { contacts, nextActions } from '../db/schema';
 import { createContactFlowService } from '../services/contact-flow-service';
 import { createContactLifecycleService } from '../services/contact-lifecycle-service';
 import { createNextActionService } from '../services/next-action-service';
@@ -176,6 +176,23 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
     const contactId = c.req.param('id');
     const raw = await c.req.json().catch(() => ({}));
     const body = parseBody(CreateContactNoteRequestSchema, raw);
+
+    const [existingContact] = await db
+      .select({ id: contacts.id })
+      .from(contacts)
+      .where(
+        and(
+          eq(contacts.id, contactId),
+          eq(contacts.organizationId, ctx.organizationId),
+          isNull(contacts.deletedAt)
+        )
+      )
+      .limit(1);
+
+    if (!existingContact) {
+      throw new DomainError('NOT_FOUND', 'Active tenant contact not found');
+    }
+
     const activityRepo = createActivityRepository(db);
     const activity = await activityRepo.createNote({
       organizationId: ctx.organizationId,

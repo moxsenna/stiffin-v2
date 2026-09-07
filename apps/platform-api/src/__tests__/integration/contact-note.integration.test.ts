@@ -122,4 +122,34 @@ describe('POST /api/v1/flow/contacts/:id/notes', { skip: !enabled ? 'TEST_DATABA
       assert.equal(res.status, 400);
     });
   });
+
+  it('menolak kontak tenant lain (404 NOT_FOUND)', async () => {
+    await withIntegrationDb(async (db) => {
+      const org1 = await seedFlowContactFixture(db);
+      const org2 = await seedFlowContactFixture(db);
+      const res = await requestOperator(
+        db,
+        'POST',
+        `/api/v1/flow/contacts/${org2.contactId}/notes`,
+        org1.sessionToken,
+        { body: 'Catatan cross-tenant harus ditolak' }
+      );
+      assert.equal(res.status, 404);
+    });
+  });
+
+  it('menolak kontak yang tidak ada (404 NOT_FOUND)', async () => {
+    await withIntegrationDb(async (db) => {
+      const { sessionToken } = await seedFlowContactFixture(db);
+      const nonExistentId = '00000000-0000-0000-0000-000000000000';
+      const res = await requestOperator(
+        db,
+        'POST',
+        `/api/v1/flow/contacts/${nonExistentId}/notes`,
+        sessionToken,
+        { body: 'Catatan untuk kontak fiktif' }
+      );
+      assert.equal(res.status, 404);
+    });
+  });
 });

@@ -24,7 +24,7 @@ export class HttpActivityRepository implements ActivityRepositoryPort {
     const title =
       a.title ??
       (a.eventType === 'NOTE_ADDED'
-        ? 'Catatan Ditambahkan'
+        ? 'Catatan'
         : a.eventType ?? 'Aktivitas');
     const detail = a.detail ?? meta.note ?? meta.text ?? undefined;
     return {

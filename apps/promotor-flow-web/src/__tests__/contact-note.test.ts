@@ -64,6 +64,7 @@ describe('Task C2 — Contact Quick Note Unit & Schema Tests', () => {
       await (commands as any).addContactNote('contact_123', 'Catatan observasi anak');
       assert.strictEqual(activities.length, 1);
       assert.strictEqual(activities[0].contactId, 'contact_123');
+      assert.strictEqual(activities[0].title, 'Catatan');
       assert.strictEqual(activities[0].type, 'NOTE_ADDED');
       assert.strictEqual(activities[0].detail, 'Catatan observasi anak');
     });
