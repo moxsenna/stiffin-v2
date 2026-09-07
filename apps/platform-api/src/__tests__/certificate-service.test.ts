@@ -61,4 +61,43 @@ describe('certificate-service', () => {
     const svc = createCertificateService({} as any, deps as any);
     assert.equal(await svc.verifyBySerial('RAL-00-XXXXYYYY'), null);
   });
+
+  it('menolak bila enrollment bukan milik contact (ownership)', async () => {
+    const { deps } = makeDeps();
+    (deps.enrollmentFinder as any).findOwnedEnrollment = async () => null;
+    const svc = createCertificateService({} as any, deps as any);
+    // seed sertifikat milik learner lain di enrollment sama
+    (deps.certRepo as any).findByEnrollment = async () => ({
+      serial: 'RAL-26-OTHER123',
+      recipientName: 'Orang Lain',
+      programTitle: 'P',
+      promoterName: 'R',
+      issuedAt: now,
+    });
+    await assert.rejects(
+      () => svc.issueForEnrollment({ organizationId: 'o1', enrollmentId: 'e1', authenticatedContactId: 'c-att' }),
+      (e: DomainError) => e.code === 'NOT_FOUND'
+    );
+  });
+
+  it('race: create return null → fallback ke sertifikat pemenang', async () => {
+    const { deps } = makeDeps();
+    const winner = {
+      id: 'cert-w', organizationId: 'o1', enrollmentId: 'e1', serial: 'RAL-26-WINNER01',
+      recipientName: 'Budi Santoso', programTitle: 'Kelas Parenting 101', promoterName: 'Rina',
+      issuedAt: now,
+    };
+    (deps.certRepo as any).findByEnrollment = async () => null;
+    (deps.certRepo as any).create = async () => null;
+    let calls = 0;
+    const origFind = (deps.certRepo as any).findByEnrollment;
+    (deps.certRepo as any).findByEnrollment = async (id: string) => {
+      calls += 1;
+      if (calls === 1) return origFind(id);
+      return winner;
+    };
+    const svc = createCertificateService({} as any, deps as any);
+    const cert = await svc.issueForEnrollment({ organizationId: 'o1', enrollmentId: 'e1', authenticatedContactId: 'c1' });
+    assert.equal(cert.serial, 'RAL-26-WINNER01');
+  });
 });

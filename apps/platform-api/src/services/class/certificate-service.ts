@@ -122,9 +122,6 @@ export function createCertificateService(db: any, deps: CertificateServiceDeps =
       enrollmentId: string;
       authenticatedContactId: string;
     }): Promise<CertificateDto> {
-      const existing = await certRepo.findByEnrollment(input.enrollmentId);
-      if (existing) return toDto(existing);
-
       const enrollment = await enrollmentFinder.findOwnedEnrollment(
         input.organizationId,
         input.enrollmentId,
@@ -138,6 +135,9 @@ export function createCertificateService(db: any, deps: CertificateServiceDeps =
         );
       }
 
+      const existing = await certRepo.findByEnrollment(input.enrollmentId);
+      if (existing) return toDto(existing);
+
       const payload: NewCertificateRow = {
         organizationId: enrollment.organizationId,
         enrollmentId: enrollment.id,
@@ -148,6 +148,11 @@ export function createCertificateService(db: any, deps: CertificateServiceDeps =
         issuedAt: getNow(),
       };
       const row = await certRepo.create(payload);
+      if (!row) {
+        const winner = await certRepo.findByEnrollment(input.enrollmentId);
+        if (winner) return toDto(winner);
+        throw new DomainError('NOT_FOUND', 'Enrollment tidak ditemukan');
+      }
       return toDto(row);
     },
 
