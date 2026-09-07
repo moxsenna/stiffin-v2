@@ -85,7 +85,6 @@ export default function ContactsPage() {
                 style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
                 onClick={() => {
                   setActiveFilter(f.params);
-                  reloadContacts(f.params);
                 }}
               >
                 {f.label}

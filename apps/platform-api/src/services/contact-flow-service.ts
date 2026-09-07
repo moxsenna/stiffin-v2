@@ -318,6 +318,7 @@ export function createContactFlowService(
         baseConditions.push(sql`NOT EXISTS (
           SELECT 1 FROM activities a
           WHERE a.contact_id = ${contacts.id}
+            AND a.organization_id = ${ctx.organizationId}
             AND a.event_type IN ('WHATSAPP_SENT', 'WA_SENT')
         )`);
       }
@@ -326,6 +327,7 @@ export function createContactFlowService(
         baseConditions.push(sql`EXISTS (
           SELECT 1 FROM next_actions na
           WHERE na.contact_id = ${contacts.id}
+            AND na.organization_id = ${ctx.organizationId}
             AND na.status = 'PENDING'
             AND na.due_at < now()
         )`);
