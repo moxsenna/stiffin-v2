@@ -861,7 +861,8 @@ export const ListBookingsQuerySchema = z.object({
   status: FlowBookingStatusSchema.optional(),
 });
 export type ListBookingsQuery = z.infer<typeof ListBookingsQuerySchema>;
-export const CreateBookingRequestSchema = z.object({
+
+export const CreateBookingRequestSchema = z.object({
   contactId: z.string().uuid('Valid contactId is required'),
   serviceId: z.string().uuid('Valid serviceId is required'),
   startAt: z.string().min(1, 'startAt is required'),
@@ -1142,6 +1143,23 @@ export const LearnerEnrollmentDetailsSchema = z.object({
   }),
 });
 export type LearnerEnrollmentDetailsDto = z.infer<typeof LearnerEnrollmentDetailsSchema>;
+
+export const CertificateSchema = z.object({
+  serial: z.string(),
+  recipientName: z.string(),
+  programTitle: z.string(),
+  promoterName: z.string(),
+  issuedAt: z.string(),
+});
+export type Certificate = z.infer<typeof CertificateSchema>;
+
+export const CertificateIssueResponseSchema = z.object({ certificate: CertificateSchema });
+export type CertificateIssueResponse = z.infer<typeof CertificateIssueResponseSchema>;
+
+export const PublicCertificateVerificationSchema = z.object({
+  certificate: CertificateSchema.extend({ valid: z.literal(true) }),
+});
+export type PublicCertificateVerification = z.infer<typeof PublicCertificateVerificationSchema>;
 
 export const LearningSignalDtoSchema = z.object({
   id: z.string().uuid(),

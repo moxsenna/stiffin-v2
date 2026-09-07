@@ -19,6 +19,7 @@ import { createAvailabilityService } from './services/flow/availability-service'
 import { createPublicBookingService } from './services/flow/public-booking-service';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { createEnrollmentService } from './services/class/enrollment-service';
+import { createCertificateService } from './services/class/certificate-service';
 import { createLearningEngineService } from './services/class/learning-engine-service';
 import { createLearnerSessionService } from './services/class/learner-session-service';
 import { createLearnerOtpService } from './services/class/learner-otp-service';
@@ -60,6 +61,7 @@ function domainErrorStatus(err: DomainError): 400 | 401 | 402 | 403 | 404 | 409 
     case 'VALIDATION_ERROR':
     case 'INVALID_YOUTUBE_URL':
     case 'PROGRAM_NOT_PUBLISHED':
+    case 'PROGRAM_NOT_COMPLETED':
       return 400;
     case 'OTP_INVALID':
     case 'OTP_EXPIRED':
@@ -336,6 +338,18 @@ export function createApp(deps?: AppDependencies) {
     const programSlug = c.req.param('programSlug');
     const detail = await publicService.getPublicProgramDetail(workspaceSlug, programSlug);
     return c.json({ detail }, 200);
+  });
+
+  // Public certificate verification (A6, zero auth; path frozen — Fase 1 smoke uses it)
+  app.get('/api/v1/public/certificates/:serial', async (c) => {
+    c.header('Cache-Control', 'public, max-age=60');
+    const db = c.get('db');
+    const service = createCertificateService(db);
+    const certificate = await service.verifyBySerial(c.req.param('serial'));
+    if (!certificate) {
+      throw new DomainError('NOT_FOUND', 'Sertifikat tidak ditemukan');
+    }
+    return c.json({ certificate: { ...certificate, valid: true } }, 200);
   });
 
   // ==========================================
@@ -738,6 +752,19 @@ export function createApp(deps?: AppDependencies) {
       intentScore: result.enrollment.intentScore,
       intentLabel: result.enrollment.intentLabel,
     }, 200);
+  });
+
+  app.post('/api/v1/learner/enrollments/:enrollmentId/certificate', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const learnerCtx = c.get('learnerContext' as any) as any;
+    const service = createCertificateService(db);
+    const certificate = await service.issueForEnrollment({
+      organizationId: learnerCtx.organizationId,
+      enrollmentId: c.req.param('enrollmentId'),
+      authenticatedContactId: learnerCtx.contactId,
+    });
+    return c.json({ certificate }, 200);
   });
 
   // ==========================================

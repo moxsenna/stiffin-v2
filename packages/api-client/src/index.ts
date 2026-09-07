@@ -45,6 +45,9 @@ import type {
   CreateManualEnrollmentRequest,
   CanonicalEnrollmentDto,
   LearningContextResponse,
+  Certificate,
+  CertificateIssueResponse,
+  PublicCertificateVerification,
   CompleteLessonResponse,
   SubmitReflectionRequest,
   SubmitReflectionResponse,
@@ -458,6 +461,13 @@ export class PromotorClassContentApiClient {
   async recordLearnerCtaClick(enrollmentId: string, lessonId: string, data?: RecordCtaClickRequest): Promise<RecordCtaClickResponse> {
     return this.client.post(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/cta-click`, data ?? {});
   }
+  async issueCertificateCommand(enrollmentId: string): Promise<CertificateIssueResponse> {
+    return this.client.post(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/certificate`);
+  }
+
+  async verifyCertificate(serial: string): Promise<PublicCertificateVerification> {
+    return this.client.get(`/api/v1/public/certificates/${encodeURIComponent(serial)}`);
+  }
 
   async getMyLearnerPrograms(): Promise<{ programs: any[] }> {
     return this.client.get('/api/v1/learner/me/enrollments');
@@ -844,6 +854,13 @@ export class PromotorFlowApiClient {
 
   async recordLearnerEvent(enrollmentId: string, data: RecordLearningEventRequest): Promise<RecordLearningEventResponse> {
     return this.client.post(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/events`, data);
+  }
+  async issueCertificateCommand(enrollmentId: string): Promise<CertificateIssueResponse> {
+    return this.client.post(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/certificate`);
+  }
+
+  async verifyCertificate(serial: string): Promise<PublicCertificateVerification> {
+    return this.client.get(`/api/v1/public/certificates/${encodeURIComponent(serial)}`);
   }
 
   async listClassSignals(status?: 'ACTIVE' | 'RESOLVED' | 'DISMISSED'): Promise<{ signals: LearningSignalDto[] }> {
