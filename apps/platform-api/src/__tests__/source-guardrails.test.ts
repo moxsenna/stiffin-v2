@@ -11,7 +11,7 @@ import { createHash } from 'node:crypto';
  *    reads env.HYPERDRIVE.connectionString exclusively.
  * 2. packages/contracts deliberate B3/B6/B6.1/B4/B5/V0.1 Hardening & C2 Flow Notes & B3 Intent Breakdown & B4 Learners Filter & C4 Template Tone & C5 Contact Filters & A5 Learner OTP re-baseline.
  */
-const CONTRACTS_BASELINE_HASH = '5ec88265cde6575d992d7cf912a7ac86609ffbde6d015cadd4569182c45de19a';
+const CONTRACTS_BASELINE_HASH = '159fc957dffdd4b8081104a9c2c8b1d5782674571f2a0e2a77e2550ec98129c1';
 
 describe('B1 — source guardrails', () => {
   it('runtime src/ code never references DATABASE_URL', () => {

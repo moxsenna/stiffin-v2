@@ -576,6 +576,18 @@ export function createApp(deps?: AppDependencies) {
     return c.json({ programs }, 200);
   });
 
+  app.get('/api/v1/learner/me/certificates', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const learnerCtx = c.get('learnerContext' as any) as any;
+    const service = createCertificateService(db);
+    const certificates = await service.listForContact({
+      organizationId: learnerCtx.organizationId,
+      authenticatedContactId: learnerCtx.contactId,
+    });
+    return c.json({ certificates }, 200);
+  });
+
   app.get('/api/v1/learner/enrollments/:enrollmentId', async (c) => {
     c.header('Cache-Control', 'no-store');
     const db = c.get('db');

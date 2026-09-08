@@ -30,7 +30,7 @@ export interface CertificateDto {
 
 export interface CertificateServiceDeps {
   clock?: () => Date;
-  certRepo?: Pick<CertificateRepository, 'findByEnrollment' | 'findBySerial' | 'create'>;
+  certRepo?: Pick<CertificateRepository, 'findByEnrollment' | 'findBySerial' | 'listByContact' | 'create'>;
   enrollmentFinder?: {
     findOwnedEnrollment(
       organizationId: string,
@@ -159,6 +159,14 @@ export function createCertificateService(db: any, deps: CertificateServiceDeps =
     async verifyBySerial(serial: string): Promise<CertificateDto | null> {
       const row = await certRepo.findBySerial(serial);
       return row ? toDto(row) : null;
+    },
+
+    async listForContact(input: {
+      organizationId: string;
+      authenticatedContactId: string;
+    }): Promise<CertificateDto[]> {
+      const rows = await certRepo.listByContact(input.organizationId, input.authenticatedContactId);
+      return rows.map(toDto);
     },
   };
 }

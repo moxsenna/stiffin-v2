@@ -47,6 +47,7 @@ import type {
   LearningContextResponse,
   Certificate,
   CertificateIssueResponse,
+  LearnerCertificatesResponse,
   PublicCertificateVerification,
   CompleteLessonResponse,
   SubmitReflectionRequest,
@@ -473,6 +474,10 @@ export class PromotorClassContentApiClient {
     return this.client.get('/api/v1/learner/me/enrollments');
   }
 
+  async listMyCertificates(): Promise<LearnerCertificatesResponse> {
+    return this.client.get('/api/v1/learner/me/certificates');
+  }
+
   async listClassLearners(query?: { programId?: string; learningStatus?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'AT_RISK'; limit?: number; offset?: number }): Promise<LearnersListResponse> {
     const q = new URLSearchParams();
     if (query?.programId) q.set('programId', query.programId);
@@ -882,6 +887,10 @@ export class PromotorFlowApiClient {
 
   async getMyLearnerPrograms(): Promise<{ programs: any[] }> {
     return this.client.get('/api/v1/learner/me/enrollments');
+  }
+
+  async listMyCertificates(): Promise<LearnerCertificatesResponse> {
+    return this.client.get('/api/v1/learner/me/certificates');
   }
 
   async listClassLearners(query?: { programId?: string; learningStatus?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'AT_RISK'; limit?: number; offset?: number }): Promise<LearnersListResponse> {

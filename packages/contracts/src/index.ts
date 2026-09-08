@@ -1161,6 +1161,9 @@ export const PublicCertificateVerificationSchema = z.object({
 });
 export type PublicCertificateVerification = z.infer<typeof PublicCertificateVerificationSchema>;
 
+export const LearnerCertificatesResponseSchema = z.object({ certificates: z.array(CertificateSchema) });
+export type LearnerCertificatesResponse = z.infer<typeof LearnerCertificatesResponseSchema>;
+
 export const LearningSignalDtoSchema = z.object({
   id: z.string().uuid(),
   organizationId: z.string().uuid(),
