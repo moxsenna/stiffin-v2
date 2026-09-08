@@ -1698,4 +1698,17 @@ export const CouponQuoteResponseSchema = z.object({
 });
 export type CouponQuoteResponse = z.infer<typeof CouponQuoteResponseSchema>;
 
+// --- A4 Learner Lesson Notes ---
+export const UpsertLessonNoteRequestSchema = z.object({
+  body: z.string().trim().min(1, 'Catatan tidak boleh kosong').max(5000, 'Catatan maksimal 5000 karakter'),
+});
+export type UpsertLessonNoteRequest = z.infer<typeof UpsertLessonNoteRequestSchema>;
+
+export const LessonNoteDtoSchema = z.object({
+  body: z.string(),
+  updatedAt: z.string(),
+});
+export type LessonNoteDto = z.infer<typeof LessonNoteDtoSchema>;
+
+
 

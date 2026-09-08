@@ -13,6 +13,7 @@ import { createReflectionResponseRepository, ReflectionResponseRepository } from
 import { createLearningEventRepository, LearningEventRepository } from '../../repositories/learning-event-repository';
 import { createLearningSignalRepository, LearningSignalRepository } from '../../repositories/learning-signal-repository';
 import { createEntitlementRepository, EntitlementRepository } from '../../repositories/entitlement-repository';
+import { createLearnerLessonNoteRepository, LearnerLessonNoteRepository } from '../../repositories/learner-lesson-note-repository';
 import { createIntegrationOutboxService, IntegrationOutboxService } from '../integration/integration-outbox-service';
 import { createLocalPromotorFlowAdapter } from '../../adapters/local-promotor-flow-adapter';
 import { EnrollmentRow } from '../../db/schema/enrollments';
@@ -192,6 +193,19 @@ export interface LearningEngineService {
     positionSeconds: number;
   }): Promise<void>;
   getEnrollmentFullDetails(organizationId: string, enrollmentId: string, authenticatedContactId?: string): Promise<EnrollmentFullDetails>;
+  getLessonNote(input: {
+    organizationId: string;
+    enrollmentId: string;
+    lessonId: string;
+    authenticatedContactId?: string;
+  }): Promise<{ body: string; updatedAt: string } | null>;
+  saveLessonNote(input: {
+    organizationId: string;
+    enrollmentId: string;
+    lessonId: string;
+    authenticatedContactId?: string;
+    body: string;
+  }): Promise<{ body: string; updatedAt: string }>;
   listLearners(organizationId: string, options?: { programId?: string; search?: string; learningStatus?: CanonicalLearningStatus | 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'AT_RISK'; limit?: number; offset?: number }): Promise<{ learners: LearnerSummaryItem[]; total: number }>;
   getLearnerDetail(organizationId: string, contactId: string): Promise<Record<string, unknown>>;
   getProgramAnalytics(organizationId: string, programId: string): Promise<ProgramAnalyticsResult>;
@@ -209,6 +223,7 @@ export function createLearningEngineService(
     learningEventRepo?: LearningEventRepository;
     learningSignalRepo?: LearningSignalRepository;
     entitlementRepo?: EntitlementRepository;
+    lessonNoteRepo?: LearnerLessonNoteRepository;
     outboxService?: IntegrationOutboxService;
     clock?: () => Date;
   } = {}
@@ -220,6 +235,7 @@ export function createLearningEngineService(
   const learningEventRepo = dependencies.learningEventRepo ?? createLearningEventRepository(db);
   const learningSignalRepo = dependencies.learningSignalRepo ?? createLearningSignalRepository(db);
   const entitlementRepo = dependencies.entitlementRepo ?? createEntitlementRepository(db);
+  const lessonNoteRepo = dependencies.lessonNoteRepo ?? createLearnerLessonNoteRepository(db);
   const flowAdapter = createLocalPromotorFlowAdapter(db);
   const outboxService = dependencies.outboxService ?? createIntegrationOutboxService(db, { flowAdapter });
   const getNow = dependencies.clock ?? (() => new Date());
@@ -975,6 +991,37 @@ export function createLearningEngineService(
           modules,
         },
       };
+    },
+
+    async getLessonNote(input) {
+      const { enrollment } = await validateEnrollmentAndLesson(
+        input.organizationId,
+        input.enrollmentId,
+        input.lessonId,
+        input.authenticatedContactId
+      );
+      const row = await lessonNoteRepo.findByEnrollmentAndLesson(
+        input.organizationId,
+        enrollment.id,
+        input.lessonId
+      );
+      return row ? { body: row.body, updatedAt: new Date(row.updatedAt).toISOString() } : null;
+    },
+
+    async saveLessonNote(input) {
+      const { enrollment } = await validateEnrollmentAndLesson(
+        input.organizationId,
+        input.enrollmentId,
+        input.lessonId,
+        input.authenticatedContactId
+      );
+      const row = await lessonNoteRepo.upsert(
+        input.organizationId,
+        enrollment.id,
+        input.lessonId,
+        input.body.trim()
+      );
+      return { body: row.body, updatedAt: new Date(row.updatedAt).toISOString() };
     },
 
     async listLearners(organizationId, options = {}) {

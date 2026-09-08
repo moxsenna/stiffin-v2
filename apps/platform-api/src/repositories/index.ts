@@ -22,3 +22,5 @@ export * from './learning-event-repository';
 export * from './learning-signal-repository';
 export * from './price-variant-repository';
 export * from './coupon-repository';
+export * from './learner-lesson-note-repository';
+
