@@ -411,9 +411,9 @@ export function ProgramDetailClient() {
          }}
        >
          <h2 style={{ fontSize: '16px', fontWeight: 750, marginBottom: '4px' }}>Pilihan Paket Harga (Multi-tier & Bundling)</h2>
-         <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
-           Tambahkan variasi paket penawaran untuk peserta. Contoh: "Kelas Saja" Rp 299.000 vs "Kelas + Konsultasi 1-on-1" Rp 499.000.
-         </p>
+        <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+          Tambahkan variasi paket penawaran untuk peserta. Contoh: &quot;Kelas Saja&quot; Rp 299.000 vs &quot;Kelas + Konsultasi 1-on-1&quot; Rp 499.000.
+        </p>
 
          {((program.variants ?? []).length > 0) ? (
            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>

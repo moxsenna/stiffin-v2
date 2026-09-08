@@ -285,7 +285,7 @@ export default function PipelinePage() {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
               <div style={{ fontWeight: 750, fontSize: '15px', color: '#0F172A' }}>
-                Pindahkan "{menuContact.name}" ke tahap:
+                Pindahkan &quot;{menuContact.name}&quot; ke tahap:
               </div>
               <button
                 type="button"

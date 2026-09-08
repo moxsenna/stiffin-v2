@@ -582,7 +582,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                       >
                         <div>
                           <div style={{ fontWeight: 700, color: '#065F46', fontSize: '13px' }}>
-                            ✓ Kupon "{appliedCoupon.code}" Aktif
+                            ✓ Kupon &quot;{appliedCoupon.code}&quot; Aktif
                           </div>
                           <div style={{ fontSize: '12px', color: '#047857', marginTop: '2px' }}>
                             Hemat {formatIDR(appliedCoupon.discountAmount)}
