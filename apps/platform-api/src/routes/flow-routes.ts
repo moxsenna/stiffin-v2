@@ -33,6 +33,8 @@ import { contacts, nextActions } from '../db/schema';
 import { createContactFlowService } from '../services/contact-flow-service';
 import { createContactLifecycleService } from '../services/contact-lifecycle-service';
 import { createNextActionService } from '../services/next-action-service';
+import { createNextActionRepository } from '../repositories/next-action-repository';
+import { resolveOutcomeEffect } from '../domain/next-action-rules';
 import { createBookingService } from '../services/booking-service';
 import { createServiceRepository } from '../repositories/service-repository';
 import { createActivityRepository } from '../repositories/activity-repository';
@@ -648,7 +650,67 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
       { confirmedWhatsAppSent: true },
       actor
     );
-    return c.json({ nextAction: completed }, 200);
+
+    // C1: apply deterministic post-WhatsApp outcome effect.
+    // Legacy clients send only nextActionId (outcome undefined) -> neutral effect.
+    const effect = resolveOutcomeEffect(body.outcome, body.nextActionId, new Date());
+    const nextActionRepo = createNextActionRepository(db);
+    let createdAction: { id: string; title: string; dueAt: string } | null = null;
+
+    // Create the explicit follow-up BEFORE the stage transition so the
+    // INTERESTED entry trigger (ENSURE_FOLLOW_UP_IF_NONE) sees it and
+    // skips its generic auto-created follow-up (no duplicate FOLLOW_UP).
+    if (effect.followUp) {
+      const existing = await nextActionRepo.findByIdempotency(
+        ctx,
+        'PROMOTORFLOW',
+        effect.followUp.idempotencyKey
+      );
+      const row =
+        existing ??
+        (await nextActionRepo.create(ctx, {
+          contactId: completed.contactId,
+          actionType: effect.followUp.actionType,
+          title: effect.followUp.title,
+          description: null,
+          dueAt: effect.followUp.dueAt.toISOString(),
+          priority: effect.followUp.priority,
+          status: 'PENDING',
+          source: 'PROMOTORFLOW',
+          idempotencyKey: effect.followUp.idempotencyKey,
+        }));
+      createdAction = { id: row.id, title: row.title, dueAt: row.dueAt };
+    } else {
+      // WAIT_PAYDAY / NO_RESPONSE: explicit client choice wins, otherwise the
+      // outcome default days apply. Legacy clients (no outcome) sending manual
+      // days keep working through the same path. Idempotent per outcome+action.
+      const days = body.scheduleNextFollowUpDays ?? effect.nextFollowUpDays;
+      if (days && days > 0) {
+        const keyOutcome = body.outcome ?? 'MANUAL';
+        const idempotencyKey = `wa-outcome:${keyOutcome}:${body.nextActionId}`;
+        const existing = await nextActionRepo.findByIdempotency(ctx, 'PROMOTORFLOW', idempotencyKey);
+        const dayMs = 24 * 3600_000;
+        const row =
+          existing ??
+          (await nextActionRepo.create(ctx, {
+            contactId: completed.contactId,
+            actionType: 'FOLLOW_UP',
+            title: `Follow-up ${days} hari lagi`,
+            description: null,
+            dueAt: new Date(Date.now() + days * dayMs).toISOString(),
+            priority: 70,
+            status: 'PENDING',
+            source: 'PROMOTORFLOW',
+            idempotencyKey,
+          }));
+        createdAction = { id: row.id, title: row.title, dueAt: row.dueAt };
+      }
+    }
+    if (effect.stage) {
+      const lifecycle = createContactLifecycleService(db);
+      await lifecycle.transitionStage(ctx, completed.contactId, effect.stage, {}, actor);
+    }
+    return c.json({ nextAction: completed, createdAction }, 200);
   });
 
   // =========================================================================

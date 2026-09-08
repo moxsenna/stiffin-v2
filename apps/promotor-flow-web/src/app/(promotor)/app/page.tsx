@@ -18,6 +18,7 @@ import {
 } from '@/lib/container';
 import { TodayQueue, TodayQueueItem } from '@/modules/next-actions/queries';
 import { DemoScenarioPreset } from '@/modules/promotorclass/ports';
+import type { ContactWaOutcome } from '@promotor/contracts';
 
 type QueueGroup = { key: 'overdue' | 'today' | 'upcoming'; label: string; items: TodayQueueItem[] };
 
@@ -68,13 +69,14 @@ export default function TodayPage() {
     }
   };
 
-  const handleConfirmWASent = async (scheduleNextDays?: number) =>{
+  const handleConfirmWASent = async (scheduleNextDays?: number, outcome?: ContactWaOutcome) =>{
     if (!activeWaItem) return;
     await messagingCommands.confirmWhatsAppSent({
       contactId: activeWaItem.item.action.contactId,
       actionId: activeWaItem.item.action.id,
       messageText: activeWaItem.draft,
       scheduleNextFollowUpDays: scheduleNextDays,
+      outcome,
     });
     setActiveWaItem(null);
     showToast('Tindakan selesai · Next Action berikutnya dibuat');

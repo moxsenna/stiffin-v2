@@ -31,6 +31,7 @@ import type {
   ListBookingsQuery,
   WhatsAppOpenedRequest,
   ConfirmWhatsAppSentRequest,
+  ConfirmWhatsAppSentResponse,
   AvailabilityRuleDto,
   ReplaceAvailabilityRulesRequest,
   CreateContactNoteRequest,
@@ -794,7 +795,7 @@ export class PromotorFlowApiClient {
     return this.client.post('/api/v1/flow/messaging/whatsapp-opened', data);
   }
 
-  async confirmWhatsAppSent(data: ConfirmWhatsAppSentRequest): Promise<{ success: boolean; nextActionId: string }> {
+  async confirmWhatsAppSent(data: ConfirmWhatsAppSentRequest): Promise<ConfirmWhatsAppSentResponse> {
     return this.client.post('/api/v1/flow/messaging/confirm-sent', data);
   }
 

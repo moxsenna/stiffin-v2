@@ -1,5 +1,6 @@
 import { MessagingPort } from '@/modules/messaging/ports';
 import { PromotorFlowApiClient } from '@promotor/api-client';
+import type { ConfirmWhatsAppSentResponse, ContactWaOutcome } from '@promotor/contracts';
 
 export class HttpMessagingRepository implements MessagingPort {
   constructor(private api: PromotorFlowApiClient) {}
@@ -13,16 +14,19 @@ export class HttpMessagingRepository implements MessagingPort {
     nextActionId?: string;
     messageText: string;
     scheduleNextFollowUpDays?: number;
+    outcome?: ContactWaOutcome;
   }): Promise<{ success: boolean; nextActionId?: string }> {
     if (!input.nextActionId) {
       throw new Error('nextActionId is required to confirm WhatsApp sent');
     }
-    const res = await this.api.confirmWhatsAppSent({
+    const res: ConfirmWhatsAppSentResponse = await this.api.confirmWhatsAppSent({
       nextActionId: input.nextActionId,
+      scheduleNextFollowUpDays: input.scheduleNextFollowUpDays,
+      outcome: input.outcome,
     });
     return {
-      success: res.success,
-      nextActionId: res.nextActionId,
+      success: true,
+      nextActionId: res.nextAction.id,
     };
   }
 }

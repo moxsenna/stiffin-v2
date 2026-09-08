@@ -193,7 +193,8 @@ export function getMessagingRepository(): MessagingPort {
         : new MockMessagingRepository(
             getNextActionRepository(),
             getActivityRepository(),
-            mockClock
+            mockClock,
+            getLifecycleRepository()
           );
   }
   return messagingRepoInstance;

@@ -1,5 +1,5 @@
 import { MessageTemplate, NextActionType } from '@promotor/promotor-flow-fixtures';
-import type { MessageTemplateTone } from '@promotor/contracts';
+import type { ContactWaOutcome, MessageTemplateTone } from '@promotor/contracts';
 
 export interface MessageTemplateRepositoryPort {
   listTemplates(): Promise<MessageTemplate[]>;
@@ -13,5 +13,6 @@ export interface MessagingPort {
     nextActionId?: string;
     messageText: string;
     scheduleNextFollowUpDays?: number;
+    outcome?: ContactWaOutcome;
   }): Promise<{ success: boolean; nextActionId?: string }>;
 }

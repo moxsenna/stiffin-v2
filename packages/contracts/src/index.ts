@@ -892,10 +892,32 @@ export const WhatsAppOpenedRequestSchema = z.object({
 });
 export type WhatsAppOpenedRequest = z.infer<typeof WhatsAppOpenedRequestSchema>;
 
+export const ContactWaOutcomeSchema = z.enum(['INTERESTED_TEST', 'ASK_SCHEDULE', 'WAIT_PAYDAY', 'NO_RESPONSE']);
+export type ContactWaOutcome = z.infer<typeof ContactWaOutcomeSchema>;
+
 export const ConfirmWhatsAppSentRequestSchema = z.object({
   nextActionId: z.string().uuid('Valid nextActionId is required'),
+  outcome: ContactWaOutcomeSchema.optional(),
+  scheduleNextFollowUpDays: z.number().int().min(1).max(60).optional(),
 });
 export type ConfirmWhatsAppSentRequest = z.infer<typeof ConfirmWhatsAppSentRequestSchema>;
+
+export const ConfirmWhatsAppSentResponseSchema = z.object({
+  nextAction: z.object({
+    id: z.string(),
+    contactId: z.string(),
+    actionType: z.string(),
+    title: z.string(),
+    status: z.string(),
+    dueAt: z.string(),
+  }).passthrough(),
+  createdAction: z.object({
+    id: z.string(),
+    title: z.string(),
+    dueAt: z.string(),
+  }).nullable().optional(),
+});
+export type ConfirmWhatsAppSentResponse = z.infer<typeof ConfirmWhatsAppSentResponseSchema>;
 
 // --- B6.1 Availability & Public Booking ----
 export const AvailabilityRuleSchema = z.object({
