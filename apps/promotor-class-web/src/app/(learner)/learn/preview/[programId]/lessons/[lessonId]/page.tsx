@@ -13,15 +13,15 @@ export default function PreviewLessonPage() {
   const programId = params.programId as string;
   const lessonId = params.lessonId as string;
   const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [status, setStatus] = useState<'LOADING' | 'NOT_FOUND'>('LOADING');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     getProgramByIdQuery(programId)
       .then((program) => {
         const found = (program?.modules ?? []).flatMap((m) => m.lessons ?? []).find((l) => l.id === lessonId);
-        if (found) setLesson(found); else setStatus('NOT_FOUND');
+        if (found) setLesson(found); else setError('Materi tidak ditemukan.');
       })
-      .catch(() => setStatus('NOT_FOUND'));
+      .catch(() => setError('Gagal memuat materi. Pastikan Anda login sebagai promotor.'));
   }, [programId, lessonId]);
 
   const embedUrl = lesson?.videoYoutubeUrl ? getYoutubeEmbedUrl(lesson.videoYoutubeUrl) : null;
@@ -31,8 +31,8 @@ export default function PreviewLessonPage() {
       <div style={{ margin: 12, padding: 12, background: '#fef9c3', border: '1px solid #ca8a04', font: '600 13px/1.4 var(--font-sans)' }}>
         Mode Pratinjau — inilah yang dilihat peserta.
       </div>
-      {status === 'LOADING' && !lesson && <LoadingRows rows={3} />}
-      {status === 'NOT_FOUND' && !lesson && <p style={{ padding: 16 }}>Materi tidak ditemukan.</p>}
+      {error && <p style={{ padding: 16 }}>{error}</p>}
+      {!lesson && !error && <LoadingRows rows={3} />}
       {lesson && (
         <article style={{ padding: 16 }}>
           <h1 style={{ font: '700 20px/1.3 var(--font-sans)' }}>{lesson.title}</h1>
