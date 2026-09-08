@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BottomSheet } from '../ui';
-import type { MessageTemplateTone } from '@promotor/contracts';
+import type { ContactWaOutcome, MessageTemplateTone } from '@promotor/contracts';
 
 export interface WhatsAppBottomSheetProps {
   isOpen: boolean;
@@ -13,7 +13,7 @@ export interface WhatsAppBottomSheetProps {
   initialTone?: MessageTemplateTone;
   onRegenerateDraft?: (tone: MessageTemplateTone) => string | Promise<string>;
   onClose: () => void;
-  onConfirmSent: (scheduleNextDays?: number) => Promise<void>;
+  onConfirmSent: (scheduleNextDays?: number, outcome?: ContactWaOutcome) => Promise<void>;
   onDraftError?: (message: string) => void;
 }
 
@@ -32,12 +32,16 @@ export const WhatsAppBottomSheet: React.FC<WhatsAppBottomSheetProps> = ({
   const [tone, setTone] = useState<MessageTemplateTone | undefined>(initialTone);
   const [hasOpenedWa, setHasOpenedWa] = useState(false);
   const [nextFollowUpDays, setNextFollowUpDays] = useState<number | undefined>(2);
+  const [delayTouched, setDelayTouched] = useState(false);
+  const [outcome, setOutcome] = useState<ContactWaOutcome | undefined>(undefined);
 
   useEffect(() => {
     setDraft(initialDraft);
     setTone(initialTone);
     setHasOpenedWa(false);
     setNextFollowUpDays(2);
+    setDelayTouched(false);
+    setOutcome(undefined);
   }, [initialDraft, initialTone, isOpen]);
 
   if (!isOpen) return null;
@@ -60,9 +64,17 @@ export const WhatsAppBottomSheet: React.FC<WhatsAppBottomSheetProps> = ({
   };
 
   const handleConfirm = async () => {
-    await onConfirmSent(nextFollowUpDays);
+    const systemScheduled = outcome === 'INTERESTED_TEST' || outcome === 'ASK_SCHEDULE';
+    // WAIT_PAYDAY defaults to 3d and NO_RESPONSE to 2d on the backend. Only send
+    // an explicit delay when the user touched the picker, otherwise let the
+    // backend outcome default apply.
+    const useOutcomeDefault =
+      (outcome === 'WAIT_PAYDAY' || outcome === 'NO_RESPONSE') && !delayTouched;
+    await onConfirmSent(systemScheduled || useOutcomeDefault ? undefined : nextFollowUpDays, outcome);
     onClose();
   };
+
+  const showDelayPicker = outcome !== 'INTERESTED_TEST' && outcome !== 'ASK_SCHEDULE';
 
   return (
     <BottomSheet open={isOpen} onClose={onClose} labelledBy="wa-sheet-title">
@@ -119,6 +131,29 @@ export const WhatsAppBottomSheet: React.FC<WhatsAppBottomSheetProps> = ({
           </div>
 
          <div style={{ marginTop: 14 }}>
+           <div className="field-label">Apa hasil chat barusan?</div>
+           <div className="segmented">
+             {[
+               { label: 'Tertarik Tes STIFIn', value: 'INTERESTED_TEST' as const },
+               { label: 'Minta Jadwal', value: 'ASK_SCHEDULE' as const },
+               { label: 'Tunggu Gajian', value: 'WAIT_PAYDAY' as const },
+               { label: 'Tidak Merespons', value: 'NO_RESPONSE' as const },
+             ].map((opt) => (
+               <button
+                 key={opt.value}
+                 type="button"
+                 className={outcome === opt.value ? 'is-active' : undefined}
+                 aria-pressed={outcome === opt.value}
+                 onClick={() => setOutcome(outcome === opt.value ? undefined : opt.value)}
+               >
+                 {opt.label}
+               </button>
+             ))}
+           </div>
+         </div>
+
+         {showDelayPicker && (
+         <div style={{ marginTop: 14 }}>
            <div className="field-label">Jadwalkan follow-up berikutnya</div>
            <div className="segmented">
              {[
@@ -132,13 +167,14 @@ export const WhatsAppBottomSheet: React.FC<WhatsAppBottomSheetProps> = ({
                   type="button"
                   className={nextFollowUpDays === opt.value ? 'is-active' : undefined}
                   aria-pressed={nextFollowUpDays === opt.value}
-                  onClick={() =>setNextFollowUpDays(opt.value)}
+                  onClick={() =>{setNextFollowUpDays(opt.value); setDelayTouched(true);}}
                 >
                  {opt.label}
                 </button>
              ))}
             </div>
          </div>
+         )}
 
          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
            <button type="button" className="btn btn-primary" onClick={handleConfirm}>

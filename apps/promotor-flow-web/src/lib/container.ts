@@ -11,6 +11,7 @@ import {
   getSettingsRepository,
   getPromotorClassAdapter,
   getAvailabilityRepository,
+  getRevenueRepository,
   getClock,
 } from '@/adapters';
 
@@ -47,6 +48,9 @@ import { createPromotorClassCommands } from '@/modules/promotorclass/commands';
 import { createAvailabilityQueries } from '@/modules/availability/queries';
 import { createAvailabilityCommands } from '@/modules/availability/commands';
 
+import { createRevenueQueries } from '@/modules/revenue/queries';
+import { createRevenueCommands } from '@/modules/revenue/commands';
+
 // Active repositories resolved via environment-controlled adapter factory
 const contactRepo = getContactRepository();
 const lifecycleRepo = getLifecycleRepository();
@@ -60,6 +64,7 @@ const messagingRepo = getMessagingRepository();
 const settingsRepo = getSettingsRepository();
 const promotorClassAdapter = getPromotorClassAdapter();
 const availabilityRepo = getAvailabilityRepository();
+const revenueRepo = getRevenueRepository();
 const activeClock = getClock();
 
 // Helper contact lookup for queries
@@ -105,6 +110,9 @@ export const promotorClassCommands = createPromotorClassCommands(promotorClassAd
 
 export const availabilityQueries = createAvailabilityQueries(availabilityRepo);
 export const availabilityCommands = createAvailabilityCommands(availabilityRepo);
+
+export const revenueQueries = createRevenueQueries(revenueRepo);
+export const revenueCommands = createRevenueCommands(revenueRepo);
 
 export const clock = activeClock;
 

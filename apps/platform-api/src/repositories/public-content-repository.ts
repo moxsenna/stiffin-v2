@@ -7,6 +7,7 @@ import {
   lessons,
   programPresentations,
   workspaceProfiles,
+  programPriceVariants,
 } from '../db/schema';
 import type {
   PublicWorkspaceProfile,
@@ -73,6 +74,24 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
       totalLessonsCount = lessonCountRes?.count ?? 0;
     }
 
+    const variantRows = await db
+      .select()
+      .from(programPriceVariants)
+      .where(eq(programPriceVariants.programId, progRow.id))
+      .orderBy(asc(programPriceVariants.sortOrder), asc(programPriceVariants.createdAt));
+
+    const variantsMapped = variantRows.map((v) => ({
+      id: v.id,
+      programId: v.programId,
+      label: v.label,
+      description: v.description ?? null,
+      priceAmount: v.priceAmount,
+      isDefault: v.isDefault,
+      sortOrder: v.sortOrder,
+      createdAt: typeof v.createdAt === 'string' ? v.createdAt : new Date(v.createdAt).toISOString(),
+      updatedAt: typeof v.updatedAt === 'string' ? v.updatedAt : new Date(v.updatedAt).toISOString(),
+    }));
+
     return {
       id: progRow.id,
       workspaceSlug: orgSlug,
@@ -87,6 +106,7 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
       publishedAt: progRow.publishedAt ?? undefined,
       totalModulesCount: moduleRows.length,
       totalLessonsCount,
+      variants: variantsMapped,
     };
   }
 
@@ -147,6 +167,24 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
       lessons: lessonsByModule.get(m.id) ?? [],
     }));
 
+    const variantRows = await db
+      .select()
+      .from(programPriceVariants)
+      .where(eq(programPriceVariants.programId, progRow.id))
+      .orderBy(asc(programPriceVariants.sortOrder), asc(programPriceVariants.createdAt));
+
+    const variantsMapped = variantRows.map((v) => ({
+      id: v.id,
+      programId: v.programId,
+      label: v.label,
+      description: v.description ?? null,
+      priceAmount: v.priceAmount,
+      isDefault: v.isDefault,
+      sortOrder: v.sortOrder,
+      createdAt: typeof v.createdAt === 'string' ? v.createdAt : new Date(v.createdAt).toISOString(),
+      updatedAt: typeof v.updatedAt === 'string' ? v.updatedAt : new Date(v.updatedAt).toISOString(),
+    }));
+
     return {
       id: progRow.id,
       workspaceSlug: orgSlug,
@@ -162,6 +200,7 @@ export function createPublicContentRepository(db: NodePgDatabase): PublicContent
       totalModulesCount: moduleRows.length,
       totalLessonsCount,
       modules: previewModules,
+      variants: variantsMapped,
     };
   }
 

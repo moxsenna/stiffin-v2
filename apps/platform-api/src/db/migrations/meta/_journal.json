@@ -120,6 +120,27 @@
       "when": 1788821225146,
       "tag": "0016_nappy_red_ghost",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1788868800816,
+      "tag": "0017_yielding_rocket_racer",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1788876929615,
+      "tag": "0018_salty_dormammu",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1788880626386,
+      "tag": "0019_clever_warhawk",
+      "breakpoints": true
     }
   ]
 }

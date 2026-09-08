@@ -31,9 +31,11 @@ import type {
   ListBookingsQuery,
   WhatsAppOpenedRequest,
   ConfirmWhatsAppSentRequest,
+  ConfirmWhatsAppSentResponse,
   AvailabilityRuleDto,
   ReplaceAvailabilityRulesRequest,
   CreateContactNoteRequest,
+  RevenueSummary,
   PublicSlotsQuery,
   CreatePublicBookingRequest,
   PublicRegisterLearnerRequest,
@@ -74,6 +76,13 @@ import type {
   ListOrdersResponse,
   CommerceOrder,
   RejectOrderRequest,
+  ProgramPriceVariant,
+  CreatePriceVariantRequest,
+  UpdatePriceVariantRequest,
+  PromoCoupon,
+  CreateCouponRequest,
+  UpdateCouponRequest,
+  CouponQuoteResponse,
 } from '@promotor/contracts';
 
 export interface ApiClientConfig {
@@ -347,6 +356,43 @@ export class PromotorClassContentApiClient {
     return res.presentation;
   }
 
+  // B7 Price Variants
+  async listPriceVariants(programId: string): Promise<ProgramPriceVariant[]> {
+    const res = await this.client.get<{ variants: ProgramPriceVariant[] }>(
+      `/api/v1/programs/${encodeURIComponent(programId)}/variants`
+    );
+    return res.variants;
+  }
+
+  async createPriceVariant(
+    programId: string,
+    data: CreatePriceVariantRequest
+  ): Promise<ProgramPriceVariant> {
+    const res = await this.client.post<{ variant: ProgramPriceVariant }>(
+      `/api/v1/programs/${encodeURIComponent(programId)}/variants`,
+      data
+    );
+    return res.variant;
+  }
+
+  async updatePriceVariant(
+    programId: string,
+    variantId: string,
+    data: UpdatePriceVariantRequest
+  ): Promise<ProgramPriceVariant> {
+    const res = await this.client.patch<{ variant: ProgramPriceVariant }>(
+      `/api/v1/programs/${encodeURIComponent(programId)}/variants/${encodeURIComponent(variantId)}`,
+      data
+    );
+    return res.variant;
+  }
+
+  async deletePriceVariant(programId: string, variantId: string): Promise<void> {
+    await this.client.delete(
+      `/api/v1/programs/${encodeURIComponent(programId)}/variants/${encodeURIComponent(variantId)}`
+    );
+  }
+
   async getWorkspaceProfile(): Promise<PublicWorkspaceProfile> {
     const res = await this.client.get<{ profile: PublicWorkspaceProfile }>('/api/v1/storefront/profile');
     return res.profile;
@@ -607,6 +653,33 @@ export class PromotorClassContentApiClient {
   async approveOrder(orderId: string): Promise<{ order: CommerceOrder }> {
     return this.client.post<{ order: CommerceOrder }>(`/api/v1/class/orders/${encodeURIComponent(orderId)}/approve`);
   }
+
+  // ==========================================
+  // PromotorClass Coupons Management & Quotes
+  // ==========================================
+  async listCoupons(): Promise<{ coupons: PromoCoupon[] }> {
+    return this.client.get<{ coupons: PromoCoupon[] }>('/api/v1/class/coupons');
+  }
+
+  async createCoupon(data: CreateCouponRequest): Promise<{ coupon: PromoCoupon }> {
+    return this.client.post<{ coupon: PromoCoupon }>('/api/v1/class/coupons', data);
+  }
+
+  async updateCoupon(couponId: string, data: UpdateCouponRequest): Promise<{ coupon: PromoCoupon }> {
+    return this.client.patch<{ coupon: PromoCoupon }>(`/api/v1/class/coupons/${encodeURIComponent(couponId)}`, data);
+  }
+
+  async getCouponQuote(
+    slug: string,
+    programSlug: string,
+    code: string,
+    variantId?: string
+  ): Promise<CouponQuoteResponse> {
+    const qs = variantId ? `?variantId=${encodeURIComponent(variantId)}` : '';
+    return this.client.get<CouponQuoteResponse>(
+      `/api/v1/public/${encodeURIComponent(slug)}/programs/${encodeURIComponent(programSlug)}/coupons/${encodeURIComponent(code)}${qs}`
+    );
+  }
 }
 
 export { PromotorClassContentApiClient as PromotorApiClient };
@@ -794,7 +867,7 @@ export class PromotorFlowApiClient {
     return this.client.post('/api/v1/flow/messaging/whatsapp-opened', data);
   }
 
-  async confirmWhatsAppSent(data: ConfirmWhatsAppSentRequest): Promise<{ success: boolean; nextActionId: string }> {
+  async confirmWhatsAppSent(data: ConfirmWhatsAppSentRequest): Promise<ConfirmWhatsAppSentResponse> {
     return this.client.post('/api/v1/flow/messaging/confirm-sent', data);
   }
 
@@ -805,6 +878,19 @@ export class PromotorFlowApiClient {
 
   async replaceAvailability(rules: Array<{ dayOfWeek: number; startTime: string; endTime: string; isActive?: boolean }>): Promise<{ rules: AvailabilityRuleDto[] }> {
     return this.client.put('/api/v1/flow/availability', { rules });
+  }
+
+  // C7 Revenue summary & settings
+  async getRevenueSummary(period: 'WEEK' | 'MONTH' = 'MONTH'): Promise<{ summary: RevenueSummary }> {
+    return this.client.get(`/api/v1/flow/revenue-summary?period=${period}`);
+  }
+
+  async getRevenueSettings(): Promise<{ commissionPercent: number }> {
+    return this.client.get('/api/v1/flow/revenue-settings');
+  }
+
+  async updateRevenueSettings(commissionPercent: number): Promise<{ commissionPercent: number }> {
+    return this.client.put('/api/v1/flow/revenue-settings', { commissionPercent });
   }
 
   // Public Booking & Slots

@@ -15,14 +15,93 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
   const { program, isRegistrationAllowed } = detail;
   const isPaid = program.pricing === 'one_time';
   const price = program.priceAmount || 0;
+  const variants = program.variants ?? [];
+  const defaultVariant = variants.find((v) => v.isDefault) || variants[0];
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(defaultVariant?.id ?? null);
+  const [couponCodeInput, setCouponCodeInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountAmount: number;
+    finalAmount: number;
+  } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [isCheckingCoupon, setIsCheckingCoupon] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdEnrollmentId, setCreatedEnrollmentId] = useState<string | null>(null);
-  const [checkoutResult, setCheckoutResult] = useState<{ reference: string; checkoutUrl?: string } | null>(null);
+  const [checkoutResult, setCheckoutResult] = useState<{ reference: string; checkoutUrl?: string | null; freeCheckout?: boolean } | null>(null);
+
+  const selectedVariant = variants.find((v) => v.id === selectedVariantId);
+  const listPrice = selectedVariant ? selectedVariant.priceAmount : price;
+  const currentPrice = appliedCoupon ? appliedCoupon.finalAmount : listPrice;
+
+  const handleApplyCoupon = async () => {
+    if (!couponCodeInput.trim()) return;
+    setCouponError(null);
+    setIsCheckingCoupon(true);
+    try {
+      const api = getPlatformApiClient();
+      const quote = await api.getCouponQuote(
+        detail.promoter.workspaceSlug,
+        program.programSlug,
+        couponCodeInput.trim().toUpperCase(),
+        selectedVariantId || undefined
+      );
+      if (quote.valid) {
+        setAppliedCoupon({
+          code: couponCodeInput.trim().toUpperCase(),
+          discountAmount: quote.discountAmount,
+          finalAmount: quote.finalAmount,
+        });
+        setCouponError(null);
+      } else {
+        setAppliedCoupon(null);
+        setCouponError(quote.message);
+      }
+    } catch (err: any) {
+      setAppliedCoupon(null);
+      setCouponError(err.message || 'Gagal memverifikasi kupon');
+    } finally {
+      setIsCheckingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCodeInput('');
+    setCouponError(null);
+  };
+
+  const handleVariantSelect = async (vId: string) => {
+    setSelectedVariantId(vId);
+    if (appliedCoupon) {
+      try {
+        const api = getPlatformApiClient();
+        const quote = await api.getCouponQuote(
+          detail.promoter.workspaceSlug,
+          program.programSlug,
+          appliedCoupon.code,
+          vId
+        );
+        if (quote.valid) {
+          setAppliedCoupon({
+            code: appliedCoupon.code,
+            discountAmount: quote.discountAmount,
+            finalAmount: quote.finalAmount,
+          });
+        } else {
+          setAppliedCoupon(null);
+          setCouponError(quote.message);
+        }
+      } catch {
+        setAppliedCoupon(null);
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,19 +120,24 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
             phone: phone.trim(),
             email: email.trim() || undefined,
             sourceChannel: 'STOREFRONT',
+            variantId: selectedVariantId || undefined,
+            couponCode: appliedCoupon ? appliedCoupon.code : undefined,
           }
         );
 
-        if (res.checkoutUrl) {
-          // Redirect to Paycore checkout
-          window.location.href = res.checkoutUrl;
+        if (res.amount === 0 || !res.checkoutUrl) {
+          // 100% coupon discount - free checkout bypass succeeded
+          setCheckoutResult({
+            reference: res.reference,
+            checkoutUrl: null,
+            freeCheckout: true,
+          });
           return;
         }
 
-        setCheckoutResult({
-          reference: res.reference,
-          checkoutUrl: res.checkoutUrl,
-        });
+        // Redirect to Paycore checkout
+        window.location.href = res.checkoutUrl;
+        return;
       } else {
         // Free program registration
         const enrollmentRepo = getEnrollmentRepository();
@@ -155,11 +239,19 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
               }}
             >
               <div style={{ fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>BIAYA INVESTASI KELAS</div>
-              <div style={{ fontSize: '26px', fontWeight: 850, color: '#111827', marginTop: '4px' }}>
-                {formatIDR(price)}
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '4px' }}>
+                <div style={{ fontSize: '26px', fontWeight: 850, color: '#111827' }}>
+                  {formatIDR(currentPrice)}
+                </div>
+                {appliedCoupon && appliedCoupon.discountAmount > 0 && (
+                  <div style={{ fontSize: '16px', textDecoration: 'line-through', color: '#9CA3AF' }}>
+                    {formatIDR(listPrice)}
+                  </div>
+                )}
               </div>
               <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>
-                Akses materi seumur hidup & pembaruan berkala
+                {selectedVariant ? selectedVariant.label : 'Akses materi seumur hidup & pembaruan berkala'}
+                {appliedCoupon ? ` · Kupon "${appliedCoupon.code}" Aktif` : ''}
               </div>
             </div>
           )}
@@ -226,12 +318,17 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
               }}
             >
               <div style={{ fontSize: '16px', fontWeight: 800, color: '#111827', marginBottom: '8px' }}>
-                Pesanan Berhasil Diajukan
+                {checkoutResult.freeCheckout ? 'Akses Gratis Berhasil Diaktifkan!' : 'Pesanan Berhasil Diajukan'}
               </div>
               <div style={{ fontSize: '13px', color: '#4B5563', marginBottom: '14px' }}>
                 Kode Referensi Pesanan: <strong>{checkoutResult.reference}</strong>
+                {checkoutResult.freeCheckout && (
+                  <p style={{ marginTop: '8px', color: '#059669', fontWeight: 600 }}>
+                    Kupon 100% diskon diterapkan. Akses materi belajar Anda telah aktif seketika.
+                  </p>
+                )}
               </div>
-              {checkoutResult.checkoutUrl && (
+              {checkoutResult.checkoutUrl ? (
                 <a
                   href={checkoutResult.checkoutUrl}
                   style={{
@@ -250,6 +347,25 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                 >
                   Lanjutkan Pembayaran →
                 </a>
+              ) : (
+                <Link
+                  href="/learn"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                    minHeight: '46px',
+                    borderRadius: '10px',
+                    backgroundColor: 'var(--accent-dark, #059669)',
+                    color: '#FFFFFF',
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    textDecoration: 'none',
+                  }}
+                >
+                  Buka Ruang Belajar Sekarang →
+                </Link>
               )}
             </div>
           ) : (
@@ -287,6 +403,63 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
               )}
 
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {isPaid && variants.length > 0 && (
+                  <div role="radiogroup" aria-label="Pilih paket kelas" style={{ marginBottom: '8px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        marginBottom: '8px',
+                        color: '#374151',
+                      }}
+                    >
+                      PILIH PAKET KELAS *
+                    </label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {variants.map((v) => (
+                        <label
+                          key={v.id}
+                          style={{
+                            display: 'flex',
+                            gap: '12px',
+                            alignItems: 'center',
+                            padding: '12px 14px',
+                            border: '2px solid',
+                            borderColor: selectedVariantId === v.id ? 'var(--accent-dark, #4F46E5)' : '#E5E7EB',
+                            borderRadius: '8px',
+                            backgroundColor: selectedVariantId === v.id ? '#F5F3FF' : '#FFFFFF',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <input
+                            type="radio"
+                            name="variant"
+                            value={v.id}
+                            checked={selectedVariantId === v.id}
+                            onChange={() => handleVariantSelect(v.id)}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <strong style={{ fontSize: '13px', color: '#111827' }}>
+                                {v.label} {v.isDefault ? '⭐' : ''}
+                              </strong>
+                              <span style={{ fontSize: '13px', fontWeight: 750, color: 'var(--accent-dark, #4F46E5)' }}>
+                                {formatIDR(v.priceAmount)}
+                              </span>
+                            </div>
+                            {v.description && (
+                              <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>
+                                {v.description}
+                              </div>
+                            )}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label
                     style={{
@@ -382,6 +555,103 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                   </div>
                 )}
 
+                {isPaid && (
+                  <div style={{ marginTop: '2px', marginBottom: '4px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        marginBottom: '6px',
+                        color: '#374151',
+                      }}
+                    >
+                      Kupon Promo / Diskon
+                    </label>
+                    {appliedCoupon ? (
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          backgroundColor: '#ECFDF5',
+                          border: '1px solid #A7F3D0',
+                          borderRadius: '8px',
+                          padding: '10px 14px',
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 700, color: '#065F46', fontSize: '13px' }}>
+                            ✓ Kupon "{appliedCoupon.code}" Aktif
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#047857', marginTop: '2px' }}>
+                            Hemat {formatIDR(appliedCoupon.discountAmount)}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleRemoveCoupon}
+                          style={{
+                            border: 0,
+                            background: 'none',
+                            color: '#DC2626',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <input
+                            type="text"
+                            placeholder="Masukkan kode kupon..."
+                            value={couponCodeInput}
+                            onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
+                            style={{
+                              flex: 1,
+                              minHeight: '42px',
+                              border: '1px solid #D1D5DB',
+                              borderRadius: '8px',
+                              padding: '0 12px',
+                              fontSize: '13px',
+                              fontFamily: 'monospace',
+                              fontWeight: 600,
+                              boxSizing: 'border-box',
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={handleApplyCoupon}
+                            disabled={isCheckingCoupon || !couponCodeInput.trim()}
+                            style={{
+                              padding: '0 16px',
+                              minHeight: '42px',
+                              borderRadius: '8px',
+                              border: '1px solid #D1D5DB',
+                              backgroundColor: '#F3F4F6',
+                              fontWeight: 700,
+                              fontSize: '13px',
+                              color: '#374151',
+                              cursor: isCheckingCoupon || !couponCodeInput.trim() ? 'not-allowed' : 'pointer',
+                            }}
+                          >
+                            {isCheckingCoupon ? 'Cek...' : 'Terapkan'}
+                          </button>
+                        </div>
+                        {couponError && (
+                          <div style={{ color: '#DC2626', fontSize: '11px', marginTop: '6px', fontWeight: 600 }}>
+                            {couponError}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={loading}
@@ -403,7 +673,9 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                   {loading
                     ? 'Memproses...'
                     : isPaid
-                    ? `Beli Sekarang — ${formatIDR(price)} →`
+                    ? currentPrice === 0
+                      ? 'Dapatkan Akses Gratis (Kupon 100%) →'
+                      : `Beli Sekarang — ${formatIDR(currentPrice)} →`
                     : 'Daftar & Mulai Belajar Gratis →'}
                 </button>
 

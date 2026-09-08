@@ -417,3 +417,79 @@ export function calculateAftercareFollowOnRule(
 
   return null;
 }
+
+export type ContactWaOutcome =
+  | 'INTERESTED_TEST'
+  | 'ASK_SCHEDULE'
+  | 'WAIT_PAYDAY'
+  | 'NO_RESPONSE';
+
+export const CONTACT_WA_OUTCOMES: readonly ContactWaOutcome[] = [
+  'INTERESTED_TEST',
+  'ASK_SCHEDULE',
+  'WAIT_PAYDAY',
+  'NO_RESPONSE',
+] as const;
+
+export function isContactWaOutcome(val: unknown): val is ContactWaOutcome {
+  return typeof val === 'string' && (CONTACT_WA_OUTCOMES as readonly string[]).includes(val as ContactWaOutcome);
+}
+
+export interface WaOutcomeFollowUp {
+  actionType: 'FOLLOW_UP' | 'MANUAL';
+  title: string;
+  dueAt: Date;
+  priority: number;
+  idempotencyKey: string;
+}
+
+export interface OutcomeEffect {
+  stage: 'INTERESTED' | null;
+  followUp: WaOutcomeFollowUp | null;
+  nextFollowUpDays: number | null;
+}
+
+/**
+ * C1: maps post-WhatsApp outcome taxonomy to deterministic follow-on effects.
+ * Pure (no IO): WAIT_PAYDAY / NO_RESPONSE only resolve default day counts;
+ * callers persist stage transitions and follow-up actions.
+ */
+export function resolveOutcomeEffect(
+  outcome: ContactWaOutcome | undefined,
+  actionId: string,
+  now: Date
+): OutcomeEffect {
+  const day = 24 * 3600_000;
+  switch (outcome) {
+    case 'INTERESTED_TEST':
+      return {
+        stage: 'INTERESTED',
+        followUp: {
+          actionType: 'FOLLOW_UP',
+          title: 'Ajak booking Tes STIFIn',
+          dueAt: new Date(now.getTime() + 2 * day),
+          priority: 70,
+          idempotencyKey: `wa-outcome:INTERESTED_TEST:${actionId}`,
+        },
+        nextFollowUpDays: null,
+      };
+    case 'ASK_SCHEDULE':
+      return {
+        stage: null,
+        followUp: {
+          actionType: 'MANUAL',
+          title: 'Kunci jadwal konsultasi',
+          dueAt: new Date(now.getTime() + 1 * day),
+          priority: 80,
+          idempotencyKey: `wa-outcome:ASK_SCHEDULE:${actionId}`,
+        },
+        nextFollowUpDays: null,
+      };
+    case 'WAIT_PAYDAY':
+      return { stage: null, followUp: null, nextFollowUpDays: 3 };
+    case 'NO_RESPONSE':
+      return { stage: null, followUp: null, nextFollowUpDays: 2 };
+    default:
+      return { stage: null, followUp: null, nextFollowUpDays: null };
+  }
+}

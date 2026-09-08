@@ -23,7 +23,7 @@ import {
 } from '@/lib/container';
 import { FlowContact, FlowNextAction, FlowBooking, FlowActivity, LifecycleStage } from '@promotor/promotor-flow-fixtures';
 import { formatPhoneDisplay } from '@promotor/platform-core';
-import { ProductEntitlements, LearningContext, ProgramSummary } from '@promotor/contracts';
+import { ProductEntitlements, LearningContext, ProgramSummary, ContactWaOutcome } from '@promotor/contracts';
 import { FlowIntegrationHealth } from '@/modules/promotorclass/ports';
 import { CalendarButtons } from '@/components/calendar/CalendarButtons';
 
@@ -181,13 +181,14 @@ export default function ContactDetailPage() {
     setActiveWaModal({ draft, waUrl });
   };
 
-  const handleConfirmWaSent = async (scheduleNextDays?: number) =>{
+  const handleConfirmWaSent = async (scheduleNextDays?: number, outcome?: ContactWaOutcome) =>{
     if (!primaryAction || !activeWaModal) return;
     await messagingCommands.confirmWhatsAppSent({
       contactId: contact.id,
       actionId: primaryAction.id,
       messageText: activeWaModal.draft,
       scheduleNextFollowUpDays: scheduleNextDays,
+      outcome,
     });
     setActiveWaModal(null);
     await loadData();

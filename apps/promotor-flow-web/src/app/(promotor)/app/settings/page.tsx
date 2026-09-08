@@ -11,6 +11,8 @@ import {
   promotorClassCommands,
   availabilityQueries,
   availabilityCommands,
+  revenueQueries,
+  revenueCommands,
 } from '@/lib/container';
 import { PromotorSettings } from '@/modules/settings/ports';
 import { DemoScenarioPreset } from '@/modules/promotorclass/ports';
@@ -29,11 +31,19 @@ export default function SettingsPage() {
   const [weeklyRules, setWeeklyRules] = useState<WeeklyAvailabilityRule[]>([]);
   const [savingAvailability, setSavingAvailability] = useState(false);
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
+  const [commissionPercent, setCommissionPercent] = useState<string>('');
+  const [savingCommission, setSavingCommission] = useState(false);
+  const [commissionFeedback, setCommissionFeedback] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() =>{
     getSession().then(setSession);
     settingsQueries.getSettings().then(setSettings);
+    revenueQueries.getRevenueSettings().then((res) =>{
+      setCommissionPercent(String(res.commissionPercent ?? 0));
+    }).catch(() =>{
+      setCommissionPercent('0');
+    });
     promotorClassQueries.getIntegrationState().then((res) =>{
       if (res.scenarioPreset) setScenarioPreset(res.scenarioPreset);
     });
@@ -109,6 +119,26 @@ export default function SettingsPage() {
   const handleScenarioChange = async (preset: DemoScenarioPreset) =>{
     await promotorClassCommands.setDemoScenario(preset);
     setScenarioPreset(preset);
+  };
+
+  const handleSaveCommission = async () =>{
+    const value = Number(commissionPercent);
+    if (!Number.isInteger(value) || value < 0 || value > 100) {
+      alert('Persen komisi harus bilangan bulat 0–100.');
+      return;
+    }
+    setSavingCommission(true);
+    setCommissionFeedback(null);
+    try {
+      const saved = await revenueCommands.updateRevenueSettings(value);
+      setCommissionPercent(String(saved.commissionPercent));
+      setCommissionFeedback('Pengaturan disimpan');
+      setTimeout(() =>setCommissionFeedback(null), 4000);
+    } catch (err: any) {
+      alert(`Gagal menyimpan komisi: ${err.message || 'Terjadi kesalahan'}`);
+    } finally {
+      setSavingCommission(false);
+    }
   };
 
   if (!settings) {
@@ -194,6 +224,32 @@ export default function SettingsPage() {
 
        <button type="button" onClick={handleSaveAvailability} disabled={savingAvailability} className="btn btn-primary btn-block" style={{ marginTop: 16 }}>
          {savingAvailability ? 'Menyimpan...' : 'Simpan Jadwal Ketersediaan'}
+        </button>
+     </div>
+
+     <SectionHead label="Komisi STIFIn" />
+     <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
+       <p className="muted-note">Persen komisi untuk estimasi omzet di dashboard.</p>
+       {commissionFeedback && (
+          <div style={{ marginTop: 12, padding: '8px 12px', border: '2px solid var(--ink)', background: 'var(--surface-muted)', font: '600 12px/1.4 var(--font-sans)' }}>
+           {commissionFeedback}
+          </div>
+       )}
+       <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+         <input
+            type="number"
+            aria-label="Komisi STIFIn (%)"
+            min={0}
+            max={100}
+            step={1}
+            value={commissionPercent}
+            onChange={(e) =>setCommissionPercent(e.target.value)}
+            style={{ padding: '8px 10px', border: '1px solid var(--line)', background: 'var(--surface)', font: '600 14px var(--font-sans)', color: 'var(--ink)', width: 120 }}
+          />
+         <span style={{ font: '600 13px/1 var(--font-sans)', color: 'var(--muted)' }}>%</span>
+        </div>
+       <button type="button" onClick={handleSaveCommission} disabled={savingCommission} className="btn btn-primary btn-block" style={{ marginTop: 12 }}>
+         {savingCommission ? 'Menyimpan...' : 'Simpan Komisi'}
         </button>
      </div>
 

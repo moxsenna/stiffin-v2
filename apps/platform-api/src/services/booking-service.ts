@@ -271,7 +271,12 @@ export function createBookingService(
         }
 
         const now = getNow();
-        const updated = await bookingRepo.updatePayment(ctx, bookingId, paymentStatus);
+        const updated = await bookingRepo.updatePayment(
+          ctx,
+          bookingId,
+          paymentStatus,
+          paymentStatus === 'PAID' ? now.toISOString() : null
+        );
 
         // Rule F: Complete pending REMIND_PAYMENT actions for this booking
         const remindPaymentActions = await actionRepo.findActiveByBookingType(

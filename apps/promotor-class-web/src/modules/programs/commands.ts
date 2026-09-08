@@ -1,5 +1,5 @@
 import { getProgramRepository } from '@/adapters';
-import { Lesson } from '@promotor/contracts';
+import { Lesson, CreatePriceVariantRequest } from '@promotor/contracts';
 import { CreateProgramDetailedInput } from './ports';
 
 export async function createProgramCommand(
@@ -41,4 +41,16 @@ export async function reorderModulesCommand(programId: string, moduleIdsOrder: s
 
 export async function saveLessonCommand(programId: string, moduleId: string, lesson: Lesson) {
   return getProgramRepository().saveLesson(programId, moduleId, lesson);
+}
+
+export async function createPriceVariantCommand(programId: string, data: CreatePriceVariantRequest) {
+  return getProgramRepository().createPriceVariant(programId, data);
+}
+
+export async function deletePriceVariantCommand(programId: string, variantId: string) {
+  return getProgramRepository().deletePriceVariant(programId, variantId);
+}
+
+export async function listPriceVariantsCommand(programId: string) {
+  return getProgramRepository().listPriceVariants(programId);
 }

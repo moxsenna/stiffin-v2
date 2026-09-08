@@ -121,7 +121,17 @@ class SpyingFlowApiClient {
 
   async confirmWhatsAppSent(data: any) {
     this.calls.push({ method: 'POST', path: '/api/v1/flow/messaging/confirm-sent', data });
-    return { success: true, nextActionId: data.nextActionId };
+    return {
+      nextAction: {
+        id: data.nextActionId,
+        contactId: 'contact_777',
+        actionType: 'FOLLOW_UP',
+        title: 'Follow-up WA',
+        status: 'COMPLETED',
+        dueAt: new Date().toISOString(),
+      },
+      createdAction: null,
+    };
   }
 }
 
@@ -291,11 +301,14 @@ test('HTTP Mode: Messaging records opened and confirms sent via canonical API en
       actionId: 'act_777',
       messageText: 'Pesan konfirmasi dikirim',
       scheduleNextFollowUpDays: 5,
+      outcome: 'WAIT_PAYDAY',
     });
 
     assert.equal(spy.calls.length, 1);
     assert.equal(spy.calls[0].path, '/api/v1/flow/messaging/confirm-sent');
     assert.equal(spy.calls[0].data.nextActionId, 'act_777');
+    assert.equal(spy.calls[0].data.scheduleNextFollowUpDays, 5);
+    assert.equal(spy.calls[0].data.outcome, 'WAIT_PAYDAY');
   } finally {
     process.env.NEXT_PUBLIC_API_MODE = originalMode;
   }

@@ -25,7 +25,8 @@ export type DomainErrorCode =
   | 'OTP_INVALID'
   | 'OTP_EXPIRED'
   | 'OTP_RATE_LIMITED'
-  | 'OTP_DELIVERY_UNAVAILABLE';
+  | 'OTP_DELIVERY_UNAVAILABLE'
+  | 'VARIANT_NOT_FOUND';
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode;

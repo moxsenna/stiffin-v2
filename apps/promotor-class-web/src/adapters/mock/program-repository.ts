@@ -1,4 +1,4 @@
-import { Program, Module, Lesson } from '@promotor/contracts';
+import { Program, Module, Lesson, ProgramPriceVariant, CreatePriceVariantRequest } from '@promotor/contracts';
 import { MockStateStore } from './mock-state-store';
 import { ProgramRepositoryPort, CreateProgramDetailedInput } from '@/modules/programs/ports';
 import { extractYoutubeId } from '@/lib/video/parse-youtube-url';
@@ -312,6 +312,51 @@ export class MockProgramRepository implements ProgramRepositoryPort {
     MockStateStore.updateState(curr => ({
       ...curr,
       programs: curr.programs.filter(p => p.id !== programId),
+    }));
+  }
+
+  async listPriceVariants(programId: string): Promise<ProgramPriceVariant[]> {
+    const prog = await this.getProgramById(programId);
+    return prog?.variants ?? [];
+  }
+
+  async createPriceVariant(programId: string, data: CreatePriceVariantRequest): Promise<ProgramPriceVariant> {
+    const newVariant: ProgramPriceVariant = {
+      id: `var_${Date.now()}`,
+      programId,
+      label: data.label,
+      description: data.description ?? null,
+      priceAmount: data.priceAmount,
+      isDefault: data.isDefault ?? false,
+      sortOrder: data.sortOrder ?? 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    MockStateStore.updateState((curr) => ({
+      ...curr,
+      programs: curr.programs.map((p) => {
+        if (p.id !== programId) return p;
+        const variants = [...(p.variants ?? [])];
+        if (newVariant.isDefault) {
+          variants.forEach((v) => { v.isDefault = false; });
+        }
+        variants.push(newVariant);
+        return { ...p, variants };
+      }),
+    }));
+    return newVariant;
+  }
+
+  async deletePriceVariant(programId: string, variantId: string): Promise<void> {
+    MockStateStore.updateState((curr) => ({
+      ...curr,
+      programs: curr.programs.map((p) => {
+        if (p.id !== programId) return p;
+        return {
+          ...p,
+          variants: (p.variants ?? []).filter((v) => v.id !== variantId),
+        };
+      }),
     }));
   }
 }

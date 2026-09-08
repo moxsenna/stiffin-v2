@@ -1,4 +1,4 @@
-import { Program, Lesson } from '@promotor/contracts';
+import { Program, Lesson, ProgramPriceVariant, CreatePriceVariantRequest } from '@promotor/contracts';
 
 export interface CreateProgramDetailedInput {
   title: string;
@@ -27,4 +27,7 @@ export interface ProgramRepositoryPort {
   deleteLesson(programId: string, moduleId: string, lessonId: string): Promise<Program>;
   reorderModules(programId: string, moduleIdsOrder: string[]): Promise<Program>;
   saveLesson(programId: string, moduleId: string, lesson: Lesson): Promise<Program>;
+  listPriceVariants(programId: string): Promise<ProgramPriceVariant[]>;
+  createPriceVariant(programId: string, data: CreatePriceVariantRequest): Promise<ProgramPriceVariant>;
+  deletePriceVariant(programId: string, variantId: string): Promise<void>;
 }

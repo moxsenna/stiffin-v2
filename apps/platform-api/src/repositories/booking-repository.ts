@@ -21,8 +21,9 @@ export interface BookingRepository {
   listByOrg(ctx: OrganizationContext, opts?: ListBookingsOrgOptions): Promise<BookingRow[]>;
   listByContact(ctx: OrganizationContext, contactId: string): Promise<BookingRow[]>;
   lockById(ctx: OrganizationContext, id: string): Promise<BookingRow | null>;
+  listPaid(ctx: OrganizationContext): Promise<BookingRow[]>;
   updateStatus(ctx: OrganizationContext, id: string, status: string): Promise<BookingRow | null>;
-  updatePayment(ctx: OrganizationContext, id: string, paymentStatus: string): Promise<BookingRow | null>;
+  updatePayment(ctx: OrganizationContext, id: string, paymentStatus: string, paidAt?: string | null): Promise<BookingRow | null>;
   reschedule(ctx: OrganizationContext, id: string, startAt: string, endAt?: string | null): Promise<BookingRow | null>;
   markCompleted(ctx: OrganizationContext, id: string, completedAt: string): Promise<BookingRow | null>;
 }
@@ -205,6 +206,11 @@ export function createBookingRepository(db: DbHandle): BookingRepository {
         locationText: raw.location_text,
         status: raw.status,
         paymentStatus: raw.payment_status,
+        paidAt: raw.paid_at
+          ? typeof raw.paid_at === 'string'
+            ? raw.paid_at
+            : new Date(raw.paid_at).toISOString()
+          : null,
         notes: raw.notes,
         completedAt: raw.completed_at
           ? typeof raw.completed_at === 'string'
@@ -237,7 +243,7 @@ export function createBookingRepository(db: DbHandle): BookingRepository {
       return rows[0] ?? null;
     },
 
-    async updatePayment(ctx, id, paymentStatus) {
+    async updatePayment(ctx, id, paymentStatus, paidAt) {
       if (!isOrganizationContext(ctx)) {
         throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
       }
@@ -245,6 +251,7 @@ export function createBookingRepository(db: DbHandle): BookingRepository {
         .update(bookings)
         .set({
           paymentStatus,
+          ...(paidAt !== undefined ? { paidAt } : {}),
           updatedAt: new Date().toISOString(),
         })
         .where(
@@ -276,6 +283,23 @@ export function createBookingRepository(db: DbHandle): BookingRepository {
         )
         .returning();
       return rows[0] ?? null;
+    },
+
+    async listPaid(ctx) {
+      if (!isOrganizationContext(ctx)) {
+        throw new DomainError('VALIDATION_ERROR', 'Tenant context is required');
+      }
+      const rows = await db
+        .select()
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.organizationId, ctx.organizationId),
+            eq(bookings.paymentStatus, 'PAID')
+          )
+        )
+        .orderBy(desc(bookings.createdAt));
+      return rows as BookingRow[];
     },
 
     async markCompleted(ctx, id, completedAt) {

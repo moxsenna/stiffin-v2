@@ -1,4 +1,4 @@
-import { Program, Lesson } from '@promotor/contracts';
+import { Program, Lesson, ProgramPriceVariant, CreatePriceVariantRequest } from '@promotor/contracts';
 import { ProgramRepositoryPort, CreateProgramDetailedInput } from '@/modules/programs/ports';
 import { PromotorClassContentApiClient } from '@promotor/api-client';
 
@@ -110,5 +110,17 @@ export class HttpProgramRepository implements ProgramRepositoryPort {
         order: a.order,
       })),
     });
+  }
+
+  async listPriceVariants(programId: string): Promise<ProgramPriceVariant[]> {
+    return this.client.listPriceVariants(programId);
+  }
+
+  async createPriceVariant(programId: string, data: CreatePriceVariantRequest): Promise<ProgramPriceVariant> {
+    return this.client.createPriceVariant(programId, data);
+  }
+
+  async deletePriceVariant(programId: string, variantId: string): Promise<void> {
+    return this.client.deletePriceVariant(programId, variantId);
   }
 }

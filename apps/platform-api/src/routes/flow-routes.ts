@@ -28,11 +28,17 @@ import {
   ConfirmWhatsAppSentRequestSchema,
   ReplaceAvailabilityRulesRequestSchema,
   CreateContactNoteRequestSchema,
+  UpdateRevenueSettingsRequestSchema,
 } from '@promotor/contracts';
+import { computeRevenueSummary } from '../domain/flow/revenue-summary';
+import { createRevenueSettingsService } from '../services/revenue-settings-service';
+import { createBookingRepository } from '../repositories/booking-repository';
 import { contacts, nextActions } from '../db/schema';
 import { createContactFlowService } from '../services/contact-flow-service';
 import { createContactLifecycleService } from '../services/contact-lifecycle-service';
 import { createNextActionService } from '../services/next-action-service';
+import { createNextActionRepository } from '../repositories/next-action-repository';
+import { resolveOutcomeEffect } from '../domain/next-action-rules';
 import { createBookingService } from '../services/booking-service';
 import { createServiceRepository } from '../repositories/service-repository';
 import { createActivityRepository } from '../repositories/activity-repository';
@@ -617,6 +623,42 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
   });
 
   // =========================================================================
+  // 7b. REVENUE SUMMARY & SETTINGS (C7)
+  // =========================================================================
+  flow.get('/revenue-summary', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const period = c.req.query('period') === 'WEEK' ? 'WEEK' : 'MONTH';
+    const settings = await createRevenueSettingsService(db).get(ctx);
+    const bookings = await createBookingRepository(db).listPaid(ctx);
+    const summary = computeRevenueSummary(
+      bookings.map((b: any) => ({
+        paymentStatus: b.paymentStatus,
+        paidAt: b.paidAt ?? null,
+        amount: b.amount,
+      })),
+      { period, now: new Date(), commissionPercent: settings.commissionPercent }
+    );
+    return c.json({ summary }, 200);
+  });
+
+  flow.get('/revenue-settings', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const settings = await createRevenueSettingsService(db).get(ctx);
+    return c.json(settings, 200);
+  });
+
+  flow.put('/revenue-settings', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const raw = await c.req.json().catch(() => ({}));
+    const body = parseBody(UpdateRevenueSettingsRequestSchema, raw);
+    const settings = await createRevenueSettingsService(db).update(ctx, body.commissionPercent);
+    return c.json(settings, 200);
+  });
+
+  // =========================================================================
   // 8. MESSAGING (§5.8, §12)
   // =========================================================================
   flow.post('/messaging/whatsapp-opened', async (c) => {
@@ -648,7 +690,96 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
       { confirmedWhatsAppSent: true },
       actor
     );
-    return c.json({ nextAction: completed }, 200);
+
+    // C1: apply deterministic post-WhatsApp outcome effect.
+    // Legacy clients send only nextActionId (outcome undefined) -> neutral effect.
+    const effect = resolveOutcomeEffect(body.outcome, body.nextActionId, new Date());
+    const nextActionRepo = createNextActionRepository(db);
+    const activityRepo = createActivityRepository(db);
+    let createdAction: { id: string; title: string; dueAt: string } | null = null;
+
+    // Create the explicit follow-up BEFORE the stage transition so the
+    // INTERESTED entry trigger (ENSURE_FOLLOW_UP_IF_NONE) sees it and
+    // skips its generic auto-created follow-up (no duplicate FOLLOW_UP).
+    if (effect.followUp) {
+      const existing = await nextActionRepo.findByIdempotency(
+        ctx,
+        'PROMOTORFLOW',
+        effect.followUp.idempotencyKey
+      );
+      const row =
+        existing ??
+        (await nextActionRepo.create(ctx, {
+          contactId: completed.contactId,
+          actionType: effect.followUp.actionType,
+          title: effect.followUp.title,
+          description: null,
+          dueAt: effect.followUp.dueAt.toISOString(),
+          priority: effect.followUp.priority,
+          status: 'PENDING',
+          source: 'PROMOTORFLOW',
+          idempotencyKey: effect.followUp.idempotencyKey,
+        }));
+      if (!existing) {
+        await activityRepo.append(ctx, actor, {
+          contactId: completed.contactId,
+          bookingId: completed.bookingId ?? undefined,
+          eventType: 'ACTION_CREATED',
+          metadataJson: {
+            actionId: row.id,
+            actionType: row.actionType,
+            dueAt: row.dueAt,
+            priority: row.priority,
+            source: 'PROMOTORFLOW',
+          },
+        });
+      }
+      createdAction = { id: row.id, title: row.title, dueAt: row.dueAt };
+    } else {
+      // WAIT_PAYDAY / NO_RESPONSE: explicit client choice wins, otherwise the
+      // outcome default days apply. Legacy clients (no outcome) sending manual
+      // days keep working through the same path. Idempotent per outcome+action.
+      const days = body.scheduleNextFollowUpDays ?? effect.nextFollowUpDays;
+      if (days && days > 0) {
+        const keyOutcome = body.outcome ?? 'MANUAL';
+        const idempotencyKey = `wa-outcome:${keyOutcome}:${body.nextActionId}`;
+        const existing = await nextActionRepo.findByIdempotency(ctx, 'PROMOTORFLOW', idempotencyKey);
+        const dayMs = 24 * 3600_000;
+        const row =
+          existing ??
+          (await nextActionRepo.create(ctx, {
+            contactId: completed.contactId,
+            actionType: 'FOLLOW_UP',
+            title: `Follow-up ${days} hari lagi`,
+            description: null,
+            dueAt: new Date(Date.now() + days * dayMs).toISOString(),
+            priority: 70,
+            status: 'PENDING',
+            source: 'PROMOTORFLOW',
+            idempotencyKey,
+          }));
+        if (!existing) {
+          await activityRepo.append(ctx, actor, {
+            contactId: completed.contactId,
+            bookingId: completed.bookingId ?? undefined,
+            eventType: 'ACTION_CREATED',
+            metadataJson: {
+              actionId: row.id,
+              actionType: 'FOLLOW_UP',
+              dueAt: row.dueAt,
+              priority: row.priority,
+              source: 'PROMOTORFLOW',
+            },
+          });
+        }
+        createdAction = { id: row.id, title: row.title, dueAt: row.dueAt };
+      }
+    }
+    if (effect.stage) {
+      const lifecycle = createContactLifecycleService(db);
+      await lifecycle.transitionStage(ctx, completed.contactId, effect.stage, {}, actor);
+    }
+    return c.json({ nextAction: completed, createdAction }, 200);
   });
 
   // =========================================================================

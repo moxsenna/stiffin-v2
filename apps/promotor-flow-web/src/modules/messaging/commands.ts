@@ -1,4 +1,5 @@
 import { MessagingPort } from './ports';
+import type { ContactWaOutcome } from '@promotor/contracts';
 
 export interface ConfirmWASentInput {
   organizationId?: string;
@@ -6,6 +7,7 @@ export interface ConfirmWASentInput {
   actionId?: string;
   messageText: string;
   scheduleNextFollowUpDays?: number;
+  outcome?: ContactWaOutcome;
 }
 
 export function createMessagingCommands(messagingPort: MessagingPort) {
@@ -20,6 +22,7 @@ export function createMessagingCommands(messagingPort: MessagingPort) {
         nextActionId: input.actionId,
         messageText: input.messageText,
         scheduleNextFollowUpDays: input.scheduleNextFollowUpDays,
+        outcome: input.outcome,
       });
     },
   };

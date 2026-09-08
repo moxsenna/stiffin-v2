@@ -131,6 +131,7 @@ export const ProgramSchema = z.object({
   publishedAt: z.string().optional().nullable(),
   presentation: ProgramPublicPresentationSchema.optional().nullable(),
   modules: z.array(ModuleSchema),
+  variants: z.array(z.lazy(() => ProgramPriceVariantSchema)).optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -188,6 +189,7 @@ export const PublicProgramSummarySchema = z.object({
   publishedAt: z.string().optional().nullable(),
   totalLessonsCount: z.number(),
   totalModulesCount: z.number(),
+  variants: z.array(z.lazy(() => ProgramPriceVariantSchema)).optional(),
 });
 export type PublicProgramSummary = z.infer<typeof PublicProgramSummarySchema>;
 
@@ -892,10 +894,32 @@ export const WhatsAppOpenedRequestSchema = z.object({
 });
 export type WhatsAppOpenedRequest = z.infer<typeof WhatsAppOpenedRequestSchema>;
 
+export const ContactWaOutcomeSchema = z.enum(['INTERESTED_TEST', 'ASK_SCHEDULE', 'WAIT_PAYDAY', 'NO_RESPONSE']);
+export type ContactWaOutcome = z.infer<typeof ContactWaOutcomeSchema>;
+
 export const ConfirmWhatsAppSentRequestSchema = z.object({
   nextActionId: z.string().uuid('Valid nextActionId is required'),
+  outcome: ContactWaOutcomeSchema.optional(),
+  scheduleNextFollowUpDays: z.number().int().min(1).max(60).optional(),
 });
 export type ConfirmWhatsAppSentRequest = z.infer<typeof ConfirmWhatsAppSentRequestSchema>;
+
+export const ConfirmWhatsAppSentResponseSchema = z.object({
+  nextAction: z.object({
+    id: z.string(),
+    contactId: z.string(),
+    actionType: z.string(),
+    title: z.string(),
+    status: z.string(),
+    dueAt: z.string(),
+  }).passthrough(),
+  createdAction: z.object({
+    id: z.string(),
+    title: z.string(),
+    dueAt: z.string(),
+  }).nullable().optional(),
+});
+export type ConfirmWhatsAppSentResponse = z.infer<typeof ConfirmWhatsAppSentResponseSchema>;
 
 // --- B6.1 Availability & Public Booking ----
 export const AvailabilityRuleSchema = z.object({
@@ -1507,15 +1531,17 @@ export const PublicPaidCheckoutRequestSchema = z.object({
   email: z.string().email('Format email tidak valid').max(256).optional().nullable(),
   sourceChannel: CommerceSourceChannelSchema.default('STOREFRONT'),
   returnUrl: z.string().url().optional(),
+  variantId: z.string().uuid().optional().nullable(),
+  couponCode: z.string().max(40).optional().nullable(),
 });
 export type PublicPaidCheckoutRequest = z.infer<typeof PublicPaidCheckoutRequestSchema>;
 
 export const PublicPaidCheckoutResponseSchema = z.object({
   orderId: z.string().uuid(),
   reference: z.string(),
-  amount: z.number().int().positive(),
+  amount: z.number().int().nonnegative(),
   currency: z.literal('IDR'),
-  checkoutUrl: z.string().url(),
+  checkoutUrl: z.string().url().nullable().optional(),
   providerOrderId: z.string(),
   expiresAt: z.string().nullable().optional(),
 });
@@ -1562,6 +1588,7 @@ export const OrderItemSummarySchema = z.object({
   createdAt: z.string(),
   paidAt: z.string().nullable().optional(),
   approvedAt: z.string().nullable().optional(),
+  metadata: z.string().nullable().optional(),
 });
 export type OrderItemSummary = z.infer<typeof OrderItemSummarySchema>;
 
@@ -1575,5 +1602,100 @@ export const RejectOrderRequestSchema = z.object({
   reason: z.string().min(1, 'Alasan penolakan wajib diisi').max(500),
 });
 export type RejectOrderRequest = z.infer<typeof RejectOrderRequestSchema>;
+
+// --- C7 Revenue Summary & Settings ---
+export const RevenueSummarySchema = z.object({
+  period: z.enum(['WEEK', 'MONTH']),
+  paidCount: z.number().int().nonnegative(),
+  grossAmount: z.number().int().nonnegative(),
+  commissionPercent: z.number().int().min(0).max(100),
+  estimatedCommission: z.number().int().nonnegative(),
+});
+export type RevenueSummary = z.infer<typeof RevenueSummarySchema>;
+
+export const UpdateRevenueSettingsRequestSchema = z.object({
+  commissionPercent: z.number().int().min(0, 'Persen komisi 0–100').max(100, 'Persen komisi 0–100'),
+});
+export type UpdateRevenueSettingsRequest = z.infer<typeof UpdateRevenueSettingsRequestSchema>;
+
+// --- B7 Program Price Variants ---
+export const ProgramPriceVariantSchema = z.object({
+  id: z.string().uuid(),
+  programId: z.string().uuid(),
+  label: z.string().min(1).max(120),
+  description: z.string().nullable().optional(),
+  priceAmount: z.number().int().min(0),
+  isDefault: z.boolean(),
+  sortOrder: z.number().int(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type ProgramPriceVariant = z.infer<typeof ProgramPriceVariantSchema>;
+
+export const CreatePriceVariantRequestSchema = z.object({
+  label: z.string().min(1, 'Nama paket wajib diisi').max(120),
+  description: z.string().max(500).optional().nullable(),
+  priceAmount: z.number().int().min(0, 'Harga tidak valid'),
+  isDefault: z.boolean().default(false),
+  sortOrder: z.number().int().min(0).default(0),
+});
+export type CreatePriceVariantRequest = z.infer<typeof CreatePriceVariantRequestSchema>;
+
+export const UpdatePriceVariantRequestSchema = CreatePriceVariantRequestSchema.partial();
+export type UpdatePriceVariantRequest = z.infer<typeof UpdatePriceVariantRequestSchema>;
+
+// --- B8 Promo Coupons ---
+export const PromoCouponDiscountTypeSchema = z.enum(['PERCENT', 'FIXED']);
+export type PromoCouponDiscountType = z.infer<typeof PromoCouponDiscountTypeSchema>;
+
+export const PromoCouponSchema = z.object({
+  id: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  code: z.string().min(1).max(40),
+  discountType: PromoCouponDiscountTypeSchema,
+  discountValue: z.number().int().min(1),
+  programId: z.string().uuid().nullable().optional(),
+  maxRedemptions: z.number().int().nullable().optional(),
+  usedCount: z.number().int().nonnegative(),
+  expiresAt: z.string().nullable().optional(),
+  isActive: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type PromoCoupon = z.infer<typeof PromoCouponSchema>;
+
+export const CreateCouponRequestSchema = z
+  .object({
+    code: z
+      .string()
+      .min(3, 'Kode minimal 3 karakter')
+      .max(40)
+      .regex(/^[A-Z0-9_-]+$/, 'Kode hanya huruf besar, angka, dan tanda hubung'),
+    discountType: PromoCouponDiscountTypeSchema,
+    discountValue: z.number().int().min(1, 'Nilai diskon minimal 1'),
+    programId: z.string().uuid().optional().nullable(),
+    maxRedemptions: z.number().int().min(1).optional().nullable(),
+    expiresAt: z.string().datetime().optional().nullable(),
+  })
+  .refine(
+    (d) => d.discountType === 'FIXED' || d.discountValue <= 100,
+    { message: 'Diskon persen maksimal 100%', path: ['discountValue'] }
+  );
+export type CreateCouponRequest = z.infer<typeof CreateCouponRequestSchema>;
+
+export const UpdateCouponRequestSchema = z.object({
+  isActive: z.boolean().optional(),
+  maxRedemptions: z.number().int().min(1).optional().nullable(),
+  expiresAt: z.string().datetime().optional().nullable(),
+});
+export type UpdateCouponRequest = z.infer<typeof UpdateCouponRequestSchema>;
+
+export const CouponQuoteResponseSchema = z.object({
+  valid: z.boolean(),
+  message: z.string(),
+  discountAmount: z.number().int().nonnegative(),
+  finalAmount: z.number().int().nonnegative(),
+});
+export type CouponQuoteResponse = z.infer<typeof CouponQuoteResponseSchema>;
 
 

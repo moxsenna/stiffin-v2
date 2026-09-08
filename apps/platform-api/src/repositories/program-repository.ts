@@ -7,6 +7,7 @@ import {
   lessonAttachments,
   programPresentations,
   organizations,
+  programPriceVariants,
   ProgramRow,
   NewProgramRow,
   ModuleRow,
@@ -171,6 +172,29 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
         }
       : null;
 
+    const variantRows = await db
+      .select()
+      .from(programPriceVariants)
+      .where(
+        and(
+          eq(programPriceVariants.organizationId, ctx.organizationId),
+          eq(programPriceVariants.programId, programId)
+        )
+      )
+      .orderBy(asc(programPriceVariants.sortOrder), asc(programPriceVariants.createdAt));
+
+    const variantsMapped = variantRows.map((v) => ({
+      id: v.id,
+      programId: v.programId,
+      label: v.label,
+      description: v.description ?? null,
+      priceAmount: v.priceAmount,
+      isDefault: v.isDefault,
+      sortOrder: v.sortOrder,
+      createdAt: typeof v.createdAt === 'string' ? v.createdAt : new Date(v.createdAt).toISOString(),
+      updatedAt: typeof v.updatedAt === 'string' ? v.updatedAt : new Date(v.updatedAt).toISOString(),
+    }));
+
     return {
       id: progRow.program.id,
       organizationId: progRow.program.organizationId,
@@ -187,6 +211,7 @@ export function createProgramRepository(db: NodePgDatabase): ProgramRepository {
       publishedAt: progRow.program.publishedAt ?? undefined,
       presentation: presentationMapped,
       modules: fullModules,
+      variants: variantsMapped,
       createdAt: progRow.program.createdAt,
       updatedAt: progRow.program.updatedAt,
     };

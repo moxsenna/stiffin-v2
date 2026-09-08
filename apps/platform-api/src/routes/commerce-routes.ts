@@ -18,6 +18,8 @@ import { createContactRepository } from '../repositories/contact-repository';
 import { createOrganizationRepository } from '../repositories/organization-repository';
 import { createEnrollmentService } from '../services/class/enrollment-service';
 import { createLearningEventRepository } from '../repositories/learning-event-repository';
+import { createPriceVariantRepository } from '../repositories/price-variant-repository';
+import { createCouponService } from '../services/commerce/coupon-service';
 import { createEntitlementRepository } from '../repositories/entitlement-repository';
 import { normalizePhone, normalizeEmail } from '@promotor/platform-core';
 
@@ -34,6 +36,8 @@ function getCommerceServices(c: any) {
   const planAccessService = createPlanAccessService(subscriptionRepo);
 
   const programRepo = createProgramRepository(db);
+  const priceVariantRepo = createPriceVariantRepository(db);
+  const couponService = createCouponService(db);
   const contactRepo = createContactRepository(db, normalizePhone, normalizeEmail);
   const orgRepo = createOrganizationRepository(db);
   const enrollmentService = createEnrollmentService(db);
@@ -45,6 +49,8 @@ function getCommerceServices(c: any) {
     planAccessService,
     paycoreClient,
     programRepo,
+    priceVariantRepo,
+    couponService,
     contactRepo,
     orgRepo,
     enrollmentService,
@@ -147,6 +153,42 @@ export function registerCommerceRoutes(app: Hono<AppEnv>) {
       organizationId: result.organizationId,
       programId: result.programId,
     }, 200);
+  });
+
+  // Public quote for promo coupon
+  app.get('/api/v1/public/:slug/programs/:programSlug/coupons/:code', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const slug = c.req.param('slug');
+    const programSlug = c.req.param('programSlug');
+    const code = c.req.param('code');
+
+    const couponService = createCouponService(db);
+    const orgRepo = createOrganizationRepository(db);
+    const programRepo = createProgramRepository(db);
+
+    const org = await orgRepo.findBySlug(slug.trim());
+    if (!org) {
+      return c.json({ valid: false, message: 'Organisasi tidak ditemukan', discountAmount: 0, finalAmount: 0 }, 200);
+    }
+
+    const program = await programRepo.findBySlug({ organizationId: org.id }, programSlug.trim());
+    if (!program || program.status !== 'published') {
+      return c.json({ valid: false, message: 'Program tidak ditemukan atau belum dipublikasikan', discountAmount: 0, finalAmount: 0 }, 200);
+    }
+
+    const coupon = await couponService.findByCode(org.id, code);
+    if (!coupon) {
+      return c.json({ valid: false, message: 'Kode kupon tidak ditemukan', discountAmount: 0, finalAmount: program.priceAmount }, 200);
+    }
+
+    const quote = couponService.validateForProgram({
+      coupon,
+      programId: program.id,
+      listPrice: program.priceAmount,
+    });
+
+    return c.json(quote, 200);
   });
 
   // ==========================================

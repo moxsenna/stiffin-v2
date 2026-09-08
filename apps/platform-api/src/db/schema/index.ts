@@ -39,4 +39,6 @@ export * from './platform-fee-entries';
 export * from './organization-bank-accounts';
 export * from './provider-webhook-events';
 export * from './certificates';
+export * from './program-price-variants';
+export * from './promo-coupons';
 

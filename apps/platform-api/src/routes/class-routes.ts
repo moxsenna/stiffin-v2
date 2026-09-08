@@ -6,10 +6,13 @@ import { DomainError } from '../core/errors';
 import {
   CreateManualEnrollmentRequestSchema,
   LearnersListQuerySchema,
+  CreateCouponRequestSchema,
+  UpdateCouponRequestSchema,
 } from '@promotor/contracts';
 import { createEnrollmentService } from '../services/class/enrollment-service';
 import { createPromotorClassAdapter } from '../services/class/promotor-class-adapter';
 import { createLearningEngineService } from '../services/class/learning-engine-service';
+import { createCouponService } from '../services/commerce/coupon-service';
 import { createEntitlementRepository } from '../repositories/entitlement-repository';
 import { contacts } from '../db/schema/contacts';
 import { reflectionResponses } from '../db/schema/reflection-responses';
@@ -400,5 +403,51 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
       })),
     }, 200);
   });
+
+  // ==========================================
+  // Coupon Management Endpoints (Operator)
+  // ==========================================
+  app.get('/api/v1/class/coupons', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const service = createCouponService(db);
+    const coupons = await service.list(ctx.organizationId);
+    return c.json({ coupons }, 200);
+  });
+
+  app.post('/api/v1/class/coupons', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = CreateCouponRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', parsed.error.issues.map((i) => i.message).join(', '));
+    }
+    const service = createCouponService(db);
+    const existing = await service.findByCode(ctx.organizationId, parsed.data.code);
+    if (existing) {
+      throw new DomainError('CONFLICT', `Kupon dengan kode "${parsed.data.code.toUpperCase()}" sudah ada`);
+    }
+    const coupon = await service.create(ctx.organizationId, parsed.data);
+    return c.json({ coupon }, 201);
+  });
+
+  app.patch('/api/v1/class/coupons/:couponId', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const couponId = c.req.param('couponId');
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = UpdateCouponRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', parsed.error.issues.map((i) => i.message).join(', '));
+    }
+    const service = createCouponService(db);
+    const updated = await service.update(ctx.organizationId, couponId, parsed.data);
+    if (!updated) {
+      throw new DomainError('NOT_FOUND', 'Kupon tidak ditemukan');
+    }
+    return c.json({ coupon: updated }, 200);
+  });
 }
+
 

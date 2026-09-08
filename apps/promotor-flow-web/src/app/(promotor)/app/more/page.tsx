@@ -6,6 +6,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader } from '@/components/ui';
 
 const MORE_LINKS = [
+  { title: 'Pipeline Visual (Kanban)', href: '/app/pipeline', subtitle: 'Papan tahap prospek dari lead hingga selesai' },
   { title: 'Katalog Layanan STIFIn', href: '/app/services', subtitle: 'Atur jenis tes, durasi, dan harga' },
   { title: 'Template Pesan WhatsApp', href: '/app/templates', subtitle: 'Atur isi draft follow-up cepat' },
   { title: 'Pengaturan Profil & Ketersediaan', href: '/app/settings', subtitle: 'Info promotor, organisasi, dan jam kerja' },
