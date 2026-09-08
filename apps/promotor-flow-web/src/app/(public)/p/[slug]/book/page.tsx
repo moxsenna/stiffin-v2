@@ -85,15 +85,54 @@ export default function PublicBookingPage() {
         return prev;
       });
     } catch (err: any) {
+      if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+        setService({
+          id: 'srv_tes_personal',
+          name: 'Tes STIFIn Personal & Konsultasi',
+          category: 'ASSESSMENT',
+          durationMinutes: 60,
+          priceAmount: 500000,
+          description: 'Sesi tes biometrik sidik jari dan penjelasan Mesin Kecerdasan secara mendalam 1-on-1.',
+        });
+        setSlots([
+          {
+            localDate: '2026-08-15',
+            localDisplay: '10:00 - 11:00 WIB',
+            startAt: '2026-08-15T10:00:00.000Z',
+            endAt: '2026-08-15T11:00:00.000Z',
+          },
+          {
+            localDate: '2026-08-15',
+            localDisplay: '14:00 - 15:00 WIB',
+            startAt: '2026-08-15T14:00:00.000Z',
+            endAt: '2026-08-15T15:00:00.000Z',
+          },
+          {
+            localDate: '2026-08-16',
+            localDisplay: '09:30 - 10:30 WIB',
+            startAt: '2026-08-16T09:30:00.000Z',
+            endAt: '2026-08-16T10:30:00.000Z',
+          },
+          {
+            localDate: '2026-08-16',
+            localDisplay: '13:30 - 14:30 WIB',
+            startAt: '2026-08-16T13:30:00.000Z',
+            endAt: '2026-08-16T14:30:00.000Z',
+          },
+        ]);
+        return;
+      }
       setErrorMessage(err.message || 'Terjadi kesalahan saat memuat jadwal');
     } finally {
       setLoadingSlots(false);
     }
   }, [baseUrl, slug]);
 
-  useEffect(() =>{
+  useEffect(() => {
     if (initialServiceId) {
       fetchSlots(initialServiceId);
+    } else if (process.env.NEXT_PUBLIC_API_MODE !== 'http') {
+      fetchSlots('srv_tes_personal');
     }
   }, [initialServiceId, fetchSlots]);
 

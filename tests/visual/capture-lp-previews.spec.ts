@@ -53,66 +53,102 @@ test.describe('Landing Page App Screenshot Previews Capture', () => {
   test('capture Class screens for Landing Page', async ({ page }) => {
     test.setTimeout(120000);
 
-    // 1. Learner Reader View
+    // Seed learner session for Ayu Lestari (enrolled in 7 Hari Mengenal Cara Belajar Anak)
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem(
+          'promotor_class_learner_session_v2',
+          JSON.stringify({ contactId: 'contact_ayu', workspaceSlug: 'rina' })
+        );
+      } catch {}
+    });
+
+    // 1. Learner Reader View (Desktop & Mobile) - Authentic Ayu Lestari demo lesson
     await captureScreen(
       page,
-      `${CLASS}/learn/preview/prog-demo-7hari/lessons/les-demo-01`,
-      path.join(CLASS_OUT_DIR, 'class-learner-reader.png')
+      `${CLASS}/learn/programs/enr_ayu_7hari/lessons/les_1_2`,
+      path.join(CLASS_OUT_DIR, 'class-learner-reader.png'),
+      { waitSelector: 'h1' }
+    );
+    await captureScreen(
+      page,
+      `${CLASS}/learn/programs/enr_ayu_7hari/lessons/les_1_2`,
+      path.join(CLASS_OUT_DIR, 'class-learner-mobile.png'),
+      { viewport: VIEWPORT_MOBILE, waitSelector: 'h1' }
     );
 
-    // 2. Promotor Cockpit / Dashboard View
+    // 2. Promotor Cockpit / Dashboard View (Desktop & Mobile)
     await captureScreen(
       page,
       `${CLASS}/app`,
-      path.join(CLASS_OUT_DIR, 'class-promotor-cockpit.png')
+      path.join(CLASS_OUT_DIR, 'class-promotor-cockpit.png'),
+      { waitSelector: 'h1, h2' }
+    );
+    await captureScreen(
+      page,
+      `${CLASS}/app`,
+      path.join(CLASS_OUT_DIR, 'class-cockpit-mobile.png'),
+      { viewport: VIEWPORT_MOBILE, waitSelector: 'h1, h2' }
     );
 
-    // 3. Learners Intent & Status Table View
+    // 3. Learners Intent & Status Table View (Desktop & Mobile)
     await captureScreen(
       page,
       `${CLASS}/app/learners`,
-      path.join(CLASS_OUT_DIR, 'class-learners-table.png')
+      path.join(CLASS_OUT_DIR, 'class-learners-table.png'),
+      { waitSelector: 'table, [data-testid="learners-list"]' }
     );
-
-    // 4. Mobile Learner View
     await captureScreen(
       page,
-      `${CLASS}/learn/preview/prog-demo-7hari/lessons/les-demo-01`,
-      path.join(CLASS_OUT_DIR, 'class-learner-mobile.png'),
-      { viewport: VIEWPORT_MOBILE }
+      `${CLASS}/app/learners`,
+      path.join(CLASS_OUT_DIR, 'class-learners-mobile.png'),
+      { viewport: VIEWPORT_MOBILE, waitSelector: 'table, [data-testid="learners-list"]' }
     );
   });
 
   test('capture Flow screens for Landing Page', async ({ page }) => {
     test.setTimeout(120000);
 
-    // 1. Today Work Queue Cockpit
+    // 1. Today Work Queue Cockpit (Desktop & Mobile)
     await captureScreen(
       page,
       `${FLOW}/app`,
-      path.join(FLOW_OUT_DIR, 'flow-today-cockpit.png')
+      path.join(FLOW_OUT_DIR, 'flow-today-cockpit.png'),
+      { waitSelector: 'h1, h2' }
     );
-
-    // 2. Kanban CRM Pipeline
-    await captureScreen(
-      page,
-      `${FLOW}/app/pipeline`,
-      path.join(FLOW_OUT_DIR, 'flow-kanban-pipeline.png')
-    );
-
-    // 3. Public 14-day Booking Calendar
-    await captureScreen(
-      page,
-      `${FLOW}/p/rina/book`,
-      path.join(FLOW_OUT_DIR, 'flow-booking-calendar.png')
-    );
-
-    // 4. Mobile Today Queue View
     await captureScreen(
       page,
       `${FLOW}/app`,
       path.join(FLOW_OUT_DIR, 'flow-today-mobile.png'),
-      { viewport: VIEWPORT_MOBILE }
+      { viewport: VIEWPORT_MOBILE, waitSelector: 'h1, h2' }
+    );
+
+    // 2. Kanban CRM Pipeline (Desktop & Mobile)
+    await captureScreen(
+      page,
+      `${FLOW}/app/pipeline`,
+      path.join(FLOW_OUT_DIR, 'flow-kanban-pipeline.png'),
+      { waitSelector: '[data-testid="kanban-column"], h1, h2' }
+    );
+    await captureScreen(
+      page,
+      `${FLOW}/app/pipeline`,
+      path.join(FLOW_OUT_DIR, 'flow-pipeline-mobile.png'),
+      { viewport: VIEWPORT_MOBILE, waitSelector: '[data-testid="kanban-column"], h1, h2' }
+    );
+
+    // 3. Public 14-day Booking Calendar (Desktop & Mobile)
+    await captureScreen(
+      page,
+      `${FLOW}/p/rina/book`,
+      path.join(FLOW_OUT_DIR, 'flow-booking-calendar.png'),
+      { waitSelector: 'h1, h2' }
+    );
+    await captureScreen(
+      page,
+      `${FLOW}/p/rina/book`,
+      path.join(FLOW_OUT_DIR, 'flow-booking-mobile.png'),
+      { viewport: VIEWPORT_MOBILE, waitSelector: 'h1, h2' }
     );
   });
 });

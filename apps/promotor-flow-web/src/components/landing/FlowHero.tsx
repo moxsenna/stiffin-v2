@@ -6,6 +6,7 @@ import { WhatsAppIcon, CheckIcon, LightningIcon, CalendarIcon, UsersIcon } from 
 
 export const FlowHero: React.FC = () => {
   const [activeDemoTab, setActiveDemoTab] = useState<'today' | 'pipeline' | 'booking'>('today');
+  const [deviceMode, setDeviceMode] = useState<'desktop' | 'mobile'>('desktop');
 
   const demoTabs = [
     {
@@ -13,7 +14,7 @@ export const FlowHero: React.FC = () => {
       label: 'Hari ini',
       badge: 'Work Queue',
       icon: <LightningIcon size={13} />,
-      url: 'app.ralivo.com/flow',
+      url: 'flow.ralivo.com/app',
       desktopSrc: '/images/previews/flow-today-cockpit.webp',
       mobileSrc: '/images/previews/flow-today-mobile.webp',
       captionTitle: 'Antrean Tindakan Hari Ini — Zero Guesswork',
@@ -24,8 +25,9 @@ export const FlowHero: React.FC = () => {
       label: 'Pipeline CRM',
       badge: 'Kanban',
       icon: <UsersIcon size={13} />,
-      url: 'app.ralivo.com/pipeline',
+      url: 'flow.ralivo.com/app/pipeline',
       desktopSrc: '/images/previews/flow-kanban-pipeline.webp',
+      mobileSrc: '/images/previews/flow-pipeline-mobile.webp',
       captionTitle: 'Papan Visual Prospek 7-Tahap',
       captionDesc: 'Pantau posisi setiap kontak dari Lead Baru, Dihubungi, Minat Tinggi, Booking Terkunci, hingga Klien Selesai.',
     },
@@ -34,8 +36,9 @@ export const FlowHero: React.FC = () => {
       label: 'Booking 14-Hari',
       badge: 'Kalender',
       icon: <CalendarIcon size={13} />,
-      url: 'promotorflow.id/p/rina/book',
+      url: 'flow.ralivo.com/p/rina/book',
       desktopSrc: '/images/previews/flow-booking-calendar.webp',
+      mobileSrc: '/images/previews/flow-booking-mobile.webp',
       captionTitle: 'Halaman Booking Mandiri Tanpa Saling Tanya',
       captionDesc: 'Klien memilih slot waktu konsultasi/tes sendiri. Terkunci otomatis ke kalender promotor tanpa double booking.',
     },
@@ -72,11 +75,19 @@ export const FlowHero: React.FC = () => {
           boxShadow: 'var(--shadow-xs)',
         }}
       >
-        <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-primary)' }} />
-        <span>Dirancang untuk Promotor & Cabang STIFIn di Seluruh Indonesia</span>
+        <span
+          style={{
+            display: 'inline-block',
+            width: '7px',
+            height: '7px',
+            borderRadius: '50%',
+            backgroundColor: 'var(--color-primary)',
+          }}
+        />
+        <span>Dirancang Khusus untuk Promotor & Praktisi STIFIn Indonesia</span>
       </div>
 
-      {/* Main Punchy Editorial Headline */}
+      {/* Main Punchy Value Hook */}
       <h1
         style={{
           fontSize: 'clamp(32px, 5.5vw, 56px)',
@@ -168,7 +179,7 @@ export const FlowHero: React.FC = () => {
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--color-divider)',
           boxShadow: 'var(--shadow-xs)',
-          marginBottom: '56px',
+          marginBottom: '48px',
           textAlign: 'center',
         }}
       >
@@ -199,58 +210,21 @@ export const FlowHero: React.FC = () => {
       </div>
 
       {/* Interactive Hero Visual Showcase */}
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '1040px',
-          backgroundColor: 'var(--color-surface)',
-          borderRadius: 'var(--radius-xl)',
-          border: '1px solid var(--color-divider)',
-          boxShadow: 'var(--shadow-lg)',
-          overflow: 'hidden',
-          textAlign: 'left',
-          marginTop: '12px',
-        }}
-      >
-        {/* Mockup Header Controls */}
+      <div style={{ width: '100%', maxWidth: '1040px' }}>
+        {/* Device Mode & Tab Switchers Bar for Desktop */}
         <div
+          className="flow-showcase-topbar"
           style={{
-            padding: '12px 18px',
-            backgroundColor: 'var(--color-canvas)',
-            borderBottom: '1px solid var(--color-divider)',
             display: 'flex',
+            flexWrap: 'wrap',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: '12px',
-            flexWrap: 'wrap',
+            marginBottom: '16px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#FF5F56' }} />
-            <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#FFBD2E' }} />
-            <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#27C93F' }} />
-            <div
-              style={{
-                marginLeft: '8px',
-                backgroundColor: 'var(--color-surface)',
-                border: '1px solid var(--color-divider)',
-                borderRadius: '6px',
-                padding: '4px 10px',
-                fontSize: '11.5px',
-                color: 'var(--color-text-secondary)',
-                fontFamily: 'monospace',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              <span style={{ color: '#10b981', fontSize: '10px' }}>🔒</span>
-              <span style={{ opacity: 0.6 }}>https://</span>
-              <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{currentTab.url}</span>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {/* Feature Tabs */}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {demoTabs.map((tab) => {
               const isActive = activeDemoTab === tab.id;
               return (
@@ -259,18 +233,19 @@ export const FlowHero: React.FC = () => {
                   type="button"
                   onClick={() => setActiveDemoTab(tab.id)}
                   style={{
-                    padding: '6px 12px',
-                    borderRadius: 'var(--radius-sm)',
-                    backgroundColor: isActive ? 'var(--color-primary)' : 'transparent',
+                    padding: '8px 16px',
+                    borderRadius: 'var(--radius-full)',
+                    backgroundColor: isActive ? 'var(--color-primary)' : 'var(--color-surface)',
                     color: isActive ? '#FFFFFF' : 'var(--color-text-secondary)',
                     border: isActive ? '1px solid var(--color-primary)' : '1px solid var(--color-divider)',
-                    fontSize: '12px',
+                    fontSize: '13px',
                     fontWeight: 750,
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '6px',
                     cursor: 'pointer',
                     transition: 'all var(--duration-fast) ease',
+                    boxShadow: isActive ? '0 4px 12px rgba(37,99,235,0.2)' : 'none',
                   }}
                 >
                   {tab.icon}
@@ -279,7 +254,7 @@ export const FlowHero: React.FC = () => {
                     <span
                       style={{
                         fontSize: '9.5px',
-                        padding: '1px 5px',
+                        padding: '2px 6px',
                         borderRadius: '4px',
                         backgroundColor: isActive ? 'rgba(255,255,255,0.22)' : 'var(--color-canvas)',
                         color: isActive ? '#FFFFFF' : 'var(--color-primary)',
@@ -294,35 +269,138 @@ export const FlowHero: React.FC = () => {
               );
             })}
           </div>
+
+          {/* Device Switcher (Desktop viewports only) */}
+          <div
+            className="flow-device-switcher"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              backgroundColor: 'var(--color-surface)',
+              border: '1px solid var(--color-divider)',
+              borderRadius: '999px',
+              padding: '3px',
+              gap: '2px',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setDeviceMode('desktop')}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '999px',
+                border: 'none',
+                backgroundColor: deviceMode === 'desktop' ? 'var(--color-primary-light)' : 'transparent',
+                color: deviceMode === 'desktop' ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 150ms ease',
+              }}
+            >
+              💻 Desktop
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeviceMode('mobile')}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '999px',
+                border: 'none',
+                backgroundColor: deviceMode === 'mobile' ? 'var(--color-primary-light)' : 'transparent',
+                color: deviceMode === 'mobile' ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 150ms ease',
+              }}
+            >
+              📱 Mobile PWA
+            </button>
+          </div>
         </div>
 
-        {/* Screenshot Viewport Container */}
+        {/* Desktop Browser Window Mockup */}
         <div
+          className={`flow-preview-desktop-frame ${deviceMode === 'mobile' ? 'force-hide' : ''}`}
           style={{
-            position: 'relative',
-            backgroundColor: '#0F172A',
-            width: '100%',
+            backgroundColor: 'var(--color-surface)',
+            borderRadius: 'var(--radius-xl)',
+            border: '1px solid var(--color-divider)',
+            boxShadow: 'var(--shadow-lg)',
             overflow: 'hidden',
+            textAlign: 'left',
           }}
         >
-          <img
-            src={currentTab.desktopSrc}
-            alt={currentTab.captionTitle}
-            width={1280}
-            height={800}
+          {/* Mockup Header Controls */}
+          <div
             style={{
-              width: '100%',
-              height: 'auto',
-              display: 'block',
-              aspectRatio: '16/10',
-              objectFit: 'cover',
-              objectPosition: 'top left',
+              padding: '12px 18px',
+              backgroundColor: 'var(--color-canvas)',
+              borderBottom: '1px solid var(--color-divider)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
             }}
-            loading="lazy"
-          />
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#FF5F56' }} />
+              <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#FFBD2E' }} />
+              <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#27C93F' }} />
+              <div
+                style={{
+                  marginLeft: '8px',
+                  backgroundColor: 'var(--color-surface)',
+                  border: '1px solid var(--color-divider)',
+                  borderRadius: '6px',
+                  padding: '4px 10px',
+                  fontSize: '11.5px',
+                  color: 'var(--color-text-secondary)',
+                  fontFamily: 'monospace',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span style={{ color: '#10b981', fontSize: '10px' }}>🔒</span>
+                <span style={{ opacity: 0.6 }}>https://</span>
+                <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{currentTab.url}</span>
+              </div>
+            </div>
 
-          {/* Floating Mobile Inset Phone Preview (Only for tabs with mobileSrc) */}
-          {currentTab.mobileSrc && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: 'var(--color-text-secondary)' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }} />
+              <span>Demo Rina Prameswari</span>
+            </div>
+          </div>
+
+          {/* Screenshot Viewport Container */}
+          <div
+            style={{
+              position: 'relative',
+              backgroundColor: '#0F172A',
+              width: '100%',
+              overflow: 'hidden',
+            }}
+          >
+            <img
+              src={currentTab.desktopSrc}
+              alt={currentTab.captionTitle}
+              width={1280}
+              height={800}
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: 'block',
+                aspectRatio: '16/10',
+                objectFit: 'cover',
+                objectPosition: 'top left',
+              }}
+              loading="lazy"
+            />
+
+            {/* Floating Mobile Inset Phone Preview */}
             <div
               className="flow-preview-mobile-inset"
               style={{
@@ -343,7 +421,7 @@ export const FlowHero: React.FC = () => {
               </div>
               <img
                 src={currentTab.mobileSrc}
-                alt={`${currentTab.label} Mobile`}
+                alt={`${currentTab.label} Mobile PWA`}
                 width={390}
                 height={844}
                 style={{
@@ -354,55 +432,194 @@ export const FlowHero: React.FC = () => {
                 loading="lazy"
               />
             </div>
-          )}
+          </div>
+
+          {/* Feature Caption Underneath Frame */}
+          <div
+            style={{
+              padding: '16px 20px',
+              backgroundColor: 'var(--color-surface)',
+              borderTop: '1px solid var(--color-divider)',
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
+            }}
+          >
+            <div style={{ minWidth: '260px', flex: 1 }}>
+              <div style={{ fontSize: '14.5px', fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: '2px' }}>
+                {currentTab.captionTitle}
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                {currentTab.captionDesc}
+              </div>
+            </div>
+            <Link
+              href="/app"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                backgroundColor: 'var(--color-primary-light)',
+                color: 'var(--color-primary)',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '13px',
+                fontWeight: 750,
+                textDecoration: 'none',
+                border: '1px solid var(--color-primary-border)',
+              }}
+            >
+              <span>Buka Demo Langsung</span>
+              <span>→</span>
+            </Link>
+          </div>
         </div>
 
-        {/* Feature Caption Underneath Frame */}
-        <div
-          style={{
-            padding: '16px 20px',
-            backgroundColor: 'var(--color-surface)',
-            borderTop: '1px solid var(--color-divider)',
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '12px',
-          }}
-        >
-          <div style={{ minWidth: '260px', flex: 1 }}>
-            <div style={{ fontSize: '14.5px', fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: '2px' }}>
+        {/* Mobile Smartphone PWA Frame (Always shown on mobile viewport <=768px, or toggled on desktop) */}
+        <div className={`flow-preview-phone-container ${deviceMode === 'mobile' ? 'force-show' : ''}`}>
+          <div className="flow-phone-device-shell">
+            {/* Top Dynamic Island / Pill */}
+            <div className="flow-phone-top-bar">
+              <div className="flow-phone-camera-pill" />
+            </div>
+
+            {/* Screen Content */}
+            <div className="flow-phone-screen">
+              <img
+                src={currentTab.mobileSrc}
+                alt={`${currentTab.captionTitle} Mobile PWA`}
+                width={390}
+                height={844}
+                className="flow-phone-screen-img"
+                loading="lazy"
+              />
+            </div>
+
+            {/* Bottom Home Indicator */}
+            <div className="flow-phone-bottom-bar">
+              <div className="flow-phone-home-indicator" />
+            </div>
+          </div>
+
+          {/* Caption Underneath Phone */}
+          <div
+            style={{
+              marginTop: '16px',
+              textAlign: 'center',
+              maxWidth: '360px',
+            }}
+          >
+            <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: '4px' }}>
               {currentTab.captionTitle}
             </div>
             <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
               {currentTab.captionDesc}
             </div>
+            <div style={{ marginTop: '12px' }}>
+              <Link
+                href="/app"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '12px',
+                  fontWeight: 750,
+                  color: 'var(--color-primary)',
+                  backgroundColor: 'var(--color-primary-light)',
+                  padding: '6px 14px',
+                  borderRadius: '999px',
+                  textDecoration: 'none',
+                  border: '1px solid var(--color-primary-border)',
+                }}
+              >
+                <span>Coba Demo PWA Mobile</span>
+                <span>→</span>
+              </Link>
+            </div>
           </div>
-          <Link
-            href="/app"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 14px',
-              backgroundColor: 'var(--color-primary-light)',
-              color: 'var(--color-primary)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: '13px',
-              fontWeight: 750,
-              textDecoration: 'none',
-              border: '1px solid var(--color-primary-border)',
-            }}
-          >
-            <span>Buka Demo Langsung</span>
-            <span>→</span>
-          </Link>
         </div>
       </div>
 
       <style jsx>{`
+        .flow-preview-desktop-frame {
+          display: block;
+        }
+        .flow-preview-phone-container {
+          display: none;
+        }
+
+        .flow-preview-phone-container.force-show {
+          display: flex !important;
+          flex-direction: column;
+          align-items: center;
+        }
+        .flow-preview-desktop-frame.force-hide {
+          display: none !important;
+        }
+
+        .flow-phone-device-shell {
+          width: 100%;
+          max-width: 310px;
+          background-color: #0f172a;
+          border: 7px solid #1e293b;
+          border-radius: 36px;
+          box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+          overflow: hidden;
+          margin: 0 auto;
+        }
+        .flow-phone-top-bar {
+          background-color: #0f172a;
+          padding: 8px 0 5px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        .flow-phone-camera-pill {
+          width: 68px;
+          height: 14px;
+          background-color: #020617;
+          border-radius: 999px;
+        }
+        .flow-phone-screen {
+          width: 100%;
+          background-color: #ffffff;
+          overflow: hidden;
+        }
+        .flow-phone-screen-img {
+          width: 100%;
+          height: auto;
+          display: block;
+          aspect-ratio: 390 / 844;
+          object-fit: cover;
+          object-position: top center;
+        }
+        .flow-phone-bottom-bar {
+          background-color: #0f172a;
+          padding: 10px 0 6px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        .flow-phone-home-indicator {
+          width: 96px;
+          height: 4px;
+          background-color: rgba(255, 255, 255, 0.4);
+          border-radius: 999px;
+        }
+
         @media (max-width: 768px) {
-          .flow-preview-mobile-inset {
+          .flow-preview-desktop-frame {
+            display: none !important;
+          }
+          .flow-preview-phone-container {
+            display: flex !important;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+          }
+          .flow-device-switcher {
             display: none !important;
           }
         }
