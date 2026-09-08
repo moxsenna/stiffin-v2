@@ -32,6 +32,7 @@ export const WhatsAppBottomSheet: React.FC<WhatsAppBottomSheetProps> = ({
   const [tone, setTone] = useState<MessageTemplateTone | undefined>(initialTone);
   const [hasOpenedWa, setHasOpenedWa] = useState(false);
   const [nextFollowUpDays, setNextFollowUpDays] = useState<number | undefined>(2);
+  const [delayTouched, setDelayTouched] = useState(false);
   const [outcome, setOutcome] = useState<ContactWaOutcome | undefined>(undefined);
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export const WhatsAppBottomSheet: React.FC<WhatsAppBottomSheetProps> = ({
     setTone(initialTone);
     setHasOpenedWa(false);
     setNextFollowUpDays(2);
+    setDelayTouched(false);
     setOutcome(undefined);
   }, [initialDraft, initialTone, isOpen]);
 
@@ -63,7 +65,12 @@ export const WhatsAppBottomSheet: React.FC<WhatsAppBottomSheetProps> = ({
 
   const handleConfirm = async () => {
     const systemScheduled = outcome === 'INTERESTED_TEST' || outcome === 'ASK_SCHEDULE';
-    await onConfirmSent(systemScheduled ? undefined : nextFollowUpDays, outcome);
+    // WAIT_PAYDAY defaults to 3d and NO_RESPONSE to 2d on the backend. Only send
+    // an explicit delay when the user touched the picker, otherwise let the
+    // backend outcome default apply.
+    const useOutcomeDefault =
+      (outcome === 'WAIT_PAYDAY' || outcome === 'NO_RESPONSE') && !delayTouched;
+    await onConfirmSent(systemScheduled || useOutcomeDefault ? undefined : nextFollowUpDays, outcome);
     onClose();
   };
 
@@ -160,7 +167,7 @@ export const WhatsAppBottomSheet: React.FC<WhatsAppBottomSheetProps> = ({
                   type="button"
                   className={nextFollowUpDays === opt.value ? 'is-active' : undefined}
                   aria-pressed={nextFollowUpDays === opt.value}
-                  onClick={() =>setNextFollowUpDays(opt.value)}
+                  onClick={() =>{setNextFollowUpDays(opt.value); setDelayTouched(true);}}
                 >
                  {opt.label}
                 </button>

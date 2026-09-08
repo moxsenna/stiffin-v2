@@ -655,6 +655,7 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
     // Legacy clients send only nextActionId (outcome undefined) -> neutral effect.
     const effect = resolveOutcomeEffect(body.outcome, body.nextActionId, new Date());
     const nextActionRepo = createNextActionRepository(db);
+    const activityRepo = createActivityRepository(db);
     let createdAction: { id: string; title: string; dueAt: string } | null = null;
 
     // Create the explicit follow-up BEFORE the stage transition so the
@@ -679,6 +680,20 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
           source: 'PROMOTORFLOW',
           idempotencyKey: effect.followUp.idempotencyKey,
         }));
+      if (!existing) {
+        await activityRepo.append(ctx, actor, {
+          contactId: completed.contactId,
+          bookingId: completed.bookingId ?? undefined,
+          eventType: 'ACTION_CREATED',
+          metadataJson: {
+            actionId: row.id,
+            actionType: row.actionType,
+            dueAt: row.dueAt,
+            priority: row.priority,
+            source: 'PROMOTORFLOW',
+          },
+        });
+      }
       createdAction = { id: row.id, title: row.title, dueAt: row.dueAt };
     } else {
       // WAIT_PAYDAY / NO_RESPONSE: explicit client choice wins, otherwise the
@@ -703,6 +718,20 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
             source: 'PROMOTORFLOW',
             idempotencyKey,
           }));
+        if (!existing) {
+          await activityRepo.append(ctx, actor, {
+            contactId: completed.contactId,
+            bookingId: completed.bookingId ?? undefined,
+            eventType: 'ACTION_CREATED',
+            metadataJson: {
+              actionId: row.id,
+              actionType: 'FOLLOW_UP',
+              dueAt: row.dueAt,
+              priority: row.priority,
+              source: 'PROMOTORFLOW',
+            },
+          });
+        }
         createdAction = { id: row.id, title: row.title, dueAt: row.dueAt };
       }
     }

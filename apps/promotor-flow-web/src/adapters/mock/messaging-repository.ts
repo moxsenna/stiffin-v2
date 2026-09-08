@@ -102,16 +102,26 @@ export class MockMessagingRepository implements MessagingPort {
     } else {
       const days = input.scheduleNextFollowUpDays ?? effect.nextFollowUpDays ?? 0;
       if (days > 0) {
+        const keyOutcome = input.outcome ?? 'MANUAL';
+        const idempotencyKey = input.nextActionId
+          ? `wa-outcome:${keyOutcome}:${input.nextActionId}`
+          : undefined;
         const dueAt = this.clock.addDays(this.clock.now(), days).toISOString();
-        await this.actionRepo.createNextAction({
-          contactId: input.contactId,
-          organizationId: '',
-          actionType: 'FOLLOW_UP',
-          title: `Follow-up ${days} hari lagi`,
-          dueAt,
-          status: 'PENDING',
-          source: 'PROMOTORFLOW',
-        });
+        const existing = idempotencyKey
+          ? await this.actionRepo.findByIdempotencyKey(idempotencyKey)
+          : null;
+        if (!existing) {
+          await this.actionRepo.createNextAction({
+            contactId: input.contactId,
+            organizationId: '',
+            actionType: 'FOLLOW_UP',
+            title: `Follow-up ${days} hari lagi`,
+            dueAt,
+            status: 'PENDING',
+            source: 'PROMOTORFLOW',
+            ...(idempotencyKey ? { idempotencyKey } : {}),
+          });
+        }
       }
     }
 
