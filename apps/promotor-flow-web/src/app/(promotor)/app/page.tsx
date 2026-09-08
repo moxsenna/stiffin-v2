@@ -14,11 +14,12 @@ import {
   promotorClassQueries,
   promotorClassCommands,
   settingsCommands,
+  revenueQueries,
   clock,
 } from '@/lib/container';
 import { TodayQueue, TodayQueueItem } from '@/modules/next-actions/queries';
 import { DemoScenarioPreset } from '@/modules/promotorclass/ports';
-import type { ContactWaOutcome } from '@promotor/contracts';
+import type { ContactWaOutcome, RevenueSummary } from '@promotor/contracts';
 
 type QueueGroup = { key: 'overdue' | 'today' | 'upcoming'; label: string; items: TodayQueueItem[] };
 
@@ -34,12 +35,20 @@ export default function TodayPage() {
   const [toast, showToast] = useToast();
   const [currentPreset, setCurrentPreset] = useState<DemoScenarioPreset>('BUNDLE_AVAILABLE');
   const [tick, setTick] = useState(0);
+  const [summary, setSummary] = useState<RevenueSummary | null>(null);
 
   const loadData = useCallback(async () =>{
     setLoadError(null);
     try {
       const q = await nextActionQueries.getTodayQueue();
       setQueue(q);
+
+      try {
+        const s = await revenueQueries.getRevenueSummary('MONTH');
+        setSummary(s);
+      } catch {
+        setSummary(null);
+      }
 
       const intState = await promotorClassQueries.getIntegrationState();
       if (intState.scenarioPreset) {
@@ -162,6 +171,18 @@ export default function TodayPage() {
       />
 
      {loadError && <ErrorState title="Gagal memuat antrian" detail={loadError} onRetry={() =>loadData()} />}
+
+      {summary && (
+        <section style={{ margin: '12px 12px 0', padding: 14, border: '1px solid var(--accent)', background: '#eff6ff' }}>
+          <div className="kicker">Estimasi omzet bulan ini</div>
+          <div style={{ font: '700 22px/1.2 var(--font-sans)' }}>
+            Rp {summary.grossAmount.toLocaleString('id-ID')}
+          </div>
+          <div className="kicker kicker-muted">
+            {summary.paidCount} tes ter-closing{summary.commissionPercent > 0 ? ` · estimasi komisi ${summary.commissionPercent}% = Rp ${summary.estimatedCommission.toLocaleString('id-ID')}` : ''}
+          </div>
+        </section>
+      )}
 
       {!queue && !loadError && (
         <>

@@ -1598,4 +1598,19 @@ export const RejectOrderRequestSchema = z.object({
 });
 export type RejectOrderRequest = z.infer<typeof RejectOrderRequestSchema>;
 
+// --- C7 Revenue Summary & Settings ---
+export const RevenueSummarySchema = z.object({
+  period: z.enum(['WEEK', 'MONTH']),
+  paidCount: z.number().int().nonnegative(),
+  grossAmount: z.number().int().nonnegative(),
+  commissionPercent: z.number().int().min(0).max(100),
+  estimatedCommission: z.number().int().nonnegative(),
+});
+export type RevenueSummary = z.infer<typeof RevenueSummarySchema>;
+
+export const UpdateRevenueSettingsRequestSchema = z.object({
+  commissionPercent: z.number().int().min(0, 'Persen komisi 0–100').max(100, 'Persen komisi 0–100'),
+});
+export type UpdateRevenueSettingsRequest = z.infer<typeof UpdateRevenueSettingsRequestSchema>;
+
 

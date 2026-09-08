@@ -35,6 +35,7 @@ import type {
   AvailabilityRuleDto,
   ReplaceAvailabilityRulesRequest,
   CreateContactNoteRequest,
+  RevenueSummary,
   PublicSlotsQuery,
   CreatePublicBookingRequest,
   PublicRegisterLearnerRequest,
@@ -806,6 +807,19 @@ export class PromotorFlowApiClient {
 
   async replaceAvailability(rules: Array<{ dayOfWeek: number; startTime: string; endTime: string; isActive?: boolean }>): Promise<{ rules: AvailabilityRuleDto[] }> {
     return this.client.put('/api/v1/flow/availability', { rules });
+  }
+
+  // C7 Revenue summary & settings
+  async getRevenueSummary(period: 'WEEK' | 'MONTH' = 'MONTH'): Promise<{ summary: RevenueSummary }> {
+    return this.client.get(`/api/v1/flow/revenue-summary?period=${period}`);
+  }
+
+  async getRevenueSettings(): Promise<{ commissionPercent: number }> {
+    return this.client.get('/api/v1/flow/revenue-settings');
+  }
+
+  async updateRevenueSettings(commissionPercent: number): Promise<{ commissionPercent: number }> {
+    return this.client.put('/api/v1/flow/revenue-settings', { commissionPercent });
   }
 
   // Public Booking & Slots

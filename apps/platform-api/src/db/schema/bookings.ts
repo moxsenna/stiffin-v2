@@ -24,6 +24,7 @@ export const bookings = pgTable(
     locationText: text('location_text'),
     status: text('status').notNull().default('PENDING'),
     paymentStatus: text('payment_status').notNull().default('UNPAID'),
+    paidAt: timestamp('paid_at', { withTimezone: true, mode: 'string' }),
     notes: text('notes'),
     completedAt: timestamp('completed_at', { withTimezone: true, mode: 'string' }),
     idempotencyKey: text('idempotency_key'),

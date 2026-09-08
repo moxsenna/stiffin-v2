@@ -120,6 +120,13 @@
       "when": 1788821225146,
       "tag": "0016_nappy_red_ghost",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1788868800816,
+      "tag": "0017_yielding_rocket_racer",
+      "breakpoints": true
     }
   ]
 }

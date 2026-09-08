@@ -10,6 +10,7 @@ import { AftercareRepositoryPort } from '@/modules/aftercare/ports';
 import { SettingsRepositoryPort } from '@/modules/settings/ports';
 import { PromotorClassAdapterPort } from '@/modules/promotorclass/ports';
 import { AvailabilityRepositoryPort } from '@/modules/availability/ports';
+import { RevenueRepositoryPort } from '@/modules/revenue/ports';
 
 import { MockContactRepository } from './mock/contact-repository';
 import { MockLifecycleRepository } from './mock/lifecycle-repository';
@@ -23,6 +24,7 @@ import { MockSettingsRepository } from './mock/settings-repository';
 import { MockPromotorClassAdapter } from './mock/promotorclass-adapter';
 import { MockMessagingRepository } from './mock/messaging-repository';
 import { MockAvailabilityRepository } from './mock/availability-repository';
+import { MockRevenueRepository } from './mock/revenue-repository';
 import { mockStateStore } from './mock/mock-state-store';
 import { mockClock } from './mock/mock-clock';
 import { systemClock } from './system-clock';
@@ -40,6 +42,7 @@ import { HttpSettingsRepository } from './http/settings-repository';
 import { HttpPromotorClassAdapter } from './http/promotorclass-adapter';
 import { HttpMessagingRepository } from './http/messaging-repository';
 import { HttpAvailabilityRepository } from './http/availability-repository';
+import { HttpRevenueRepository } from './http/revenue-repository';
 
 export function getApiMode(): 'http' | 'mock' {
   const mode = process.env.NEXT_PUBLIC_API_MODE;
@@ -184,6 +187,7 @@ export function getPromotorClassAdapter(): PromotorClassAdapterPort {
 
 let messagingRepoInstance: MessagingPort | null = null;
 let availabilityRepoInstance: AvailabilityRepositoryPort | null = null;
+let revenueRepoInstance: RevenueRepositoryPort | null = null;
 
 export function getMessagingRepository(): MessagingPort {
   if (!messagingRepoInstance) {
@@ -214,6 +218,16 @@ export function getClock(): ClockPort {
   return getApiMode() === 'http' ? systemClock : mockClock;
 }
 
+export function getRevenueRepository(): RevenueRepositoryPort {
+  if (!revenueRepoInstance) {
+    revenueRepoInstance =
+      getApiMode() === 'http'
+        ? new HttpRevenueRepository(getApiClient())
+        : new MockRevenueRepository();
+  }
+  return revenueRepoInstance;
+}
+
 export function resetAdapterInstances(): void {
   contactRepoInstance = null;
   lifecycleRepoInstance = null;
@@ -227,4 +241,5 @@ export function resetAdapterInstances(): void {
   promotorClassAdapterInstance = null;
   messagingRepoInstance = null;
   availabilityRepoInstance = null;
+  revenueRepoInstance = null;
 }

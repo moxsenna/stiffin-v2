@@ -28,7 +28,11 @@ import {
   ConfirmWhatsAppSentRequestSchema,
   ReplaceAvailabilityRulesRequestSchema,
   CreateContactNoteRequestSchema,
+  UpdateRevenueSettingsRequestSchema,
 } from '@promotor/contracts';
+import { computeRevenueSummary } from '../domain/flow/revenue-summary';
+import { createRevenueSettingsService } from '../services/revenue-settings-service';
+import { createBookingRepository } from '../repositories/booking-repository';
 import { contacts, nextActions } from '../db/schema';
 import { createContactFlowService } from '../services/contact-flow-service';
 import { createContactLifecycleService } from '../services/contact-lifecycle-service';
@@ -616,6 +620,42 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
     const service = createBookingService(db);
     const updated = await service.markNoShow(ctx, bookingId, actor);
     return c.json({ booking: updated }, 200);
+  });
+
+  // =========================================================================
+  // 7b. REVENUE SUMMARY & SETTINGS (C7)
+  // =========================================================================
+  flow.get('/revenue-summary', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const period = c.req.query('period') === 'WEEK' ? 'WEEK' : 'MONTH';
+    const settings = await createRevenueSettingsService(db).get(ctx);
+    const bookings = await createBookingRepository(db).listPaid(ctx);
+    const summary = computeRevenueSummary(
+      bookings.map((b: any) => ({
+        paymentStatus: b.paymentStatus,
+        paidAt: b.paidAt ?? null,
+        amount: b.amount,
+      })),
+      { period, now: new Date(), commissionPercent: settings.commissionPercent }
+    );
+    return c.json({ summary }, 200);
+  });
+
+  flow.get('/revenue-settings', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const settings = await createRevenueSettingsService(db).get(ctx);
+    return c.json(settings, 200);
+  });
+
+  flow.put('/revenue-settings', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const raw = await c.req.json().catch(() => ({}));
+    const body = parseBody(UpdateRevenueSettingsRequestSchema, raw);
+    const settings = await createRevenueSettingsService(db).update(ctx, body.commissionPercent);
+    return c.json(settings, 200);
   });
 
   // =========================================================================
