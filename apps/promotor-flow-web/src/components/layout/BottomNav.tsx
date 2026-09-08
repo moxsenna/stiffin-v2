@@ -17,6 +17,7 @@ function isItemActive(pathname: string, href: string): boolean {
   if (href === '/app/more') {
     return (
       pathname.startsWith('/app/more') ||
+      pathname.startsWith('/app/pipeline') ||
       pathname.startsWith('/app/services') ||
       pathname.startsWith('/app/templates') ||
       pathname.startsWith('/app/settings')

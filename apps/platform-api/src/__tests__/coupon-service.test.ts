@@ -4,10 +4,18 @@ import { createCouponService } from '../services/commerce/coupon-service';
 
 const now = new Date('2026-09-08T10:00:00.000Z');
 
-function makeDeps(couponFixture: any = null) {
+function makeDeps(couponFixture: any = null): any {
   const mockRepo = {
     async findByCode(_orgId: string, code: string) {
       if (couponFixture && couponFixture.code === code) return couponFixture;
+      return null;
+    },
+    async findByCodeAndOrgSlug(_slug: string, code: string) {
+      if (couponFixture && couponFixture.code === code) return couponFixture;
+      return null;
+    },
+    async findById(_orgId: string, id: string) {
+      if (couponFixture && couponFixture.id === id) return couponFixture;
       return null;
     },
     async list(_orgId: string) {
@@ -23,9 +31,13 @@ function makeDeps(couponFixture: any = null) {
       if (couponFixture) couponFixture.usedCount += 1;
       return couponFixture;
     },
+    async incrementUsedCountByCode(_orgId: string, code: string) {
+      if (couponFixture && couponFixture.code === code) couponFixture.usedCount += 1;
+      return couponFixture;
+    },
   };
   return {
-    couponRepo: mockRepo,
+    couponRepo: mockRepo as any,
     clock: () => now,
   };
 }
@@ -41,6 +53,8 @@ const BASE_COUPON = {
   usedCount: 0,
   expiresAt: null,
   isActive: true,
+  createdAt: now.toISOString(),
+  updatedAt: now.toISOString(),
 };
 
 describe('B8 — coupon-service.validateForProgram', () => {
