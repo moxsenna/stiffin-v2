@@ -83,6 +83,8 @@ import type {
   CreateCouponRequest,
   UpdateCouponRequest,
   CouponQuoteResponse,
+  UpsertLessonNoteRequest,
+  LessonNoteDto,
 } from '@promotor/contracts';
 
 export interface ApiClientConfig {
@@ -478,6 +480,26 @@ export class PromotorClassContentApiClient {
   ): Promise<{ ok: boolean }> {
     return this.client.put(
       `/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/position`,
+      data
+    );
+  }
+
+  async getLessonNote(
+    enrollmentId: string,
+    lessonId: string
+  ): Promise<{ note: LessonNoteDto | null }> {
+    return this.client.get(
+      `/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/note`
+    );
+  }
+
+  async saveLessonNote(
+    enrollmentId: string,
+    lessonId: string,
+    data: UpsertLessonNoteRequest
+  ): Promise<{ note: LessonNoteDto }> {
+    return this.client.put(
+      `/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/note`,
       data
     );
   }
@@ -941,6 +963,26 @@ export class PromotorFlowApiClient {
 
   async submitLearnerReflection(enrollmentId: string, lessonId: string, data: SubmitReflectionRequest): Promise<SubmitReflectionResponse> {
     return this.client.post(`/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/reflection`, data);
+  }
+
+  async getLessonNote(
+    enrollmentId: string,
+    lessonId: string
+  ): Promise<{ note: LessonNoteDto | null }> {
+    return this.client.get(
+      `/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/note`
+    );
+  }
+
+  async saveLessonNote(
+    enrollmentId: string,
+    lessonId: string,
+    data: UpsertLessonNoteRequest
+  ): Promise<{ note: LessonNoteDto }> {
+    return this.client.put(
+      `/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/note`,
+      data
+    );
   }
 
   async recordLearnerEvent(enrollmentId: string, data: RecordLearningEventRequest): Promise<RecordLearningEventResponse> {

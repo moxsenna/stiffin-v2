@@ -19,6 +19,7 @@ import {
   loadReflectionDraft,
   clearReflectionDraft,
 } from '@/lib/reflection-draft';
+import { getLessonNoteQuery, saveLessonNoteCommand } from '@/modules/learning/notes';
 import { Enrollment, Program, Lesson } from '@promotor/contracts';
 
 export function LessonReaderClient() {
@@ -35,6 +36,36 @@ export function LessonReaderClient() {
   const [errorMsg, setErrorMsg] = useState('');
   const [accessDenied, setAccessDenied] = useState(false);
   const [showVideoDonePrompt, setShowVideoDonePrompt] = useState(false);
+
+  // Catatan pribadi state & autosave
+  const [noteBody, setNoteBody] = useState('');
+  const [savedNoteBody, setSavedNoteBody] = useState('');
+  const [noteStatus, setNoteStatus] = useState('');
+
+  useEffect(() => {
+    getLessonNoteQuery(enrollmentId, lessonId)
+      .then((note) => {
+        if (note) {
+          setNoteBody(note.body);
+          setSavedNoteBody(note.body);
+        }
+      })
+      .catch(() => {});
+  }, [enrollmentId, lessonId]);
+
+  useEffect(() => {
+    if (noteBody === savedNoteBody || noteBody.trim().length === 0) return;
+    setNoteStatus('Menyimpan...');
+    const t = setTimeout(() => {
+      saveLessonNoteCommand(enrollmentId, lessonId, noteBody)
+        .then(() => {
+          setSavedNoteBody(noteBody);
+          setNoteStatus('Tersimpan ✓');
+        })
+        .catch(() => setNoteStatus('Gagal menyimpan — coba lagi.'));
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [noteBody, savedNoteBody, enrollmentId, lessonId]);
 
   // Restore draft sekali per lesson
   const draftKey = enrollment && lesson ? buildReflectionDraftKey(enrollmentId, lessonId) : null;
@@ -333,11 +364,33 @@ export function LessonReaderClient() {
             className="textarea"
             style={{ marginTop: 12 }}
           />
-         {isButtonDisabled && (
+          {isButtonDisabled && (
             <div style={{ fontSize: 11, color: 'var(--muted-strong)', marginTop: 8 }}>
              * Anda wajib mengisi refleksi di atas untuk membuka tombol Selesai.
             </div>
          )}
+        </section>
+
+        {/* Catatan Pribadi */}
+        <section style={{ marginTop: 22, border: '1px solid var(--line, #e2e8f0)', padding: 16, background: 'var(--surface, #ffffff)' }}>
+          <div className="kicker kicker-muted" style={{ fontSize: 10 }}>Catatan Pribadi</div>
+          <p style={{ font: '400 11px/1.4 var(--font-sans)', color: 'var(--muted-strong)', marginTop: 4 }}>
+            Hanya Anda yang bisa melihat catatan ini.
+          </p>
+          <textarea
+            className="textarea"
+            rows={4}
+            value={noteBody}
+            onChange={(e) => setNoteBody(e.target.value)}
+            placeholder="Ringkasan insight penting dari materi ini..."
+            aria-label="Catatan pribadi"
+            style={{ marginTop: 10 }}
+          />
+          {noteStatus && (
+            <div style={{ font: '400 11px/1.4 var(--font-sans)', color: 'var(--muted-strong)', marginTop: 6 }}>
+              {noteStatus}
+            </div>
+          )}
         </section>
 
        {(lesson.hasCta || lesson.ctaLabel) && (lesson.ctaUrl || (lesson.ctaConfig as any)?.url || lesson.ctaLabel) && (

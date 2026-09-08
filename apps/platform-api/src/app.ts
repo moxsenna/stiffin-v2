@@ -39,6 +39,7 @@ import {
   RecordCtaClickRequestSchema,
   CreatePriceVariantRequestSchema,
   UpdatePriceVariantRequestSchema,
+  UpsertLessonNoteRequestSchema,
 } from '@promotor/contracts';
 import { registerFlowRoutes } from './routes/flow-routes';
 import { registerClassRoutes } from './routes/class-routes';
@@ -781,6 +782,41 @@ export function createApp(deps?: AppDependencies) {
       authenticatedContactId: learnerCtx.contactId,
     });
     return c.json({ certificate }, 200);
+  });
+
+  app.get('/api/v1/learner/enrollments/:enrollmentId/lessons/:lessonId/note', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const learnerCtx = c.get('learnerContext' as any) as any;
+    const service = createLearningEngineService(db);
+    const note = await service.getLessonNote({
+      organizationId: learnerCtx.organizationId,
+      enrollmentId: c.req.param('enrollmentId'),
+      lessonId: c.req.param('lessonId'),
+      authenticatedContactId: learnerCtx.contactId,
+    });
+    return c.json({ note }, 200);
+  });
+
+  app.put('/api/v1/learner/enrollments/:enrollmentId/lessons/:lessonId/note', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const learnerCtx = c.get('learnerContext' as any) as any;
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = UpsertLessonNoteRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      const details = parsed.error.issues.map((i) => i.message).join(', ');
+      throw new DomainError('VALIDATION_ERROR', `Catatan tidak valid: ${details}`);
+    }
+    const service = createLearningEngineService(db);
+    const note = await service.saveLessonNote({
+      organizationId: learnerCtx.organizationId,
+      enrollmentId: c.req.param('enrollmentId'),
+      lessonId: c.req.param('lessonId'),
+      authenticatedContactId: learnerCtx.contactId,
+      body: parsed.data.body,
+    });
+    return c.json({ note }, 200);
   });
 
   // ==========================================
