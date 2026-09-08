@@ -861,7 +861,8 @@ export const ListBookingsQuerySchema = z.object({
   status: FlowBookingStatusSchema.optional(),
 });
 export type ListBookingsQuery = z.infer<typeof ListBookingsQuerySchema>;
-export const CreateBookingRequestSchema = z.object({
+
+export const CreateBookingRequestSchema = z.object({
   contactId: z.string().uuid('Valid contactId is required'),
   serviceId: z.string().uuid('Valid serviceId is required'),
   startAt: z.string().min(1, 'startAt is required'),
@@ -972,6 +973,30 @@ export const RedeemLearnerTokenResponseSchema = z.object({
   organizationId: z.string().uuid(),
 });
 export type RedeemLearnerTokenResponse = z.infer<typeof RedeemLearnerTokenResponseSchema>;
+
+export const RequestLearnerOtpSchema = z.object({
+  phoneRaw: z.string().min(8, 'Nomor WhatsApp tidak valid').max(32),
+});
+export type RequestLearnerOtp = z.infer<typeof RequestLearnerOtpSchema>;
+
+export const RequestLearnerOtpResponseSchema = z.object({
+  expiresAt: z.string(),
+  devCode: z.string().optional(),
+});
+export type RequestLearnerOtpResponse = z.infer<typeof RequestLearnerOtpResponseSchema>;
+
+export const VerifyLearnerOtpSchema = z.object({
+  phoneRaw: z.string().min(8).max(32),
+  code: z.string().regex(/^\d{6}$/, 'Kode harus 6 digit angka'),
+});
+export type VerifyLearnerOtp = z.infer<typeof VerifyLearnerOtpSchema>;
+
+export const VerifyLearnerOtpResponseSchema = z.object({
+  contactId: z.string(),
+  organizationId: z.string(),
+  workspaceSlug: z.string(),
+});
+export type VerifyLearnerOtpResponse = z.infer<typeof VerifyLearnerOtpResponseSchema>;
 
 export const CreateManualEnrollmentRequestSchema = z.object({
   programId: z.string().uuid('Valid programId is required'),
@@ -1118,6 +1143,26 @@ export const LearnerEnrollmentDetailsSchema = z.object({
   }),
 });
 export type LearnerEnrollmentDetailsDto = z.infer<typeof LearnerEnrollmentDetailsSchema>;
+
+export const CertificateSchema = z.object({
+  serial: z.string(),
+  recipientName: z.string(),
+  programTitle: z.string(),
+  promoterName: z.string(),
+  issuedAt: z.string(),
+});
+export type Certificate = z.infer<typeof CertificateSchema>;
+
+export const CertificateIssueResponseSchema = z.object({ certificate: CertificateSchema });
+export type CertificateIssueResponse = z.infer<typeof CertificateIssueResponseSchema>;
+
+export const PublicCertificateVerificationSchema = z.object({
+  certificate: CertificateSchema.extend({ valid: z.literal(true) }),
+});
+export type PublicCertificateVerification = z.infer<typeof PublicCertificateVerificationSchema>;
+
+export const LearnerCertificatesResponseSchema = z.object({ certificates: z.array(CertificateSchema) });
+export type LearnerCertificatesResponse = z.infer<typeof LearnerCertificatesResponseSchema>;
 
 export const LearningSignalDtoSchema = z.object({
   id: z.string().uuid(),

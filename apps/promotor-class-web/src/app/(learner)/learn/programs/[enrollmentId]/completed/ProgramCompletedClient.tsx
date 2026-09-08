@@ -4,13 +4,16 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { LearnerShell } from '@/components/layout/LearnerShell';
+import { CertificateCard } from '@/components/learner/CertificateCard';
 import { LoadingRows } from '@/components/ui';
+import { getPlatformApiClient } from '@/adapters';
+import { ApiError } from '@promotor/api-client';
 import { getEnrollmentByIdQuery } from '@/modules/enrollments/queries';
 import { getProgramByIdQuery } from '@/modules/programs/queries';
 import { getEnrollmentFullDetailsQuery } from '@/modules/learning/queries';
 import { getPublicWorkspaceQuery } from '@/modules/public-storefront/queries';
 import { resolveWorkspaceSlug } from '@/lib/session';
-import { Enrollment, Program } from '@promotor/contracts';
+import { Enrollment, Program, Certificate } from '@promotor/contracts';
 import { buildConsultationClaimMessage } from '@/lib/wa-templates';
 
 export function ProgramCompletedClient() {
@@ -21,16 +24,19 @@ export function ProgramCompletedClient() {
   const [program, setProgram] = useState<Program | null>(null);
   const [promoterPhone, setPromoterPhone] = useState<string | null>(null);
   const [reflectionTopics, setReflectionTopics] = useState<string[]>([]);
+  const [certificate, setCertificate] = useState<Certificate | null>(null);
 
   useEffect(() => {
     async function loadData() {
       let detailsFound = false;
+      let progress: number | undefined;
       try {
         const details = await getEnrollmentFullDetailsQuery(enrollmentId);
         if (details?.enrollment && details?.program) {
           detailsFound = true;
           setEnrollment(details.enrollment as any);
           setProgram(details.program as any);
+          progress = (details as any)?.enrollment?.progressPercent;
 
           const modules = (details as any)?.program?.modules ?? (details as any)?.modules ?? [];
           const topics = modules
@@ -47,9 +53,20 @@ export function ProgramCompletedClient() {
         const enr = await getEnrollmentByIdQuery(enrollmentId);
         if (enr) {
           setEnrollment(enr);
+          progress = (enr as any)?.progressPercent;
           const prog = await getProgramByIdQuery(enr.programId);
           if (prog) setProgram(prog);
           setReflectionTopics([]);
+        }
+      }
+
+      if (progress === 100) {
+        try {
+          const res = await getPlatformApiClient().issueCertificateCommand(enrollmentId);
+          if (res?.certificate) setCertificate(res.certificate);
+        } catch (err) {
+          if (err instanceof ApiError && err.code === 'PROGRAM_NOT_COMPLETED') return;
+          console.warn('[ProgramCompletedClient] issueCertificateCommand skip:', err);
         }
       }
 
@@ -128,6 +145,13 @@ export function ProgramCompletedClient() {
          Kembali ke Beranda Belajar
         </Link>
      </section>
+
+      {certificate && (
+        <CertificateCard
+          certificate={certificate}
+          verifyUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/verify/${certificate.serial}`}
+        />
+      )}
    </LearnerShell>
  );
 }

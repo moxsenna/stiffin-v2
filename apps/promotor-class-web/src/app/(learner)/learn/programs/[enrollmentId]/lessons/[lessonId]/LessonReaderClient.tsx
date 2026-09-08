@@ -163,6 +163,8 @@ export function LessonReaderClient() {
       <LearnerShell>
        <ErrorState title="Akses ditolak" detail="Anda tidak memiliki hak akses ke pelajaran ini." />
        <div style={{ padding: 18 }}>
+         <Link href="/masuk" className="btn btn-accent btn-block">Masuk dengan Nomor WhatsApp</Link>
+         <p className="kicker kicker-muted" style={{ marginTop: 8 }}>Ganti perangkat? Masuk lagi dengan nomor WhatsApp Anda.</p>
          <Link href="/learn" className="btn btn-secondary btn-sm">← Kembali ke Program Saya</Link>
        </div>
      </LearnerShell>

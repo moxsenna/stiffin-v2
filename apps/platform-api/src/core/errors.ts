@@ -10,6 +10,7 @@ export type DomainErrorCode =
   | 'FORBIDDEN'
   | 'INVALID_YOUTUBE_URL'
   | 'PROGRAM_NOT_PUBLISHED'
+  | 'PROGRAM_NOT_COMPLETED'
   | 'CONTENT_DELETE_FORBIDDEN'
   | 'SLOT_UNAVAILABLE'
   | 'PAYMENT_REQUIRED'
@@ -19,7 +20,12 @@ export type DomainErrorCode =
   | 'PAYMENT_GATEWAY_ERROR'
   | 'INVALID_STATE'
   | 'FEATURE_DISABLED'
-  | 'INTERNAL_ERROR';
+  | 'INTERNAL_ERROR'
+  | 'LEARNER_NOT_FOUND'
+  | 'OTP_INVALID'
+  | 'OTP_EXPIRED'
+  | 'OTP_RATE_LIMITED'
+  | 'OTP_DELIVERY_UNAVAILABLE';
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode;

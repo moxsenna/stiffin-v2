@@ -21,7 +21,8 @@
     "APP_ENV": "production",
     "BETTER_AUTH_URL": "https://stiffin-promotor-api.moxsenna.workers.dev",
     "BETTER_AUTH_TRUSTED_ORIGINS": "https://stiffin-promotor-class.moxsenna.workers.dev,https://stiffin-promotor-flow.moxsenna.workers.dev",
-    "INACTIVITY_SWEEP_DAYS": "7"
+    "INACTIVITY_SWEEP_DAYS": "7",
+    "LEARNER_OTP_CHANNEL": "log"
   },
   "env": {
     "staging": {

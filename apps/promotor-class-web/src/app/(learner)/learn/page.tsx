@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { LearnerShell } from '@/components/layout/LearnerShell';
 import { ProgressBar, EmptyState } from '@/components/ui';
 import { getActiveLearnerContactId, resolveWorkspaceSlug } from '@/lib/session';
+import { getPlatformApiClient } from '@/adapters';
 import { getEnrollmentsByContactIdQuery } from '@/modules/enrollments/queries';
 import { getProgramsQuery } from '@/modules/programs/queries';
-import { Enrollment, Program } from '@promotor/contracts';
+import { Enrollment, Program, Certificate } from '@promotor/contracts';
 
 function findNextLesson(prog: Program | undefined, enr: Enrollment): { moduleTitle: string; title: string; id: string } | null {
   if (!prog) return null;
@@ -24,6 +25,7 @@ function findNextLesson(prog: Program | undefined, enr: Enrollment): { moduleTit
 export default function LearnerHomePage() {
   const [enrollments, setEnrollments] = useState<Enrollment[] | null>(null);
   const [programsMap, setProgramsMap] = useState<Map<string, Program>>(new Map());
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [noSession, setNoSession] = useState(false);
   const [fallbackWorkspace, setFallbackWorkspace] = useState<string | null>(null);
 
@@ -46,6 +48,10 @@ export default function LearnerHomePage() {
       progList.forEach(p =>pMap.set(p.id, p));
       setProgramsMap(pMap);
     });
+
+    getPlatformApiClient().listMyCertificates()
+      .then((res) => setCertificates(res.certificates ?? []))
+      .catch(() => setCertificates([]));
   }, []);
 
   if (noSession) {
@@ -118,6 +124,19 @@ export default function LearnerHomePage() {
           }
         />
      )}
+
+      {certificates.length > 0 && (
+        <section style={{ marginTop: 12 }}>
+          <div className="kicker">Sertifikat Saya</div>
+          {certificates.map((cert) => (
+            <a key={cert.serial} href={`/verify/${cert.serial}`} target="_blank" rel="noreferrer"
+              style={{ display: 'block', padding: 12, border: '1px solid var(--border)', marginTop: 8 }}>
+              <strong style={{ font: '700 14px/1.4 var(--font-sans)' }}>🎓 {cert.programTitle}</strong>
+              <div className="kicker kicker-muted">{cert.serial}</div>
+            </a>
+          ))}
+        </section>
+      )}
 
       {list.length >0 && (
         <>
