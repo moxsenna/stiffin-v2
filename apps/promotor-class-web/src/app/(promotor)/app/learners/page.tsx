@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { LearnerDetail } from '@/components/promotor/LearnerDetail';
 import { WhatsAppDraftSheet } from '@/components/promotor/WhatsAppDraftSheet';
+import { BroadcastReminderSheet } from '@/components/promotor/BroadcastReminderSheet';
 import { PageHeader, SectionHead, SegmentedControl, ProgressBar, EmptyState, ErrorState, LoadingRows } from '@/components/ui';
 import { getContactsQuery } from '@/modules/contacts/queries';
 import { getEnrollmentsQuery } from '@/modules/enrollments/queries';
@@ -33,6 +34,7 @@ export default function LearnersPage() {
     contact: null,
     message: '',
   });
+  const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
 
   const loadData = React.useCallback(async () =>{
     setLoadError(null);
@@ -90,6 +92,27 @@ export default function LearnersPage() {
     return effectiveSignalLevel === selectedFilter;
   });
 
+  const reminderCandidates = learnerContacts
+    .map((c) => {
+      const enr = getEnrollmentForContact(c.id) as any;
+      const prog = enr ? programsMap.get(enr.programId) : undefined;
+      return {
+        contactId: c.id,
+        name: c.name,
+        phoneE164: c.phoneE164,
+        programTitle: prog ? prog.title : 'Program tidak diketahui',
+        progressPercent: Number(enr?.progressPercent ?? 0),
+        learningStatus: enr?.learningStatus as string | undefined,
+        legacyStatus: enr?.status as string | undefined,
+      };
+    })
+    .filter(
+      (l) =>
+        l.progressPercent < 50 &&
+        l.learningStatus !== 'COMPLETED' &&
+        l.legacyStatus !== 'selesai'
+    );
+
   return (
     <PromotorShell>
      <PageHeader
@@ -110,6 +133,15 @@ export default function LearnersPage() {
           value={selectedFilter}
           onChange={(v) =>setSelectedFilter(v as LearnerFilter)}
         />
+        <button
+          type="button"
+          className="btn btn-secondary btn-block"
+          style={{ marginTop: 10 }}
+          disabled={reminderCandidates.length === 0}
+          onClick={() =>setIsBroadcastOpen(true)}
+        >
+          Broadcast Pengingat{reminderCandidates.length > 0 ? ` (${reminderCandidates.length})` : ''}
+        </button>
      </div>
 
      {loadError && <ErrorState title="Gagal memuat peserta" detail={loadError} onRetry={() =>loadData()} />}
@@ -209,6 +241,14 @@ export default function LearnersPage() {
           contact={draftState.contact}
           initialMessage={draftState.message}
           onClose={() =>setDraftState({ ...draftState, isOpen: false })}
+        />
+     )}
+
+      {isBroadcastOpen && (
+        <BroadcastReminderSheet
+          isOpen={isBroadcastOpen}
+          learners={reminderCandidates}
+          onClose={() =>setIsBroadcastOpen(false)}
         />
      )}
     </PromotorShell>
