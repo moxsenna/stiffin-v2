@@ -13,6 +13,7 @@ import { createProgramRepository } from './repositories/program-repository';
 import { createWorkspaceProfileRepository } from './repositories/workspace-profile-repository';
 import { createPublicContentRepository } from './repositories/public-content-repository';
 import { createEnrollmentRepository } from './repositories/enrollment-repository';
+import { createPriceVariantRepository } from './repositories/price-variant-repository';
 import { createProgramService } from './services/program-service';
 import { createPublicContentService } from './services/public-content-service';
 import { createAvailabilityService } from './services/flow/availability-service';
@@ -36,6 +37,8 @@ import {
   UpdateLessonPositionRequestSchema,
   RecordLearningEventRequestSchema,
   RecordCtaClickRequestSchema,
+  CreatePriceVariantRequestSchema,
+  UpdatePriceVariantRequestSchema,
 } from '@promotor/contracts';
 import { registerFlowRoutes } from './routes/flow-routes';
 import { registerClassRoutes } from './routes/class-routes';
@@ -62,6 +65,7 @@ function domainErrorStatus(err: DomainError): 400 | 401 | 402 | 403 | 404 | 409 
     case 'INVALID_YOUTUBE_URL':
     case 'PROGRAM_NOT_PUBLISHED':
     case 'PROGRAM_NOT_COMPLETED':
+    case 'VARIANT_NOT_FOUND':
       return 400;
     case 'OTP_INVALID':
     case 'OTP_EXPIRED':
@@ -977,6 +981,84 @@ export function createApp(deps?: AppDependencies) {
     const body = await c.req.json();
     const presentation = await service.updateProgramPresentation(ctx, programId, body);
     return c.json({ presentation }, 200);
+  });
+
+  // Program Price Variants (B7)
+  app.get('/api/v1/programs/:programId/variants', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const authCtx = c.get('authContext')!;
+    const programId = c.req.param('programId');
+    const repo = createPriceVariantRepository(db);
+    const variants = await repo.listByProgram(authCtx.organization!.organizationId, programId);
+    return c.json({ variants }, 200);
+  });
+
+  app.post('/api/v1/programs/:programId/variants', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const authCtx = c.get('authContext')!;
+    const programId = c.req.param('programId');
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = CreatePriceVariantRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', parsed.error.issues.map((i) => i.message).join(', '));
+    }
+    const repo = createPriceVariantRepository(db);
+    if (parsed.data.isDefault) {
+      await repo.clearDefault(authCtx.organization!.organizationId, programId);
+    }
+    const variant = await repo.create({
+      organizationId: authCtx.organization!.organizationId,
+      programId,
+      label: parsed.data.label,
+      description: parsed.data.description ?? null,
+      priceAmount: parsed.data.priceAmount,
+      isDefault: parsed.data.isDefault ?? false,
+      sortOrder: parsed.data.sortOrder ?? 0,
+    });
+    return c.json({ variant }, 201);
+  });
+
+  app.patch('/api/v1/programs/:programId/variants/:variantId', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const authCtx = c.get('authContext')!;
+    const programId = c.req.param('programId');
+    const variantId = c.req.param('variantId');
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = UpdatePriceVariantRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', parsed.error.issues.map((i) => i.message).join(', '));
+    }
+    const repo = createPriceVariantRepository(db);
+    if (parsed.data.isDefault) {
+      await repo.clearDefault(authCtx.organization!.organizationId, programId);
+    }
+    const updated = await repo.update(
+      authCtx.organization!.organizationId,
+      programId,
+      variantId,
+      parsed.data
+    );
+    if (!updated) {
+      throw new DomainError('NOT_FOUND', 'Paket harga tidak ditemukan');
+    }
+    return c.json({ variant: updated }, 200);
+  });
+
+  app.delete('/api/v1/programs/:programId/variants/:variantId', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const authCtx = c.get('authContext')!;
+    const programId = c.req.param('programId');
+    const variantId = c.req.param('variantId');
+    const repo = createPriceVariantRepository(db);
+    const success = await repo.delete(authCtx.organization!.organizationId, programId, variantId);
+    if (!success) {
+      throw new DomainError('NOT_FOUND', 'Paket harga tidak ditemukan');
+    }
+    return c.json({ success: true }, 200);
   });
 
   // Workspace Profile Get & Update

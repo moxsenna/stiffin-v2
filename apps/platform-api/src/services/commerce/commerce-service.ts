@@ -19,6 +19,7 @@ import { ContactRepository } from '../../repositories/contact-repository';
 import { OrganizationRepository } from '../../repositories/organization-repository';
 import { EnrollmentService } from '../class/enrollment-service';
 import { LearningEventRepository } from '../../repositories/learning-event-repository';
+import { PriceVariantRepository } from '../../repositories/price-variant-repository';
 
 export const MANUAL_BANK_ENABLED = false;
 
@@ -109,6 +110,7 @@ export interface CommerceServiceDependencies {
   planAccessService: PlanAccessService;
   paycoreClient: PaycoreClient;
   programRepo: ProgramRepository;
+  priceVariantRepo?: PriceVariantRepository;
   contactRepo: ContactRepository;
   orgRepo: OrganizationRepository;
   enrollmentService: EnrollmentService;
@@ -205,8 +207,23 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
       if (program.accessType !== 'public') {
         throw new DomainError('FORBIDDEN', 'Program ini tidak dibuka untuk pembelian publik');
       }
-      if (program.pricing !== 'one_time' || program.priceAmount <= 0) {
+      if (program.pricing !== 'one_time' || (program.priceAmount <= 0 && !input.variantId)) {
         throw new DomainError('VALIDATION_ERROR', 'Program ini tidak memiliki harga berbayar valid');
+      }
+
+      let effectiveAmount = program.priceAmount;
+      let variantMetadata: { variantId?: string; variantLabel?: string } = {};
+
+      if (input.variantId) {
+        if (!deps.priceVariantRepo) {
+          throw new DomainError('VARIANT_NOT_FOUND', 'Paket harga tidak ditemukan');
+        }
+        const variant = await deps.priceVariantRepo.findByIdAndProgram(org.id, program.id, input.variantId);
+        if (!variant || variant.programId !== program.id) {
+          throw new DomainError('VARIANT_NOT_FOUND', 'Paket harga tidak ditemukan');
+        }
+        effectiveAmount = variant.priceAmount;
+        variantMetadata = { variantId: variant.id, variantLabel: variant.label };
       }
 
       // Enforce organization plan allows paid programs
@@ -237,9 +254,10 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
         reference,
         sourceChannel: input.sourceChannel || 'STOREFRONT',
         paymentMode: 'PAYCORE',
-        amount: program.priceAmount, // Server authoritative IDR amount
+        amount: effectiveAmount, // Server authoritative IDR amount
         currency: 'IDR',
         status: 'PENDING',
+        metadata: Object.keys(variantMetadata).length > 0 ? JSON.stringify(variantMetadata) : null,
       });
 
       // 2. Call Paycore create order with fail-recovery
@@ -248,8 +266,10 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
         paycoreOrder = await deps.paycoreClient.createOrder({
           externalOrderId: order.reference,
           productKey: `PROGRAM_${program.id}`,
-          description: `Kelas: ${program.title}`,
-          amount: program.priceAmount,
+          description: variantMetadata.variantLabel
+            ? `Kelas: ${program.title} (${variantMetadata.variantLabel})`
+            : `Kelas: ${program.title}`,
+          amount: effectiveAmount,
           currency: 'IDR',
           customer: {
             name: contact.name,
@@ -264,6 +284,7 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
             contactId: contact.id,
             orderId: order.id,
             orderReference: order.reference,
+            ...(variantMetadata.variantId ? { variantId: variantMetadata.variantId } : {}),
           },
           idempotencyKey: `talira:checkout:${order.id}`,
         });
@@ -280,7 +301,7 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
         provider: 'PAYCORE',
         providerPaymentId: paycoreOrder.order_id,
         providerReference: order.reference,
-        grossAmount: program.priceAmount,
+        grossAmount: effectiveAmount,
         currency: 'IDR',
         status: 'PENDING',
       });

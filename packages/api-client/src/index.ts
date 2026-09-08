@@ -76,6 +76,9 @@ import type {
   ListOrdersResponse,
   CommerceOrder,
   RejectOrderRequest,
+  ProgramPriceVariant,
+  CreatePriceVariantRequest,
+  UpdatePriceVariantRequest,
 } from '@promotor/contracts';
 
 export interface ApiClientConfig {
@@ -347,6 +350,43 @@ export class PromotorClassContentApiClient {
       patch
     );
     return res.presentation;
+  }
+
+  // B7 Price Variants
+  async listPriceVariants(programId: string): Promise<ProgramPriceVariant[]> {
+    const res = await this.client.get<{ variants: ProgramPriceVariant[] }>(
+      `/api/v1/programs/${encodeURIComponent(programId)}/variants`
+    );
+    return res.variants;
+  }
+
+  async createPriceVariant(
+    programId: string,
+    data: CreatePriceVariantRequest
+  ): Promise<ProgramPriceVariant> {
+    const res = await this.client.post<{ variant: ProgramPriceVariant }>(
+      `/api/v1/programs/${encodeURIComponent(programId)}/variants`,
+      data
+    );
+    return res.variant;
+  }
+
+  async updatePriceVariant(
+    programId: string,
+    variantId: string,
+    data: UpdatePriceVariantRequest
+  ): Promise<ProgramPriceVariant> {
+    const res = await this.client.patch<{ variant: ProgramPriceVariant }>(
+      `/api/v1/programs/${encodeURIComponent(programId)}/variants/${encodeURIComponent(variantId)}`,
+      data
+    );
+    return res.variant;
+  }
+
+  async deletePriceVariant(programId: string, variantId: string): Promise<void> {
+    await this.client.delete(
+      `/api/v1/programs/${encodeURIComponent(programId)}/variants/${encodeURIComponent(variantId)}`
+    );
   }
 
   async getWorkspaceProfile(): Promise<PublicWorkspaceProfile> {

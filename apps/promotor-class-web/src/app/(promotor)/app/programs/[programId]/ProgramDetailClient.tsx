@@ -12,6 +12,8 @@ import {
   deleteModuleCommand,
   addLessonCommand,
   deleteLessonCommand,
+  createPriceVariantCommand,
+  deletePriceVariantCommand,
 } from '@/modules/programs/commands';
 import { Program, Module, Lesson } from '@promotor/contracts';
 
@@ -42,6 +44,9 @@ export function ProgramDetailClient() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
+
+  const [newVariant, setNewVariant] = useState({ label: '', priceAmount: 0, description: '' });
+  const [isSubmittingVariant, setIsSubmittingVariant] = useState(false);
 
   const loadProgramData = useCallback(async () =>{
     try {
@@ -219,6 +224,38 @@ export function ProgramDetailClient() {
     }
   };
 
+  const handleCreateVariant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newVariant.label.trim()) return;
+    setIsSubmittingVariant(true);
+    try {
+      await createPriceVariantCommand(program.id, {
+        label: newVariant.label.trim(),
+        priceAmount: newVariant.priceAmount,
+        description: newVariant.description.trim() || undefined,
+        isDefault: false,
+        sortOrder: program.variants?.length ?? 0,
+      });
+      setNewVariant({ label: '', priceAmount: 0, description: '' });
+      await loadProgramData();
+      showToast('Paket harga berhasil ditambahkan!');
+    } catch (err: any) {
+      showToast(`Gagal menambahkan paket: ${err?.message || 'Terjadi kesalahan'}`);
+    } finally {
+      setIsSubmittingVariant(false);
+    }
+  };
+
+  const handleDeleteVariant = async (variantId: string) => {
+    try {
+      await deletePriceVariantCommand(program.id, variantId);
+      await loadProgramData();
+      showToast('Paket harga berhasil dihapus');
+    } catch (err: any) {
+      showToast(`Gagal menghapus paket: ${err?.message || 'Terjadi kesalahan'}`);
+    }
+  };
+
   const totalLessons = program.modules.reduce((acc, m) =>acc + m.lessons.length, 0);
 
   return (
@@ -361,6 +398,113 @@ export function ProgramDetailClient() {
              Lihat sebagai Peserta ↗
             </Link>
          </div>
+       </div>
+
+       {/* Price Variants Section (B7) */}
+       <div
+         style={{
+           backgroundColor: 'var(--color-surface)',
+           borderRadius: '0px',
+           border: '1px solid var(--color-divider)',
+           padding: '20px',
+           marginBottom: '24px',
+         }}
+       >
+         <h2 style={{ fontSize: '16px', fontWeight: 750, marginBottom: '4px' }}>Pilihan Paket Harga (Multi-tier & Bundling)</h2>
+         <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+           Tambahkan variasi paket penawaran untuk peserta. Contoh: "Kelas Saja" Rp 299.000 vs "Kelas + Konsultasi 1-on-1" Rp 499.000.
+         </p>
+
+         {((program.variants ?? []).length > 0) ? (
+           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+             {(program.variants ?? []).map((v) => (
+               <div
+                 key={v.id}
+                 style={{
+                   display: 'flex',
+                   justifyContent: 'space-between',
+                   alignItems: 'center',
+                   padding: '12px 16px',
+                   border: '1px solid var(--color-divider)',
+                   backgroundColor: 'var(--color-surface)',
+                 }}
+               >
+                 <div>
+                   <strong style={{ fontSize: '14px' }}>{v.label}{v.isDefault ? ' ⭐ (Default)' : ''}</strong>
+                   <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                     Rp {v.priceAmount.toLocaleString('id-ID')}{v.description ? ` · ${v.description}` : ''}
+                   </div>
+                 </div>
+                 <button
+                   type="button"
+                   style={{
+                     padding: '4px 10px',
+                     fontSize: '12px',
+                     border: '1px solid var(--color-divider)',
+                     background: 'transparent',
+                     cursor: 'pointer',
+                     color: 'var(--color-status-danger, #dc2626)',
+                   }}
+                   onClick={() => handleDeleteVariant(v.id)}
+                 >
+                   Hapus
+                 </button>
+               </div>
+             ))}
+           </div>
+         ) : (
+           <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontStyle: 'italic', marginBottom: '16px' }}>
+             Belum ada paket tambahan. Harga standar yang berlaku: Rp {program.priceAmount.toLocaleString('id-ID')}.
+           </div>
+         )}
+
+         <form
+           onSubmit={handleCreateVariant}
+           style={{
+             display: 'grid',
+             gridTemplateColumns: '1fr 140px 1fr 100px',
+             gap: '8px',
+             alignItems: 'center',
+           }}
+         >
+           <input
+             style={{ padding: '8px 12px', fontSize: '13px', border: '1px solid var(--color-divider)' }}
+             placeholder="Nama paket (mis. Kelas + Sesi 1on1)"
+             value={newVariant.label}
+             onChange={(e) => setNewVariant({ ...newVariant, label: e.target.value })}
+             required
+           />
+           <input
+             style={{ padding: '8px 12px', fontSize: '13px', border: '1px solid var(--color-divider)' }}
+             type="text"
+             inputMode="numeric"
+             placeholder="Harga (Rp)"
+             value={newVariant.priceAmount || ''}
+             onChange={(e) => setNewVariant({ ...newVariant, priceAmount: Number(e.target.value.replace(/\D/g, '') || 0) })}
+             required
+           />
+           <input
+             style={{ padding: '8px 12px', fontSize: '13px', border: '1px solid var(--color-divider)' }}
+             placeholder="Keterangan singkat (opsional)"
+             value={newVariant.description}
+             onChange={(e) => setNewVariant({ ...newVariant, description: e.target.value })}
+           />
+           <button
+             type="submit"
+             disabled={isSubmittingVariant}
+             style={{
+               padding: '8px 16px',
+               backgroundColor: 'var(--accent-dark)',
+               color: '#FFF',
+               border: 'none',
+               fontSize: '13px',
+               fontWeight: 700,
+               cursor: isSubmittingVariant ? 'not-allowed' : 'pointer',
+             }}
+           >
+             {isSubmittingVariant ? 'Menyimpan...' : 'Tambah'}
+           </button>
+         </form>
        </div>
 
        {/* Curriculum Header & Action Bar */}

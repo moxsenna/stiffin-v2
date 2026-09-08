@@ -15,14 +15,20 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
   const { program, isRegistrationAllowed } = detail;
   const isPaid = program.pricing === 'one_time';
   const price = program.priceAmount || 0;
+  const variants = program.variants ?? [];
+  const defaultVariant = variants.find((v) => v.isDefault) || variants[0];
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(defaultVariant?.id ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdEnrollmentId, setCreatedEnrollmentId] = useState<string | null>(null);
   const [checkoutResult, setCheckoutResult] = useState<{ reference: string; checkoutUrl?: string } | null>(null);
+
+  const selectedVariant = variants.find((v) => v.id === selectedVariantId);
+  const currentPrice = selectedVariant ? selectedVariant.priceAmount : price;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +47,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
             phone: phone.trim(),
             email: email.trim() || undefined,
             sourceChannel: 'STOREFRONT',
+            variantId: selectedVariantId || undefined,
           }
         );
 
@@ -156,10 +163,10 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
             >
               <div style={{ fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>BIAYA INVESTASI KELAS</div>
               <div style={{ fontSize: '26px', fontWeight: 850, color: '#111827', marginTop: '4px' }}>
-                {formatIDR(price)}
+                {formatIDR(currentPrice)}
               </div>
               <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>
-                Akses materi seumur hidup & pembaruan berkala
+                {selectedVariant ? selectedVariant.label : 'Akses materi seumur hidup & pembaruan berkala'}
               </div>
             </div>
           )}
@@ -287,6 +294,63 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
               )}
 
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {isPaid && variants.length > 0 && (
+                  <div role="radiogroup" aria-label="Pilih paket kelas" style={{ marginBottom: '8px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        marginBottom: '8px',
+                        color: '#374151',
+                      }}
+                    >
+                      PILIH PAKET KELAS *
+                    </label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {variants.map((v) => (
+                        <label
+                          key={v.id}
+                          style={{
+                            display: 'flex',
+                            gap: '12px',
+                            alignItems: 'center',
+                            padding: '12px 14px',
+                            border: '2px solid',
+                            borderColor: selectedVariantId === v.id ? 'var(--accent-dark, #4F46E5)' : '#E5E7EB',
+                            borderRadius: '8px',
+                            backgroundColor: selectedVariantId === v.id ? '#F5F3FF' : '#FFFFFF',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <input
+                            type="radio"
+                            name="variant"
+                            value={v.id}
+                            checked={selectedVariantId === v.id}
+                            onChange={() => setSelectedVariantId(v.id)}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <strong style={{ fontSize: '13px', color: '#111827' }}>
+                                {v.label} {v.isDefault ? '⭐' : ''}
+                              </strong>
+                              <span style={{ fontSize: '13px', fontWeight: 750, color: 'var(--accent-dark, #4F46E5)' }}>
+                                {formatIDR(v.priceAmount)}
+                              </span>
+                            </div>
+                            {v.description && (
+                              <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>
+                                {v.description}
+                              </div>
+                            )}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label
                     style={{

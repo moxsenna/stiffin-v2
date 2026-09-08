@@ -131,6 +131,7 @@ export const ProgramSchema = z.object({
   publishedAt: z.string().optional().nullable(),
   presentation: ProgramPublicPresentationSchema.optional().nullable(),
   modules: z.array(ModuleSchema),
+  variants: z.array(z.lazy(() => ProgramPriceVariantSchema)).optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -188,6 +189,7 @@ export const PublicProgramSummarySchema = z.object({
   publishedAt: z.string().optional().nullable(),
   totalLessonsCount: z.number(),
   totalModulesCount: z.number(),
+  variants: z.array(z.lazy(() => ProgramPriceVariantSchema)).optional(),
 });
 export type PublicProgramSummary = z.infer<typeof PublicProgramSummarySchema>;
 
@@ -1529,6 +1531,7 @@ export const PublicPaidCheckoutRequestSchema = z.object({
   email: z.string().email('Format email tidak valid').max(256).optional().nullable(),
   sourceChannel: CommerceSourceChannelSchema.default('STOREFRONT'),
   returnUrl: z.string().url().optional(),
+  variantId: z.string().uuid().optional().nullable(),
 });
 export type PublicPaidCheckoutRequest = z.infer<typeof PublicPaidCheckoutRequestSchema>;
 
@@ -1612,5 +1615,31 @@ export const UpdateRevenueSettingsRequestSchema = z.object({
   commissionPercent: z.number().int().min(0, 'Persen komisi 0–100').max(100, 'Persen komisi 0–100'),
 });
 export type UpdateRevenueSettingsRequest = z.infer<typeof UpdateRevenueSettingsRequestSchema>;
+
+// --- B7 Program Price Variants ---
+export const ProgramPriceVariantSchema = z.object({
+  id: z.string().uuid(),
+  programId: z.string().uuid(),
+  label: z.string().min(1).max(120),
+  description: z.string().nullable().optional(),
+  priceAmount: z.number().int().min(0),
+  isDefault: z.boolean(),
+  sortOrder: z.number().int(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type ProgramPriceVariant = z.infer<typeof ProgramPriceVariantSchema>;
+
+export const CreatePriceVariantRequestSchema = z.object({
+  label: z.string().min(1, 'Nama paket wajib diisi').max(120),
+  description: z.string().max(500).optional().nullable(),
+  priceAmount: z.number().int().min(0, 'Harga tidak valid'),
+  isDefault: z.boolean().default(false),
+  sortOrder: z.number().int().min(0).default(0),
+});
+export type CreatePriceVariantRequest = z.infer<typeof CreatePriceVariantRequestSchema>;
+
+export const UpdatePriceVariantRequestSchema = CreatePriceVariantRequestSchema.partial();
+export type UpdatePriceVariantRequest = z.infer<typeof UpdatePriceVariantRequestSchema>;
 
 

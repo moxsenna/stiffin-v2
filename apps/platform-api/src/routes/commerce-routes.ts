@@ -18,6 +18,7 @@ import { createContactRepository } from '../repositories/contact-repository';
 import { createOrganizationRepository } from '../repositories/organization-repository';
 import { createEnrollmentService } from '../services/class/enrollment-service';
 import { createLearningEventRepository } from '../repositories/learning-event-repository';
+import { createPriceVariantRepository } from '../repositories/price-variant-repository';
 import { createEntitlementRepository } from '../repositories/entitlement-repository';
 import { normalizePhone, normalizeEmail } from '@promotor/platform-core';
 
@@ -34,6 +35,7 @@ function getCommerceServices(c: any) {
   const planAccessService = createPlanAccessService(subscriptionRepo);
 
   const programRepo = createProgramRepository(db);
+  const priceVariantRepo = createPriceVariantRepository(db);
   const contactRepo = createContactRepository(db, normalizePhone, normalizeEmail);
   const orgRepo = createOrganizationRepository(db);
   const enrollmentService = createEnrollmentService(db);
@@ -45,6 +47,7 @@ function getCommerceServices(c: any) {
     planAccessService,
     paycoreClient,
     programRepo,
+    priceVariantRepo,
     contactRepo,
     orgRepo,
     enrollmentService,
