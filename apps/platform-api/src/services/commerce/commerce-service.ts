@@ -20,6 +20,8 @@ import { OrganizationRepository } from '../../repositories/organization-reposito
 import { EnrollmentService } from '../class/enrollment-service';
 import { LearningEventRepository } from '../../repositories/learning-event-repository';
 import { PriceVariantRepository } from '../../repositories/price-variant-repository';
+import { CouponService } from './coupon-service';
+import type { PromoCoupon } from '@promotor/contracts';
 
 export const MANUAL_BANK_ENABLED = false;
 
@@ -111,6 +113,7 @@ export interface CommerceServiceDependencies {
   paycoreClient: PaycoreClient;
   programRepo: ProgramRepository;
   priceVariantRepo?: PriceVariantRepository;
+  couponService?: CouponService;
   contactRepo: ContactRepository;
   orgRepo: OrganizationRepository;
   enrollmentService: EnrollmentService;
@@ -226,6 +229,36 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
         variantMetadata = { variantId: variant.id, variantLabel: variant.label };
       }
 
+      let couponMetadata: { couponCode?: string; discountAmount?: number } = {};
+      let appliedCoupon: PromoCoupon | null = null;
+
+      if (input.couponCode && input.couponCode.trim()) {
+        if (!deps.couponService) {
+          throw new DomainError('VALIDATION_ERROR', 'Fitur kupon tidak tersedia');
+        }
+        const cleanedCode = input.couponCode.trim().toUpperCase();
+        appliedCoupon = await deps.couponService.findByCode(org.id, cleanedCode);
+        const quote = deps.couponService.validateForProgram({
+          coupon: appliedCoupon,
+          programId: program.id,
+          listPrice: effectiveAmount,
+        });
+        if (!quote.valid) {
+          throw new DomainError('VALIDATION_ERROR', quote.message);
+        }
+        effectiveAmount = quote.finalAmount;
+        couponMetadata = {
+          couponCode: appliedCoupon!.code,
+          discountAmount: quote.discountAmount,
+        };
+      }
+
+      const mergedMetadata = {
+        ...variantMetadata,
+        ...couponMetadata,
+      };
+      const metadataStr = Object.keys(mergedMetadata).length > 0 ? JSON.stringify(mergedMetadata) : null;
+
       // Enforce organization plan allows paid programs
       await deps.planAccessService.assertCanUsePaidPrograms(org.id);
 
@@ -245,6 +278,52 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
 
       const reference = generateOrderReference('TLR');
 
+      // 100% coupon discount — bypass payment gateway entirely
+      if (effectiveAmount === 0) {
+        const nowIso = clock().toISOString();
+        const order = await deps.commerceRepo.createOrder({
+          organizationId: org.id,
+          orderType: 'PROGRAM_PURCHASE',
+          programId: program.id,
+          contactId: contact.id,
+          reference,
+          sourceChannel: input.sourceChannel || 'STOREFRONT',
+          paymentMode: 'PAYCORE',
+          amount: 0,
+          currency: 'IDR',
+          status: 'PAID',
+          paidAt: nowIso,
+          providerOrderId: 'COUPON_FREE',
+          metadata: metadataStr,
+        });
+
+        // Issue canonical enrollment and access
+        const enrollmentResult = await deps.enrollmentService.enrollContactAndIssueAccess({
+          organizationId: org.id,
+          programId: program.id,
+          contactId: contact.id,
+        });
+
+        await deps.commerceRepo.updateOrderStatus(order.id, 'PAID', {
+          enrollmentId: enrollmentResult.enrollment.id,
+          paidAt: nowIso,
+        });
+
+        if (appliedCoupon) {
+          await deps.couponService?.incrementUsedCount(org.id, appliedCoupon.id).catch(() => {});
+        }
+
+        return {
+          orderId: order.id,
+          reference: order.reference,
+          amount: 0,
+          currency: 'IDR',
+          checkoutUrl: null,
+          providerOrderId: 'COUPON_FREE',
+          expiresAt: null,
+        };
+      }
+
       // 1. Persist local expected checkout truth BEFORE external gateway call
       const order = await deps.commerceRepo.createOrder({
         organizationId: org.id,
@@ -257,7 +336,7 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
         amount: effectiveAmount, // Server authoritative IDR amount
         currency: 'IDR',
         status: 'PENDING',
-        metadata: Object.keys(variantMetadata).length > 0 ? JSON.stringify(variantMetadata) : null,
+        metadata: metadataStr,
       });
 
       // 2. Call Paycore create order with fail-recovery
@@ -653,6 +732,16 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
         idempotencyKey: `talira:fee:${order.id}`,
       });
 
+      // If order used a coupon, increment redemption count
+      if (order.metadata && deps.couponService) {
+        try {
+          const meta = JSON.parse(order.metadata);
+          if (meta.couponCode) {
+            await deps.couponService.incrementUsedCountByCode(order.organizationId, meta.couponCode).catch(() => {});
+          }
+        } catch {}
+      }
+
       await deps.commerceRepo.updateWebhookEventResult('PAYCORE', event.event_id, 'SUCCESS');
       return { status: 'processed', type: 'program_purchase', orderId: order.id };
     },
@@ -683,6 +772,7 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
         createdAt: r.order.createdAt,
         paidAt: r.order.paidAt,
         approvedAt: r.order.approvedAt,
+        metadata: r.order.metadata,
       }));
 
       return { orders: items, total: result.total };

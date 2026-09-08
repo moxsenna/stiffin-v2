@@ -352,53 +352,77 @@ export default function OrdersPage() {
               </button>
             </div>
 
-            <div style={{ display: 'grid', gap: '14px', fontSize: '13px', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
-                <span style={{ color: '#6B7280' }}>Program</span>
-                <span style={{ fontWeight: 600, color: '#111827' }}>{selectedOrder.programTitle}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
-                <span style={{ color: '#6B7280' }}>Pembeli</span>
-                <span style={{ fontWeight: 600, color: '#111827' }}>{selectedOrder.buyerName}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
-                <span style={{ color: '#6B7280' }}>Nomor WhatsApp</span>
-                <a
-                  href={`https://wa.me/${selectedOrder.buyerPhone.replace(/\D/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ fontWeight: 600, color: '#0284C7', textDecoration: 'none' }}
-                >
-                  {selectedOrder.buyerPhone} ↗
-                </a>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
-                <span style={{ color: '#6B7280' }}>Kanal Pembelian</span>
-                <span style={{ fontWeight: 600, color: '#111827' }}>{selectedOrder.sourceChannel}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
-                <span style={{ color: '#6B7280' }}>Total Dibayar</span>
-                <span style={{ fontWeight: 800, color: '#059669', fontSize: '15px' }}>
-                  {formatIDR(selectedOrder.amount)}
-                </span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
-                <span style={{ color: '#6B7280' }}>Biaya Platform</span>
-                <span style={{ fontWeight: 600, color: '#6B7280' }}>
-                  {formatIDR(selectedOrder.platformFee)} (Flat)
-                </span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
-                <span style={{ color: '#6B7280' }}>Status Transaksi</span>
-                <span style={{ fontWeight: 700 }}>{selectedOrder.status}</span>
-              </div>
-              {selectedOrder.enrollmentId && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
-                  <span style={{ color: '#6B7280' }}>Akses Kelas (Enrollment)</span>
-                  <span style={{ fontWeight: 600, color: '#059669' }}>✓ Aktif</span>
+            {(() => {
+              let parsedMeta: any = null;
+              try {
+                if (selectedOrder.metadata) {
+                  parsedMeta = JSON.parse(selectedOrder.metadata);
+                }
+              } catch {}
+              return (
+                <div style={{ display: 'grid', gap: '14px', fontSize: '13px', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
+                    <span style={{ color: '#6B7280' }}>Program</span>
+                    <span style={{ fontWeight: 600, color: '#111827' }}>{selectedOrder.programTitle}</span>
+                  </div>
+                  {parsedMeta?.variantLabel && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
+                      <span style={{ color: '#6B7280' }}>Varian Paket</span>
+                      <span style={{ fontWeight: 600, color: '#111827' }}>{parsedMeta.variantLabel}</span>
+                    </div>
+                  )}
+                  {parsedMeta?.couponCode && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
+                      <span style={{ color: '#6B7280' }}>Kupon Promo</span>
+                      <span style={{ fontWeight: 600, color: '#D97706' }}>
+                        {parsedMeta.couponCode} {parsedMeta.discountAmount ? `(-${formatIDR(parsedMeta.discountAmount)})` : ''}
+                      </span>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
+                    <span style={{ color: '#6B7280' }}>Pembeli</span>
+                    <span style={{ fontWeight: 600, color: '#111827' }}>{selectedOrder.buyerName}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
+                    <span style={{ color: '#6B7280' }}>Nomor WhatsApp</span>
+                    <a
+                      href={`https://wa.me/${selectedOrder.buyerPhone.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontWeight: 600, color: '#0284C7', textDecoration: 'none' }}
+                    >
+                      {selectedOrder.buyerPhone} ↗
+                    </a>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
+                    <span style={{ color: '#6B7280' }}>Kanal Pembelian</span>
+                    <span style={{ fontWeight: 600, color: '#111827' }}>{selectedOrder.sourceChannel}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
+                    <span style={{ color: '#6B7280' }}>Total Dibayar</span>
+                    <span style={{ fontWeight: 800, color: '#059669', fontSize: '15px' }}>
+                      {formatIDR(selectedOrder.amount)}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
+                    <span style={{ color: '#6B7280' }}>Biaya Platform</span>
+                    <span style={{ fontWeight: 600, color: '#6B7280' }}>
+                      {formatIDR(selectedOrder.platformFee)} (Flat)
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
+                    <span style={{ color: '#6B7280' }}>Status Transaksi</span>
+                    <span style={{ fontWeight: 700 }}>{selectedOrder.status}</span>
+                  </div>
+                  {selectedOrder.enrollmentId && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '8px' }}>
+                      <span style={{ color: '#6B7280' }}>Akses Kelas (Enrollment)</span>
+                      <span style={{ fontWeight: 600, color: '#059669' }}>✓ Aktif</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              );
+            })()}
 
             {selectedOrder.status === 'PENDING' && (
               <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '16px' }}>

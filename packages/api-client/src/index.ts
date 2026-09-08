@@ -79,6 +79,10 @@ import type {
   ProgramPriceVariant,
   CreatePriceVariantRequest,
   UpdatePriceVariantRequest,
+  PromoCoupon,
+  CreateCouponRequest,
+  UpdateCouponRequest,
+  CouponQuoteResponse,
 } from '@promotor/contracts';
 
 export interface ApiClientConfig {
@@ -648,6 +652,33 @@ export class PromotorClassContentApiClient {
 
   async approveOrder(orderId: string): Promise<{ order: CommerceOrder }> {
     return this.client.post<{ order: CommerceOrder }>(`/api/v1/class/orders/${encodeURIComponent(orderId)}/approve`);
+  }
+
+  // ==========================================
+  // PromotorClass Coupons Management & Quotes
+  // ==========================================
+  async listCoupons(): Promise<{ coupons: PromoCoupon[] }> {
+    return this.client.get<{ coupons: PromoCoupon[] }>('/api/v1/class/coupons');
+  }
+
+  async createCoupon(data: CreateCouponRequest): Promise<{ coupon: PromoCoupon }> {
+    return this.client.post<{ coupon: PromoCoupon }>('/api/v1/class/coupons', data);
+  }
+
+  async updateCoupon(couponId: string, data: UpdateCouponRequest): Promise<{ coupon: PromoCoupon }> {
+    return this.client.patch<{ coupon: PromoCoupon }>(`/api/v1/class/coupons/${encodeURIComponent(couponId)}`, data);
+  }
+
+  async getCouponQuote(
+    slug: string,
+    programSlug: string,
+    code: string,
+    variantId?: string
+  ): Promise<CouponQuoteResponse> {
+    const qs = variantId ? `?variantId=${encodeURIComponent(variantId)}` : '';
+    return this.client.get<CouponQuoteResponse>(
+      `/api/v1/public/${encodeURIComponent(slug)}/programs/${encodeURIComponent(programSlug)}/coupons/${encodeURIComponent(code)}${qs}`
+    );
   }
 }
 

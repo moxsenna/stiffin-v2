@@ -1532,15 +1532,16 @@ export const PublicPaidCheckoutRequestSchema = z.object({
   sourceChannel: CommerceSourceChannelSchema.default('STOREFRONT'),
   returnUrl: z.string().url().optional(),
   variantId: z.string().uuid().optional().nullable(),
+  couponCode: z.string().max(40).optional().nullable(),
 });
 export type PublicPaidCheckoutRequest = z.infer<typeof PublicPaidCheckoutRequestSchema>;
 
 export const PublicPaidCheckoutResponseSchema = z.object({
   orderId: z.string().uuid(),
   reference: z.string(),
-  amount: z.number().int().positive(),
+  amount: z.number().int().nonnegative(),
   currency: z.literal('IDR'),
-  checkoutUrl: z.string().url(),
+  checkoutUrl: z.string().url().nullable().optional(),
   providerOrderId: z.string(),
   expiresAt: z.string().nullable().optional(),
 });
@@ -1587,6 +1588,7 @@ export const OrderItemSummarySchema = z.object({
   createdAt: z.string(),
   paidAt: z.string().nullable().optional(),
   approvedAt: z.string().nullable().optional(),
+  metadata: z.string().nullable().optional(),
 });
 export type OrderItemSummary = z.infer<typeof OrderItemSummarySchema>;
 
@@ -1641,5 +1643,59 @@ export type CreatePriceVariantRequest = z.infer<typeof CreatePriceVariantRequest
 
 export const UpdatePriceVariantRequestSchema = CreatePriceVariantRequestSchema.partial();
 export type UpdatePriceVariantRequest = z.infer<typeof UpdatePriceVariantRequestSchema>;
+
+// --- B8 Promo Coupons ---
+export const PromoCouponDiscountTypeSchema = z.enum(['PERCENT', 'FIXED']);
+export type PromoCouponDiscountType = z.infer<typeof PromoCouponDiscountTypeSchema>;
+
+export const PromoCouponSchema = z.object({
+  id: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  code: z.string().min(1).max(40),
+  discountType: PromoCouponDiscountTypeSchema,
+  discountValue: z.number().int().min(1),
+  programId: z.string().uuid().nullable().optional(),
+  maxRedemptions: z.number().int().nullable().optional(),
+  usedCount: z.number().int().nonnegative(),
+  expiresAt: z.string().nullable().optional(),
+  isActive: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type PromoCoupon = z.infer<typeof PromoCouponSchema>;
+
+export const CreateCouponRequestSchema = z
+  .object({
+    code: z
+      .string()
+      .min(3, 'Kode minimal 3 karakter')
+      .max(40)
+      .regex(/^[A-Z0-9_-]+$/, 'Kode hanya huruf besar, angka, dan tanda hubung'),
+    discountType: PromoCouponDiscountTypeSchema,
+    discountValue: z.number().int().min(1, 'Nilai diskon minimal 1'),
+    programId: z.string().uuid().optional().nullable(),
+    maxRedemptions: z.number().int().min(1).optional().nullable(),
+    expiresAt: z.string().datetime().optional().nullable(),
+  })
+  .refine(
+    (d) => d.discountType === 'FIXED' || d.discountValue <= 100,
+    { message: 'Diskon persen maksimal 100%', path: ['discountValue'] }
+  );
+export type CreateCouponRequest = z.infer<typeof CreateCouponRequestSchema>;
+
+export const UpdateCouponRequestSchema = z.object({
+  isActive: z.boolean().optional(),
+  maxRedemptions: z.number().int().min(1).optional().nullable(),
+  expiresAt: z.string().datetime().optional().nullable(),
+});
+export type UpdateCouponRequest = z.infer<typeof UpdateCouponRequestSchema>;
+
+export const CouponQuoteResponseSchema = z.object({
+  valid: z.boolean(),
+  message: z.string(),
+  discountAmount: z.number().int().nonnegative(),
+  finalAmount: z.number().int().nonnegative(),
+});
+export type CouponQuoteResponse = z.infer<typeof CouponQuoteResponseSchema>;
 
 

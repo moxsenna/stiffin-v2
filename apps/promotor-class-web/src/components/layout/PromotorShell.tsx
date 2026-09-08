@@ -17,6 +17,7 @@ const DESKTOP_NAV: Array<{ label: string; href: string }> = [
   { label: 'Program', href: '/app/programs' },
   { label: 'Learner', href: '/app/learners' },
   { label: 'Pesanan', href: '/app/orders' },
+  { label: 'Kupon', href: '/app/coupons' },
   { label: 'Aktivitas', href: '/app/activity' },
   { label: 'Storefront', href: '/app/storefront' },
   { label: 'Pengaturan', href: '/app/settings' },
