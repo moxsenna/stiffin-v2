@@ -22,7 +22,8 @@
     "test:integration": "pnpm --filter @promotor/platform-api test:integration",
     "test:e2e": "playwright test",
     "test:e2e:sell-ready": "playwright test --config=playwright.sell-ready.config.ts",
-    "test:e2e:staging": "playwright test --config=playwright.staging.config.ts"
+    "test:e2e:staging": "playwright test --config=playwright.staging.config.ts",
+    "capture:previews": "playwright test --config=playwright.visual.config.ts tests/visual/capture-lp-previews.spec.ts"
   },
   "overrides": {
     "@aws-sdk/xml-builder": "3.972.33",

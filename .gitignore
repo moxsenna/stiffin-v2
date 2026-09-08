@@ -33,6 +33,7 @@ Thumbs.db
 # OS / Editor files
 .idea/
 .vscode/
+.zcode/
 *.swp
 
 # Local media / video generation
