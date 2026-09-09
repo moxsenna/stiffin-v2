@@ -116,3 +116,73 @@ export async function signOut(): Promise<void> {
     localStorage.removeItem('promotor_session_token');
   }
 }
+
+export async function signUp(name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+  try {
+    const res = await fetch(`${apiUrl}/api/auth/sign-up/email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ name, email, password }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return { success: false, error: err?.message || 'Pendaftaran gagal' };
+    }
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Gagal terhubung ke server autentikasi' };
+  }
+}
+
+export async function requestPasswordReset(email: string): Promise<{ success: boolean; error?: string }> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+  try {
+    await fetch(`${apiUrl}/api/auth/forget-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email }),
+    });
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Gagal terhubung ke server autentikasi' };
+  }
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+  try {
+    const res = await fetch(`${apiUrl}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ token, newPassword }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return { success: false, error: err?.message || 'Reset kata sandi gagal' };
+    }
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Gagal terhubung ke server autentikasi' };
+  }
+}
+
+export async function verifyEmail(token: string): Promise<{ success: boolean; error?: string }> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+  try {
+    const res = await fetch(`${apiUrl}/api/auth/verify-email?token=${encodeURIComponent(token)}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return { success: false, error: err?.message || 'Verifikasi email gagal' };
+    }
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Gagal terhubung ke server autentikasi' };
+  }
+}
