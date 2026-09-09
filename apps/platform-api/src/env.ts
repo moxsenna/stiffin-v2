@@ -9,6 +9,9 @@ export interface Env {
   /** Comma-separated additional trusted frontend origins. */
   BETTER_AUTH_TRUSTED_ORIGINS?: string;
 
+  /** Email provider mode: log only untuk tahap awal. */
+  EMAIL_MODE?: string;
+
   /** Inactivity sweep threshold in days (default: 7). */
   INACTIVITY_SWEEP_DAYS?: string;
 
