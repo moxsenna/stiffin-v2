@@ -76,7 +76,7 @@ export const FlowClassIntegrationSection: React.FC = () => {
     <section
       id="class"
       style={{
-        padding: '80px 24px',
+        padding: '56px 18px',
         backgroundColor: 'var(--color-surface)',
         borderTop: '1px solid var(--color-divider)',
         borderBottom: '1px solid var(--color-divider)',
@@ -84,7 +84,7 @@ export const FlowClassIntegrationSection: React.FC = () => {
     >
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Section Header */}
-        <div style={{ textAlign: 'center', maxWidth: '820px', margin: '0 auto 56px' }}>
+        <div style={{ textAlign: 'center', maxWidth: '820px', margin: '0 auto 40px' }}>
           <div
             style={{
               display: 'inline-flex',
@@ -128,14 +128,15 @@ export const FlowClassIntegrationSection: React.FC = () => {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '24px',
-            marginBottom: '48px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: '20px',
+            marginBottom: '40px',
           }}
         >
           {pillars.map((pillar) => (
             <div
               key={pillar.title}
+              className="pillar-card"
               style={{
                 backgroundColor: 'var(--color-canvas)',
                 borderRadius: 'var(--radius-xl)',
@@ -205,6 +206,7 @@ export const FlowClassIntegrationSection: React.FC = () => {
 
         {/* Workflow Diagram */}
         <div
+          className="workflow-container"
           style={{
             backgroundColor: 'var(--color-canvas)',
             border: '1px solid var(--color-divider)',
@@ -225,7 +227,7 @@ export const FlowClassIntegrationSection: React.FC = () => {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
               gap: '16px',
             }}
           >
@@ -233,7 +235,7 @@ export const FlowClassIntegrationSection: React.FC = () => {
               <div
                 key={s.step}
                 style={{
-                  padding: '20px',
+                  padding: '18px 14px',
                   backgroundColor: 'var(--color-surface)',
                   border: '1px solid var(--color-divider)',
                   borderRadius: 'var(--radius-lg)',
@@ -271,6 +273,7 @@ export const FlowClassIntegrationSection: React.FC = () => {
 
         {/* Ecosystem Synergy Callout Banner */}
         <div
+          className="synergy-banner"
           style={{
             padding: '24px 28px',
             backgroundColor: 'rgba(37, 99, 235, 0.04)',
@@ -295,6 +298,7 @@ export const FlowClassIntegrationSection: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <a
               href="#harga"
+              className="synergy-cta-btn"
               style={{
                 padding: '10px 20px',
                 backgroundColor: 'var(--color-primary)',
@@ -311,6 +315,26 @@ export const FlowClassIntegrationSection: React.FC = () => {
           </div>
         </div>
       </div>
+      <style jsx>{`
+        @media (max-width: 640px) {
+          .pillar-card {
+            padding: 22px 18px !important;
+          }
+          .workflow-container {
+            padding: 20px 14px !important;
+          }
+          .synergy-banner {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            padding: 20px 16px !important;
+          }
+          .synergy-cta-btn {
+            width: 100% !important;
+            text-align: center !important;
+            display: block !important;
+          }
+        }
+      `}</style>
     </section>
   );
 };

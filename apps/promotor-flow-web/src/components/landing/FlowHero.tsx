@@ -49,7 +49,7 @@ export const FlowHero: React.FC = () => {
   return (
     <section
       style={{
-        padding: '56px 24px 72px',
+        padding: '52px 20px 64px',
         maxWidth: '1200px',
         margin: '0 auto',
         display: 'flex',
@@ -73,6 +73,9 @@ export const FlowHero: React.FC = () => {
           fontWeight: 780,
           marginBottom: '24px',
           boxShadow: 'var(--shadow-xs)',
+          maxWidth: '100%',
+          boxSizing: 'border-box',
+          textAlign: 'left',
         }}
       >
         <span
@@ -82,6 +85,7 @@ export const FlowHero: React.FC = () => {
             height: '7px',
             borderRadius: '50%',
             backgroundColor: 'var(--color-primary)',
+            flexShrink: 0,
           }}
         />
         <span>Dirancang Khusus untuk Promotor & Praktisi STIFIn Indonesia</span>
@@ -170,11 +174,11 @@ export const FlowHero: React.FC = () => {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '20px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+          gap: '16px',
           width: '100%',
           maxWidth: '880px',
-          padding: '20px 24px',
+          padding: '18px 20px',
           backgroundColor: 'var(--color-surface)',
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--color-divider)',
@@ -224,13 +228,14 @@ export const FlowHero: React.FC = () => {
           }}
         >
           {/* Feature Tabs */}
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div className="flow-tab-chips" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {demoTabs.map((tab) => {
               const isActive = activeDemoTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   type="button"
+                  className="flow-tab-chip"
                   onClick={() => setActiveDemoTab(tab.id)}
                   style={{
                     padding: '8px 16px',
@@ -621,6 +626,21 @@ export const FlowHero: React.FC = () => {
           }
           .flow-device-switcher {
             display: none !important;
+          }
+          .flow-tab-chips {
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            scrollbar-width: none !important;
+            width: 100% !important;
+            padding: 4px 4px 10px !important;
+            -webkit-overflow-scrolling: touch;
+          }
+          .flow-tab-chips::-webkit-scrollbar {
+            display: none;
+          }
+          .flow-tab-chip {
+            flex-shrink: 0 !important;
+            white-space: nowrap !important;
           }
         }
       `}</style>

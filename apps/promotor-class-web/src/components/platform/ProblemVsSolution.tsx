@@ -56,9 +56,31 @@ export function ProblemVsSolution() {
             Mengapa cara lama menguras tenaga tanpa hasil konversi yang jelas.
           </h2>
           <p style={{ fontSize: '16px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-            Bandingkan alur kerja konvensional berbasis Google Drive dan broadcast WhatsApp manual dengan arsitektur terintegrasi PromotorClass.
+            Bandingkan alur kerja konvensional berbasis Google Drive dan broadcast WhatsApp manual dengan arsitektur terintegrasi Ralivo Class.
           </p>
         </div>
+
+        <style>{`
+          @media (max-width: 768px) {
+            .comparison-header {
+              display: none !important;
+            }
+            .comparison-row {
+              display: flex !important;
+              flex-direction: column !important;
+              gap: 10px !important;
+              padding: 16px 14px !important;
+            }
+            .comparison-old-badge, .comparison-new-badge {
+              display: inline-block !important;
+              font-size: 10.5px !important;
+              font-weight: 800 !important;
+              text-transform: uppercase !important;
+              letter-spacing: 0.04em !important;
+              margin-bottom: 4px !important;
+            }
+          }
+        `}</style>
 
         {/* Comparison Table / Grid */}
         <div
@@ -93,7 +115,7 @@ export function ProblemVsSolution() {
             </div>
             <div style={{ color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-primary)' }} />
-              Dengan PromotorClass
+              Dengan Ralivo Class
             </div>
           </div>
 
@@ -116,12 +138,39 @@ export function ProblemVsSolution() {
                 {item.aspect}
               </div>
 
-              <div style={{ fontSize: '13px', color: '#6A6860', lineHeight: 1.6 }}>
-                {item.oldWay}
+              <div
+                style={{
+                  fontSize: '13px',
+                  color: '#6A6860',
+                  lineHeight: 1.6,
+                  backgroundColor: '#FEF2F2',
+                  padding: '10px 12px',
+                  borderRadius: '10px',
+                  borderLeft: '3px solid #EF4444',
+                }}
+              >
+                <div className="comparison-old-badge" style={{ display: 'none', color: '#DC2626' }}>
+                  ✕ Cara Konvensional
+                </div>
+                <div>{item.oldWay}</div>
               </div>
 
-              <div style={{ fontSize: '13px', color: 'var(--color-text-main)', lineHeight: 1.6, fontWeight: 550 }}>
-                {item.newWay}
+              <div
+                style={{
+                  fontSize: '13px',
+                  color: 'var(--color-text-main)',
+                  lineHeight: 1.6,
+                  fontWeight: 550,
+                  backgroundColor: '#F0FDF4',
+                  padding: '10px 12px',
+                  borderRadius: '10px',
+                  borderLeft: '3px solid #10B981',
+                }}
+              >
+                <div className="comparison-new-badge" style={{ display: 'none', color: '#059669' }}>
+                  ✓ Solusi Ralivo Class
+                </div>
+                <div>{item.newWay}</div>
               </div>
             </div>
           ))}

@@ -10,7 +10,7 @@ export const FlowLandingFooter: React.FC = () => {
       style={{
         backgroundColor: 'var(--color-canvas)',
         borderTop: '1px solid var(--color-divider)',
-        padding: '64px 24px 40px',
+        padding: '48px 18px 36px',
       }}
     >
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -18,8 +18,8 @@ export const FlowLandingFooter: React.FC = () => {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '40px',
-            marginBottom: '48px',
+            gap: '32px',
+            marginBottom: '40px',
           }}
         >
           {/* Brand Col */}
@@ -82,8 +82,8 @@ export const FlowLandingFooter: React.FC = () => {
               Ekosistem Terintegrasi
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13.5px' }}>
-              <span style={{ color: 'var(--color-text-secondary)' }}>PromotorFlow (Daily Execution OS)</span>
-              <span style={{ color: 'var(--color-text-secondary)' }}>PromotorClass (Client Education OS)</span>
+              <span style={{ color: 'var(--color-text-secondary)' }}>Ralivo Flow (Daily Execution OS)</span>
+              <span style={{ color: 'var(--color-text-secondary)' }}>Ralivo Class (Client Education OS)</span>
               <span style={{ color: 'var(--color-text-secondary)' }}>STIFIn Biometric Intelligence</span>
             </div>
           </div>
@@ -119,7 +119,7 @@ export const FlowLandingFooter: React.FC = () => {
           }}
         >
           <div>
-            © {new Date().getFullYear()} PromotorFlow. Hak cipta dilindungi undang-undang.
+            © {new Date().getFullYear()} Ralivo. Hak cipta dilindungi undang-undang.
           </div>
           <div>
             Dibuat untuk praktisi, promotor, dan cabang STIFIn di seluruh Indonesia.

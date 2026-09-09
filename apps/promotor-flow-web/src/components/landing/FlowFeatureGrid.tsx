@@ -42,7 +42,7 @@ export const FlowFeatureGrid: React.FC = () => {
     >
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Section Header */}
-        <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 56px' }}>
+        <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 40px' }}>
           <h2
             style={{
               fontSize: 'clamp(26px, 4vw, 38px)',
@@ -56,7 +56,7 @@ export const FlowFeatureGrid: React.FC = () => {
             Fitur Lengkap yang Dirancang Khusus untuk Alur Kerja Promotor STIFIn
           </h2>
           <p style={{ fontSize: '15.5px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-            Bukan CRM generik yang rumit. PromotorFlow dibangun dari pengalaman nyata para praktisi dan konsultan STIFIn terbaik di lapangan.
+            Bukan CRM generik yang rumit. Ralivo Flow dibangun dari pengalaman nyata para praktisi dan konsultan STIFIn terbaik di lapangan.
           </p>
         </div>
 
@@ -64,13 +64,14 @@ export const FlowFeatureGrid: React.FC = () => {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '24px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: '20px',
           }}
         >
           {features.map((feat) => (
             <div
               key={feat.title}
+              className="feature-grid-card"
               style={{
                 backgroundColor: 'var(--color-canvas)',
                 borderRadius: 'var(--radius-xl)',
@@ -120,6 +121,13 @@ export const FlowFeatureGrid: React.FC = () => {
           ))}
         </div>
       </div>
+      <style jsx>{`
+        @media (max-width: 640px) {
+          .feature-grid-card {
+            padding: 24px 18px !important;
+          }
+        }
+      `}</style>
     </section>
   );
 };

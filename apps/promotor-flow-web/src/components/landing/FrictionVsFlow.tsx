@@ -23,7 +23,7 @@ export const FrictionVsFlow: React.FC = () => {
     {
       title: 'Pencatatan Data & Status Pipeline',
       friction: 'Catatan berserakan di buku tulis atau spreadsheet manual yang tidak pernah dibuka, tidak tahu siapa lead dengan minat tertinggi.',
-      flow: 'Pusat Komando CRM 6-tahap lifecycle terintegrasi dengan sinyal aktivitas belajar PromotorClass secara real-time.',
+      flow: 'Pusat Komando CRM 6-tahap lifecycle terintegrasi dengan sinyal aktivitas belajar Ralivo Class secara real-time.',
     },
   ];
 
@@ -31,7 +31,7 @@ export const FrictionVsFlow: React.FC = () => {
     <section
       id="fitur"
       style={{
-        padding: '72px 24px',
+        padding: '56px 18px',
         backgroundColor: 'var(--color-surface)',
         borderTop: '1px solid var(--color-divider)',
         borderBottom: '1px solid var(--color-divider)',
@@ -39,7 +39,7 @@ export const FrictionVsFlow: React.FC = () => {
     >
       <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
         {/* Section Header */}
-        <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 48px' }}>
+        <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 40px' }}>
           <h2
             style={{
               fontSize: 'clamp(26px, 4vw, 38px)',
@@ -50,10 +50,10 @@ export const FrictionVsFlow: React.FC = () => {
               lineHeight: 1.2,
             }}
           >
-            Mengapa Promotor STIFIn Berkinerja Tinggi Beralih ke PromotorFlow?
+            Mengapa Promotor STIFIn Berkinerja Tinggi Beralih ke Ralivo Flow?
           </h2>
           <p style={{ fontSize: '15.5px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-            Bandingkan cara lama yang menguras energi dan membuat prospek bocor dengan sistem operasi eksekusi otomatis PromotorFlow.
+            Bandingkan cara lama yang menguras energi dan membuat prospek bocor dengan sistem operasi eksekusi otomatis Ralivo Flow.
           </p>
         </div>
 
@@ -62,9 +62,10 @@ export const FrictionVsFlow: React.FC = () => {
           {comparisons.map((item) => (
             <div
               key={item.title}
+              className="comparison-card"
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
                 gap: '16px',
                 padding: '20px',
                 borderRadius: 'var(--radius-lg)',
@@ -105,7 +106,7 @@ export const FrictionVsFlow: React.FC = () => {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                   <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Dengan PromotorFlow
+                    Dengan Ralivo Flow
                   </span>
                 </div>
                 <div style={{ fontWeight: 800, fontSize: '15px', color: 'var(--color-primary)', marginBottom: '4px' }}>
@@ -119,6 +120,13 @@ export const FrictionVsFlow: React.FC = () => {
           ))}
         </div>
       </div>
+      <style jsx>{`
+        @media (max-width: 640px) {
+          .comparison-card {
+            padding: 14px 12px !important;
+          }
+        }
+      `}</style>
     </section>
   );
 };

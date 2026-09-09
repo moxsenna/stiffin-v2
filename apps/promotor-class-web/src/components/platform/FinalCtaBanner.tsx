@@ -48,7 +48,21 @@ export function FinalCtaBanner() {
             Bergabunglah dengan ratusan promotor STIFIn dan praktisi edukasi yang telah membebaskan diri dari kerumitan teknis dan menikmati follow-up klien yang lebih manusiawi.
           </p>
 
+          <style>{`
+            @media (max-width: 640px) {
+              .final-cta-btn-group {
+                flex-direction: column !important;
+                align-items: stretch !important;
+              }
+              .final-cta-btn-group a {
+                width: 100% !important;
+                text-align: center !important;
+              }
+            }
+          `}</style>
+
           <div
+            className="final-cta-btn-group"
             style={{
               display: 'flex',
               gap: '14px',

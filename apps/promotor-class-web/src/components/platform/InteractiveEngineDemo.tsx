@@ -27,15 +27,36 @@ export function InteractiveEngineDemo() {
               color: 'var(--color-text-main)',
             }}
           >
-            Bagaimana PromotorClass mengubah materi menjadi klien nyata.
+            Bagaimana Ralivo Class mengubah materi menjadi klien nyata.
           </h2>
           <p style={{ fontSize: '16px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
             Bukan sekadar statistik view atau persentase video. Setiap interaksi peserta diterjemahkan menjadi konteks percakapan personal yang siap difollow-up.
           </p>
         </div>
 
+        <style>{`
+          @media (max-width: 640px) {
+            .demo-step-grid {
+              display: flex !important;
+              overflow-x: auto !important;
+              padding-bottom: 8px !important;
+              scrollbar-width: none;
+              -webkit-overflow-scrolling: touch;
+            }
+            .demo-step-grid::-webkit-scrollbar { display: none; }
+            .demo-step-btn {
+              flex: 0 0 220px !important;
+            }
+            .demo-content-box {
+              padding: 18px 14px !important;
+              gap: 20px !important;
+            }
+          }
+        `}</style>
+
         {/* Step Selector Buttons */}
         <div
+          className="demo-step-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
@@ -46,6 +67,7 @@ export function InteractiveEngineDemo() {
         >
           <button
             type="button"
+            className="demo-step-btn"
             onClick={() => setActiveTab(0)}
             style={{
               padding: '16px 20px',
@@ -70,6 +92,7 @@ export function InteractiveEngineDemo() {
 
           <button
             type="button"
+            className="demo-step-btn"
             onClick={() => setActiveTab(1)}
             style={{
               padding: '16px 20px',
@@ -94,6 +117,7 @@ export function InteractiveEngineDemo() {
 
           <button
             type="button"
+            className="demo-step-btn"
             onClick={() => setActiveTab(2)}
             style={{
               padding: '16px 20px',
@@ -146,7 +170,7 @@ export function InteractiveEngineDemo() {
               <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#27C93F' }} />
               <span style={{ marginLeft: '12px', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)' }}>
                 {activeTab === 0 && 'ruangbelajar.id/p/rina/7-hari-mengenal-anak (Tampilan Peserta)'}
-                {activeTab === 1 && 'app.promotorclass.com/activity (Dashboard Sinyal Promotor)'}
+                {activeTab === 1 && 'app.ralivo.com/activity (Dashboard Sinyal Promotor)'}
                 {activeTab === 2 && 'WhatsApp Web / Mobile Follow-Up Trigger'}
               </span>
             </div>
@@ -157,7 +181,7 @@ export function InteractiveEngineDemo() {
 
           {/* Tab 0 Content: Learner Experience */}
           {activeTab === 0 && (
-            <div style={{ padding: '32px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', alignItems: 'center' }}>
+            <div className="demo-content-box" style={{ padding: '32px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '32px', alignItems: 'center' }}>
               <div>
                 <div style={{ fontSize: '12px', fontWeight: 750, color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '8px' }}>
                   Modul 2 · Video & Refleksi Singkat
@@ -216,7 +240,7 @@ export function InteractiveEngineDemo() {
 
           {/* Tab 1 Content: Intent Signal Detection */}
           {activeTab === 1 && (
-            <div style={{ padding: '32px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', alignItems: 'center' }}>
+            <div className="demo-content-box" style={{ padding: '32px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '32px', alignItems: 'center' }}>
               <div>
                 <div style={{ fontSize: '12px', fontWeight: 750, color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '8px' }}>
                   Sinyal Bisnis Real-Time
@@ -225,7 +249,7 @@ export function InteractiveEngineDemo() {
                   Tahu Persis Kapan Calon Klien Membutuhkan Anda
                 </h3>
                 <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6, marginBottom: '18px' }}>
-                  Ketika peserta mengisi refleksi atau menyelesaikan modul, PromotorClass menganalisis tingkat keterlibatan dan menandai peserta sebagai <strong>High Intent Lead</strong>.
+                  Ketika peserta mengisi refleksi atau menyelesaikan modul, Ralivo Class menganalisis tingkat keterlibatan dan menandai peserta sebagai <strong>High Intent Lead</strong>.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--color-text-main)' }}>
@@ -283,7 +307,7 @@ export function InteractiveEngineDemo() {
 
           {/* Tab 2 Content: 1-Click WhatsApp Follow-up */}
           {activeTab === 2 && (
-            <div style={{ padding: '32px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', alignItems: 'center' }}>
+            <div className="demo-content-box" style={{ padding: '32px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '32px', alignItems: 'center' }}>
               <div>
                 <div style={{ fontSize: '12px', fontWeight: 750, color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '8px' }}>
                   Pesan Kontekstual & Human
@@ -292,7 +316,7 @@ export function InteractiveEngineDemo() {
                   Follow-Up Tanpa Terasa Seperti Spam
                 </h3>
                 <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6, marginBottom: '18px' }}>
-                  PromotorClass menyusun draf pesan WhatsApp yang menyebutkan materi dan refleksi spesifik dari peserta. Peserta merasa didengar dan diapresiasi, bukan di-hard sell.
+                  Ralivo Class menyusun draf pesan WhatsApp yang menyebutkan materi dan refleksi spesifik dari peserta. Peserta merasa didengar dan diapresiasi, bukan di-hard sell.
                 </p>
                 <div style={{ padding: '12px 16px', backgroundColor: '#EAF5F2', borderRadius: '10px', border: '1px solid #B8D4C5', fontSize: '13px', color: '#167A68' }}>
                   <strong>Hasil Konversi:</strong> 94% calon klien merespons positif karena pesan relevan dengan masalah nyata yang mereka hadapi saat ini.

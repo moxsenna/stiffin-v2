@@ -132,6 +132,7 @@ export function PricingSection() {
               setBillingCycle('annual');
               setIncludeUpsell(true);
             }}
+            className="pricing-annual-banner"
             style={{
               cursor: 'pointer',
               margin: '0 auto 36px',
@@ -148,8 +149,8 @@ export function PricingSection() {
               transition: 'transform 0.15s ease, box-shadow 0.15s ease',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0 }}>
-              <span style={{ fontSize: '28px', flexShrink: 0 }}>💡</span>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', minWidth: 0 }}>
+              <span style={{ fontSize: '26px', flexShrink: 0, lineHeight: 1 }}>💡</span>
               <div style={{ fontSize: '13.5px', color: '#713F12', lineHeight: 1.5 }}>
                 <strong style={{ color: '#854D0E', fontSize: '14px', display: 'block', marginBottom: '2px' }}>
                   Ingin Jauh Lebih Hemat? Pilih Paket Tahunan!
@@ -159,15 +160,16 @@ export function PricingSection() {
             </div>
             <button
               type="button"
+              className="pricing-annual-btn"
               style={{
                 flexShrink: 0,
-                padding: '9px 16px',
+                padding: '10px 18px',
                 backgroundColor: '#854D0E',
                 color: '#FFFFFF',
                 borderRadius: '10px',
                 border: 0,
                 fontWeight: 800,
-                fontSize: '12.5px',
+                fontSize: '13px',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 boxShadow: '0 2px 6px rgba(133, 77, 14, 0.3)',
@@ -202,7 +204,7 @@ export function PricingSection() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '32px',
             maxWidth: '920px',
             margin: '0 auto',
@@ -211,6 +213,7 @@ export function PricingSection() {
         >
           {/* Plan 1: Free */}
           <div
+            className="pricing-card-box"
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '20px',
@@ -284,6 +287,7 @@ export function PricingSection() {
 
           {/* Plan 2: Solo (Highlighted) */}
           <div
+            className="pricing-card-box"
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '20px',
@@ -322,7 +326,7 @@ export function PricingSection() {
               </div>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
                 {includeUpsell
-                  ? 'LMS PromotorClass + CRM PromotorFlow terpadu dengan multi-program & pipeline prospek WhatsApp.'
+                  ? 'LMS Ralivo Class + CRM Ralivo Flow terpadu dengan multi-program & pipeline prospek WhatsApp.'
                   : 'Untuk promotor aktif yang ingin fokus menjual kelas berbayar dan mengelola multi-program edukasi.'}
               </p>
 
@@ -407,7 +411,7 @@ export function PricingSection() {
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--color-text-main)' }}>
-                        + Tambah PromotorFlow (CRM & WA)
+                        + Tambah Ralivo Flow (CRM & WA)
                       </span>
                       <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--color-primary)', backgroundColor: 'var(--accent-soft, #dbeafe)', padding: '2px 8px', borderRadius: '6px' }}>
                         {billingCycle === 'annual' ? '+Rp 200.000/thn' : '+Rp 50.000/bln'}
@@ -469,7 +473,7 @@ export function PricingSection() {
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12.5px', color: 'var(--color-text-muted)' }}>
                     <span>—</span>
-                    <span>PromotorFlow pada paket Free (250 kontak CRM)</span>
+                    <span>Ralivo Flow pada paket Free (250 kontak CRM)</span>
                   </div>
                 )}
                 <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', paddingTop: '4px' }}>
@@ -496,10 +500,29 @@ export function PricingSection() {
                 transition: 'background-color 0.15s ease',
               }}
             >
-              {includeUpsell ? 'Mulai Paket Lengkap (Class + Flow) Sekarang' : 'Mulai PromotorClass Solo Sekarang'}
+              {includeUpsell ? 'Mulai Paket Lengkap (Class + Flow) Sekarang' : 'Mulai Ralivo Class Solo Sekarang'}
             </Link>
           </div>
         </div>
+
+        <style jsx>{`
+          @media (max-width: 640px) {
+            .pricing-annual-banner {
+              flex-direction: column !important;
+              align-items: stretch !important;
+              gap: 14px !important;
+              padding: 16px 14px !important;
+            }
+            .pricing-annual-btn {
+              width: 100% !important;
+              justify-content: center !important;
+              text-align: center !important;
+            }
+            .pricing-card-box {
+              padding: 24px 18px !important;
+            }
+          }
+        `}</style>
       </div>
     </section>
   );

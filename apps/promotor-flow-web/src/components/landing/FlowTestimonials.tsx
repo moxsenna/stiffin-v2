@@ -27,7 +27,7 @@ export const FlowTestimonials: React.FC = () => {
   return (
     <section
       style={{
-        padding: '80px 24px',
+        padding: '56px 18px',
         backgroundColor: 'var(--color-surface)',
         borderTop: '1px solid var(--color-divider)',
         borderBottom: '1px solid var(--color-divider)',
@@ -35,7 +35,7 @@ export const FlowTestimonials: React.FC = () => {
     >
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Section Header */}
-        <div style={{ textAlign: 'center', maxWidth: '760px', margin: '0 auto 56px' }}>
+        <div style={{ textAlign: 'center', maxWidth: '760px', margin: '0 auto 40px' }}>
           <h2
             style={{
               fontSize: 'clamp(26px, 4vw, 38px)',
@@ -49,7 +49,7 @@ export const FlowTestimonials: React.FC = () => {
             Cerita Sukses dari Para Praktisi & Promotor STIFIn
           </h2>
           <p style={{ fontSize: '15.5px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-            Lihat bagaimana PromotorFlow mengubah operasional harian para konsultan biometrik di berbagai kota di Indonesia.
+            Lihat bagaimana Ralivo Flow mengubah operasional harian para konsultan biometrik di berbagai kota di Indonesia.
           </p>
         </div>
 
@@ -57,13 +57,14 @@ export const FlowTestimonials: React.FC = () => {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '24px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: '20px',
           }}
         >
           {testimonials.map((t) => (
             <div
               key={t.role}
+              className="testimonial-card"
               style={{
                 backgroundColor: 'var(--color-canvas)',
                 borderRadius: 'var(--radius-xl)',
@@ -109,6 +110,13 @@ export const FlowTestimonials: React.FC = () => {
           ))}
         </div>
       </div>
+      <style jsx>{`
+        @media (max-width: 640px) {
+          .testimonial-card {
+            padding: 20px 16px !important;
+          }
+        }
+      `}</style>
     </section>
   );
 };

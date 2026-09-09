@@ -131,6 +131,7 @@ export const FlowPricingSection: React.FC = () => {
               setBillingCycle('annual');
               setIncludeUpsell(true);
             }}
+            className="flow-pricing-annual-banner"
             style={{
               cursor: 'pointer',
               margin: '0 auto 36px',
@@ -147,8 +148,8 @@ export const FlowPricingSection: React.FC = () => {
               transition: 'transform 0.15s ease, box-shadow 0.15s ease',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0 }}>
-              <span style={{ fontSize: '28px', flexShrink: 0 }}>💡</span>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', minWidth: 0 }}>
+              <span style={{ fontSize: '26px', flexShrink: 0, lineHeight: 1 }}>💡</span>
               <div style={{ fontSize: '13.5px', color: '#713F12', lineHeight: 1.5 }}>
                 <strong style={{ color: '#854D0E', fontSize: '14px', display: 'block', marginBottom: '2px' }}>
                   Ingin Jauh Lebih Hemat? Pilih Paket Tahunan!
@@ -158,15 +159,16 @@ export const FlowPricingSection: React.FC = () => {
             </div>
             <button
               type="button"
+              className="flow-pricing-annual-btn"
               style={{
                 flexShrink: 0,
-                padding: '9px 16px',
+                padding: '10px 18px',
                 backgroundColor: '#854D0E',
                 color: '#FFFFFF',
                 borderRadius: '10px',
                 border: 0,
                 fontWeight: 800,
-                fontSize: '12.5px',
+                fontSize: '13px',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 boxShadow: '0 2px 6px rgba(133, 77, 14, 0.3)',
@@ -201,13 +203,14 @@ export const FlowPricingSection: React.FC = () => {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '32px',
             alignItems: 'stretch',
           }}
         >
           {/* Card 1: Free */}
           <div
+            className="flow-pricing-card"
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '20px',
@@ -279,6 +282,7 @@ export const FlowPricingSection: React.FC = () => {
 
           {/* Card 2: Solo */}
           <div
+            className="flow-pricing-card"
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '20px',
@@ -317,7 +321,7 @@ export const FlowPricingSection: React.FC = () => {
               </div>
               <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '20px', lineHeight: 1.5 }}>
                 {includeUpsell
-                  ? 'CRM PromotorFlow + LMS PromotorClass terpadu dengan modul belajar & penjualan kelas berbayar.'
+                  ? 'CRM Ralivo Flow + LMS Ralivo Class terpadu dengan modul belajar & penjualan kelas berbayar.'
                   : 'Fokus penuh pada CRM, antrean tindakan follow-up WhatsApp harian, dan konversi prospek STIFIn.'}
               </p>
 
@@ -402,7 +406,7 @@ export const FlowPricingSection: React.FC = () => {
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: '13px', fontWeight: 800, color: '#111827' }}>
-                        + Tambah PromotorClass (LMS Edukasi)
+                        + Tambah Ralivo Class (LMS Edukasi)
                       </span>
                       <span style={{ fontSize: '11px', fontWeight: 800, color: '#059669', backgroundColor: '#DCFCE7', padding: '2px 8px', borderRadius: '6px' }}>
                         {billingCycle === 'annual' ? '+Rp 200.000/thn' : '+Rp 50.000/bln'}
@@ -458,7 +462,7 @@ export const FlowPricingSection: React.FC = () => {
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12.5px', color: '#9CA3AF' }}>
                     <span>—</span>
-                    <span>PromotorClass pada paket Free (1 program, 50 peserta)</span>
+                    <span>Ralivo Class pada paket Free (1 program, 50 peserta)</span>
                   </div>
                 )}
               </div>
@@ -481,11 +485,29 @@ export const FlowPricingSection: React.FC = () => {
                 boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)',
               }}
             >
-              {includeUpsell ? 'Pilih Paket Lengkap (Flow + Class) Sekarang' : 'Pilih PromotorFlow Solo Sekarang'}
+              {includeUpsell ? 'Pilih Paket Lengkap (Flow + Class) Sekarang' : 'Pilih Ralivo Flow Solo Sekarang'}
             </Link>
           </div>
         </div>
       </div>
+      <style jsx>{`
+        @media (max-width: 640px) {
+          .flow-pricing-annual-banner {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 14px !important;
+            padding: 16px 14px !important;
+          }
+          .flow-pricing-annual-btn {
+            width: 100% !important;
+            justify-content: center !important;
+            text-align: center !important;
+          }
+          .flow-pricing-card {
+            padding: 24px 18px !important;
+          }
+        }
+      `}</style>
     </section>
   );
 };

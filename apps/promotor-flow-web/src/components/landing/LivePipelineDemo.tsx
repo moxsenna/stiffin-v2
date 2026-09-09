@@ -40,8 +40,8 @@ export const LivePipelineDemo: React.FC = () => {
       leadContext: 'Sumber: Website Storefront · Telah menyelesaikan modul edukasi "Mengenal 5 Mesin Kecerdasan" (Score: 85/100)',
       actionTitle: 'Kirim link pemilihan jadwal tes tatap muka (On-Site / Home Visit)',
       actionDue: 'Jatuh tempo: 10:00 WIB',
-      whatsappDraft: 'Halo Pak Dimas! Senang melihat Bapak sudah menyimak materi pengantar STIFIn. Untuk memetakan potensi Bapak dan keluarga secara presisi, silakan pilih slot jadwal tes yang paling pas melalui link ini: https://promotorflow.id/p/stifin-consulting/book',
-      impactExplanation: 'Integrasi sinyal belajar PromotorClass memfilter prospek yang sudah teredukasi dan siap bayar.',
+      whatsappDraft: 'Halo Pak Dimas! Senang melihat Bapak sudah menyimak materi pengantar STIFIn. Untuk memetakan potensi Bapak dan keluarga secara presisi, silakan pilih slot jadwal tes yang paling pas melalui link ini: https://flow.ralivo.com/p/stifin-consulting/book',
+      impactExplanation: 'Integrasi sinyal belajar Ralivo Class memfilter prospek yang sudah teredukasi dan siap bayar.',
     },
     {
       id: 'BOOKED',
@@ -75,13 +75,13 @@ export const LivePipelineDemo: React.FC = () => {
     <section
       id="simulasi"
       style={{
-        padding: '72px 24px',
+        padding: '56px 18px',
         backgroundColor: 'var(--color-canvas)',
       }}
     >
       <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
         {/* Section Header */}
-        <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 40px' }}>
+        <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 36px' }}>
           <h2
             style={{
               fontSize: 'clamp(26px, 4vw, 38px)',
@@ -95,12 +95,13 @@ export const LivePipelineDemo: React.FC = () => {
             Simulasi Pipeline Interaktif: Dari Chat Menjadi Klien Setia
           </h2>
           <p style={{ fontSize: '15.5px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-            Klik tahapan pipeline di bawah untuk melihat bagaimana PromotorFlow mengotomatiskan tindakan harian dan draf pesan Anda.
+            Klik tahapan pipeline di bawah untuk melihat bagaimana Ralivo Flow mengotomatiskan tindakan harian dan draf pesan Anda.
           </p>
         </div>
 
         {/* Stage Selector Pills */}
         <div
+          className="pipeline-stages-list"
           style={{
             display: 'flex',
             flexWrap: 'wrap',
@@ -115,7 +116,7 @@ export const LivePipelineDemo: React.FC = () => {
               <button
                 key={stg.id}
                 onClick={() => setActiveStage(stg)}
-                className="touch-target"
+                className="touch-target pipeline-stage-btn"
                 style={{
                   padding: '10px 18px',
                   borderRadius: 'var(--radius-full)',
@@ -137,6 +138,7 @@ export const LivePipelineDemo: React.FC = () => {
 
         {/* Interactive Simulator Box */}
         <div
+          className="pipeline-simulator-box"
           style={{
             backgroundColor: 'var(--color-surface)',
             borderRadius: 'var(--radius-xl)',
@@ -144,8 +146,8 @@ export const LivePipelineDemo: React.FC = () => {
             padding: '32px',
             boxShadow: 'var(--shadow-md)',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '28px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: '24px',
           }}
         >
           {/* Left Column: Context & Action Trigger */}
@@ -278,6 +280,32 @@ export const LivePipelineDemo: React.FC = () => {
           </div>
         </div>
       </div>
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .pipeline-stages-list {
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            scrollbar-width: none !important;
+            width: 100% !important;
+            justify-content: flex-start !important;
+            padding: 4px 4px 10px !important;
+            -webkit-overflow-scrolling: touch;
+          }
+          .pipeline-stages-list::-webkit-scrollbar {
+            display: none;
+          }
+          .pipeline-stage-btn {
+            flex-shrink: 0 !important;
+            white-space: nowrap !important;
+            padding: 8px 14px !important;
+            font-size: 13px !important;
+          }
+          .pipeline-simulator-box {
+            padding: 18px 14px !important;
+            border-radius: 16px !important;
+          }
+        }
+      `}</style>
     </section>
   );
 };

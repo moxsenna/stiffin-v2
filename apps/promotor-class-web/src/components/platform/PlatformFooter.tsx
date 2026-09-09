@@ -53,7 +53,7 @@ export function PlatformFooter() {
               Client Education OS untuk Promotor STIFIn, praktisi parenting, dan coach profesional di Indonesia.
             </p>
             <div style={{ fontSize: '12px', color: '#666661' }}>
-              Bagian dari ekosistem Promotor Suite (PromotorClass + PromotorFlow).
+              Bagian dari ekosistem Ralivo (Ralivo Class + Ralivo Flow).
             </div>
           </div>
 
@@ -110,7 +110,7 @@ export function PlatformFooter() {
           }}
         >
           <div>
-            © {new Date().getFullYear()} PromotorClass. Seluruh hak cipta dilindungi undang-undang.
+            © {new Date().getFullYear()} Ralivo. Seluruh hak cipta dilindungi undang-undang.
           </div>
           <div style={{ display: 'flex', gap: '20px' }}>
             <span>Privasi Data Peserta Terjamin</span>

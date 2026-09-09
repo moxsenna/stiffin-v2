@@ -96,7 +96,7 @@ export default function RootPage() {
             </Link>
             <Link
               href="/login"
-              style={{ padding: '10px 14px', backgroundColor: 'var(--accent)', color: '#fff', fontWeight: 800, fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap' }}
+              style={{ padding: '9px 14px', backgroundColor: 'var(--accent)', color: '#fff', fontWeight: 800, fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap', borderRadius: 8 }}
             >
               <span className="landing-cta-long">Buat Kelas Gratis →</span>
               <span className="landing-cta-short" style={{ display: 'none' }}>Gratis →</span>
@@ -113,17 +113,18 @@ export default function RootPage() {
                 justifyContent: 'center',
                 alignItems: 'center',
                 gap: 4,
-                width: 42,
-                height: 42,
+                width: 44,
+                height: 44,
                 background: 'transparent',
                 border: '2px solid var(--ink)',
+                borderRadius: 8,
                 cursor: 'pointer',
                 flexShrink: 0,
               }}
             >
-              <span style={{ width: 16, height: 2, backgroundColor: 'var(--ink)', display: 'block' }} />
-              <span style={{ width: 16, height: 2, backgroundColor: 'var(--ink)', display: 'block' }} />
-              <span style={{ width: 16, height: 2, backgroundColor: 'var(--ink)', display: 'block' }} />
+              <span style={{ width: 18, height: 2, backgroundColor: 'var(--ink)', display: 'block', borderRadius: 1 }} />
+              <span style={{ width: 18, height: 2, backgroundColor: 'var(--ink)', display: 'block', borderRadius: 1 }} />
+              <span style={{ width: 18, height: 2, backgroundColor: 'var(--ink)', display: 'block', borderRadius: 1 }} />
             </button>
           </div>
         </div>
@@ -135,29 +136,29 @@ export default function RootPage() {
               <a href="#flow" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--ink)', fontWeight: 600, fontSize: 15, textDecoration: 'none', borderBottom: '1px solid var(--line)' }}>Ralivo Flow</a>
               <a href="#harga" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--ink)', fontWeight: 600, fontSize: 15, textDecoration: 'none', borderBottom: '1px solid var(--line)' }}>Harga</a>
               <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 0', color: 'var(--ink)', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>FAQ</a>
-              <Link href="/login" onClick={() => setMobileMenuOpen(false)} style={{ marginTop: 12, padding: '14px', border: '2px solid var(--ink)', textAlign: 'center', fontWeight: 700, textDecoration: 'none', color: 'var(--ink)' }}>Masuk</Link>
+              <Link href="/login" onClick={() => setMobileMenuOpen(false)} style={{ marginTop: 12, padding: '14px', border: '2px solid var(--ink)', borderRadius: 8, textAlign: 'center', fontWeight: 700, textDecoration: 'none', color: 'var(--ink)' }}>Masuk</Link>
             </nav>
           </div>
         )}
         <style>{`@media(min-width:840px){.landing-nav-links{display:flex!important}.landing-hamburger{display:none!important}.landing-cta-short{display:none!important}.landing-cta-long{display:inline!important}}@media(max-width:839px){.landing-nav-links{display:none!important}.landing-hamburger{display:inline-flex!important}.landing-cta-long{display:none!important}.landing-cta-short{display:inline!important}}`}</style>
       </header>
 
-      <section style={{ padding: '64px 24px 48px', maxWidth: 1200, margin: '0 auto', textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', backgroundColor: 'var(--accent-soft)', border: '1px solid #bfdbfe', color: 'var(--accent-dark)', fontSize: 12.5, fontWeight: 780, marginBottom: 24 }}>
-          <span style={{ width: 8, height: 8, backgroundColor: 'var(--accent)', display: 'inline-block' }} />
-          Dirancang untuk Promotor & Ekosistem STIFIn di Seluruh Indonesia
+      <section style={{ padding: '56px 20px 48px', maxWidth: 1200, margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', backgroundColor: 'var(--accent-soft)', border: '1px solid #bfdbfe', borderRadius: 9999, color: 'var(--accent-dark)', fontSize: 12.5, fontWeight: 780, marginBottom: 24, maxWidth: '100%', boxSizing: 'border-box', textAlign: 'left' }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--accent)', display: 'inline-block', flexShrink: 0 }} />
+          <span>Dirancang untuk Promotor & Ekosistem STIFIn di Seluruh Indonesia</span>
         </div>
-        <h1 style={{ fontSize: 'clamp(32px,5.5vw,56px)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.04em', maxWidth: 860, margin: '0 auto 18px' }}>
+        <h1 style={{ fontSize: 'clamp(28px,5.5vw,56px)', fontWeight: 900, lineHeight: 1.15, letterSpacing: '-0.04em', maxWidth: 860, margin: '0 auto 18px' }}>
           Ubah Setiap Sesi Belajar<br />Menjadi <span style={{ color: 'var(--accent)' }}>Sinyal Intent</span> yang Menjual
         </h1>
-        <p style={{ fontSize: 'clamp(16px,2vw,19px)', color: 'var(--muted-strong)', lineHeight: 1.6, maxWidth: 740, margin: '0 auto 32px', fontWeight: 450 }}>
+        <p style={{ fontSize: 'clamp(15px,2vw,19px)', color: 'var(--muted-strong)', lineHeight: 1.6, maxWidth: 740, margin: '0 auto 32px', fontWeight: 450 }}>
           LMS pertama untuk promotor STIFIn. Bangun program edukasi, lacak <strong>progres & refleksi</strong>, skor <strong>intent HOT/WARM/COLD</strong>, dan kirim follow-up WA 1-tap — tanpa pindah tools.
         </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginBottom: 48 }}>
-          <Link href="/login" style={{ padding: '14px 28px', backgroundColor: 'var(--accent)', color: '#fff', fontWeight: 800, fontSize: 15, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>Mulai Gratis — Buat Program Pertama →</Link>
-          <a href="#cara-kerja" style={{ padding: '14px 28px', backgroundColor: 'var(--surface)', color: 'var(--ink)', border: '2px solid var(--ink)', fontWeight: 750, fontSize: 15, textDecoration: 'none' }}>Lihat Cara Kerja</a>
+        <div className="hero-cta-group" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginBottom: 48 }}>
+          <Link href="/login" style={{ padding: '14px 26px', backgroundColor: 'var(--accent)', color: '#fff', fontWeight: 800, fontSize: 15, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 10, boxShadow: '0 4px 14px rgba(37,99,235,0.2)' }}>Mulai Gratis — Buat Program Pertama →</Link>
+          <a href="#cara-kerja" style={{ padding: '14px 26px', backgroundColor: 'var(--surface)', color: 'var(--ink)', border: '2px solid var(--ink)', fontWeight: 750, fontSize: 15, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}>Lihat Cara Kerja</a>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 16, maxWidth: 860, margin: '0 auto', padding: '16px', backgroundColor: 'var(--surface-muted)', border: '1px solid var(--line)', textAlign: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 16, maxWidth: 860, margin: '0 auto', padding: '16px', backgroundColor: 'var(--surface-muted)', border: '1px solid var(--line)', borderRadius: 14, textAlign: 'center' }}>
           <div style={{ minWidth: 0, overflowWrap: 'anywhere' }}><div style={{ fontSize: 'clamp(20px,4vw,28px)', fontWeight: 900, color: 'var(--accent)', wordBreak: 'break-word' }}>3</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600, overflowWrap: 'anywhere' }}>Langkah: Program → Belajar → Follow-up</div></div>
           <div style={{ minWidth: 0, overflowWrap: 'anywhere' }}><div style={{ fontSize: 'clamp(18px,3.5vw,24px)', fontWeight: 900, color: 'var(--accent)', wordBreak: 'break-word' }}>HOT/WARM/COLD</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600, overflowWrap: 'anywhere' }}>Intent Otomatis per Peserta</div></div>
           <div style={{ minWidth: 0, overflowWrap: 'anywhere' }}><div style={{ fontSize: 'clamp(20px,4vw,28px)', fontWeight: 900, color: 'var(--accent)' }}>D+7</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600 }}>Aftercare Otomatis</div></div>

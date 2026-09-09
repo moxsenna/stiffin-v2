@@ -11,8 +11,8 @@ interface FaqItem {
 export const FlowFaqSection: React.FC = () => {
   const faqs: FaqItem[] = [
     {
-      question: 'Apakah PromotorFlow memerlukan instalasi khusus dari Play Store atau App Store?',
-      answer: 'Tidak perlu. PromotorFlow dibangun dengan teknologi Progressive Web App (PWA) modern. Anda dapat membukanya langsung melalui browser di smartphone, tablet, maupun laptop. Anda juga dapat menambahkan icon PromotorFlow ke Home Screen ponsel dengan 1-klik untuk pengalaman native tanpa memakan memori penyimpanan.',
+      question: 'Apakah Ralivo Flow memerlukan instalasi khusus dari Play Store atau App Store?',
+      answer: 'Tidak perlu. Ralivo Flow dibangun dengan teknologi Progressive Web App (PWA) modern. Anda dapat membukanya langsung melalui browser di smartphone, tablet, maupun laptop. Anda juga dapat menambahkan icon Ralivo Flow ke Home Screen ponsel dengan 1-klik untuk pengalaman native tanpa memakan memori penyimpanan.',
     },
     {
       question: 'Apa itu Ralivo Class dan bagaimana integrasinya dengan Ralivo Flow?',
@@ -20,7 +20,7 @@ export const FlowFaqSection: React.FC = () => {
     },
     {
       question: 'Apakah link booking jadwal bisa saya pasang di bio Instagram atau pesan otomatis WhatsApp?',
-      answer: 'Bisa sekali! Setiap promotor mendapatkan tautan booking publik unik (misal: promotorflow.id/p/nama-anda/book). Tautan ini dapat langsung Anda taruh di bio Instagram, TikTok, Linktree, maupun pesan auto-reply WhatsApp Business Anda.',
+      answer: 'Bisa sekali! Setiap promotor mendapatkan tautan booking publik unik (misal: flow.ralivo.com/p/nama-anda/book). Tautan ini dapat langsung Anda taruh di bio Instagram, TikTok, Linktree, maupun pesan auto-reply WhatsApp Business Anda.',
     },
     {
       question: 'Apakah data kontak dan catatan klien saya terjamin keamanannya?',
@@ -28,7 +28,7 @@ export const FlowFaqSection: React.FC = () => {
     },
     {
       question: 'Bagaimana jika ada dua klien yang memilih jam konsultasi yang sama secara bersamaan?',
-      answer: 'Sistem PromotorFlow dilengkapi mekanisme pencegahan race condition. Begitu sebuah slot waktu berhasil dibooking, slot tersebut langsung dikunci dan otomatis hilang dari pilihan klien lain dalam hitungan milidetik.',
+      answer: 'Sistem Ralivo Flow dilengkapi mekanisme pencegahan race condition. Begitu sebuah slot waktu berhasil dibooking, slot tersebut langsung dikunci dan otomatis hilang dari pilihan klien lain dalam hitungan milidetik.',
     },
   ];
 
@@ -42,7 +42,7 @@ export const FlowFaqSection: React.FC = () => {
     <section
       id="faq"
       style={{
-        padding: '80px 24px',
+        padding: '56px 18px',
         backgroundColor: 'var(--color-surface)',
         borderTop: '1px solid var(--color-divider)',
         borderBottom: '1px solid var(--color-divider)',
@@ -50,7 +50,7 @@ export const FlowFaqSection: React.FC = () => {
     >
       <div style={{ maxWidth: '820px', margin: '0 auto' }}>
         {/* Section Header */}
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <h2
             style={{
               fontSize: 'clamp(26px, 4vw, 36px)',
@@ -64,7 +64,7 @@ export const FlowFaqSection: React.FC = () => {
             Pertanyaan yang Sering Diajukan (FAQ)
           </h2>
           <p style={{ fontSize: '15px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-            Semua hal yang perlu Anda ketahui sebelum menggunakan PromotorFlow.
+            Semua hal yang perlu Anda ketahui sebelum menggunakan Ralivo Flow.
           </p>
         </div>
 

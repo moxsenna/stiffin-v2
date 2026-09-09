@@ -67,6 +67,7 @@ export const ClassAppPreview: React.FC = () => {
       >
         {/* Feature Tabs */}
         <div
+          className="preview-tabs-container"
           style={{
             display: 'flex',
             flexWrap: 'wrap',
@@ -80,6 +81,7 @@ export const ClassAppPreview: React.FC = () => {
               <button
                 key={tab.id}
                 type="button"
+                className="preview-tab-btn"
                 onClick={() => setActiveTabId(tab.id)}
                 style={{
                   display: 'inline-flex',
@@ -470,6 +472,23 @@ export const ClassAppPreview: React.FC = () => {
           }
           .device-switcher {
             display: none !important;
+          }
+          .preview-tabs-container {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            justify-content: flex-start !important;
+            width: 100% !important;
+            padding: 4px 4px 10px !important;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+          }
+          .preview-tabs-container::-webkit-scrollbar {
+            display: none;
+          }
+          .preview-tab-btn {
+            flex-shrink: 0 !important;
+            white-space: nowrap !important;
           }
         }
       `}</style>

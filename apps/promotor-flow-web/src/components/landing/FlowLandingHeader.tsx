@@ -33,7 +33,7 @@ export const FlowLandingHeader: React.FC = () => {
         style={{
           maxWidth: '1200px',
           margin: '0 auto',
-          padding: '14px 24px',
+          padding: '12px 18px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -152,19 +152,32 @@ export const FlowLandingHeader: React.FC = () => {
               width: '44px',
               height: '44px',
               background: 'transparent',
-              border: '2px solid var(--ink)',
+              border: '2px solid var(--ink, #111827)',
+              borderRadius: '8px',
               cursor: 'pointer',
               flexShrink: 0,
             }}
           >
-            <span style={{ width: '18px', height: '2px', backgroundColor: 'var(--ink)' }} />
-            <span style={{ width: '18px', height: '2px', backgroundColor: 'var(--ink)' }} />
-            <span style={{ width: '18px', height: '2px', backgroundColor: 'var(--ink)' }} />
+            <span style={{ width: '18px', height: '2px', backgroundColor: 'var(--ink, #111827)', borderRadius: '1px' }} />
+            <span style={{ width: '18px', height: '2px', backgroundColor: 'var(--ink, #111827)', borderRadius: '1px' }} />
+            <span style={{ width: '18px', height: '2px', backgroundColor: 'var(--ink, #111827)', borderRadius: '1px' }} />
           </button>
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
+        .landing-nav-links {
+          display: none !important;
+        }
+        .landing-hamburger {
+          display: inline-flex !important;
+        }
+        .landing-cta-long {
+          display: none !important;
+        }
+        .landing-cta-short {
+          display: inline !important;
+        }
         @media (min-width: 840px) {
           .landing-nav-links {
             display: flex !important;
@@ -182,20 +195,12 @@ export const FlowLandingHeader: React.FC = () => {
             display: inline !important;
           }
         }
-        @media (max-width: 839px) {
-          .landing-cta-long {
-            display: none !important;
-          }
-          .landing-cta-short {
-            display: inline !important;
-          }
-        }
       `}</style>
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="landing-mobile-menu" style={{ borderTop: '1px solid var(--color-divider)', backgroundColor: 'var(--color-surface)' }}>
-          <nav style={{ display: 'flex', flexDirection: 'column', padding: '8px 24px 16px' }}>
+          <nav style={{ display: 'flex', flexDirection: 'column', padding: '8px 20px 20px' }}>
             <a href="#fitur" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: 'var(--color-text-primary)', fontWeight: 600, fontSize: '15px', textDecoration: 'none', borderBottom: '1px solid var(--color-divider)' }}>
               Fitur Utama
             </a>
@@ -211,9 +216,12 @@ export const FlowLandingHeader: React.FC = () => {
             <a href="#harga" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: 'var(--color-text-primary)', fontWeight: 600, fontSize: '15px', textDecoration: 'none', borderBottom: '1px solid var(--color-divider)' }}>
               Harga Paket
             </a>
-            <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: 'var(--color-text-primary)', fontWeight: 600, fontSize: '15px', textDecoration: 'none' }}>
+            <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: 'var(--color-text-primary)', fontWeight: 600, fontSize: '15px', textDecoration: 'none', borderBottom: '1px solid var(--color-divider)' }}>
               FAQ
             </a>
+            <Link href="/login" onClick={() => setMobileMenuOpen(false)} style={{ marginTop: '16px', padding: '14px', border: '2px solid var(--color-border-strong, #111827)', borderRadius: '8px', textAlign: 'center', fontWeight: 750, textDecoration: 'none', color: 'var(--color-text-primary)', fontSize: '15px' }}>
+              Masuk
+            </Link>
           </nav>
         </div>
       )}

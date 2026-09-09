@@ -37,7 +37,7 @@ export const FlowRoiCalculator: React.FC = () => {
               lineHeight: 1.2,
             }}
           >
-            Kalkulator Dampak Bisnis PromotorFlow
+            Kalkulator Dampak Bisnis Ralivo Flow
           </h2>
           <p style={{ fontSize: '15.5px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
             Geser angka di bawah untuk melihat estimasi penambahan omzet dan waktu kerja yang dapat Anda selamatkan setiap bulan.
@@ -46,15 +46,16 @@ export const FlowRoiCalculator: React.FC = () => {
 
         {/* Calculator Card */}
         <div
+          className="calculator-card"
           style={{
             backgroundColor: 'var(--color-surface)',
             borderRadius: 'var(--radius-xl)',
             border: '1px solid var(--color-divider)',
-            padding: '36px 32px',
+            padding: '32px 28px',
             boxShadow: 'var(--shadow-md)',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '36px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: '32px',
             alignItems: 'center',
           }}
         >
@@ -195,11 +196,18 @@ export const FlowRoiCalculator: React.FC = () => {
                 boxShadow: 'var(--shadow-sm)',
               }}
             >
-              Mulai Pakai PromotorFlow Sekarang →
+              Mulai Pakai Ralivo Flow Sekarang →
             </Link>
           </div>
         </div>
       </div>
+      <style jsx>{`
+        @media (max-width: 640px) {
+          .calculator-card {
+            padding: 20px 16px !important;
+          }
+        }
+      `}</style>
     </section>
   );
 };
