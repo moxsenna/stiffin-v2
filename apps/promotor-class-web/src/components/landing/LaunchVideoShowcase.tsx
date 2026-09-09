@@ -227,33 +227,6 @@ export const LaunchVideoShowcase: React.FC = () => {
             </svg>
           </button>
         )}
-
-        {/* Top Floating Badge */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 14,
-            left: 16,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            backgroundColor: 'rgba(15, 23, 42, 0.75)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            borderRadius: '999px',
-            padding: '4px 12px',
-            fontSize: 12,
-            fontWeight: 700,
-            color: '#ffffff',
-            pointerEvents: 'none',
-            zIndex: 2,
-          }}
-        >
-          <span>🎵 Musik & Visual 1080p</span>
-          <span style={{ opacity: 0.5 }}>•</span>
-          <span style={{ color: '#60a5fa' }}>ralivo.biz.id</span>
-        </div>
       </div>
 
       {/* Feature Highlights beneath Video */}
