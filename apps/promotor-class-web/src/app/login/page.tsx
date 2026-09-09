@@ -37,7 +37,7 @@ function LoginForm() {
       }
 
       if (session.entitlements && !session.entitlements.promotorClass) {
-        setErrorMessage('Akun Anda tidak memiliki akses ke PromotorClass.');
+        setErrorMessage('Akun Anda belum memiliki akses / menunggu aktivasi. Hubungi administrator.');
         setIsLoading(false);
         return;
       }
@@ -111,6 +111,11 @@ function LoginForm() {
              {isLoading ? 'Memverifikasi...' : 'Masuk'}
             </button>
          </form>
+
+         <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+           <a href="/register">Daftar akun baru</a>
+           <a href="/forgot-password">Lupa kata sandi?</a>
+         </div>
        </div>
 
        <div style={{ marginTop: 20, font: '400 12px/1.5 var(--font-sans)', color: 'var(--muted)' }}>
