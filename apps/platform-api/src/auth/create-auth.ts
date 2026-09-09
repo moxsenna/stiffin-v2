@@ -65,10 +65,30 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
     trustedOrigins,
     emailAndPassword: {
       enabled: true,
-      disableSignUp: true, // public self-signup OFF — registration is B4
-      // Frozen shared policy — same values the trusted provisioning path enforces.
+      disableSignUp: false,
+      requireEmailVerification: true,
       minPasswordLength: EMAIL_PASSWORD_POLICY.minPasswordLength,
       maxPasswordLength: EMAIL_PASSWORD_POLICY.maxPasswordLength,
+      sendResetPassword: async ({ user, url }) => {
+        const { resolveEmailService } = await import('../services/email/email-service');
+        await resolveEmailService().sendEmail(
+          user.email,
+          'Reset kata sandi Ralivo',
+          `<p>Klik link berikut untuk reset kata sandi:</p><p><a href="${url}">${url}</a></p>`
+        );
+      },
+    },
+    emailVerification: {
+      sendOnSignUp: true,
+      autoSignInAfterVerification: false,
+      sendVerificationEmail: async ({ user, url }) => {
+        const { resolveEmailService } = await import('../services/email/email-service');
+        await resolveEmailService().sendEmail(
+          user.email,
+          'Verifikasi email Ralivo',
+          `<p>Klik link berikut untuk verifikasi email:</p><p><a href="${url}">${url}</a></p>`
+        );
+      },
     },
     user: {
       modelName: MODEL_NAMES.user,
@@ -100,6 +120,14 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
             '/sign-in/email': {
               window: 60,
               max: 100,
+            },
+            '/sign-up/email': {
+              window: 3600,
+              max: 10,
+            },
+            '/forget-password': {
+              window: 3600,
+              max: 5,
             },
           },
         },
@@ -134,6 +162,23 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
       before: createAuthMiddleware(async (ctx) => {
         // ---- Frozen soft-delete policy: soft-deleted user must not sign in ----
         if (ctx.path === '/sign-in/email') {
+          const email = (ctx.body as { email?: string } | undefined)?.email;
+          if (email) {
+            const rows = await db
+              .select({ deletedAt: users.deletedAt })
+              .from(users)
+              .where(eq(users.email, email.toLowerCase().trim()))
+              .limit(1);
+            if (rows.length > 0 && rows[0].deletedAt !== null) {
+              return ctx.json(
+                { message: 'Invalid email or password', code: 'INVALID_EMAIL_OR_PASSWORD' },
+                { status: 401 }
+              );
+            }
+          }
+        }
+
+        if (ctx.path === '/sign-up/email' || ctx.path === '/forget-password') {
           const email = (ctx.body as { email?: string } | undefined)?.email;
           if (email) {
             const rows = await db
