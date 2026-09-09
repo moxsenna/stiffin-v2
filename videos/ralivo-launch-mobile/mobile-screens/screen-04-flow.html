@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Mobile Screen 04 — Flow WhatsApp</title>
+  <link rel="stylesheet" href="../assets/fonts/fonts.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 390px;
+      height: 844px;
+      background: #f8fafc;
+      font-family: 'Archivo', sans-serif;
+      color: #0f172a;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .status-bar {
+      height: 44px;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+      background: #ffffff;
+    }
+    .island {
+      width: 120px;
+      height: 28px;
+      background: #000000;
+      border-radius: 20px;
+      margin: 0 auto;
+    }
+    .header {
+      padding: 12px 20px;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .flow-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge-flow {
+      font-size: 10px;
+      font-weight: 800;
+      color: #059669;
+      background-color: rgba(5, 150, 105, 0.08);
+      border: 1px solid rgba(5, 150, 105, 0.2);
+      padding: 1px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .badge-today {
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .content {
+      flex: 1;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 750;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .lead-card {
+      background: #ffffff;
+      border: 1.5px solid #059669;
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(5, 150, 105, 0.08);
+    }
+    .lead-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .lead-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .lead-context {
+      font-size: 12px;
+      color: #64748b;
+    }
+    .lead-status {
+      font-size: 10px;
+      font-weight: 750;
+      background: #ecfdf5;
+      color: #059669;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    /* WA Sheet Box */
+    .sheet-card {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sheet-head {
+      font-size: 11px;
+      font-weight: 750;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .draft-bubble {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #166534;
+      font-style: italic;
+    }
+    .wa-btn {
+      background: #25d366;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 750;
+      padding: 12px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+    }
+    .wa-subtext {
+      font-size: 10px;
+      color: #64748b;
+      text-align: center;
+    }
+    /* Tab bar */
+    .tab-bar {
+      height: 60px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding-bottom: 8px;
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-size: 9px;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+    .tab-item.active {
+      color: #059669;
+    }
+  </style>
+</head>
+<body>
+  <div class="status-bar">
+    <span>09:41</span>
+    <div class="island"></div>
+    <span>5G · 100%</span>
+  </div>
+
+  <div class="header">
+    <div class="flow-brand">
+      <img src="../assets/ralivo-logo.webp" alt="Ralivo" style="height: 22px; width: auto; display: block;">
+      <span class="badge-flow">Flow</span>
+    </div>
+    <div class="badge-today">Rabu · 5 Tindakan</div>
+  </div>
+
+  <div class="content">
+    <div class="section-label">Prioritas Utama Hari Ini</div>
+
+    <div class="lead-card">
+      <div class="lead-top">
+        <div>
+          <div class="lead-name">Maya Pratama</div>
+          <div class="lead-context">Kelas Parenting STIFIn 30 Hari · Selesai Modul 1</div>
+        </div>
+        <span class="lead-status">Progres 80%</span>
+      </div>
+      <div style="font-size: 11px; color: #475569;">
+        Sinyal aktif: Penyerahan refleksi wajib selesai. Rekomendasi tawaran konsultasi 1-on-1.
+      </div>
+    </div>
+
+    <div class="sheet-card">
+      <div class="sheet-head">
+        <span>💬 Draft Pesan WhatsApp Otomatis</span>
+      </div>
+      <div class="draft-bubble">
+        "Halo Bu Maya! Selamat telah menuntaskan Modul 1 Kelas Parenting. Berdasarkan refleksi Ibu, saya siapkan slot konsultasi personal tes STIFIn untuk pemetaan anak Ibu akhir pekan ini."
+      </div>
+      <div class="wa-btn">
+        <span>Buka WhatsApp Sekarang</span>
+      </div>
+      <div class="wa-subtext">
+        Pesan dibuka di WhatsApp. Anda yang menekan kirim.
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab-item active">
+      <div>⚡</div>
+      <span>Today</span>
+    </div>
+    <div class="tab-item">
+      <div>👥</div>
+      <span>Kontak</span>
+    </div>
+    <div class="tab-item">
+      <div>📅</div>
+      <span>Kalender</span>
+    </div>
+    <div class="tab-item">
+      <div>⚙️</div>
+      <span>Lainnya</span>
+    </div>
+  </div>
+</body>
+</html>

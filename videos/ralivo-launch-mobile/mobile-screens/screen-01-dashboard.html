@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Mobile Screen 01 — Dashboard Cockpit</title>
+  <link rel="stylesheet" href="../assets/fonts/fonts.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 390px;
+      height: 844px;
+      background: #f8fafc;
+      font-family: 'Archivo', sans-serif;
+      color: #0f172a;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Status Bar */
+    .status-bar {
+      height: 44px;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+      background: #ffffff;
+    }
+    .island {
+      width: 120px;
+      height: 28px;
+      background: #000000;
+      border-radius: 20px;
+      margin: 0 auto;
+    }
+    /* Nav */
+    .mobile-header {
+      padding: 12px 20px;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge-class {
+      font-size: 10px;
+      font-weight: 800;
+      color: #2563eb;
+      background-color: rgba(37, 99, 235, 0.08);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      padding: 1px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #f1f5f9;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+    }
+    .user-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #2563eb;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+    /* Main Content */
+    .content {
+      flex: 1;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow: hidden;
+    }
+    .metric-card {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      border-radius: 16px;
+      padding: 18px;
+      color: #ffffff;
+      box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.25);
+    }
+    .metric-sub {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.85;
+    }
+    .metric-val {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 4px 0 10px;
+    }
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      padding-top: 10px;
+      font-size: 12px;
+    }
+    .metric-item span {
+      font-weight: 700;
+    }
+    /* Program Box */
+    .section-title {
+      font-size: 13px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    .program-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .program-thumb {
+      width: 72px;
+      height: 72px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid #e2e8f0;
+    }
+    .program-info {
+      flex: 1;
+    }
+    .program-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      color: #059669;
+      background: rgba(5, 150, 105, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+    .program-title {
+      font-size: 14px;
+      font-weight: 750;
+      line-height: 1.25;
+      margin-bottom: 4px;
+    }
+    .program-meta {
+      font-size: 11px;
+      color: #64748b;
+    }
+    /* Learner Feed */
+    .feed-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .feed-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .feed-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .feed-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #e0e7ff;
+      color: #3730a3;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .feed-name {
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .feed-action {
+      font-size: 11px;
+      color: #64748b;
+    }
+    .feed-tag {
+      font-size: 10px;
+      font-weight: 700;
+      color: #2563eb;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 3px 8px;
+      border-radius: 12px;
+    }
+    /* Bottom Tabs */
+    .tab-bar {
+      height: 64px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding-bottom: 10px;
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+    .tab-item.active {
+      color: #2563eb;
+    }
+    .tab-icon {
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span>09:41</span>
+    <div class="island"></div>
+    <span>5G · 100%</span>
+  </div>
+
+  <!-- Header -->
+  <div class="mobile-header">
+    <div class="brand-wrap">
+      <img src="../assets/ralivo-logo.webp" alt="Ralivo" style="height: 22px; width: auto; display: block;">
+      <span class="badge-class">Class</span>
+    </div>
+    <div class="user-pill">
+      <div class="user-avatar">R</div>
+      <span>Rina Aditya</span>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <div class="metric-card">
+      <div class="metric-sub">Estimasi Omzet Bulan Ini</div>
+      <div class="metric-val">Rp 3.576.000</div>
+      <div class="metric-row">
+        <div class="metric-item">Peserta: <span>24 Siswa</span></div>
+        <div class="metric-item">Penyelesaian: <span>84%</span></div>
+        <div class="metric-item">Pertumbuhan: <span>+32%</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">Program Edukasi Aktif</div>
+    <div class="program-card">
+      <img src="../assets/program_cover_parenting.webp" class="program-thumb" alt="Cover">
+      <div class="program-info">
+        <span class="program-tag">● Aktif Berjalan</span>
+        <div class="program-title">Kelas Parenting STIFIn 30 Hari</div>
+        <div class="program-meta">Rp 149.000 · 24 Peserta Terdaftar</div>
+      </div>
+    </div>
+
+    <div class="section-title">Aktivitas Learner Terbaru</div>
+    <div class="feed-card">
+      <div class="feed-item">
+        <div class="feed-user">
+          <div class="feed-avatar">M</div>
+          <div>
+            <div class="feed-name">Maya Pratama</div>
+            <div class="feed-action">Selesai Modul 1 (Progres 80%)</div>
+          </div>
+        </div>
+        <div class="feed-tag">Siap Follow-up</div>
+      </div>
+      <div class="feed-item" style="border-top: 1px solid #f1f5f9; padding-top: 8px;">
+        <div class="feed-user">
+          <div class="feed-avatar" style="background:#fef3c7; color:#b45309;">N</div>
+          <div>
+            <div class="feed-name">Nina Rahmawati</div>
+            <div class="feed-action">Pembayaran Instan Terverifikasi</div>
+          </div>
+        </div>
+        <div class="feed-tag" style="color: #059669; background: #ecfdf5; border-color: #a7f3d0;">Lunas</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab-item active">
+      <div class="tab-icon">📊</div>
+      <span>Beranda</span>
+    </div>
+    <div class="tab-item">
+      <div class="tab-icon">📚</div>
+      <span>Program</span>
+    </div>
+    <div class="tab-item">
+      <div class="tab-icon">👥</div>
+      <span>Learner</span>
+    </div>
+    <div class="tab-item">
+      <div class="tab-icon">⚙️</div>
+      <span>Lainnya</span>
+    </div>
+  </div>
+</body>
+</html>

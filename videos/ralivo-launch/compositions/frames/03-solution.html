@@ -1,0 +1,272 @@
+<template>
+  <div id="root" data-composition-id="03-solution" data-width="1920" data-height="1080" data-duration="5.5">
+    <div id="frame-03-bg" class="clip f03-sol-bg" data-start="0" data-duration="5.5" data-track-index="0"></div>
+
+    <div id="frame-03-content" class="clip f03-sol-content" data-start="0" data-duration="5.5" data-track-index="1">
+      <div class="f03-sol-badge">
+        <span class="f03-sol-dot"></span>
+        ALL-IN-ONE SOLUTION
+      </div>
+      <h2 class="f03-sol-title">Satu Sistem Operasi untuk Seluruh Klien</h2>
+      <p class="f03-sol-sub">Satukan pembelajaran, transaksi, dan komunikasi tanpa aplikasi terpisah</p>
+
+      <div class="f03-sol-main">
+        <!-- Left: 4 pillars -->
+        <div class="f03-sol-pillars">
+          <div class="f03-sol-pillar f03-sol-pillar-1">
+            <div class="f03-sol-pnum">01</div>
+            <div>
+              <div class="f03-sol-pname">Workspace Edukator</div>
+              <div class="f03-sol-pdesc">Kendali omzet, metrik siswa, dan komisi terpusat</div>
+            </div>
+          </div>
+          <div class="f03-sol-pillar f03-sol-pillar-2">
+            <div class="f03-sol-pnum">02</div>
+            <div>
+              <div class="f03-sol-pname">Program & Kurikulum</div>
+              <div class="f03-sol-pdesc">Materi video bertahap dengan pelacakan progres presisi</div>
+            </div>
+          </div>
+          <div class="f03-sol-pillar f03-sol-pillar-3">
+            <div class="f03-sol-pnum">03</div>
+            <div>
+              <div class="f03-sol-pname">Transaksi Otomatis</div>
+              <div class="f03-sol-pdesc">Integrasi QRIS & Virtual Account dengan verifikasi instan</div>
+            </div>
+          </div>
+          <div class="f03-sol-pillar f03-sol-pillar-4">
+            <div class="f03-sol-pnum">04</div>
+            <div>
+              <div class="f03-sol-pname">WhatsApp Flow & Booking</div>
+              <div class="f03-sol-pdesc">Broadcast retensi 1-tap dan booking sesi tanpa bentrok</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: App screenshot preview -->
+        <div class="f03-sol-preview-wrap">
+          <div class="f03-sol-preview-card">
+            <img src="assets/scene-program.png" alt="Ralivo Program" class="f03-sol-img" />
+            <div class="f03-sol-overlay-pill">
+              <span class="f03-sol-live-indicator"></span>
+              Sistem Aktif & Terintegrasi
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @font-face {
+      font-family: 'Archivo';
+      font-style: normal;
+      font-weight: 400;
+      src: url('assets/fonts/archivo-400.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Archivo';
+      font-style: normal;
+      font-weight: 600;
+      src: url('assets/fonts/archivo-600.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Archivo';
+      font-style: normal;
+      font-weight: 700;
+      src: url('assets/fonts/archivo-700.woff2') format('woff2');
+    }
+
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      font-family: 'Archivo', sans-serif;
+    }
+
+    .f03-sol-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 75% 25%, rgba(37, 99, 235, 0.08) 0%, #ffffff 70%);
+      z-index: 0;
+    }
+
+    .f03-sol-content {
+      position: absolute;
+      top: 70px;
+      left: 120px;
+      right: 120px;
+      height: 810px; /* keep-out <= 900px */
+      display: flex;
+      flex-direction: column;
+      z-index: 1;
+    }
+
+    .f03-sol-badge {
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(37, 99, 235, 0.08);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      border-radius: 100px;
+      color: #2563eb;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+
+    .f03-sol-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #2563eb;
+    }
+
+    .f03-sol-title {
+      font-size: 44px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+      margin: 0 0 8px 0;
+    }
+
+    .f03-sol-sub {
+      font-size: 18px;
+      color: #64748b;
+      margin: 0 0 36px 0;
+    }
+
+    .f03-sol-main {
+      display: grid;
+      grid-template-columns: 480px 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .f03-sol-pillars {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .f03-sol-pillar {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    }
+
+    .f03-sol-pnum {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: rgba(37, 99, 235, 0.08);
+      color: #2563eb;
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .f03-sol-pname {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 3px;
+    }
+
+    .f03-sol-pdesc {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .f03-sol-preview-wrap {
+      position: relative;
+    }
+
+    .f03-sol-preview-card {
+      position: relative;
+      width: 100%;
+      height: 480px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1.5px solid rgba(37, 99, 235, 0.2);
+      box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.1);
+      background: #ffffff;
+    }
+
+    .f03-sol-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
+
+    .f03-sol-overlay-pill {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(8px);
+      border-radius: 100px;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .f03-sol-live-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script>
+    (() => {
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines = window.__timelines || {};
+      window.__timelines["03-solution"] = tl;
+
+      // Header entrance (0.0s - 0.9s)
+      tl.fromTo(".f03-sol-badge", { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.1);
+      tl.fromTo(".f03-sol-title", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.25);
+      tl.fromTo(".f03-sol-sub", { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 0.45);
+
+      // Pillars stagger (0.8s - 2.8s)
+      tl.fromTo(".f03-sol-pillar", 
+        { opacity: 0, x: -30 }, 
+        { opacity: 1, x: 0, duration: 0.6, stagger: 0.3, ease: "power2.out" }, 
+        0.8
+      );
+
+      // Preview card slide & scale (1.2s - 3.0s)
+      tl.fromTo(".f03-sol-preview-card", 
+        { opacity: 0, scale: 0.94, y: 30 }, 
+        { opacity: 1, scale: 1, y: 0, duration: 1.0, ease: "power2.out" }, 
+        1.2
+      );
+      tl.fromTo(".f03-sol-overlay-pill", 
+        { opacity: 0, scale: 0.8 }, 
+        { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.5)" }, 
+        2.4
+      );
+    })();
+  </script>
+</template>

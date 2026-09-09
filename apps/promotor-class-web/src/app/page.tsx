@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { PricingSection } from '@/components/platform/PricingSection';
 import { ClassAppPreview } from '@/components/landing/ClassAppPreview';
+import { LaunchVideoShowcase } from '@/components/landing/LaunchVideoShowcase';
 
 export default function RootPage() {
   const router = useRouter();
@@ -13,6 +14,9 @@ export default function RootPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && (window.location.search.includes('lp=1') || window.location.search.includes('preview=1'))) {
+      return;
+    }
     getSession()
       .then((session) => {
         if (session) router.replace('/app');
@@ -159,6 +163,10 @@ export default function RootPage() {
           <div style={{ minWidth: 0, overflowWrap: 'anywhere' }}><div style={{ fontSize: 'clamp(20px,4vw,28px)', fontWeight: 900, color: 'var(--accent)' }}>D+7</div><div style={{ fontSize: 13, color: 'var(--muted-strong)', fontWeight: 600 }}>Aftercare Otomatis</div></div>
         </div>
 
+        {/* Video Tur Walkthrough Platform */}
+        <LaunchVideoShowcase />
+
+        {/* Simulasi Interaktif Tampilan Layar */}
         <ClassAppPreview />
       </section>
 

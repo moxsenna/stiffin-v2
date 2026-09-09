@@ -38,3 +38,6 @@ Thumbs.db
 
 # Local media / video generation
 ralivo-hero-video/
+ralivo-hero-v2/
+tests/visual/audit-output/
+

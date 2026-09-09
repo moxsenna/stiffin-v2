@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Mobile Screen 03 — Checkout Paycore</title>
+  <link rel="stylesheet" href="../assets/fonts/fonts.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 390px;
+      height: 844px;
+      background: #f8fafc;
+      font-family: 'Archivo', sans-serif;
+      color: #0f172a;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .status-bar {
+      height: 44px;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+      background: #ffffff;
+    }
+    .island {
+      width: 120px;
+      height: 28px;
+      background: #000000;
+      border-radius: 20px;
+      margin: 0 auto;
+    }
+    .url-bar {
+      height: 36px;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .url-chip {
+      background: #f1f5f9;
+      padding: 4px 12px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .content {
+      flex: 1;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
+    }
+    .product-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      gap: 12px;
+    }
+    .product-cover {
+      width: 80px;
+      height: 80px;
+      border-radius: 10px;
+      object-fit: cover;
+    }
+    .product-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .product-badge {
+      font-size: 9px;
+      font-weight: 750;
+      color: #2563eb;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .product-title {
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 4px;
+    }
+    .product-price {
+      font-size: 16px;
+      font-weight: 850;
+      color: #0f172a;
+    }
+    .checkout-form {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .form-title {
+      font-size: 11px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+    }
+    .input-box {
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 12px;
+      background: #f8fafc;
+    }
+    .input-label {
+      font-size: 9px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+    .input-val {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .payment-options {
+      background: #ffffff;
+      border: 1.5px solid #2563eb;
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .payment-tag {
+      font-size: 12px;
+      font-weight: 800;
+      color: #2563eb;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge-instant {
+      font-size: 9px;
+      font-weight: 700;
+      background: #dcfce7;
+      color: #15803d;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .summary-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      color: #64748b;
+    }
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 8px;
+      font-size: 14px;
+      font-weight: 850;
+      color: #0f172a;
+    }
+    .btn-pay {
+      background: #2563eb;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 14px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="status-bar">
+    <span>09:41</span>
+    <div class="island"></div>
+    <span>5G · 100%</span>
+  </div>
+
+  <div class="url-bar">
+    <div class="url-chip">
+      <span>🔒</span>
+      <span>ralivo.biz.id/p/rina/checkout</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="product-card">
+      <img src="../assets/program_cover_30hari.webp" class="product-cover" alt="Cover">
+      <div class="product-info">
+        <span class="product-badge">Program Premium 30 Hari</span>
+        <div class="product-title">Kelas Parenting STIFIn 30 Hari</div>
+        <div class="product-price">Rp 149.000</div>
+      </div>
+    </div>
+
+    <div class="checkout-form">
+      <div class="form-title">Data Pembeli</div>
+      <div class="input-box">
+        <div class="input-label">NAMA LENGKAP</div>
+        <div class="input-val">Maya Pratama</div>
+      </div>
+      <div class="input-box">
+        <div class="input-label">WHATSAPP (TERINTEGRASI NOTIFIKASI)</div>
+        <div class="input-val">0812-3456-7890</div>
+      </div>
+    </div>
+
+    <div class="payment-options">
+      <div class="payment-tag">
+        <span>⚡ QRIS & Virtual Account</span>
+      </div>
+      <span class="badge-instant">Konfirmasi Otomatis</span>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-row">
+        <span>Subtotal</span>
+        <span>Rp 149.000</span>
+      </div>
+      <div class="summary-row">
+        <span>Biaya Layanan</span>
+        <span style="color: #059669; font-weight: 700;">Rp 0 (Gratis)</span>
+      </div>
+      <div class="summary-total">
+        <span>Total Bayar</span>
+        <span style="color: #2563eb;">Rp 149.000</span>
+      </div>
+    </div>
+
+    <div class="btn-pay">
+      <span>🔒 Selesaikan Pembayaran Sekarang</span>
+    </div>
+  </div>
+</body>
+</html>

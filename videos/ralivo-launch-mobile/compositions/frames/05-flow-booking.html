@@ -1,0 +1,215 @@
+<template>
+  <div id="root" data-composition-id="05-flow-booking" data-width="1920" data-height="1080" data-duration="5.5">
+    <div id="frame-05-bg" class="clip m05-fb-bg" data-start="0" data-duration="5.5" data-track-index="0"></div>
+
+    <div id="frame-05-content" class="clip m05-fb-content" data-start="0" data-duration="5.5" data-track-index="1">
+      <div class="m05-fb-header">
+        <span class="m05-fb-eyebrow">AUTOMASI KOMUNIKASI & JADWAL KONSULTASI</span>
+        <h2 class="m05-fb-title">Dorong Retensi WhatsApp, Kunci Booking 1-on-1</h2>
+      </div>
+
+      <div class="m05-fb-grid">
+        <!-- Phone 1: WhatsApp Flow -->
+        <div class="m05-fb-col m05-fb-col-left">
+          <div class="m05-fb-phone-wrap">
+            <div class="m05-phone-mockup">
+              <div class="m05-phone-speaker"></div>
+              <div class="m05-phone-screen">
+                <img src="assets/mobile-flow.png" class="m05-phone-img" alt="Mobile Flow">
+              </div>
+            </div>
+          </div>
+          <div class="m05-fb-info-badge">
+            <div class="m05-fb-badge-top">
+              <span class="m05-fb-tag m05-fb-tag-green">01. WHATSAPP FLOW</span>
+              <span class="m05-fb-badge-sub">Deteksi Progres 80%</span>
+            </div>
+            <div class="m05-fb-benefit">✓ Draf pesan otomatis disiapkan, Anda yang menekan kirim</div>
+          </div>
+        </div>
+
+        <!-- Phone 2: Booking 1-on-1 -->
+        <div class="m05-fb-col m05-fb-col-right">
+          <div class="m05-fb-phone-wrap">
+            <div class="m05-phone-mockup">
+              <div class="m05-phone-speaker"></div>
+              <div class="m05-phone-screen">
+                <img src="assets/mobile-booking.png" class="m05-phone-img" alt="Mobile Booking">
+              </div>
+            </div>
+          </div>
+          <div class="m05-fb-info-badge">
+            <div class="m05-fb-badge-top">
+              <span class="m05-fb-tag m05-fb-tag-blue">02. BOOKING KONSULTASI</span>
+              <span class="m05-fb-badge-sub">Sinkron Google Calendar</span>
+            </div>
+            <div class="m05-fb-benefit">✓ Kunci slot jadwal konsultasi personal tanpa chat bolak-balik</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    
+    
+    
+
+    .m05-fb-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 70% 30%, rgba(5, 150, 105, 0.06) 0%, #ffffff 75%);
+    }
+
+    .m05-fb-content {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 820px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 40px;
+      font-family: 'Archivo', sans-serif;
+    }
+
+    .m05-fb-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .m05-fb-eyebrow {
+      font-size: 13px;
+      font-weight: 700;
+      color: #059669;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .m05-fb-title {
+      font-size: 38px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+
+    .m05-fb-grid {
+      display: flex;
+      gap: 70px;
+      justify-content: center;
+      align-items: flex-start;
+      width: 1300px;
+    }
+
+    .m05-fb-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .m05-fb-phone-wrap {
+      position: relative;
+    }
+
+    .m05-phone-mockup {
+      position: relative;
+      width: 250px;
+      height: 510px;
+      background: #0f172a;
+      border-radius: 38px;
+      padding: 7px;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.22), 0 0 0 2px rgba(15, 23, 42, 0.1);
+    }
+
+    .m05-phone-speaker {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 65px;
+      height: 15px;
+      background: #000000;
+      border-radius: 10px;
+      z-index: 10;
+    }
+
+    .m05-phone-screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 31px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .m05-phone-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .m05-fb-info-badge {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 320px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    }
+
+    .m05-fb-badge-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .m05-fb-tag {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .m05-fb-tag-green { background: rgba(5, 150, 105, 0.1); color: #059669; }
+    .m05-fb-tag-blue { background: rgba(37, 99, 235, 0.1); color: #2563eb; }
+
+    .m05-fb-badge-sub {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .m05-fb-benefit {
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+      margin-top: 2px;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["05-flow-booking"] = tl;
+
+      tl.fromTo(".m05-fb-eyebrow", { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.1);
+      tl.fromTo(".m05-fb-title", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.25);
+
+      // Left column entrance
+      tl.fromTo(".m05-fb-col-left", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.8, ease: "power2.out" }, 0.6);
+
+      // Right column entrance
+      tl.fromTo(".m05-fb-col-right", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.8, ease: "power2.out" }, 1.4);
+    })();
+  </script>
+</template>

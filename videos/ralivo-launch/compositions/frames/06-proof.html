@@ -1,0 +1,235 @@
+<template>
+  <div id="root" data-composition-id="06-proof" data-width="1920" data-height="1080" data-duration="4.5">
+    <div id="frame-06-bg" class="clip f06-proof-bg" data-start="0" data-duration="4.5" data-track-index="0"></div>
+
+    <div id="frame-06-content" class="clip f06-proof-content" data-start="0" data-duration="4.5" data-track-index="1">
+      <div class="f06-proof-eyebrow">DAMPAK TERBUKTI & TERUKUR</div>
+      <h2 class="f06-proof-title">Hasil Nyata yang Dirasakan Para Edukator</h2>
+
+      <div class="f06-proof-grid">
+        <!-- Metric 1 -->
+        <div class="f06-proof-card">
+          <div class="f06-proof-stat f06-proof-stat-blue">84%</div>
+          <div class="f06-proof-label">Tingkat Retensi Siswa</div>
+          <div class="f06-proof-delta">+38% dibanding platform terpisah</div>
+          <div class="f06-proof-bar-track">
+            <div class="f06-proof-bar-fill f06-proof-bar-blue"></div>
+          </div>
+        </div>
+
+        <!-- Metric 2 -->
+        <div class="f06-proof-card">
+          <div class="f06-proof-stat f06-proof-stat-green">3.2×</div>
+          <div class="f06-proof-label">Lonjakan Konversi Leads</div>
+          <div class="f06-proof-delta">Otomatisasi follow-up WhatsApp terbukti</div>
+          <div class="f06-proof-bar-track">
+            <div class="f06-proof-bar-fill f06-proof-bar-green"></div>
+          </div>
+        </div>
+
+        <!-- Metric 3 -->
+        <div class="f06-proof-card">
+          <div class="f06-proof-stat f06-proof-stat-dark">15+ Jam</div>
+          <div class="f06-proof-label">Hemat Waktu Per Minggu</div>
+          <div class="f06-proof-delta">Tanpa cek transfer & jadwal manual</div>
+          <div class="f06-proof-bar-track">
+            <div class="f06-proof-bar-fill f06-proof-bar-dark"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="f06-proof-footer-badge">
+        <span class="f06-proof-check-badge">✓</span>
+        Divalidasi oleh Ratusan Promotor & Trainer STIFIn di Seluruh Indonesia
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @font-face {
+      font-family: 'Archivo';
+      font-style: normal;
+      font-weight: 400;
+      src: url('assets/fonts/archivo-400.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Archivo';
+      font-style: normal;
+      font-weight: 600;
+      src: url('assets/fonts/archivo-600.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Archivo';
+      font-style: normal;
+      font-weight: 700;
+      src: url('assets/fonts/archivo-700.woff2') format('woff2');
+    }
+
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      font-family: 'Archivo', sans-serif;
+    }
+
+    .f06-proof-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 20%, rgba(37, 99, 235, 0.08) 0%, #ffffff 80%);
+      z-index: 0;
+    }
+
+    .f06-proof-content {
+      position: absolute;
+      top: 90px;
+      left: 140px;
+      right: 140px;
+      height: 780px; /* keep-out <= 900px */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .f06-proof-eyebrow {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: #2563eb;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .f06-proof-title {
+      font-size: 48px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+      margin: 0 0 54px 0;
+    }
+
+    .f06-proof-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 36px;
+      width: 100%;
+      margin-bottom: 50px;
+    }
+
+    .f06-proof-card {
+      background: #ffffff;
+      border: 1.5px solid rgba(37, 99, 235, 0.2);
+      border-radius: 18px;
+      padding: 40px 32px;
+      text-align: left;
+      box-shadow: 0 12px 36px -10px rgba(15, 23, 42, 0.08);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .f06-proof-stat {
+      font-size: 68px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+    .f06-proof-stat-blue { color: #2563eb; }
+    .f06-proof-stat-green { color: #059669; }
+    .f06-proof-stat-dark { color: #0f172a; }
+
+    .f06-proof-label {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .f06-proof-delta {
+      font-size: 14px;
+      color: #64748b;
+      margin-bottom: 24px;
+      font-weight: 500;
+    }
+
+    .f06-proof-bar-track {
+      width: 100%;
+      height: 8px;
+      background: #f1f5f9;
+      border-radius: 100px;
+      overflow: hidden;
+      margin-top: auto;
+    }
+
+    .f06-proof-bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      transform-origin: left center;
+    }
+    .f06-proof-bar-blue { width: 84%; background: #2563eb; }
+    .f06-proof-bar-green { width: 92%; background: #059669; }
+    .f06-proof-bar-dark { width: 75%; background: #0f172a; }
+
+    .f06-proof-footer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 28px;
+      background: rgba(37, 99, 235, 0.05);
+      border: 1.5px solid rgba(37, 99, 235, 0.2);
+      border-radius: 100px;
+      color: #1e293b;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .f06-proof-check-badge {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #2563eb;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script>
+    (() => {
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines = window.__timelines || {};
+      window.__timelines["06-proof"] = tl;
+
+      // Header entrance (0.0s - 0.8s)
+      tl.fromTo(".f06-proof-eyebrow", { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.1);
+      tl.fromTo(".f06-proof-title", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.25);
+
+      // Stagger metric cards (0.8s - 2.8s)
+      tl.fromTo(".f06-proof-card", 
+        { opacity: 0, y: 40, scale: 0.95 }, 
+        { opacity: 1, y: 0, scale: 1, duration: 0.7, stagger: 0.25, ease: "power2.out" }, 
+        0.8
+      );
+
+      // Progress bar fill animations
+      tl.fromTo(".f06-proof-bar-fill", 
+        { scaleX: 0 }, 
+        { scaleX: 1, duration: 1.0, stagger: 0.2, ease: "power3.out" }, 
+        1.5
+      );
+
+      // Footer badge
+      tl.fromTo(".f06-proof-footer-badge", 
+        { opacity: 0, y: 15 }, 
+        { opacity: 1, y: 0, duration: 0.6, ease: "back.out(1.5)" }, 
+        2.5
+      );
+    })();
+  </script>
+</template>

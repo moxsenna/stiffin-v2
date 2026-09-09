@@ -1,0 +1,215 @@
+<template>
+  <div id="root" data-composition-id="04-classroom-checkout" data-width="1920" data-height="1080" data-duration="5.5">
+    <div id="frame-04-bg" class="clip m04-cc-bg" data-start="0" data-duration="5.5" data-track-index="0"></div>
+
+    <div id="frame-04-content" class="clip m04-cc-content" data-start="0" data-duration="5.5" data-track-index="1">
+      <div class="m04-cc-header">
+        <span class="m04-cc-eyebrow">PENGALAMAN SISWA & TRANSAKSI NIR-GESEKAN</span>
+        <h2 class="m04-cc-title">Belajar Mandiri, Transaksi Konfirmasi Otomatis</h2>
+      </div>
+
+      <div class="m04-cc-grid">
+        <!-- Phone 1: Classroom -->
+        <div class="m04-cc-col m04-cc-col-left">
+          <div class="m04-cc-phone-wrap">
+            <div class="m04-phone-mockup">
+              <div class="m04-phone-speaker"></div>
+              <div class="m04-phone-screen">
+                <img src="assets/mobile-classroom.png" class="m04-phone-img" alt="Mobile Classroom">
+              </div>
+            </div>
+          </div>
+          <div class="m04-cc-info-badge">
+            <div class="m04-cc-badge-top">
+              <span class="m04-cc-tag m04-cc-tag-blue">01. RUANG KELAS PWA</span>
+              <span class="m04-cc-badge-sub">Video Player & Refleksi Wajib</span>
+            </div>
+            <div class="m04-cc-benefit">✓ Progres tersimpan realtime tanpa distraksi grup chat</div>
+          </div>
+        </div>
+
+        <!-- Phone 2: Checkout -->
+        <div class="m04-cc-col m04-cc-col-right">
+          <div class="m04-cc-phone-wrap">
+            <div class="m04-phone-mockup">
+              <div class="m04-phone-speaker"></div>
+              <div class="m04-phone-screen">
+                <img src="assets/mobile-checkout.png" class="m04-phone-img" alt="Mobile Checkout">
+              </div>
+            </div>
+          </div>
+          <div class="m04-cc-info-badge">
+            <div class="m04-cc-badge-top">
+              <span class="m04-cc-tag m04-cc-tag-green">02. CHECKOUT INSTAN</span>
+              <span class="m04-cc-badge-sub">QRIS & VA Terverifikasi</span>
+            </div>
+            <div class="m04-cc-benefit">✓ Pembayaran lunas langsung aktifkan akses modul</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    
+    
+    
+
+    .m04-cc-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 30% 20%, rgba(37, 99, 235, 0.06) 0%, #ffffff 75%);
+    }
+
+    .m04-cc-content {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 820px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 40px;
+      font-family: 'Archivo', sans-serif;
+    }
+
+    .m04-cc-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .m04-cc-eyebrow {
+      font-size: 13px;
+      font-weight: 700;
+      color: #2563eb;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .m04-cc-title {
+      font-size: 38px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+
+    .m04-cc-grid {
+      display: flex;
+      gap: 70px;
+      justify-content: center;
+      align-items: flex-start;
+      width: 1300px;
+    }
+
+    .m04-cc-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .m04-cc-phone-wrap {
+      position: relative;
+    }
+
+    .m04-phone-mockup {
+      position: relative;
+      width: 250px;
+      height: 510px;
+      background: #0f172a;
+      border-radius: 38px;
+      padding: 7px;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.22), 0 0 0 2px rgba(15, 23, 42, 0.1);
+    }
+
+    .m04-phone-speaker {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 65px;
+      height: 15px;
+      background: #000000;
+      border-radius: 10px;
+      z-index: 10;
+    }
+
+    .m04-phone-screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 31px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .m04-phone-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .m04-cc-info-badge {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 320px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    }
+
+    .m04-cc-badge-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .m04-cc-tag {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .m04-cc-tag-blue { background: rgba(37, 99, 235, 0.1); color: #2563eb; }
+    .m04-cc-tag-green { background: rgba(5, 150, 105, 0.1); color: #059669; }
+
+    .m04-cc-badge-sub {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .m04-cc-benefit {
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+      margin-top: 2px;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["04-classroom-checkout"] = tl;
+
+      tl.fromTo(".m04-cc-eyebrow", { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.1);
+      tl.fromTo(".m04-cc-title", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.25);
+
+      // Left column entrance
+      tl.fromTo(".m04-cc-col-left", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.8, ease: "power2.out" }, 0.6);
+
+      // Right column entrance
+      tl.fromTo(".m04-cc-col-right", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.8, ease: "power2.out" }, 1.4);
+    })();
+  </script>
+</template>

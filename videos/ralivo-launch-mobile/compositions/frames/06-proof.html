@@ -1,0 +1,217 @@
+<template>
+  <div id="root" data-composition-id="06-proof" data-width="1920" data-height="1080" data-duration="4.5">
+    <div id="frame-06-bg" class="clip m06-proof-bg" data-start="0" data-duration="4.5" data-track-index="0"></div>
+
+    <div id="frame-06-content" class="clip m06-proof-content" data-start="0" data-duration="4.5" data-track-index="1">
+      <div class="m06-proof-header">
+        <span class="m06-proof-eyebrow">DAMPAK TERBUKTI & TERUKUR</span>
+        <h2 class="m06-proof-title">Hasil Nyata yang Dirasakan Para Edukator</h2>
+      </div>
+
+      <div class="m06-proof-grid">
+        <!-- Metric 1 -->
+        <div class="m06-proof-card">
+          <div class="m06-proof-stat m06-proof-stat-blue">84%</div>
+          <div class="m06-proof-label">Tingkat Retensi Siswa</div>
+          <div class="m06-proof-delta">+38% dibanding platform terpisah</div>
+          <div class="m06-proof-bar-track">
+            <div class="m06-proof-bar-fill m06-proof-bar-blue"></div>
+          </div>
+        </div>
+
+        <!-- Metric 2 -->
+        <div class="m06-proof-card">
+          <div class="m06-proof-stat m06-proof-stat-green">3.2×</div>
+          <div class="m06-proof-label">Lonjakan Konversi Leads</div>
+          <div class="m06-proof-delta">Otomatisasi follow-up WhatsApp terarah</div>
+          <div class="m06-proof-bar-track">
+            <div class="m06-proof-bar-fill m06-proof-bar-green"></div>
+          </div>
+        </div>
+
+        <!-- Metric 3 -->
+        <div class="m06-proof-card">
+          <div class="m06-proof-stat m06-proof-stat-dark">15+ Jam</div>
+          <div class="m06-proof-label">Hemat Waktu Per Minggu</div>
+          <div class="m06-proof-delta">Tanpa cek transfer & jadwal manual</div>
+          <div class="m06-proof-bar-track">
+            <div class="m06-proof-bar-fill m06-proof-bar-dark"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="m06-proof-footer-badge">
+        <span class="m06-proof-check-badge">✓</span>
+        <span>Terbukti meningkatkan omzet dan kepuasan belajar di ekosistem edukasi modern</span>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    
+    
+    
+
+    .m06-proof-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 20%, rgba(37, 99, 235, 0.08) 0%, #ffffff 80%);
+    }
+
+    .m06-proof-content {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 820px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 56px;
+      font-family: 'Archivo', sans-serif;
+    }
+
+    .m06-proof-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .m06-proof-eyebrow {
+      font-size: 13px;
+      font-weight: 750;
+      color: #2563eb;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .m06-proof-title {
+      font-size: 44px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+
+    .m06-proof-grid {
+      display: flex;
+      gap: 36px;
+      width: 1380px;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+
+    .m06-proof-card {
+      flex: 1;
+      background: #ffffff;
+      border: 1.5px solid rgba(37, 99, 235, 0.2);
+      border-radius: 20px;
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 12px 36px -10px rgba(15, 23, 42, 0.08);
+      position: relative;
+    }
+
+    .m06-proof-stat {
+      font-size: 56px;
+      font-weight: 850;
+      line-height: 1;
+      margin-bottom: 12px;
+      letter-spacing: -0.04em;
+    }
+
+    .m06-proof-stat-blue { color: #2563eb; }
+    .m06-proof-stat-green { color: #059669; }
+    .m06-proof-stat-dark { color: #0f172a; }
+
+    .m06-proof-label {
+      font-size: 18px;
+      font-weight: 750;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .m06-proof-delta {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 24px;
+    }
+
+    .m06-proof-bar-track {
+      width: 100%;
+      height: 6px;
+      background: #f1f5f9;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-top: auto;
+    }
+
+    .m06-proof-bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+      transform-origin: left center;
+    }
+
+    .m06-proof-bar-blue { width: 84%; background: #2563eb; }
+    .m06-proof-bar-green { width: 92%; background: #059669; }
+    .m06-proof-bar-dark { width: 75%; background: #0f172a; }
+
+    .m06-proof-footer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 28px;
+      background: rgba(37, 99, 235, 0.05);
+      border: 1.5px solid rgba(37, 99, 235, 0.2);
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .m06-proof-check-badge {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #2563eb;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["06-proof"] = tl;
+
+      tl.fromTo(".m06-proof-eyebrow", { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.1);
+      tl.fromTo(".m06-proof-title", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.25);
+
+      tl.fromTo(".m06-proof-card", 
+        { opacity: 0, y: 40, scale: 0.95 }, 
+        { opacity: 1, y: 0, scale: 1, duration: 0.7, stagger: 0.25, ease: "power2.out" }, 
+        0.8
+      );
+
+      tl.fromTo(".m06-proof-bar-fill", 
+        { scaleX: 0 }, 
+        { scaleX: 1, duration: 1.0, stagger: 0.2, ease: "power3.out" }, 
+        1.5
+      );
+
+      tl.fromTo(".m06-proof-footer-badge", 
+        { opacity: 0, y: 15 }, 
+        { opacity: 1, y: 0, duration: 0.6, ease: "back.out(1.5)" }, 
+        2.5
+      );
+    })();
+  </script>
+</template>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Mobile Screen 02 — Learner Classroom</title>
+  <link rel="stylesheet" href="../assets/fonts/fonts.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 390px;
+      height: 844px;
+      background: #ffffff;
+      font-family: 'Archivo', sans-serif;
+      color: #0f172a;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .status-bar {
+      height: 44px;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+      background: #ffffff;
+    }
+    .island {
+      width: 120px;
+      height: 28px;
+      background: #000000;
+      border-radius: 20px;
+      margin: 0 auto;
+    }
+    .mobile-header {
+      padding: 10px 16px;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .back-btn {
+      font-size: 13px;
+      font-weight: 700;
+      color: #2563eb;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .user-pill {
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      background: #f1f5f9;
+      padding: 4px 8px;
+      border-radius: 12px;
+    }
+    /* Video Box */
+    .video-wrap {
+      position: relative;
+      width: 100%;
+      height: 210px;
+      background: #000000;
+      overflow: hidden;
+    }
+    .video-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.85;
+    }
+    .play-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 52px;
+      height: 52px;
+      background: #dc2626;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+    }
+    .play-btn svg {
+      margin-left: 3px;
+    }
+    .video-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.3);
+    }
+    .video-fill {
+      width: 65%;
+      height: 100%;
+      background: #2563eb;
+    }
+    /* Lesson Body */
+    .lesson-content {
+      flex: 1;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
+    }
+    .modul-tag {
+      font-size: 10px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #2563eb;
+    }
+    .lesson-title {
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+    }
+    /* Refleksi Wajib */
+    .reflection-box {
+      background: #f8fafc;
+      border: 1.5px solid #2563eb;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .reflection-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .reflection-label {
+      font-size: 11px;
+      font-weight: 750;
+      color: #2563eb;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .required-badge {
+      font-size: 9px;
+      font-weight: 700;
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .reflection-text {
+      font-size: 12px;
+      line-height: 1.5;
+      color: #1e293b;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px;
+      font-style: normal;
+    }
+    .submit-btn {
+      background: #2563eb;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 750;
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+    /* Bottom Tabs */
+    .tab-bar {
+      height: 60px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding-bottom: 8px;
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-size: 9px;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+    .tab-item.active {
+      color: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="status-bar">
+    <span>09:41</span>
+    <div class="island"></div>
+    <span>5G · 100%</span>
+  </div>
+
+  <div class="mobile-header">
+    <div class="back-btn">← Kurikulum Kelas</div>
+    <div class="user-pill">Maya Pratama (Siswa)</div>
+  </div>
+
+  <div class="video-wrap">
+    <img src="../assets/program_cover_parenting.webp" class="video-img" alt="Video">
+    <div class="play-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+      </svg>
+    </div>
+    <div class="video-bar">
+      <div class="video-fill"></div>
+    </div>
+  </div>
+
+  <div class="lesson-content">
+    <div>
+      <div class="modul-tag">Modul 1: Mengenali Bakat Genetik Anak</div>
+      <h1 class="lesson-title">Sesi 4: Komunikasi Efektif Meredakan Emosi Anak</h1>
+    </div>
+
+    <div class="reflection-box">
+      <div class="reflection-head">
+        <span class="reflection-label">Refleksi Wajib *</span>
+        <span class="required-badge">Syarat Buka Modul</span>
+      </div>
+      <div class="reflection-text">
+        "Saya paling kesulitan menjaga emosi saat anak mulai tantrum. Setelah sesi ini, saya paham gaya komunikasi Sensing harus to-the-point dan penuh rasa tenang."
+      </div>
+      <div class="submit-btn">
+        <span>✓ Tandai Selesai & Lanjut</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab-item">
+      <div>🏠</div>
+      <span>Beranda</span>
+    </div>
+    <div class="tab-item">
+      <div>📋</div>
+      <span>Katalog</span>
+    </div>
+    <div class="tab-item active">
+      <div>📖</div>
+      <span>Belajar</span>
+    </div>
+    <div class="tab-item">
+      <div>👤</div>
+      <span>Profil</span>
+    </div>
+  </div>
+</body>
+</html>

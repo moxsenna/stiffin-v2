@@ -1,0 +1,286 @@
+<template>
+  <div id="root" data-composition-id="03-solution" data-width="1920" data-height="1080" data-duration="5.5">
+    <div id="frame-03-bg" class="clip m03-sol-bg" data-start="0" data-duration="5.5" data-track-index="0"></div>
+
+    <div id="frame-03-content" class="clip m03-sol-content" data-start="0" data-duration="5.5" data-track-index="1">
+      <div class="m03-sol-header">
+        <div class="m03-sol-badge">
+          <span class="m03-sol-dot"></span>
+          <span>ALL-IN-ONE SOLUTION</span>
+        </div>
+        <h2 class="m03-sol-title">Satu Sistem Operasi untuk Seluruh Klien</h2>
+        <p class="m03-sol-sub">Satukan pembelajaran, transaksi, dan komunikasi langsung dalam genggaman smartphone peserta</p>
+      </div>
+
+      <div class="m03-sol-main">
+        <!-- 4 Pillars (Left Column) -->
+        <div class="m03-sol-pillars">
+          <div class="m03-sol-pillar">
+            <div class="m03-sol-pnum">01</div>
+            <div>
+              <div class="m03-sol-pname">Workspace Edukator Terpadu</div>
+              <div class="m03-sol-pdesc">Kendali omzet, murid, sesi, dan kurikulum dalam satu dashboard.</div>
+            </div>
+          </div>
+
+          <div class="m03-sol-pillar">
+            <div class="m03-sol-pnum">02</div>
+            <div>
+              <div class="m03-sol-pname">Program & Kurikulum Interaktif</div>
+              <div class="m03-sol-pdesc">Materi video bertahap dengan pengunci progres refleksi wajib.</div>
+            </div>
+          </div>
+
+          <div class="m03-sol-pillar">
+            <div class="m03-sol-pnum">03</div>
+            <div>
+              <div class="m03-sol-pname">Transaksi Otomatis Instan</div>
+              <div class="m03-sol-pdesc">Integrasi QRIS & Virtual Account dengan verifikasi tanpa perantara.</div>
+            </div>
+          </div>
+
+          <div class="m03-sol-pillar">
+            <div class="m03-sol-pnum">04</div>
+            <div>
+              <div class="m03-sol-pname">WhatsApp Flow & Booking Konsultasi</div>
+              <div class="m03-sol-pdesc">Broadcast retensi 1-tap dan booking sesi tanya jawab langsung.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phone Mockup (Right Column) -->
+        <div class="m03-sol-phone-wrap">
+          <div class="m03-phone-mockup">
+            <div class="m03-phone-speaker"></div>
+            <div class="m03-phone-screen">
+              <img src="assets/mobile-classroom.png" class="m03-phone-img" alt="Mobile Classroom">
+            </div>
+          </div>
+          <div class="m03-sol-overlay-pill">
+            <span class="m03-sol-live-indicator"></span>
+            <span>Ruang Belajar Mobile PWA Terintegrasi</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    
+    
+    
+
+    .m03-sol-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 75% 25%, rgba(37, 99, 235, 0.08) 0%, #ffffff 70%);
+    }
+
+    .m03-sol-content {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 820px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 40px;
+      font-family: 'Archivo', sans-serif;
+    }
+
+    .m03-sol-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .m03-sol-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px;
+      background: rgba(37, 99, 235, 0.08);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #2563eb;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .m03-sol-dot {
+      width: 7px;
+      height: 7px;
+      background: #2563eb;
+      border-radius: 50%;
+    }
+
+    .m03-sol-title {
+      font-size: 38px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .m03-sol-sub {
+      font-size: 17px;
+      color: #64748b;
+    }
+
+    .m03-sol-main {
+      display: flex;
+      gap: 70px;
+      width: 1440px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .m03-sol-pillars {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 580px;
+    }
+
+    .m03-sol-pillar {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      border: 1.5px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    }
+
+    .m03-sol-pnum {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(37, 99, 235, 0.08);
+      color: #2563eb;
+      font-size: 15px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .m03-sol-pname {
+      font-size: 17px;
+      font-weight: 750;
+      color: #0f172a;
+      margin-bottom: 3px;
+    }
+
+    .m03-sol-pdesc {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    /* Right Phone Mockup */
+    .m03-sol-phone-wrap {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .m03-phone-mockup {
+      position: relative;
+      width: 270px;
+      height: 550px;
+      background: #0f172a;
+      border-radius: 40px;
+      padding: 8px;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 2px rgba(15, 23, 42, 0.1);
+    }
+
+    .m03-phone-speaker {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70px;
+      height: 16px;
+      background: #000000;
+      border-radius: 10px;
+      z-index: 10;
+    }
+
+    .m03-phone-screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 32px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .m03-phone-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .m03-sol-overlay-pill {
+      position: absolute;
+      bottom: -18px;
+      background: rgba(15, 23, 42, 0.9);
+      color: #ffffff;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      white-space: nowrap;
+    }
+
+    .m03-sol-live-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["03-solution"] = tl;
+
+      tl.fromTo(".m03-sol-badge", { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.1);
+      tl.fromTo(".m03-sol-title", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.25);
+      tl.fromTo(".m03-sol-sub", { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 0.45);
+
+      tl.fromTo(".m03-sol-pillar", 
+        { opacity: 0, x: -30 }, 
+        { opacity: 1, x: 0, duration: 0.6, stagger: 0.25, ease: "power2.out" }, 
+        0.8
+      );
+
+      tl.fromTo(".m03-phone-mockup", 
+        { opacity: 0, scale: 0.94, y: 30 }, 
+        { opacity: 1, scale: 1, y: 0, duration: 1.0, ease: "power2.out" }, 
+        1.2
+      );
+
+      tl.fromTo(".m03-sol-overlay-pill", 
+        { opacity: 0, scale: 0.8 }, 
+        { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.5)" }, 
+        2.2
+      );
+    })();
+  </script>
+</template>

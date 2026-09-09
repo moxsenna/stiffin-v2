@@ -1,0 +1,40 @@
+{
+  "provider": "kokoro",
+  "speed": 1,
+  "lines": [
+    {
+      "id": "01",
+      "text": "Bagaimana cara mengubah keahlian Anda menjadi bisnis edukasi yang terukur dan otomatis?"
+    },
+    {
+      "id": "02",
+      "text": "Tanpa sistem terpadu: materi tersebar, pembayaran dicek manual, dan follow-up prospek sering terlewat."
+    },
+    {
+      "id": "03",
+      "text": "Perkenalkan Ralivo. Client Education OS yang menyatukan seluruh siklus belajar klien Anda dalam satu tempat."
+    },
+    {
+      "id": "04",
+      "text": "Siswa belajar mandiri dengan progres terpantau, sementara pembayaran terkonfirmasi otomatis detik itu juga."
+    },
+    {
+      "id": "05",
+      "text": "Kirim pengingat belajar via WhatsApp dengan satu ketukan, dan atur sesi konsultasi tanpa tabrakan jadwal."
+    },
+    {
+      "id": "06",
+      "text": "Hasilnya: retensi siswa melonjak hingga delapan puluh empat persen, dan konversi follow-up naik tiga kali lipat."
+    },
+    {
+      "id": "07",
+      "text": "Bangun bisnis edukasi Anda sekarang bersama Ralivo. Kunjungi ralivo.biz.id."
+    }
+  ],
+  "bgm": {
+    "mode": "retrieve",
+    "query": "blueprint",
+    "blob": "Ralivo — Client Education OS: Ubah keahlian menjadi bisnis edukasi berkelanjutan dalam satu ekosistem",
+    "arc": "Hook → Problem → Solution → Core Modules → Proof → CTA"
+  }
+}
