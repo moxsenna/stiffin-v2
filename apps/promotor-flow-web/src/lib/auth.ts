@@ -139,7 +139,7 @@ export async function signUp(name: string, email: string, password: string): Pro
 export async function requestPasswordReset(email: string): Promise<{ success: boolean; error?: string }> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
   try {
-    await fetch(`${apiUrl}/api/auth/forget-password`, {
+    await fetch(`${apiUrl}/api/auth/request-password-reset`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

@@ -114,7 +114,7 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
     });
   });
 
-  it('5. provisioning mechanism gate PASS (BA internal adapter, disableSignUp=true)', async () => {
+  it('5. provisioning mechanism gate PASS (BA internal adapter, public signup enabled)', async () => {
     await withIntegrationDb(async (db) => {
       const { email } = await provisionedUser(db, 'prov');
       const auth = testAuth(db);
@@ -124,8 +124,8 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
         body: JSON.stringify({ name: 'X', email: `pub-${Date.now()}@example.com`, password: 'password123' }),
       });
       const res = await auth.handler(req);
-      const body = (await res.json()) as { code?: string };
-      assert.strictEqual(body.code, 'EMAIL_PASSWORD_SIGN_UP_DISABLED', 'public signup must be disabled');
+      // Public signup is ON (register flow); unverified users cannot sign in (see test 11).
+      assert.ok([200, 201].includes(res.status), `public signup must succeed, got ${res.status}`);
       assert.ok(email, 'provisioned user exists');
     });
   });
@@ -217,16 +217,23 @@ describe('B2 Phase C — Auth Core integration', { skip: !enabled ? 'TEST_DATABA
     });
   });
 
-  it('11. self-signup through public auth endpoint is disabled', async () => {
+  it('11. self-signup through public auth endpoint creates unverified user', async () => {
     await withIntegrationDb(async (db) => {
       const auth = testAuth(db);
+      const email = `pub2-${Date.now()}@example.com`;
       const res = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-up/email`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ name: 'X', email: `pub2-${Date.now()}@example.com`, password: 'password123' }),
+        body: JSON.stringify({ name: 'X', email, password: 'password123' }),
       }));
-      const body = (await res.json()) as { code?: string };
-      assert.strictEqual(body.code, 'EMAIL_PASSWORD_SIGN_UP_DISABLED');
+      assert.ok([200, 201].includes(res.status), `public signup must succeed, got ${res.status}`);
+      // Unverified users cannot sign in until email verification.
+      const signIn = await auth.handler(new Request(`${TEST_ENV.BETTER_AUTH_URL}/api/auth/sign-in/email`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password: 'password123' }),
+      }));
+      assert.strictEqual(signIn.status, 403, 'unverified user must be blocked from sign-in');
     });
   });
 

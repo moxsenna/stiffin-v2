@@ -58,7 +58,7 @@ describe('auth register reset', { skip: !enabled ? 'TEST_DATABASE_URL not set' :
     await withIntegrationDb(async () => {
       const app = createApp();
       const res = await app.request(
-        '/api/auth/forget-password',
+        '/api/auth/request-password-reset',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -92,7 +92,7 @@ describe('auth register reset', { skip: !enabled ? 'TEST_DATABASE_URL not set' :
       assert.strictEqual(signupRes.status, 401, `signup of deleted user must be 401, got ${signupRes.status}`);
 
       const forgetRes = await app.request(
-        '/api/auth/forget-password',
+        '/api/auth/request-password-reset',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

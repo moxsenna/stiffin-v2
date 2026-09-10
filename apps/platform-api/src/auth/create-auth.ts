@@ -92,7 +92,7 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
     },
     user: {
       modelName: MODEL_NAMES.user,
-      fields: { emailVerified: 'email_verified' },
+      fields: { emailVerified: 'emailVerified' },
       // Explicit product policy: BA hard-delete is OFF; Shared Core soft-delete is canonical.
       deleteUser: { enabled: false },
     },
@@ -125,7 +125,7 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
               window: 3600,
               max: 10,
             },
-            '/forget-password': {
+            '/request-password-reset': {
               window: 3600,
               max: 5,
             },
@@ -178,7 +178,7 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
           }
         }
 
-        if (ctx.path === '/sign-up/email' || ctx.path === '/forget-password') {
+        if (ctx.path === '/sign-up/email' || ctx.path === '/request-password-reset') {
           const email = (ctx.body as { email?: string } | undefined)?.email;
           if (email) {
             const rows = await db
