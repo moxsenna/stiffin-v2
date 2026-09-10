@@ -14,6 +14,9 @@ export interface CreateAuthEnv {
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
   BETTER_AUTH_TRUSTED_ORIGINS?: string;
+  EMAIL_MODE?: string;
+  RESEND_API_KEY?: string;
+  EMAIL_FROM?: string;
 }
 
 /** Test-only escape hatch — passed directly by tests, NEVER read from env. */
@@ -71,7 +74,7 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
       maxPasswordLength: EMAIL_PASSWORD_POLICY.maxPasswordLength,
       sendResetPassword: async ({ user, url }) => {
         const { resolveEmailService } = await import('../services/email/email-service');
-        await resolveEmailService().sendEmail(
+        await resolveEmailService(env as never).sendEmail(
           user.email,
           'Reset kata sandi Ralivo',
           `<p>Klik link berikut untuk reset kata sandi:</p><p><a href="${url}">${url}</a></p>`
@@ -83,7 +86,7 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
       autoSignInAfterVerification: false,
       sendVerificationEmail: async ({ user, url }) => {
         const { resolveEmailService } = await import('../services/email/email-service');
-        await resolveEmailService().sendEmail(
+        await resolveEmailService(env as never).sendEmail(
           user.email,
           'Verifikasi email Ralivo',
           `<p>Klik link berikut untuk verifikasi email:</p><p><a href="${url}">${url}</a></p>`

@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { organizations, productEntitlements } from './db/schema';
 import { Env } from './env';
 import { executeDbHealthProbe } from './db/client';
 import { authLifecycle, sessionMiddleware } from './auth/session-middleware';
@@ -279,6 +281,81 @@ export function createApp(deps?: AppDependencies) {
   );
   app.use('/api/*', authLifecycle);
   app.all('/api/auth/*', (c) => c.get('auth').handler(c.req.raw));
+
+  // POST /api/admin/entitlements — service-key gated grant (ADMIN_API_KEY).
+  // Sets product_entitlements for an org; creates row when missing.
+  // Body: { organizationId: UUID, promotorClass?: bool, promotorFlow?: bool }.
+  app.post('/api/admin/entitlements', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const adminKey = (c.env as Env | undefined)?.ADMIN_API_KEY;
+    if (!adminKey) {
+      return c.json({ error: { code: 'FORBIDDEN', message: 'Admin access is not configured' } }, 403);
+    }
+    const presented = c.req.header('x-admin-key');
+    if (!presented || presented !== adminKey) {
+      return c.json({ error: { code: 'FORBIDDEN', message: 'Admin access denied' } }, 403);
+    }
+    const raw = await c.req.json().catch(() => ({}));
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const organizationId = typeof raw?.organizationId === 'string' ? raw.organizationId : '';
+    if (!UUID_RE.test(organizationId)) {
+      return c.json({ error: { code: 'VALIDATION_ERROR', message: 'organizationId must be a UUID' } }, 400);
+    }
+    const hasClass = typeof raw?.promotorClass === 'boolean';
+    const hasFlow = typeof raw?.promotorFlow === 'boolean';
+    if (!hasClass && !hasFlow) {
+      return c.json(
+        { error: { code: 'VALIDATION_ERROR', message: 'promotorClass or promotorFlow must be provided' } },
+        400
+      );
+    }
+    const db = c.get('db');
+    const [org] = await db
+      .select({ id: organizations.id })
+      .from(organizations)
+      .where(eq(organizations.id, organizationId))
+      .limit(1);
+    if (!org) {
+      return c.json({ error: { code: 'NOT_FOUND', message: 'Organization not found' } }, 404);
+    }
+    const patch: { promotorClass?: boolean; promotorFlow?: boolean } = {};
+    if (hasClass) patch.promotorClass = raw.promotorClass;
+    if (hasFlow) patch.promotorFlow = raw.promotorFlow;
+    const existing = await db
+      .select()
+      .from(productEntitlements)
+      .where(eq(productEntitlements.organizationId, organizationId))
+      .limit(1);
+    let row;
+    if (existing.length === 0) {
+      const [created] = await db
+        .insert(productEntitlements)
+        .values({
+          organizationId,
+          promotorClass: patch.promotorClass ?? false,
+          promotorFlow: patch.promotorFlow ?? false,
+        })
+        .returning();
+      row = created;
+    } else {
+      const [updated] = await db
+        .update(productEntitlements)
+        .set({ ...patch, updatedAt: new Date().toISOString() })
+        .where(eq(productEntitlements.organizationId, organizationId))
+        .returning();
+      row = updated;
+    }
+    return c.json(
+      {
+        entitlements: {
+          organizationId: row.organizationId,
+          promotorClass: row.promotorClass,
+          promotorFlow: row.promotorFlow,
+        },
+      },
+      200
+    );
+  });
 
   // GET /api/me — authenticated context endpoint
   app.use('/api/me', sessionMiddleware);

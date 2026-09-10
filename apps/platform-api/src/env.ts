@@ -9,8 +9,14 @@ export interface Env {
   /** Comma-separated additional trusted frontend origins. */
   BETTER_AUTH_TRUSTED_ORIGINS?: string;
 
-  /** Email provider mode: log only untuk tahap awal. */
+  /** Email provider mode: 'log' (default) or 'resend'. */
   EMAIL_MODE?: string;
+  /** Resend HTTP API key — Worker secret binding. Never committed. */
+  RESEND_API_KEY?: string;
+  /** Verified sender address, e.g. 'Ralivo <noreply@ralivo.id>'. */
+  EMAIL_FROM?: string;
+  /** Shared secret for POST /api/admin/entitlements — Worker secret binding. */
+  ADMIN_API_KEY?: string;
 
   /** Inactivity sweep threshold in days (default: 7). */
   INACTIVITY_SWEEP_DAYS?: string;

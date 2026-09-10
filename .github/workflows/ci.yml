@@ -61,6 +61,12 @@ jobs:
           OWNER_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
         run: pnpm --filter @promotor/platform-api test:integration
 
+      - name: Run Auth Register-Reset Integration Gate
+        env:
+          TEST_DATABASE_URL: postgresql://promotor_runtime:ci_runtime_pw@localhost:5432/postgres
+          OWNER_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+        run: pnpm --filter @promotor/platform-api exec tsx --test --test-concurrency=1 src/__tests__/integration/auth-register-reset.integration.test.ts src/__tests__/integration/admin-entitlements.integration.test.ts
+
       - name: Verify PromotorClass Production Build
         run: pnpm build:class
 
