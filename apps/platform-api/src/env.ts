@@ -9,12 +9,14 @@ export interface Env {
   /** Comma-separated additional trusted frontend origins. */
   BETTER_AUTH_TRUSTED_ORIGINS?: string;
 
-  /** Email provider mode: 'log' (default) or 'resend'. */
+  /** Email provider mode: 'log' (default) or 'mailketing'. */
   EMAIL_MODE?: string;
-  /** Resend HTTP API key — Worker secret binding. Never committed. */
-  RESEND_API_KEY?: string;
-  /** Verified sender address, e.g. 'Ralivo <noreply@ralivo.id>'. */
+  /** Mailketing API v2 token — Worker secret binding. Never committed. */
+  MAILKETING_API_TOKEN?: string;
+  /** Verified sender email, e.g. 'noreply@ralivo.biz.id'. */
   EMAIL_FROM?: string;
+  /** Sender display name, e.g. 'Ralivo'. */
+  EMAIL_FROM_NAME?: string;
   /** Shared secret for POST /api/admin/entitlements — Worker secret binding. */
   ADMIN_API_KEY?: string;
 

@@ -15,8 +15,9 @@ export interface CreateAuthEnv {
   BETTER_AUTH_URL: string;
   BETTER_AUTH_TRUSTED_ORIGINS?: string;
   EMAIL_MODE?: string;
-  RESEND_API_KEY?: string;
+  MAILKETING_API_TOKEN?: string;
   EMAIL_FROM?: string;
+  EMAIL_FROM_NAME?: string;
 }
 
 /** Test-only escape hatch — passed directly by tests, NEVER read from env. */

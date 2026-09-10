@@ -22,7 +22,10 @@
     "BETTER_AUTH_URL": "https://stiffin-promotor-api.moxsenna.workers.dev",
     "BETTER_AUTH_TRUSTED_ORIGINS": "https://stiffin-promotor-class.moxsenna.workers.dev,https://stiffin-promotor-flow.moxsenna.workers.dev",
     "INACTIVITY_SWEEP_DAYS": "7",
-    "LEARNER_OTP_CHANNEL": "log"
+    "LEARNER_OTP_CHANNEL": "log",
+    "EMAIL_MODE": "mailketing",
+    "EMAIL_FROM": "noreply@ralivo.biz.id",
+    "EMAIL_FROM_NAME": "Ralivo"
   },
   "env": {
     "staging": {
@@ -37,7 +40,10 @@
         "APP_ENV": "staging",
         "BETTER_AUTH_URL": "https://stiffin-promotor-api-staging.moxsenna.workers.dev",
         "BETTER_AUTH_TRUSTED_ORIGINS": "https://promotor-class-staging.moxsenna.workers.dev,https://promotor-flow-staging.moxsenna.workers.dev",
-        "INACTIVITY_SWEEP_DAYS": "7"
+        "INACTIVITY_SWEEP_DAYS": "7",
+        "EMAIL_MODE": "mailketing",
+        "EMAIL_FROM": "noreply@ralivo.biz.id",
+        "EMAIL_FROM_NAME": "Ralivo"
       }
     }
   }
