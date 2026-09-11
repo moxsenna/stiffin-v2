@@ -40,4 +40,6 @@ Thumbs.db
 ralivo-hero-video/
 ralivo-hero-v2/
 tests/visual/audit-output/
+preview-*.png
+.playwright-mcp/
 

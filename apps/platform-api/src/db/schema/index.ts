@@ -43,3 +43,5 @@ export * from './program-price-variants';
 export * from './promo-coupons';
 export * from './learner-lesson-notes';
 
+export * from './payout-batches';
+export * from './payout-items';

@@ -8,7 +8,7 @@ web
 
 ## Users
 
-Primary users are Promotors / Practitioners (STIFIn promoters, parenting educators, counselors, career coaches, and professional service creators in Indonesia) who run education sessions, assessment programs, workshops, and coaching. Secondary users are Learners (parents, professionals, students) who register and consume the learning material on mobile web / desktop.
+Primary users are Promotors / Practitioners (STIFIn promoters, parenting educators, counselors, career coaches, and professional service creators in Indonesia) who run education sessions, assessment programs, workshops, and coaching. Secondary users are Peserta (parents, professionals, students) who register and consume the learning material on mobile web / desktop.
 
 ## Product Purpose
 

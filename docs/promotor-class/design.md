@@ -19,7 +19,7 @@ Dokumen ini menjadi acuan desain utama untuk PromotorClass agar implementasi UI/
 - terasa seperti produk yang sengaja dirancang untuk workflow promotor,
 - tetap nyaman digunakan dari mobile,
 - memiliki hierarchy yang jelas,
-- membedakan visual language antara **promotor workspace** dan **learner experience**,
+- membedakan visual language antara **promotor workspace** dan **pengalaman peserta**,
 - menjaga integrasi dengan PromotorFlow tetap kontekstual dan tidak tumpang tindih.
 
 Dokumen ini bukan sekadar moodboard. Semua coding agent dan design agent harus memperlakukan aturan di bawah sebagai **implementation constraints**.
@@ -367,7 +367,7 @@ Typical row:
 44–52px
 ```
 
-### Learner content
+### Konten Peserta
 
 Lebih lapang.
 
@@ -566,7 +566,7 @@ Contoh:
 ```text
 Follow up →
 Open in PromotorFlow ↗
-View learner
+Lihat Peserta
 ```
 
 Hindari:
@@ -591,7 +591,7 @@ PromotorClass
 Home
 
 Programs
-Learners
+Peserta
 Activity
 
 ────────────
@@ -608,7 +608,7 @@ Jangan buat:
 ```text
 Home
 Programs
-Learners
+Peserta
 Activity
 Analytics
 Templates
@@ -632,7 +632,7 @@ Bottom navigation:
 ```text
 Home
 Programs
-Learners
+Peserta
 Activity
 More
 ```
@@ -666,7 +666,7 @@ Overview Dashboard
 
 Tujuan Home:
 
-> menunjukkan learner dan aktivitas yang membutuhkan perhatian.
+> menunjukkan peserta dan aktivitas yang membutuhkan perhatian.
 
 Home bukan tempat semua metrics.
 

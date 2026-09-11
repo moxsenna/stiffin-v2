@@ -47,7 +47,7 @@ export function LearnerTabBar({ workspaceSlug: explicitWorkspaceSlug }: LearnerT
   ];
 
   return (
-    <nav className="bottom-nav" aria-label="Navigasi bawah learner">
+    <nav className="bottom-nav" aria-label="Navigasi bawah peserta">
       {tabs.map(({ label, href, key, Icon }) => {
         const active = activeTab === key;
         return (

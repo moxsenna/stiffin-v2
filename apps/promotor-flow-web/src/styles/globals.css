@@ -690,7 +690,7 @@ svg {
   color: var(--muted);
 }
 
-/* Dark ink hero block (learner home, More page header) */
+/* Dark ink hero block (peserta home, More page header) */
 .ink-hero {
   background: var(--ink);
   color: var(--on-ink);

@@ -176,14 +176,14 @@ PromotorClass boleh:
 PromotorClass tidak boleh secara default:
 
 - mengirim WhatsApp otomatis,
-- menghubungi learner tanpa action manusia,
+- menghubungi peserta tanpa action manusia,
 - melakukan aggressive sales automation.
 
 ---
 
 ## 4.3 One contact, one identity
 
-Learner di PromotorClass dan contact di PromotorFlow adalah entity yang sama.
+Peserta di PromotorClass dan contact di PromotorFlow adalah entity yang sama.
 
 Tidak boleh ada duplicate customer hanya karena seseorang enroll ke course.
 
@@ -203,9 +203,9 @@ Hindari:
 
 ---
 
-## 4.5 Content-first learner experience
+## 4.5 Content-first learning experience
 
-Learner UI harus memprioritaskan materi belajar.
+UI peserta harus memprioritaskan materi belajar.
 
 Promotor UI harus memprioritaskan action dan signal.
 
@@ -320,21 +320,23 @@ Needs:
 
 - membuat program,
 - publish program,
-- enroll learner,
+- enroll peserta,
 - melihat progress,
 - melihat reflection,
-- melihat learner intent,
+- melihat intent peserta,
 - melihat recommended next step,
-- membuka learner di PromotorFlow,
+- membuka peserta/kontak di PromotorFlow,
 - melakukan follow-up.
 
 ---
 
-## 7.2 Learner
+## 7.2 Peserta (Learner)
+
+Peserta adalah individu yang mengikuti, mengakses, atau terdaftar dalam program edukasi. Dalam konteks pra-pendaftaran di PromotorFlow, individu ini berstatus Prospek.
 
 Can be:
 
-- lead,
+- prospek (lead magnet),
 - existing client,
 - aftersales customer,
 - paid participant.

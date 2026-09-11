@@ -1563,6 +1563,7 @@ export type PublicOrderStatusResponse = z.infer<typeof PublicOrderStatusResponse
 
 export const ListOrdersQuerySchema = z.object({
   status: CommerceOrderStatusSchema.optional(),
+  payoutStatus: z.enum(['AVAILABLE', 'IN_BATCH', 'PAID']).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
   offset: z.coerce.number().int().min(0).default(0),
 });
@@ -1584,6 +1585,9 @@ export const OrderItemSummarySchema = z.object({
   paymentStatus: PaymentRecordStatusSchema.nullable().optional(),
   paymentMethod: z.string().nullable().optional(),
   platformFee: z.number().int(),
+  processorFee: z.number().int().nullable().optional(),
+  netAmount: z.number().int().optional(),
+  payoutStatus: z.enum(['AVAILABLE', 'IN_BATCH', 'PAID']).optional(),
   enrollmentId: z.string().uuid().nullable().optional(),
   createdAt: z.string(),
   paidAt: z.string().nullable().optional(),
@@ -1597,6 +1601,110 @@ export const ListOrdersResponseSchema = z.object({
   total: z.number().int().nonnegative(),
 });
 export type ListOrdersResponse = z.infer<typeof ListOrdersResponseSchema>;
+
+export const PayoutStatusFilterSchema = z.enum(['AVAILABLE', 'IN_BATCH', 'PAID']);
+export type PayoutStatusFilter = z.infer<typeof PayoutStatusFilterSchema>;
+
+export const BankAccountSchema = z.object({
+  id: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  bankName: z.string().min(1).max(120),
+  accountNumber: z.string().min(1).max(40),
+  accountHolderName: z.string().min(1).max(200),
+  isActive: z.boolean(),
+  sortOrder: z.number().int(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type BankAccount = z.infer<typeof BankAccountSchema>;
+
+export const CreateBankAccountRequestSchema = z.object({
+  bankName: z.string().min(1, 'Nama bank wajib diisi').max(120),
+  accountNumber: z.string().min(1, 'Nomor rekening wajib diisi').max(40),
+  accountHolderName: z.string().min(1, 'Nama pemilik wajib diisi').max(200),
+});
+export type CreateBankAccountRequest = z.infer<typeof CreateBankAccountRequestSchema>;
+
+export const UpdateBankAccountRequestSchema = z.object({
+  bankName: z.string().min(1).max(120).optional(),
+  accountNumber: z.string().min(1).max(40).optional(),
+  accountHolderName: z.string().min(1).max(200).optional(),
+  isActive: z.boolean().optional(),
+});
+export type UpdateBankAccountRequest = z.infer<typeof UpdateBankAccountRequestSchema>;
+
+export const PayoutBatchStatusSchema = z.enum(['DRAFT', 'PROCESSING', 'PAID', 'FAILED']);
+export type PayoutBatchStatus = z.infer<typeof PayoutBatchStatusSchema>;
+
+export const PayoutBatchSchema = z.object({
+  id: z.string().uuid(),
+  organizationId: z.string().uuid(),
+  status: PayoutBatchStatusSchema,
+  totalNet: z.number().int().nonnegative(),
+  orderCount: z.number().int().nonnegative(),
+  bankAccountId: z.string().uuid().nullable().optional(),
+  destBankName: z.string().nullable().optional(),
+  destAccountNumber: z.string().nullable().optional(),
+  destHolderName: z.string().nullable().optional(),
+  proofUrl: z.string().url().nullable().optional(),
+  paidAt: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type PayoutBatch = z.infer<typeof PayoutBatchSchema>;
+
+export const CreatePayoutBatchRequestSchema = z.object({
+  orderIds: z.array(z.string().uuid()).min(1, 'Pilih minimal 1 order').max(100),
+  bankAccountId: z.string().uuid('Rekening tujuan wajib dipilih'),
+});
+export type CreatePayoutBatchRequest = z.infer<typeof CreatePayoutBatchRequestSchema>;
+
+export const MarkPayoutPaidRequestSchema = z.object({
+  proofUrl: z.string().url('Bukti transfer wajib berupa URL'),
+});
+export type MarkPayoutPaidRequest = z.infer<typeof MarkPayoutPaidRequestSchema>;
+
+export const PayoutItemSchema = z.object({
+  id: z.string().uuid(),
+  batchId: z.string().uuid(),
+  orderId: z.string().uuid(),
+  netAmount: z.number().int().nonnegative(),
+  createdAt: z.string(),
+});
+export type PayoutItem = z.infer<typeof PayoutItemSchema>;
+
+export const OrdersSummarySchema = z.object({
+  grossAmount: z.number().int().nonnegative(),
+  processorFeeTotal: z.number().int().nonnegative(),
+  platformFeeTotal: z.number().int().nonnegative(),
+  netTotal: z.number().int(),
+  paidCount: z.number().int().nonnegative(),
+});
+export type OrdersSummary = z.infer<typeof OrdersSummarySchema>;
+
+export const DashboardSummarySchema = z.object({
+  monthlyOmzet: z.number().int().nonnegative(),
+  pesertaCount: z.number().int().nonnegative(),
+  completionPercent: z.number().min(0).max(100),
+  growthPercent: z.number(),
+  programAktif: z.array(
+    z.object({
+      id: z.string().uuid(),
+      title: z.string(),
+      priceAmount: z.number().int().nonnegative(),
+      pesertaCount: z.number().int().nonnegative(),
+    })
+  ),
+  aktivitasTerbaru: z.array(
+    z.object({
+      id: z.string(),
+      kind: z.enum(['enrollment', 'payment', 'reflection']),
+      summary: z.string(),
+      occurredAt: z.string(),
+    })
+  ),
+});
+export type DashboardSummary = z.infer<typeof DashboardSummarySchema>;
 
 export const RejectOrderRequestSchema = z.object({
   reason: z.string().min(1, 'Alasan penolakan wajib diisi').max(500),

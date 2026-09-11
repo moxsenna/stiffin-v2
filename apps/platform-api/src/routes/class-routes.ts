@@ -448,6 +448,84 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
     }
     return c.json({ coupon: updated }, 200);
   });
+
+  // 14. Dashboard summary for Beranda cards (single call, no N+1)
+  app.get('/api/v1/class/dashboard-summary', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const orgId = ctx.organizationId;
+    const now = new Date();
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const prevMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+
+    const paidRes = await db.execute(sql`
+      SELECT
+        COALESCE(SUM(CASE WHEN paid_at >= ${monthStart.toISOString()} THEN amount ELSE 0 END), 0) AS "monthOmzet",
+        COALESCE(SUM(CASE WHEN paid_at >= ${prevMonthStart.toISOString()} AND paid_at < ${monthStart.toISOString()} THEN amount ELSE 0 END), 0) AS "prevOmzet"
+      FROM commerce_orders
+      WHERE organization_id = ${orgId}
+        AND order_type = 'PROGRAM_PURCHASE'
+        AND status IN ('PAID', 'APPROVED')
+    `);
+    const paidRow: any = paidRes.rows?.[0] ?? {};
+    const monthOmzet = Number(paidRow.monthOmzet ?? 0);
+    const prevOmzet = Number(paidRow.prevOmzet ?? 0);
+    const growthPercent = prevOmzet === 0 ? (monthOmzet > 0 ? 100 : 0) : ((monthOmzet - prevOmzet) / prevOmzet) * 100;
+
+    const pesertaRes = await db.execute(sql`
+      SELECT COUNT(DISTINCT contact_id) AS v FROM enrollments WHERE organization_id = ${orgId}
+    `);
+    const pesertaCount = Number((pesertaRes.rows?.[0] as any)?.v ?? 0);
+
+    const progRes = await db.execute(sql`
+      SELECT COUNT(*) FILTER (WHERE is_completed) AS done, COUNT(*) AS total
+      FROM lesson_progress WHERE organization_id = ${orgId}
+    `);
+    const progRow: any = progRes.rows?.[0] ?? {};
+    const progTotal = Number(progRow.total ?? 0);
+    const completionPercent = progTotal === 0 ? 0 : (Number(progRow.done ?? 0) / progTotal) * 100;
+
+    const activePrograms = await db
+      .select({ id: programs.id, title: programs.title, priceAmount: programs.priceAmount })
+      .from(programs)
+      .where(and(eq(programs.organizationId, orgId), eq(programs.status, 'published')))
+      .limit(10);
+
+    const withCounts = [];
+    for (const p of activePrograms) {
+      const cntRes = await db.execute(sql`
+        SELECT COUNT(*) AS v FROM enrollments WHERE organization_id = ${orgId} AND program_id = ${p.id}
+      `);
+      withCounts.push({ ...p, pesertaCount: Number((cntRes.rows?.[0] as any)?.v ?? 0) });
+    }
+
+    const enrollRes = await db.execute(sql`
+      SELECT id, created_at AS "occurredAt", 'enrollment' AS kind FROM enrollments
+      WHERE organization_id = ${orgId} ORDER BY created_at DESC LIMIT 3
+    `);
+    const payRes = await db.execute(sql`
+      SELECT id, paid_at AS "occurredAt", 'payment' AS kind FROM commerce_orders
+      WHERE organization_id = ${orgId} AND status IN ('PAID','APPROVED') ORDER BY paid_at DESC NULLS LAST LIMIT 3
+    `);
+    const reflRes = await db.execute(sql`
+      SELECT id, submitted_at AS "occurredAt", 'reflection' AS kind FROM reflection_responses
+      WHERE organization_id = ${orgId} ORDER BY submitted_at DESC LIMIT 3
+    `);
+    const recent = [...(enrollRes.rows ?? []), ...(payRes.rows ?? []), ...(reflRes.rows ?? [])] as any[];
+
+    return c.json({
+      monthlyOmzet: monthOmzet,
+      pesertaCount,
+      completionPercent: Math.round(completionPercent * 10) / 10,
+      growthPercent: Math.round(growthPercent * 10) / 10,
+      programAktif: withCounts,
+      aktivitasTerbaru: recent
+        .filter((a) => a.occurredAt)
+        .sort((a, b) => +new Date(b.occurredAt) - +new Date(a.occurredAt))
+        .slice(0, 6)
+        .map((a) => ({ id: String(a.id), kind: a.kind, summary: String(a.kind), occurredAt: new Date(a.occurredAt).toISOString() })),
+    }, 200);
+  });
 }
 
 

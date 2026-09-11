@@ -528,7 +528,7 @@ export function createApp(deps?: AppDependencies) {
     const raw = await c.req.json().catch(() => ({}));
     const rawToken = raw?.token || raw?.accessToken;
     if (!rawToken || typeof rawToken !== 'string') {
-      throw new DomainError('VALIDATION_ERROR', 'Token akses learner wajib diisi');
+      throw new DomainError('VALIDATION_ERROR', 'Token akses peserta wajib diisi');
     }
 
     const sessionService = createLearnerSessionService(db);

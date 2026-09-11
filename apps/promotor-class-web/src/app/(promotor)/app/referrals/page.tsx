@@ -116,8 +116,8 @@ export default function PromotorReferralPage() {
          <h1 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '4px' }}>
            Program Referral Promotor
           </h1>
-         <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-           Overview performa referral learner, leaderboard referrer teraktif, dan audit fraud pencapaian reward.
+          <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+            Overview performa referral peserta, leaderboard referrer teraktif, dan audit fraud pencapaian reward.
           </div>
        </div>
 
@@ -228,7 +228,7 @@ export default function PromotorReferralPage() {
             marginBottom: '24px',
           }}
         >
-         <h2 style={{ fontSize: '16px', fontWeight: 750, marginBottom: '14px' }}>Top Referrers (Learner Teraktif)</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: 750, marginBottom: '14px' }}>Top Referrers (Peserta Teraktif)</h2>
 
          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
            {overview.topReferrers.map((ref, idx) =>(

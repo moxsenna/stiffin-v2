@@ -1096,7 +1096,7 @@ export function createLearningEngineService(
         .limit(1);
 
       if (!contact) {
-        throw new DomainError('NOT_FOUND', 'Kontak learner tidak ditemukan');
+        throw new DomainError('NOT_FOUND', 'Kontak peserta tidak ditemukan');
       }
 
       const enrs = await db

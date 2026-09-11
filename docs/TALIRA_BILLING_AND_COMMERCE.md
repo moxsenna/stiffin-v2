@@ -43,7 +43,7 @@ Talira operates on a unified subscription and commerce model for educational ent
 
 Defined canonically in `packages/contracts/src/index.ts` via `TALIRA_PLANS`:
 
-| Plan Code | Monthly Price | Annual Price | Operators | Published Programs | Active Learners | CRM Contacts | Paid Classes Allowed | Custom Branding |
+| Plan Code | Monthly Price | Annual Price | Operators | Published Programs | Peserta Aktif | CRM Contacts | Paid Classes Allowed | Custom Branding |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **FREE** | Rp 0 | Rp 0 | 1 | 1 | 50 | 250 | ❌ No | ❌ No |
 | **SOLO** | Rp 149.000 | Rp 1.490.000 | 1 | 10 | 500 | 2.500 | ✅ Yes | ✅ Yes |
@@ -53,7 +53,7 @@ Defined canonically in `packages/contracts/src/index.ts` via `TALIRA_PLANS`:
 
 ### Downgrade & Grace Period Semantics
 1. If an account moves to `PAST_DUE`, a **7-day grace period** is granted before paid features lock.
-2. Existing active learners **never** lose access to their enrolled courses upon promoter plan downgrade or subscription lapse.
+2. Existing active peserta **never** lose access to their enrolled courses upon promoter plan downgrade or subscription lapse.
 3. If an organization exceeds published program limits upon downgrade, existing programs remain published, but new publications or paid program updates are rejected with `PLAN_LIMIT_REACHED`.
 
 ---
@@ -147,7 +147,7 @@ The client cannot supply or alter the price. When a learner initiates checkout:
 ## 7. Frontend User Experience Enhancements
 
 ### A. PromotorClass Navigation & Orders Dashboard (`/app/orders`)
-- Promotor navigation now features **"Pesanan"** alongside Beranda, Program, Learner, Aktivitas, Storefront, and Pengaturan.
+- Promotor navigation now features **"Pesanan"** alongside Beranda, Program, Peserta, Aktivitas, Storefront, and Pengaturan.
 - Filtering by order status: *Semua*, *Menunggu Pembayaran*, *Berhasil*, and *Ditolak / Batal*.
 - Metrics cards displaying Total Pesanan, Omzet Lunas (Rp), and Biaya Platform (Rp3.000 / transaksi).
 - Detailed modal displaying buyer contact details (with direct WhatsApp chat link), order reference, payment provenance, and enrollment status.

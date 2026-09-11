@@ -348,7 +348,7 @@ export function createEnrollmentService(
 
     async redeemLearnerToken(tokenRaw: string): Promise<{ contactId: string; organizationId: string }> {
       if (!tokenRaw?.trim()) {
-        throw new DomainError('UNAUTHORIZED', 'Token akses learner wajib diisi');
+        throw new DomainError('UNAUTHORIZED', 'Token akses peserta wajib diisi');
       }
 
       const tokenHash = createHash('sha256').update(tokenRaw.trim()).digest('hex');
@@ -356,7 +356,7 @@ export function createEnrollmentService(
 
       const validToken = await learnerAccessRepo.findValidByHash(tokenHash, nowIso);
       if (!validToken) {
-        throw new DomainError('UNAUTHORIZED', 'Token akses learner tidak valid atau telah kedaluwarsa');
+        throw new DomainError('UNAUTHORIZED', 'Token akses peserta tidak valid atau telah kedaluwarsa');
       }
 
       await learnerAccessRepo.markRedeemed(validToken.id, nowIso);

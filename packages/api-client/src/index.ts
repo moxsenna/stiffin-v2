@@ -74,6 +74,15 @@ import type {
   PublicOrderStatusResponse,
   ListOrdersQuery,
   ListOrdersResponse,
+  OrderItemSummary,
+  OrdersSummary,
+  PayoutBatch,
+  PayoutItem,
+  CreatePayoutBatchRequest,
+  BankAccount,
+  CreateBankAccountRequest,
+  UpdateBankAccountRequest,
+  DashboardSummary,
   CommerceOrder,
   RejectOrderRequest,
   ProgramPriceVariant,
@@ -658,6 +667,7 @@ export class PromotorClassContentApiClient {
   async listOrders(query?: Partial<ListOrdersQuery>): Promise<ListOrdersResponse> {
     const params = new URLSearchParams();
     if (query?.status) params.set('status', query.status);
+    if (query?.payoutStatus) params.set('payoutStatus', query.payoutStatus);
     if (query?.limit) params.set('limit', String(query.limit));
     if (query?.offset) params.set('offset', String(query.offset));
     const qs = params.toString();
@@ -674,6 +684,58 @@ export class PromotorClassContentApiClient {
 
   async approveOrder(orderId: string): Promise<{ order: CommerceOrder }> {
     return this.client.post<{ order: CommerceOrder }>(`/api/v1/class/orders/${encodeURIComponent(orderId)}/approve`);
+  }
+
+  async listOrdersSummary(): Promise<{ summary: OrdersSummary }> {
+    return this.client.get<{ summary: OrdersSummary }>('/api/v1/class/orders/summary');
+  }
+
+  async listAvailableOrders(limit = 100): Promise<{ orders: OrderItemSummary[] }> {
+    return this.client.get<{ orders: OrderItemSummary[] }>(`/api/v1/class/orders/available?limit=${limit}`);
+  }
+
+  async listPayouts(): Promise<{ batches: PayoutBatch[] }> {
+    return this.client.get<{ batches: PayoutBatch[] }>('/api/v1/class/payouts');
+  }
+
+  async createPayout(data: CreatePayoutBatchRequest): Promise<{ batch: PayoutBatch; items: PayoutItem[] }> {
+    return this.client.post<{ batch: PayoutBatch; items: PayoutItem[] }>('/api/v1/class/payouts', data);
+  }
+
+  async getPayout(id: string): Promise<{ batch: PayoutBatch; items: PayoutItem[] }> {
+    return this.client.get<{ batch: PayoutBatch; items: PayoutItem[] }>(`/api/v1/class/payouts/${encodeURIComponent(id)}`);
+  }
+
+  async submitPayout(id: string): Promise<{ batch: PayoutBatch }> {
+    return this.client.post<{ batch: PayoutBatch }>(`/api/v1/class/payouts/${encodeURIComponent(id)}/submit`);
+  }
+
+  async markPayoutPaid(id: string, proofUrl: string): Promise<{ batch: PayoutBatch }> {
+    return this.client.post<{ batch: PayoutBatch }>(`/api/v1/class/payouts/${encodeURIComponent(id)}/mark-paid`, { proofUrl });
+  }
+
+  async failPayout(id: string): Promise<{ batch: PayoutBatch }> {
+    return this.client.post<{ batch: PayoutBatch }>(`/api/v1/class/payouts/${encodeURIComponent(id)}/fail`);
+  }
+
+  async listBankAccounts(): Promise<{ accounts: BankAccount[] }> {
+    return this.client.get<{ accounts: BankAccount[] }>('/api/v1/class/bank-accounts');
+  }
+
+  async createBankAccount(data: CreateBankAccountRequest): Promise<{ account: BankAccount }> {
+    return this.client.post<{ account: BankAccount }>('/api/v1/class/bank-accounts', data);
+  }
+
+  async updateBankAccount(id: string, data: UpdateBankAccountRequest): Promise<{ account: BankAccount }> {
+    return this.client.patch<{ account: BankAccount }>(`/api/v1/class/bank-accounts/${encodeURIComponent(id)}`, data);
+  }
+
+  async deleteBankAccount(id: string): Promise<{ success: boolean }> {
+    return this.client.delete<{ success: boolean }>(`/api/v1/class/bank-accounts/${encodeURIComponent(id)}`);
+  }
+
+  async getDashboardSummary(): Promise<DashboardSummary> {
+    return this.client.get<DashboardSummary>('/api/v1/class/dashboard-summary');
   }
 
   // ==========================================
