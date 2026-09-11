@@ -57,3 +57,19 @@ Transfer gagal tetap PROCESSING. Bukti wajib.
 
 Uji: unit rumus net + transisi status. Integration lifecycle batch.
 E2E ajukan sampai cair.
+
+## 6. Beranda selaras screenshot
+
+Beranda promotor tampil kartu ringkasan dari endpoint baru
+`GET /api/v1/class/dashboard-summary`:
+
+- estimasi omzet bulan ini (sum order PAID/APPROVED bulan berjalan)
+- jumlah peserta (distinct buyer / enrollments aktif)
+- persen penyelesaian (lesson completed / total)
+- pertumbuhan vs bulan lalu (persen, boleh negatif)
+- program edukasi aktif (judul, harga, peserta terdaftar)
+- aktivitas terbaru (enrollment, pembayaran, refleksi)
+
+Kartu baca endpoint, bukan hitung di client. Alasan: cegah N+1,
+angka konsisten dengan ledger payout. Sinyal belajar tetap di bawah
+kartu, bukan pengganti.
