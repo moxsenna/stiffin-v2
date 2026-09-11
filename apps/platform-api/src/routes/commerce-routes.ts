@@ -230,7 +230,18 @@ export function registerCommerceRoutes(app: Hono<AppEnv>) {
     const orgId = authCtx.organization.organizationId;
     const { planAccessService } = getCommerceServices(c);
     const planAccess = await planAccessService.getPlanAccess(orgId);
-    return c.json(planAccess, 200);
+    const db = c.get('db');
+    const ent = await createEntitlementRepository(db).getForOrg({ organizationId: orgId });
+    return c.json(
+      {
+        ...planAccess,
+        features: {
+          promotorClass: !!ent?.promotorClass,
+          promotorFlow: !!ent?.promotorFlow,
+        },
+      },
+      200
+    );
   });
 
   app.post('/api/v1/billing/subscription/checkout', async (c) => {
