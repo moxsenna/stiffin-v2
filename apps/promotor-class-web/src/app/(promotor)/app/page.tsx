@@ -356,7 +356,7 @@ export default function PromotorHomePage() {
 
       {summary && summary.aktivitasTerbaru.length > 0 && (
         <>
-          <SectionHead label="Aktivitas Learner Terbaru" />
+          <SectionHead label="Aktivitas Peserta Terbaru" />
           <div style={{ display: 'flex', flexDirection: 'column', padding: '4px 0 8px' }}>
             {summary.aktivitasTerbaru.map((act) => {
               const tone = ACTIVITY_TONE[act.kind] ?? ACTIVITY_TONE.reflection;
