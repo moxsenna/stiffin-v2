@@ -35,6 +35,8 @@ Fondasi teknis sudah disiapkan sejak awal dan menganggur:
 
 ## 3. Section 1 — Arsitektur Event Class → NextAction Flow
 
+> **Koreksi audit (2026-09-12, pasca-approval):** pipa Class → Flow ternyata sudah terbangun dan sebagian besar sudah aktif. `integration-outbox-service` lengkap (enqueue idempotent, retry + dead-letter), `local-promotor-flow-adapter.createLearningNextAction` → `NextActionService.createClassNextAction` sudah menulis `source='PROMOTORCLASS'` + idempotency, dan **tiga event sudah di-bridge dengan gating entitlemen**: `PROGRAM_COMPLETED`, `CTA_CLICKED`, `MILESTONE_80_PERCENT` (learning-engine-service §8) serta `LEARNER_AT_RISK` (inactivity-sweep §4), plus proyeksi aktivitas `APPEND_ACTIVITY`. Dispatch berjalan via cron `index.ts` + in-request setelah sweep/engine. **Satu-satunya event yang belum ada: `ORDER_PAID`.** Sisa kerja R1 adalah gap ini + seluruh lapisan UX (badge, teaser, switcher, metrik).
+
 **Alur:**
 
 ```
