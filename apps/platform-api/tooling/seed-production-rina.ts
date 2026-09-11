@@ -159,8 +159,9 @@ async function main() {
         order: 1,
         isRequired: true,
         textContent: 'Pola belajar anak sangat dipengaruhi oleh mesin kecerdasan dominan yang dibawanya sejak lahir.',
-        videoYoutubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        hasReflection: true,
+        videoProvider: 'youtube',
+        videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        videoExternalId: 'dQw4w9WgXcQ',
         reflectionType: 'long_text',
         reflectionPrompt: 'Tuliskan pengamatan Anda tentang kebiasaan belajar anak yang paling menonjol:',
       })
@@ -174,13 +175,14 @@ async function main() {
         order: 2,
         isRequired: true,
         textContent: 'Anak Sensing belajar lewat praktik dan memori konkrit, sedangkan anak Thinking belajar lewat skema logika.',
-        videoYoutubeUrl: 'https://www.youtube.com/watch?v=p31ucD7z0sg',
-        hasReflection: true,
+        videoProvider: 'youtube',
+        videoUrl: 'https://www.youtube.com/watch?v=p31ucD7z0sg',
+        videoExternalId: 'p31ucD7z0sg',
         reflectionType: 'long_text',
         reflectionPrompt: 'Apakah anak Anda lebih cenderung menghafal fakta atau mempertanyakan alasan?',
-        hasCta: true,
+        ctaType: 'WHATSAPP',
         ctaLabel: 'Konsultasi Hasil Tes via WhatsApp',
-        ctaUrl: 'https://wa.me/6281234567890?text=Saya%20ingin%20konsultasi%20tes%20STIFIn',
+        ctaConfig: { url: 'https://wa.me/6281234567890?text=Saya%20ingin%20konsultasi%20tes%20STIFIn' },
       })
       .returning();
 
