@@ -148,6 +148,13 @@
       "when": 1788887396571,
       "tag": "0020_young_luke_cage",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1789137970274,
+      "tag": "0021_curvy_kitty_pryde",
+      "breakpoints": true
     }
   ]
 }
