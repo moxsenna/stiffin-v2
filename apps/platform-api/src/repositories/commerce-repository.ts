@@ -1,11 +1,14 @@
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { eq, and, desc, count } from 'drizzle-orm';
+import { eq, and, desc, count, isNull } from 'drizzle-orm';
 import { commerceOrders, CommerceOrderRow, NewCommerceOrderRow } from '../db/schema/commerce-orders';
 import { paymentRecords, PaymentRecordRow, NewPaymentRecordRow } from '../db/schema/payment-records';
 import { platformFeeEntries, PlatformFeeEntryRow, NewPlatformFeeEntryRow } from '../db/schema/platform-fee-entries';
 import { providerWebhookEvents, ProviderWebhookEventRow } from '../db/schema/provider-webhook-events';
 import { contacts } from '../db/schema/contacts';
 import { programs } from '../db/schema/programs';
+import { payoutItems } from '../db/schema/payout-items';
+import { payoutBatches } from '../db/schema/payout-batches';
+import { calcNetAmount } from '../services/payout/payout-math';
 
 export interface CommerceRepository {
   createOrder(data: NewCommerceOrderRow): Promise<CommerceOrderRow>;
@@ -14,7 +17,7 @@ export interface CommerceRepository {
   getOrderByProviderOrderId(providerOrderId: string): Promise<CommerceOrderRow | null>;
   listOrders(
     organizationId: string,
-    filter?: { status?: string; limit?: number; offset?: number }
+    filter?: { status?: string; payoutStatus?: 'AVAILABLE' | 'IN_BATCH' | 'PAID'; limit?: number; offset?: number }
   ): Promise<{
     orders: Array<{
       order: CommerceOrderRow;
@@ -25,6 +28,9 @@ export interface CommerceRepository {
       paymentStatus: string | null;
       paymentMethod: string | null;
       platformFee: number;
+      processorFee: number | null;
+      netAmount: number;
+      payoutStatus: 'AVAILABLE' | 'IN_BATCH' | 'PAID';
     }>;
     total: number;
   }>;
@@ -98,7 +104,7 @@ export function createCommerceRepository(db: NodePgDatabase): CommerceRepository
 
     async listOrders(
       organizationId: string,
-      filter?: { status?: string; limit?: number; offset?: number }
+      filter?: { status?: string; payoutStatus?: 'AVAILABLE' | 'IN_BATCH' | 'PAID'; limit?: number; offset?: number }
     ) {
       const limit = Math.min(filter?.limit ?? 50, 100);
       const offset = filter?.offset ?? 0;
@@ -106,6 +112,9 @@ export function createCommerceRepository(db: NodePgDatabase): CommerceRepository
       const whereConditions = [eq(commerceOrders.organizationId, organizationId)];
       if (filter?.status) {
         whereConditions.push(eq(commerceOrders.status, filter.status));
+      }
+      if (filter?.payoutStatus === 'AVAILABLE') {
+        whereConditions.push(isNull(payoutItems.orderId));
       }
       const combinedWhere = and(...whereConditions);
 
@@ -125,28 +134,41 @@ export function createCommerceRepository(db: NodePgDatabase): CommerceRepository
           paymentMethod: paymentRecords.paymentMethod,
           platformFeeAmount: platformFeeEntries.amount,
           platformFeeStatus: platformFeeEntries.status,
+          payoutOrderId: payoutItems.orderId,
+          payoutBatchStatus: payoutBatches.status,
+          grossProcessorFee: paymentRecords.processorFee,
         })
         .from(commerceOrders)
         .leftJoin(contacts, eq(commerceOrders.contactId, contacts.id))
         .leftJoin(programs, eq(commerceOrders.programId, programs.id))
         .leftJoin(paymentRecords, eq(commerceOrders.paymentRecordId, paymentRecords.id))
         .leftJoin(platformFeeEntries, eq(commerceOrders.id, platformFeeEntries.orderId))
+        .leftJoin(payoutItems, eq(commerceOrders.id, payoutItems.orderId))
+        .leftJoin(payoutBatches, eq(payoutItems.batchId, payoutBatches.id))
         .where(combinedWhere)
         .orderBy(desc(commerceOrders.createdAt))
         .limit(limit)
         .offset(offset);
 
       return {
-        orders: rows.map((r) => ({
-          order: r.order,
-          buyerName: r.buyerName ?? 'Promotor Subscription',
-          buyerPhone: r.buyerPhone ?? '-',
-          buyerEmail: r.buyerEmail,
-          programTitle: r.programTitle ?? (r.order.orderType === 'SUBSCRIPTION_PURCHASE' ? 'Langganan Ralivo Solo' : '-'),
-          paymentStatus: r.paymentStatus,
-          paymentMethod: r.paymentMethod,
-          platformFee: (r.platformFeeStatus === 'BILLABLE' || r.platformFeeStatus === 'BILLED') ? (r.platformFeeAmount ?? 3000) : 0,
-        })),
+        orders: rows.map((r) => {
+          const processorFee = r.grossProcessorFee ?? null;
+          const netAmount = calcNetAmount(r.order.amount, processorFee);
+          const payoutStatus = !r.payoutOrderId ? 'AVAILABLE' : r.payoutBatchStatus === 'PAID' ? 'PAID' : 'IN_BATCH';
+          return {
+            order: r.order,
+            buyerName: r.buyerName ?? 'Promotor Subscription',
+            buyerPhone: r.buyerPhone ?? '-',
+            buyerEmail: r.buyerEmail,
+            programTitle: r.programTitle ?? (r.order.orderType === 'SUBSCRIPTION_PURCHASE' ? 'Langganan Ralivo Solo' : '-'),
+            paymentStatus: r.paymentStatus,
+            paymentMethod: r.paymentMethod,
+            platformFee: (r.platformFeeStatus === 'BILLABLE' || r.platformFeeStatus === 'BILLED') ? (r.platformFeeAmount ?? 3000) : 0,
+            processorFee,
+            netAmount,
+            payoutStatus: payoutStatus as 'AVAILABLE' | 'IN_BATCH' | 'PAID',
+          };
+        }),
         total: Number(totalResult?.value ?? 0),
       };
     },

@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { sql } from 'drizzle-orm';
 import type { AppEnv } from '../app';
 import { DomainError } from '../core/errors';
 import {
@@ -7,6 +8,10 @@ import {
   CreateSubscriptionCheckoutRequestSchema,
   ListOrdersQuerySchema,
   RejectOrderRequestSchema,
+  CreatePayoutBatchRequestSchema,
+  MarkPayoutPaidRequestSchema,
+  CreateBankAccountRequestSchema,
+  UpdateBankAccountRequestSchema,
 } from '@promotor/contracts';
 import { createCommerceRepository } from '../repositories/commerce-repository';
 import { createSubscriptionRepository } from '../repositories/subscription-repository';
@@ -21,6 +26,10 @@ import { createLearningEventRepository } from '../repositories/learning-event-re
 import { createPriceVariantRepository } from '../repositories/price-variant-repository';
 import { createCouponService } from '../services/commerce/coupon-service';
 import { createEntitlementRepository } from '../repositories/entitlement-repository';
+import { createPayoutRepository } from '../repositories/payout-repository';
+import { createBankAccountRepository } from '../repositories/bank-account-repository';
+import { createPayoutService } from '../services/payout/payout-service';
+import { calcNetAmount } from '../services/payout/payout-math';
 import { normalizePhone, normalizeEmail } from '@promotor/platform-core';
 
 function getCommerceServices(c: any) {
@@ -66,6 +75,23 @@ function getCommerceServices(c: any) {
     paycoreClient,
     commerceService,
   };
+}
+
+function getPayoutServices(c: any) {
+  const db = c.get('db');
+  const commerceRepo = createCommerceRepository(db);
+  const payoutRepo = createPayoutRepository(db);
+  const bankRepo = createBankAccountRepository(db);
+  const payoutService = createPayoutService({ payoutRepo, commerceRepo });
+  return { commerceRepo, payoutRepo, bankRepo, payoutService };
+}
+
+function requireOrgId(c: any): string {
+  const authCtx = c.get('authContext');
+  if (!authCtx?.organization) {
+    throw new DomainError('UNAUTHORIZED', 'Autentikasi organisasi dibutuhkan');
+  }
+  return authCtx.organization.organizationId as string;
 }
 
 export function registerCommerceRoutes(app: Hono<AppEnv>) {
@@ -254,6 +280,7 @@ export function registerCommerceRoutes(app: Hono<AppEnv>) {
 
     const queryRaw = {
       status: c.req.query('status') || undefined,
+      payoutStatus: c.req.query('payoutStatus') || undefined,
       limit: c.req.query('limit') || undefined,
       offset: c.req.query('offset') || undefined,
     };
@@ -313,5 +340,166 @@ export function registerCommerceRoutes(app: Hono<AppEnv>) {
     const { commerceService } = getCommerceServices(c);
     const order = await commerceService.approveOrder(orgId, id, authCtx.user.id);
     return c.json({ order }, 200);
+  });
+
+  app.get('/api/v1/class/orders/summary', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const orgId = requireOrgId(c);
+    const db = c.get('db');
+    const res = await db.execute(
+      sql`SELECT
+        COALESCE(SUM(o.amount), 0) AS "gross",
+        COALESCE(SUM(COALESCE(pr.processor_fee, 0)), 0) AS "processor",
+        COALESCE(SUM(CASE WHEN fe.status IN ('BILLABLE', 'BILLED') THEN 3000 ELSE 0 END), 0) AS "platform",
+        COUNT(*) AS "count"
+      FROM commerce_orders o
+      LEFT JOIN payment_records pr ON pr.id = o.payment_record_id
+      LEFT JOIN platform_fee_entries fe ON fe.order_id = o.id
+      WHERE o.organization_id = ${orgId}
+        AND o.order_type = 'PROGRAM_PURCHASE'
+        AND o.status IN ('PAID', 'APPROVED')`
+    );
+    const row: any = res.rows?.[0] ?? {};
+    const gross = Number(row.gross ?? 0);
+    const processor = Number(row.processor ?? 0);
+    const platform = Number(row.platform ?? 0);
+    return c.json({
+      summary: {
+        grossAmount: gross,
+        processorFeeTotal: processor,
+        platformFeeTotal: platform,
+        netTotal: gross - processor - platform,
+        paidCount: Number(row.count ?? 0),
+      },
+    }, 200);
+  });
+
+  app.get('/api/v1/class/orders/available', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const orgId = requireOrgId(c);
+    const { payoutRepo } = getPayoutServices(c);
+    const limit = Math.min(Number(c.req.query('limit') || 100), 100);
+    const rows = await payoutRepo.listAvailableOrders(orgId, limit);
+    return c.json({
+      orders: rows.map((r) => ({
+        id: r.order.id,
+        reference: r.order.reference,
+        amount: r.order.amount,
+        status: r.order.status,
+        processorFee: r.processorFee,
+        netAmount: calcNetAmount(r.order.amount, r.processorFee),
+        payoutStatus: 'AVAILABLE' as const,
+        paidAt: r.order.paidAt,
+        createdAt: r.order.createdAt,
+      })),
+    }, 200);
+  });
+
+  app.get('/api/v1/class/payouts', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const orgId = requireOrgId(c);
+    const { payoutRepo } = getPayoutServices(c);
+    const batches = await payoutRepo.listBatches(orgId);
+    return c.json({ batches }, 200);
+  });
+
+  app.post('/api/v1/class/payouts', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const orgId = requireOrgId(c);
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = CreatePayoutBatchRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', parsed.error.issues.map((i) => i.message).join(', '));
+    }
+    const { payoutService } = getPayoutServices(c);
+    const { batch, items } = await payoutService.createBatch({
+      organizationId: orgId,
+      orderIds: parsed.data.orderIds,
+      bankAccountId: parsed.data.bankAccountId,
+    });
+    return c.json({ batch, items }, 201);
+  });
+
+  app.get('/api/v1/class/payouts/:id', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const orgId = requireOrgId(c);
+    const { payoutRepo } = getPayoutServices(c);
+    const batch = await payoutRepo.getBatchById(orgId, c.req.param('id'));
+    if (!batch) throw new DomainError('NOT_FOUND', 'Batch pencairan tidak ditemukan');
+    const items = await payoutRepo.listBatchItems(batch.id);
+    return c.json({ batch, items }, 200);
+  });
+
+  app.post('/api/v1/class/payouts/:id/submit', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const orgId = requireOrgId(c);
+    const { payoutService } = getPayoutServices(c);
+    const batch = await payoutService.submitBatch({ organizationId: orgId, batchId: c.req.param('id') });
+    return c.json({ batch }, 200);
+  });
+
+  app.post('/api/v1/class/payouts/:id/mark-paid', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const orgId = requireOrgId(c);
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = MarkPayoutPaidRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', parsed.error.issues.map((i) => i.message).join(', '));
+    }
+    const { payoutService } = getPayoutServices(c);
+    const batch = await payoutService.markPaid({ organizationId: orgId, batchId: c.req.param('id'), proofUrl: parsed.data.proofUrl });
+    return c.json({ batch }, 200);
+  });
+
+  app.post('/api/v1/class/payouts/:id/fail', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const orgId = requireOrgId(c);
+    const { payoutService } = getPayoutServices(c);
+    const batch = await payoutService.markFailed({ organizationId: orgId, batchId: c.req.param('id') });
+    return c.json({ batch }, 200);
+  });
+
+  app.get('/api/v1/class/bank-accounts', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const orgId = requireOrgId(c);
+    const { bankRepo } = getPayoutServices(c);
+    const accounts = await bankRepo.list(orgId);
+    return c.json({ accounts }, 200);
+  });
+
+  app.post('/api/v1/class/bank-accounts', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const orgId = requireOrgId(c);
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = CreateBankAccountRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', parsed.error.issues.map((i) => i.message).join(', '));
+    }
+    const { bankRepo } = getPayoutServices(c);
+    const account = await bankRepo.create(orgId, parsed.data);
+    return c.json({ account }, 201);
+  });
+
+  app.patch('/api/v1/class/bank-accounts/:id', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const orgId = requireOrgId(c);
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = UpdateBankAccountRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', parsed.error.issues.map((i) => i.message).join(', '));
+    }
+    const { bankRepo } = getPayoutServices(c);
+    const account = await bankRepo.update(orgId, c.req.param('id'), parsed.data);
+    if (!account) throw new DomainError('NOT_FOUND', 'Rekening tidak ditemukan');
+    return c.json({ account }, 200);
+  });
+
+  app.delete('/api/v1/class/bank-accounts/:id', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const orgId = requireOrgId(c);
+    const { bankRepo } = getPayoutServices(c);
+    const account = await bankRepo.remove(orgId, c.req.param('id'));
+    if (!account) throw new DomainError('NOT_FOUND', 'Rekening tidak ditemukan');
+    return c.json({ success: true }, 200);
   });
 }

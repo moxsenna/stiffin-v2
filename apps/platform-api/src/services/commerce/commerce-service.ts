@@ -748,7 +748,7 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
 
     async listOrders(
       organizationId: string,
-      query: { status?: string; limit?: number; offset?: number }
+      query: { status?: string; payoutStatus?: 'AVAILABLE' | 'IN_BATCH' | 'PAID'; limit?: number; offset?: number }
     ): Promise<{ orders: OrderItemSummary[]; total: number }> {
       const result = await deps.commerceRepo.listOrders(organizationId, query);
 
@@ -768,6 +768,9 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
         paymentStatus: r.paymentStatus as any,
         paymentMethod: r.paymentMethod,
         platformFee: r.platformFee, // Canonical ledger truth from platform_fee_entries
+        processorFee: (r as any).processorFee ?? null,
+        netAmount: (r as any).netAmount ?? r.order.amount,
+        payoutStatus: (r as any).payoutStatus ?? 'AVAILABLE',
         enrollmentId: r.order.enrollmentId,
         createdAt: r.order.createdAt,
         paidAt: r.order.paidAt,
@@ -804,6 +807,7 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
         rejectedByUserId: userId,
         rejectionReason: reason.trim(),
       });
+      await deps.commerceRepo.updatePlatformFeeStatus(orderId, 'REVERSED', { reversedAt: nowIso }).catch(() => null);
       return updated as any;
     },
 
