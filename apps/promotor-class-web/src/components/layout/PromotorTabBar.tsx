@@ -8,7 +8,7 @@ import { BerandaIcon, ProgramIcon, LearnerIcon, LainnyaIcon } from './nav-icons'
 const TABS = [
   { label: 'Beranda', href: '/app', Icon: BerandaIcon },
   { label: 'Program', href: '/app/programs', Icon: ProgramIcon },
-  { label: 'Learner', href: '/app/learners', Icon: LearnerIcon },
+  { label: 'Peserta', href: '/app/learners', Icon: LearnerIcon },
   { label: 'Lainnya', href: '/app/more', Icon: LainnyaIcon },
 ];
 

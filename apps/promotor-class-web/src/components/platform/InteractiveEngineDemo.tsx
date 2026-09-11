@@ -270,7 +270,7 @@ export function InteractiveEngineDemo() {
               {/* Signal Card Visual */}
               <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid var(--color-divider)', padding: '20px', boxShadow: '0 4px 16px rgba(0,0,0,0.04)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', paddingBottom: '10px', borderBottom: '1px solid var(--color-divider)' }}>
-                  <span style={{ fontWeight: 800, fontSize: '14px' }}>Feed Aktivitas Learner</span>
+                  <span style={{ fontWeight: 800, fontSize: '14px' }}>Feed Aktivitas Peserta</span>
                   <span style={{ fontSize: '11px', padding: '3px 8px', backgroundColor: '#EAF5F2', color: '#167A68', borderRadius: '6px', fontWeight: 700 }}>
                     Intent: Tinggi
                   </span>

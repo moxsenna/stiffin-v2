@@ -151,8 +151,8 @@ export default function PromotorHomePage() {
                   Skor minat: {sig.intentScore}/100
                 </div>
                 <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <button type="button" className="btn btn-primary btn-sm" onClick={() =>setSelectedContactId(sig.contactId)}>
-                    Lihat learner
+                  <button type="button" className="btn btn-primary btn-sm" onClick={() => setSelectedContactId(sig.contactId)}>
+                    Lihat peserta
                   </button>
                   {sig.recommendedActionType === 'WHATSAPP_REPLY' && (
                     <button
@@ -185,7 +185,7 @@ export default function PromotorHomePage() {
 
       {(atRiskLearners.length > 0) && (
         <section style={{ marginTop: 16 }}>
-          <SectionHead title="Learner Macet" subtitle={`Progres < 50% & tidak aktif — momen emas disapa via WA`} />
+          <SectionHead title="Peserta Macet" subtitle={`Progres < 50% & tidak aktif — momen emas disapa via WA`} />
           {atRiskLearners.map((l: any) => (
             <div key={l.contactId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, border: '1px solid var(--border)', marginTop: 8 }}>
               <div>

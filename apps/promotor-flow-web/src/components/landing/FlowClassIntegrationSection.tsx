@@ -25,7 +25,7 @@ export const FlowClassIntegrationSection: React.FC = () => {
       highlights: [
         'Skor kesiapan 0–100 dihitung otomatis per progres belajar',
         'Label HOT langsung tersemat saat peserta menyelesaikan materi kunci',
-        'Peringatan learner macet agar promotor dapat menyapa tepat waktu',
+        'Peringatan peserta macet agar promotor dapat menyapa tepat waktu',
       ],
     },
     {

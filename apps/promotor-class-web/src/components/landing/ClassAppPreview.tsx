@@ -41,7 +41,7 @@ const TABS: PreviewTab[] = [
     url: 'app.ralivo.com/app/learners',
     desktopSrc: '/images/previews/class-learners-table.webp',
     mobileSrc: '/images/previews/class-learners-mobile.webp',
-    captionTitle: 'Pantau Progres & Deteksi Learner Macet',
+    captionTitle: 'Pantau Progres & Deteksi Peserta Macet',
     captionDesc: 'Peringatan dini otomatis untuk peserta yang pasif ≥7 hari agar segera dihubungi via WhatsApp sebelum kehilangan minat.',
   },
 ];

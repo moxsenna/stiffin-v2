@@ -15,7 +15,7 @@ interface PromotorShellProps {
 const DESKTOP_NAV: Array<{ label: string; href: string }> = [
   { label: 'Beranda', href: '/app' },
   { label: 'Program', href: '/app/programs' },
-  { label: 'Learner', href: '/app/learners' },
+  { label: 'Peserta', href: '/app/learners' },
   { label: 'Pesanan', href: '/app/orders' },
   { label: 'Kupon', href: '/app/coupons' },
   { label: 'Aktivitas', href: '/app/activity' },

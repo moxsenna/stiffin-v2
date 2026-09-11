@@ -37,13 +37,13 @@ export function LearnerDetail({
   return (
     <div className="side-panel active" style={{ background: 'var(--surface)', padding: 0, display: 'flex', flexDirection: 'column' }}>
      <div style={{ borderBottom: 'var(--sep-strong)', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-       <div style={{ minWidth: 0 }}>
-         <div className="kicker kicker-muted">Detail learner</div>
-         <h2 style={{ font: '800 22px/1.1 var(--font-sans)', letterSpacing: '-0.02em', marginTop: 7 }}>{contact.name}</h2>
-         <div className="row-meta">{formatPhoneDisplay(contact.phoneE164)}</div>
-       </div>
-       {onClose && (
-          <button type="button" onClick={onClose} aria-label="Tutup detail learner" className="header-action" style={{ width: 40, height: 40 }}>
+        <div style={{ minWidth: 0 }}>
+          <div className="kicker kicker-muted">Detail peserta</div>
+          <h2 style={{ font: '800 22px/1.1 var(--font-sans)', letterSpacing: '-0.02em', marginTop: 7 }}>{contact.name}</h2>
+          <div className="row-meta">{formatPhoneDisplay(contact.phoneE164)}</div>
+        </div>
+        {onClose && (
+          <button type="button" onClick={onClose} aria-label="Tutup detail peserta" className="header-action" style={{ width: 40, height: 40 }}>
            ✕
           </button>
        )}

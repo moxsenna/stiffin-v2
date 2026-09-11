@@ -479,11 +479,11 @@ export default function ContactDetailPage() {
                    </div>
                    <span style={{ font: '700 11px/1 var(--font-sans)', width: 34, textAlign: 'right' }}>{enr.progressPercent}%</span>
                  </div>
-                 <button
+                  <button
                     type="button"
                     className="btn btn-ghost btn-sm"
                     style={{ marginTop: 8, paddingLeft: 0 }}
-                    onClick={() =>alert(`Navigasi ke PromotorClass Learner Detail: /learners/${contact.id}`)}
+                    onClick={() => alert(`Navigasi ke Detail Peserta PromotorClass: /learners/${contact.id}`)}
                   >
                    Lihat aktivitas belajar →
                   </button>

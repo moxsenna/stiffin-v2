@@ -204,7 +204,7 @@ export default function RootPage() {
           {[
             { n: '01', t: 'Buat Program & Share Link', d: 'Publikasikan program, dapatkan link storefront otomatis. Bagikan ke Instagram/WA. Peserta daftar, kontak & enrollment terbentuk.' },
             { n: '02', t: 'Peserta Belajar & Refleksi', d: 'Materi teks & video, refleksi pengunci, progres terukur. Sistem hitung intent dan tandai yang perlu perhatian.' },
-            { n: '03', t: 'Follow-up 1-Tap di Flow', d: 'Learner HOT muncul di Beranda promotor. Buka di Flow, kirim WA personal, booking tes, aftercare D+7 otomatis.' },
+            { n: '03', t: 'Follow-up 1-Tap di Flow', d: 'Peserta HOT muncul di Beranda promotor. Buka di Flow, kirim WA personal, booking tes, aftercare D+7 otomatis.' },
           ].map((s) => (
             <div key={s.n} style={{ border: '1px solid var(--line)', padding: 24, backgroundColor: 'var(--surface)' }}>
               <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.14em', color: 'var(--accent)', marginBottom: 8 }}>{s.n}</div>
@@ -260,7 +260,7 @@ export default function RootPage() {
               {
                 b: 'Self-Booking 14-Hari',
                 t: 'Halaman Booking Kalender Publik',
-                d: 'Hilangkan drama bolak-balik tanya jadwal. Cukup bagikan 1 tautan booking ke learner yang siap tes, biarkan mereka memilih slot jam konsultasi yang masih kosong sesuai ketersediaan Anda.',
+                d: 'Hilangkan drama bolak-balik tanya jadwal. Cukup bagikan 1 tautan booking ke peserta yang siap tes, biarkan mereka memilih slot jam konsultasi yang masih kosong sesuai ketersediaan Anda.',
                 h: ['Pilih slot waktu 14-hari ke depan', 'Kunci slot real-time (anti bentrok)', 'Struk instruksi persiapan tes otomatis'],
               },
               {
@@ -364,7 +364,7 @@ export default function RootPage() {
       </section>
 
       <footer style={{ padding: '32px 24px', borderTop: '1px solid var(--line)', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
-        © 2026 Ralivo Class — STIFIn Platform • <Link href="/login" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Masuk Promotor</Link> • <Link href="/learn" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Portal Learner</Link>
+        © 2026 Ralivo Class — STIFIn Platform • <Link href="/login" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Masuk Promotor</Link> • <Link href="/learn" style={{ color: 'var(--accent-dark)', fontWeight: 700 }}>Portal Peserta</Link>
       </footer>
 
       <style>{`@media(max-width:840px){.landing-nav-links{display:none!important}}`}</style>
