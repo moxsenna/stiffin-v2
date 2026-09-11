@@ -20,7 +20,7 @@
   "vars": {
     "APP_ENV": "production",
     "BETTER_AUTH_URL": "https://stiffin-promotor-api.moxsenna.workers.dev",
-    "BETTER_AUTH_TRUSTED_ORIGINS": "https://stiffin-promotor-class.moxsenna.workers.dev,https://stiffin-promotor-flow.moxsenna.workers.dev",
+    "BETTER_AUTH_TRUSTED_ORIGINS": "https://stiffin-promotor-class.moxsenna.workers.dev,https://stiffin-promotor-flow.moxsenna.workers.dev,https://class.ralivo.biz.id,https://flow.ralivo.biz.id",
     "INACTIVITY_SWEEP_DAYS": "7",
     "LEARNER_OTP_CHANNEL": "log",
     "EMAIL_MODE": "mailketing",
