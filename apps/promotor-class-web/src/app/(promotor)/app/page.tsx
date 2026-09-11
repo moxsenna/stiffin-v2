@@ -29,6 +29,32 @@ function signalTagClass(level: string): string {
   return 'tag tag-cold';
 }
 
+function ActivityGlyph() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M3.5 6.5C5.5 5.4 7.8 5.4 9.8 6.5V18.2C7.8 17.1 5.5 17.1 3.5 18.2V6.5Z"
+        stroke="#1D4ED8"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M14.2 6.5C16.2 5.4 18.5 5.4 20.5 6.5V18.2C18.5 17.1 16.2 17.1 14.2 18.2V6.5Z"
+        stroke="#1D4ED8"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path d="M9.8 6.5C11 7.2 13 7.2 14.2 6.5" stroke="#1D4ED8" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+const ACTIVITY_TONE: Record<string, { avatarBg: string; avatarColor: string; pillBg: string; pillColor: string; label: string }> = {
+  payment: { avatarBg: '#ECFDF5', avatarColor: '#047857', pillBg: '#ECFDF5', pillColor: '#047857', label: 'Lunas' },
+  enrollment: { avatarBg: 'var(--accent-soft, #DBEAFE)', avatarColor: '#1D4ED8', pillBg: 'var(--accent-soft, #DBEAFE)', pillColor: '#1D4ED8', label: 'Baru Masuk' },
+  reflection: { avatarBg: '#FFFBEB', avatarColor: '#92400E', pillBg: '#FFFBEB', pillColor: '#92400E', label: 'Refleksi' },
+};
+
 export default function PromotorHomePage() {
   const [signals, setSignals] = useState<SignalWithAction[] | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -115,18 +141,126 @@ export default function PromotorHomePage() {
       />
 
      {summary && (
-       <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 16 }}>
-         <div className="card"><div className="kicker">Omzet bulan ini</div><strong>{formatIDR(summary.monthlyOmzet)}</strong><div className="row-meta">{summary.growthPercent}% vs bulan lalu</div></div>
-         <div className="card"><div className="kicker">Peserta</div><strong>{summary.pesertaCount}</strong></div>
-         <div className="card"><div className="kicker">Penyelesaian</div><strong>{summary.completionPercent}%</strong></div>
+       <section style={{ marginBottom: 22 }}>
+         <div
+           style={{
+             background: 'linear-gradient(160deg, #2563EB 0%, #1D4ED8 82%)',
+             borderRadius: 16,
+             padding: '18px 20px 16px',
+             color: '#FFFFFF',
+             boxShadow: '0 14px 30px -14px rgba(29, 78, 216, 0.55)',
+           }}
+         >
+           <div
+             style={{
+               font: '800 10.5px/1 var(--font-sans)',
+               letterSpacing: '0.09em',
+               textTransform: 'uppercase',
+               color: 'rgba(255, 255, 255, 0.75)',
+             }}
+           >
+             Estimasi omzet bulan ini
+           </div>
+           <div
+             style={{
+               font: '850 clamp(26px, 7vw, 31px)/1.2 var(--font-sans)',
+               letterSpacing: '-0.025em',
+               marginTop: 7,
+             }}
+           >
+             {formatIDR(summary.monthlyOmzet)}
+           </div>
+           <div style={{ height: 1, background: 'rgba(255, 255, 255, 0.22)', margin: '14px 0 12px' }} />
+           <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap' }}>
+             <div>
+               <div style={{ font: '600 10.5px/1.4 var(--font-sans)', color: 'rgba(255, 255, 255, 0.72)' }}>Peserta</div>
+               <div style={{ font: '800 14.5px/1.4 var(--font-sans)' }}>{summary.pesertaCount}</div>
+             </div>
+             <div>
+               <div style={{ font: '600 10.5px/1.4 var(--font-sans)', color: 'rgba(255, 255, 255, 0.72)' }}>Penyelesaian</div>
+               <div style={{ font: '800 14.5px/1.4 var(--font-sans)' }}>{summary.completionPercent}%</div>
+             </div>
+             <div>
+               <div style={{ font: '600 10.5px/1.4 var(--font-sans)', color: 'rgba(255, 255, 255, 0.72)' }}>Pertumbuhan</div>
+               <div style={{ font: '800 14.5px/1.4 var(--font-sans)' }}>
+                 {summary.growthPercent >= 0 ? '+' : ''}
+                 {summary.growthPercent}%
+               </div>
+             </div>
+           </div>
+         </div>
        </section>
      )}
      {summary && summary.programAktif.length > 0 && (
-       <section>
-         <SectionHead label="Program aktif" />
-         {summary.programAktif.map((p) => (
-           <div key={p.id} className="list-row"><span>{p.title}</span><span className="row-meta">{formatIDR(p.priceAmount)} · {p.pesertaCount} peserta</span></div>
-         ))}
+       <section style={{ marginBottom: 6 }}>
+         <SectionHead label="Program Edukasi Aktif" />
+         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 0 4px' }}>
+           {summary.programAktif.map((p) => (
+             <div
+               key={p.id}
+               style={{
+                 display: 'flex',
+                 alignItems: 'center',
+                 gap: 13,
+                 backgroundColor: '#FFFFFF',
+                 border: '1px solid var(--color-divider, #E2E8F0)',
+                 borderRadius: 14,
+                 padding: '12px 14px',
+                 boxShadow: '0 4px 14px -6px rgba(11, 15, 25, 0.08)',
+               }}
+             >
+               <div
+                 aria-hidden="true"
+                 style={{
+                   width: 46,
+                   height: 46,
+                   flex: 'none',
+                   borderRadius: 12,
+                   background: 'linear-gradient(150deg, var(--accent-soft, #DBEAFE) 0%, #EFF6FF 100%)',
+                   display: 'flex',
+                   alignItems: 'center',
+                   justifyContent: 'center',
+                 }}
+               >
+                 <ActivityGlyph />
+               </div>
+               <div style={{ minWidth: 0 }}>
+                 <span
+                   style={{
+                     display: 'inline-flex',
+                     alignItems: 'center',
+                     gap: 4,
+                     padding: '3px 8px',
+                     borderRadius: 9999,
+                     font: '700 9.5px/1 var(--font-sans)',
+                     letterSpacing: '0.02em',
+                     backgroundColor: '#ECFDF5',
+                     color: '#047857',
+                   }}
+                 >
+                   <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#059669' }} />
+                   Aktif Berjalan
+                 </span>
+                 <div
+                   style={{
+                     font: '700 14px/1.35 var(--font-sans)',
+                     letterSpacing: '-0.01em',
+                     color: 'var(--text-main, #0B0F19)',
+                     marginTop: 5,
+                     overflow: 'hidden',
+                     textOverflow: 'ellipsis',
+                     whiteSpace: 'nowrap',
+                   }}
+                 >
+                   {p.title}
+                 </div>
+                 <div className="row-meta" style={{ marginTop: 2 }}>
+                   {formatIDR(p.priceAmount)} · {p.pesertaCount} Peserta Terdaftar
+                 </div>
+               </div>
+             </div>
+           ))}
+         </div>
        </section>
      )}
 
@@ -220,7 +354,86 @@ export default function PromotorHomePage() {
         </section>
       )}
 
-      {activityItems.length > 0 && (
+      {summary && summary.aktivitasTerbaru.length > 0 && (
+        <>
+          <SectionHead label="Aktivitas Learner Terbaru" />
+          <div style={{ display: 'flex', flexDirection: 'column', padding: '4px 0 8px' }}>
+            {summary.aktivitasTerbaru.map((act) => {
+              const tone = ACTIVITY_TONE[act.kind] ?? ACTIVITY_TONE.reflection;
+              const initial = (act.actorName ?? act.summary).trim().charAt(0).toUpperCase();
+              return (
+                <div
+                  key={act.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '11px 2px',
+                    borderBottom: '1px solid var(--line, #E2E8F0)',
+                  }}
+                >
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      width: 34,
+                      height: 34,
+                      flex: 'none',
+                      borderRadius: '50%',
+                      backgroundColor: tone.avatarBg,
+                      color: tone.avatarColor,
+                      font: '800 13px/34px var(--font-sans)',
+                      textAlign: 'center',
+                    }}
+                  >
+                    {initial}
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div
+                      style={{
+                        font: '700 13px/1.35 var(--font-sans)',
+                        color: 'var(--text-main, #0B0F19)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {act.actorName ?? 'Peserta'}
+                    </div>
+                    <div
+                      className="row-meta"
+                      style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    >
+                      {act.detail ?? act.summary}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5, flex: 'none' }}>
+                    <span
+                      style={{
+                        padding: '4px 9px',
+                        borderRadius: 9999,
+                        font: '700 9.5px/1 var(--font-sans)',
+                        letterSpacing: '0.02em',
+                        backgroundColor: tone.pillBg,
+                        color: tone.pillColor,
+                      }}
+                    >
+                      {tone.label}
+                    </span>
+                    <span
+                      className="tabular-nums"
+                      style={{ font: '500 10px/1.4 var(--font-sans)', color: 'var(--muted-light, #94A3B8)' }}
+                    >
+                      {formatTimeAgo(act.occurredAt)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {!summary && activityItems.length > 0 && (
         <>
           <SectionHead label="Aktivitas pembelajaran terbaru" />
           <div style={{ padding: '10px 18px' }}>

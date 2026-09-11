@@ -10,9 +10,9 @@ import { createHash } from 'node:crypto';
  *    that env var is migration tooling ONLY (owner role). The Worker
  *    reads env.HYPERDRIVE.connectionString exclusively.
  * 2. packages/contracts payout+dashboard extension:
- *    hash 562088600c6d01448a01f7cd385cef6ad2cf060105ac95902bcf4d98a056e5b2.
+ *    hash 2cfcbc14fa1d8b8d14ff80bffb530a8163e1c300d92a0a457abc9f49cff481ee.
  */
-const CONTRACTS_BASELINE_HASH = '562088600c6d01448a01f7cd385cef6ad2cf060105ac95902bcf4d98a056e5b2';
+const CONTRACTS_BASELINE_HASH = '2cfcbc14fa1d8b8d14ff80bffb530a8163e1c300d92a0a457abc9f49cff481ee';
 
 describe('B1 — source guardrails', () => {
   it('runtime src/ code never references DATABASE_URL', () => {

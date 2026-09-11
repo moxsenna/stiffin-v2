@@ -500,16 +500,31 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
     }
 
     const enrollRes = await db.execute(sql`
-      SELECT id, created_at AS "occurredAt", 'enrollment' AS kind FROM enrollments
-      WHERE organization_id = ${orgId} ORDER BY created_at DESC LIMIT 3
+      SELECT e.id, e.created_at AS "occurredAt", 'enrollment' AS kind,
+             c.name AS "actorName", p.title AS "objectTitle"
+      FROM enrollments e
+      LEFT JOIN contacts c ON c.id = e.contact_id
+      LEFT JOIN programs p ON p.id = e.program_id
+      WHERE e.organization_id = ${orgId} ORDER BY e.created_at DESC LIMIT 3
     `);
     const payRes = await db.execute(sql`
-      SELECT id, paid_at AS "occurredAt", 'payment' AS kind FROM commerce_orders
-      WHERE organization_id = ${orgId} AND status IN ('PAID','APPROVED') ORDER BY paid_at DESC NULLS LAST LIMIT 3
+      SELECT o.id, o.paid_at AS "occurredAt", 'payment' AS kind, o.amount,
+             c.name AS "actorName", p.title AS "objectTitle"
+      FROM commerce_orders o
+      LEFT JOIN contacts c ON c.id = o.contact_id
+      LEFT JOIN programs p ON p.id = o.program_id
+      WHERE o.organization_id = ${orgId} AND o.status IN ('PAID','APPROVED')
+        AND o.order_type = 'PROGRAM_PURCHASE' AND o.paid_at IS NOT NULL
+      ORDER BY o.paid_at DESC LIMIT 3
     `);
     const reflRes = await db.execute(sql`
-      SELECT id, submitted_at AS "occurredAt", 'reflection' AS kind FROM reflection_responses
-      WHERE organization_id = ${orgId} ORDER BY submitted_at DESC LIMIT 3
+      SELECT r.id, r.submitted_at AS "occurredAt", 'reflection' AS kind,
+             c.name AS "actorName", l.title AS "objectTitle"
+      FROM reflection_responses r
+      LEFT JOIN enrollments e ON e.id = r.enrollment_id
+      LEFT JOIN contacts c ON c.id = e.contact_id
+      LEFT JOIN lessons l ON l.id = r.lesson_id
+      WHERE r.organization_id = ${orgId} ORDER BY r.submitted_at DESC LIMIT 3
     `);
     const recent = [...(enrollRes.rows ?? []), ...(payRes.rows ?? []), ...(reflRes.rows ?? [])] as any[];
 
@@ -523,7 +538,37 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
         .filter((a) => a.occurredAt)
         .sort((a, b) => +new Date(b.occurredAt) - +new Date(a.occurredAt))
         .slice(0, 6)
-        .map((a) => ({ id: String(a.id), kind: a.kind, summary: String(a.kind), occurredAt: new Date(a.occurredAt).toISOString() })),
+        .map((a) => {
+          const actorName = a.actorName ? String(a.actorName) : null;
+          const objectTitle = a.objectTitle ? String(a.objectTitle) : null;
+          let summary: string;
+          let detail: string | null;
+          if (a.kind === 'payment') {
+            const amount = 'Rp ' + Number(a.amount ?? 0).toLocaleString('id-ID');
+            summary = actorName
+              ? `${actorName} melunasi pembayaran ${amount}`
+              : `Pembayaran ${amount} diterima`;
+            detail = objectTitle ? `Pembayaran program ${objectTitle}` : 'Pembayaran program';
+          } else if (a.kind === 'enrollment') {
+            summary = actorName
+              ? `${actorName} mendaftar di program${objectTitle ? ` ${objectTitle}` : ''}`
+              : `Pendaftaran baru${objectTitle ? ` di ${objectTitle}` : ''}`;
+            detail = objectTitle ? `Mendaftar di ${objectTitle}` : 'Pendaftaran program baru';
+          } else {
+            summary = actorName
+              ? `${actorName} mengirim refleksi${objectTitle ? ` di ${objectTitle}` : ''}`
+              : 'Refleksi baru dikirim';
+            detail = objectTitle ? `Refleksi di ${objectTitle}` : 'Mengirim refleksi';
+          }
+          return {
+            id: String(a.id),
+            kind: a.kind,
+            summary,
+            actorName,
+            detail,
+            occurredAt: new Date(a.occurredAt).toISOString(),
+          };
+        }),
     }, 200);
   });
 }

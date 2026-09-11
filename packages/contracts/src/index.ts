@@ -1700,6 +1700,8 @@ export const DashboardSummarySchema = z.object({
       id: z.string(),
       kind: z.enum(['enrollment', 'payment', 'reflection']),
       summary: z.string(),
+      actorName: z.string().nullable().optional(),
+      detail: z.string().nullable().optional(),
       occurredAt: z.string(),
     })
   ),
