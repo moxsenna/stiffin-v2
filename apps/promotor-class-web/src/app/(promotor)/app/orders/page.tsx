@@ -4,14 +4,17 @@ import React, { useState, useEffect } from 'react';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { PageHeader } from '@/components/ui';
 import { getPlatformApiClient } from '@/adapters';
-import { OrderItemSummary } from '@promotor/contracts';
+import type { OrderItemSummary, OrdersSummary } from '@promotor/contracts';
 import { formatIDR, formatTimeAgo } from '@promotor/platform-core';
 
 type OrderFilterTab = 'ALL' | 'PENDING' | 'PAID' | 'REJECTED';
+type PayoutFilter = 'ALL' | 'AVAILABLE' | 'IN_BATCH' | 'PAID';
 
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState<OrderFilterTab>('ALL');
+  const [payoutFilter, setPayoutFilter] = useState<PayoutFilter>('ALL');
   const [orders, setOrders] = useState<OrderItemSummary[]>([]);
+  const [summary, setSummary] = useState<OrdersSummary | null>(null);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<OrderItemSummary | null>(null);
@@ -32,9 +35,16 @@ export default function OrdersPage() {
           ? 'REJECTED'
           : undefined;
 
-      const res = await api.listOrders({ status: statusParam as any, limit: 50, offset: 0 });
+      const res = await api.listOrders({
+        status: statusParam as any,
+        payoutStatus: payoutFilter === 'ALL' ? undefined : payoutFilter,
+        limit: 50,
+        offset: 0,
+      });
       setOrders(res.orders || []);
       setTotal(res.total || 0);
+      const s = await api.listOrdersSummary().catch(() => null);
+      setSummary(s?.summary ?? null);
     } catch (err: any) {
       console.error('Failed to load orders:', err);
       // Fallback empty if mock mode or network error
@@ -47,7 +57,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     fetchOrders();
-  }, [activeTab]);
+  }, [activeTab, payoutFilter]);
 
   const handleReject = async (orderId: string) => {
     if (!rejectReason.trim()) {
@@ -71,8 +81,25 @@ export default function OrdersPage() {
 
   // Metrics
   const paidOrders = orders.filter((o) => o.status === 'PAID' || o.status === 'APPROVED');
-  const totalRevenue = paidOrders.reduce((sum, o) => sum + o.amount, 0);
-  const totalPlatformFees = paidOrders.length * 3000;
+  const totalRevenue = summary?.grossAmount ?? paidOrders.reduce((sum, o) => sum + o.amount, 0);
+  const totalPlatformFees = summary?.platformFeeTotal ?? paidOrders.length * 3000;
+  const totalNet = summary?.netTotal ?? totalRevenue - totalPlatformFees;
+  const totalProcessorFees = summary?.processorFeeTotal ?? 0;
+
+  const exportCsv = () => {
+    const header = 'reference,buyer,program,gross,processorFee,platformFee,net,status,payoutStatus,paidAt';
+    const lines = orders.map((o) => {
+      const net = o.netAmount ?? o.amount - (o.processorFee ?? 0) - (o.platformFee ?? 3000);
+      return [o.reference, `"${o.buyerName}"`, `"${o.programTitle}"`, o.amount, o.processorFee ?? 0, o.platformFee ?? 0, net, o.status, o.payoutStatus ?? '', o.paidAt ?? ''].join(',');
+    });
+    const blob = new Blob([[header, ...lines].join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rekonsiliasi-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <PromotorShell>
@@ -80,6 +107,11 @@ export default function OrdersPage() {
         kicker="PromotorClass"
         title="Pesanan"
         sub="Kelola transaksi, verifikasi pembayaran, dan akses peserta kelas berbayar"
+        action={
+          <button type="button" onClick={exportCsv} className="btn btn-secondary btn-sm">
+            Export CSV
+          </button>
+        }
       />
 
       {message && (
@@ -146,13 +178,29 @@ export default function OrdersPage() {
           }}
         >
           <div style={{ fontSize: '12px', color: '#6B7280', fontWeight: 600, marginBottom: '6px' }}>
-            BIAYA PLATFORM (RP3.000 / TRANSAKSI)
+            BIAYA PROSESOR + PLATFORM
           </div>
           <div style={{ fontSize: '24px', fontWeight: 800, color: '#4B5563' }}>
-            {formatIDR(totalPlatformFees)}
+            {formatIDR(totalProcessorFees + totalPlatformFees)}
           </div>
           <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '4px' }}>
             Tanpa persentase platform
+          </div>
+        </div>
+
+        <div
+          style={{
+            backgroundColor: '#FFFFFF',
+            border: '1px solid var(--color-divider, #E5E7EB)',
+            borderRadius: '14px',
+            padding: '18px',
+          }}
+        >
+          <div style={{ fontSize: '12px', color: '#6B7280', fontWeight: 600, marginBottom: '6px' }}>
+            NET BERSIH
+          </div>
+          <div style={{ fontSize: '24px', fontWeight: 800, color: '#059669' }}>
+            {formatIDR(totalNet)}
           </div>
         </div>
       </div>
@@ -184,6 +232,42 @@ export default function OrdersPage() {
               borderBottom: activeTab === tab.key ? '2px solid var(--color-primary, #0284C7)' : '2px solid transparent',
               color: activeTab === tab.key ? 'var(--color-primary, #0284C7)' : '#6B7280',
               fontWeight: activeTab === tab.key ? 700 : 500,
+              fontSize: '13px',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Payout filter */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '8px',
+          marginBottom: '20px',
+          overflowX: 'auto',
+        }}
+      >
+        {[
+          { key: 'ALL', label: 'Semua' },
+          { key: 'AVAILABLE', label: 'Siap cair' },
+          { key: 'IN_BATCH', label: 'Dalam batch' },
+          { key: 'PAID', label: 'Cair' },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setPayoutFilter(tab.key as PayoutFilter)}
+            style={{
+              padding: '10px 16px',
+              border: 0,
+              backgroundColor: 'transparent',
+              borderBottom: payoutFilter === tab.key ? '2px solid var(--color-primary, #0284C7)' : '2px solid transparent',
+              color: payoutFilter === tab.key ? 'var(--color-primary, #0284C7)' : '#6B7280',
+              fontWeight: payoutFilter === tab.key ? 700 : 500,
               fontSize: '13px',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
@@ -233,6 +317,8 @@ export default function OrdersPage() {
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: '#4B5563' }}>Pembeli</th>
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: '#4B5563' }}>Program</th>
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: '#4B5563' }}>Nominal</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: '#4B5563' }}>Net</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: '#4B5563' }}>Pencairan</th>
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: '#4B5563' }}>Status</th>
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: '#4B5563' }}>Waktu</th>
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: '#4B5563', textAlign: 'right' }}>Aksi</th>
@@ -271,6 +357,23 @@ export default function OrdersPage() {
                       </td>
                       <td style={{ padding: '14px 16px', fontWeight: 700, color: '#111827' }}>
                         {formatIDR(order.amount)}
+                      </td>
+                      <td style={{ padding: '14px 16px', fontWeight: 700, color: '#059669' }}>
+                        {formatIDR(order.netAmount ?? order.amount - (order.processorFee ?? 0) - (order.platformFee ?? 3000))}
+                      </td>
+                      <td style={{ padding: '14px 16px' }}>
+                        <span
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '9999px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            backgroundColor: order.payoutStatus === 'PAID' ? '#ECFDF5' : order.payoutStatus === 'IN_BATCH' ? '#E0F2FE' : '#FEF3C7',
+                            color: order.payoutStatus === 'PAID' ? '#065F46' : order.payoutStatus === 'IN_BATCH' ? '#0369A1' : '#92400E',
+                          }}
+                        >
+                          {order.payoutStatus === 'PAID' ? 'Cair' : order.payoutStatus === 'IN_BATCH' ? 'Dalam batch' : 'Siap cair'}
+                        </span>
                       </td>
                       <td style={{ padding: '14px 16px' }}>
                         <span
