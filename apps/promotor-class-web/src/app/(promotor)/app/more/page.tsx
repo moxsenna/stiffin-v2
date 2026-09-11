@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/ui';
 
 const MORE_LINKS: Array<{ label: string; href: string; note: string }> = [
   { label: 'Pesanan', href: '/app/orders', note: 'Kelola transaksi & status pembelian kelas berbayar' },
+  { label: 'Pencairan', href: '/app/payouts', note: 'Ajukan pencairan dan lacak transfer manual' },
   { label: 'Kupon Promo', href: '/app/coupons', note: 'Kelola voucher diskon & potongan harga program' },
   { label: 'Aktivitas', href: '/app/activity', note: 'Sinyal belajar terbaru dari peserta' },
   { label: 'Storefront', href: '/app/storefront', note: 'Halaman publik dan katalog program' },

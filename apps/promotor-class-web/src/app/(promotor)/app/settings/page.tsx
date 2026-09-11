@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { getPlatformApiClient } from '@/adapters';
+import { BankAccountsSection } from '@/components/promotor/BankAccountsSection';
 import { OrganizationPlanAccess } from '@promotor/contracts';
 import { formatIDR } from '@promotor/platform-core';
 import { signOut } from '@/lib/auth';
@@ -258,6 +259,8 @@ export default function SettingsPage() {
               </div>
             </div>
           )}
+
+          <BankAccountsSection />
 
           {/* 3. Help & Support */}
           <div

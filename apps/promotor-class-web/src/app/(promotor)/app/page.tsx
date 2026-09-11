@@ -10,8 +10,8 @@ import { getContactsQuery } from '@/modules/contacts/queries';
 import { getReflectionsQuery } from '@/modules/reflections/queries';
 import { getEnrollmentsQuery } from '@/modules/enrollments/queries';
 import { getPlatformApiClient } from '@/adapters';
-import { LearningSignal, Contact, Reflection, Enrollment, LearnerSummaryItem } from '@promotor/contracts';
-import { formatTimeAgo } from '@promotor/platform-core';
+import { LearningSignal, Contact, Reflection, Enrollment, LearnerSummaryItem, DashboardSummary } from '@promotor/contracts';
+import { formatTimeAgo, formatIDR } from '@promotor/platform-core';
 
 type SignalWithAction = LearningSignal & {
   type?: string;
@@ -35,6 +35,7 @@ export default function PromotorHomePage() {
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [enrollments] = useState<Enrollment[]>([]);
   const [atRiskLearners, setAtRiskLearners] = useState<LearnerSummaryItem[]>([]);
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [whatsAppDraftContact, setWhatsAppDraftContact] = useState<Contact | null>(null);
@@ -57,17 +58,19 @@ export default function PromotorHomePage() {
   const loadData = React.useCallback(async () =>{
     setLoadError(null);
     try {
-      const [sigData, conData, reflData, enrData, atRiskData] = await Promise.all([
+      const [sigData, conData, reflData, enrData, atRiskData, sumData] = await Promise.all([
         getLearningSignalsQuery(),
         getContactsQuery(),
         getReflectionsQuery(),
         getEnrollmentsQuery(),
         getPlatformApiClient().listClassLearners({ learningStatus: 'AT_RISK' }).catch(() => ({ learners: [], total: 0 })),
+        getPlatformApiClient().getDashboardSummary().catch(() => null),
       ]);
       setSignals(sigData as SignalWithAction[]);
       setContacts(conData);
       setReflections(reflData);
       setAtRiskLearners(atRiskData?.learners ?? []);
+      setSummary(sumData);
       void enrData;
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Tidak dapat memuat sinyal belajar.');
@@ -110,6 +113,22 @@ export default function PromotorHomePage() {
          ) : undefined
         }
       />
+
+     {summary && (
+       <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 16 }}>
+         <div className="card"><div className="kicker">Omzet bulan ini</div><strong>{formatIDR(summary.monthlyOmzet)}</strong><div className="row-meta">{summary.growthPercent}% vs bulan lalu</div></div>
+         <div className="card"><div className="kicker">Peserta</div><strong>{summary.pesertaCount}</strong></div>
+         <div className="card"><div className="kicker">Penyelesaian</div><strong>{summary.completionPercent}%</strong></div>
+       </section>
+     )}
+     {summary && summary.programAktif.length > 0 && (
+       <section>
+         <SectionHead label="Program aktif" />
+         {summary.programAktif.map((p) => (
+           <div key={p.id} className="list-row"><span>{p.title}</span><span className="row-meta">{formatIDR(p.priceAmount)} · {p.pesertaCount} peserta</span></div>
+         ))}
+       </section>
+     )}
 
      {isDevelopmentEnv && isDevMode && (
         <div className="section-block">
