@@ -45,3 +45,5 @@ export * from './learner-lesson-notes';
 
 export * from './payout-batches';
 export * from './payout-items';
+export * from './bridge-metrics';
+export * from './bridge-dismissals';
