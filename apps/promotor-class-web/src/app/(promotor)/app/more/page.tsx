@@ -1,9 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { PageHeader } from '@/components/ui';
+import { getPlatformApiClient } from '@/adapters';
+import { PARTNER_APP_URL } from '@/config/partner-app';
 
 const MORE_LINKS: Array<{ label: string; href: string; note: string }> = [
   { label: 'Pesanan', href: '/app/orders', note: 'Kelola transaksi & status pembelian kelas berbayar' },
@@ -15,10 +17,28 @@ const MORE_LINKS: Array<{ label: string; href: string; note: string }> = [
 ];
 
 export default function MorePage() {
+  const [hasFlow, setHasFlow] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    getPlatformApiClient()
+      .getPlanAccess()
+      .then((p) => setHasFlow(!!(p as any).features?.promotorFlow))
+      .catch(() => setHasFlow(null));
+  }, []);
+
   return (
     <PromotorShell>
      <PageHeader kicker="PromotorClass" title="Lainnya" sub="Aktivitas, storefront, dan pengaturan" />
      <div>
+       {hasFlow !== false && (
+         <a href={PARTNER_APP_URL} className="list-row" onClick={() => getPlatformApiClient().recordBridgeMetric('bridge_action_executed', { kind: 'switcher_class_to_flow' }).catch(() => null)}>
+           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
+             <span style={{ font: '600 13px/1 var(--font-sans)' }}>Buka PromotorFlow ↗</span>
+             <span style={{ font: '500 11px/1 var(--font-sans)', color: 'var(--muted-light)' }}>→</span>
+           </div>
+           <div className="row-meta">Pindah ke aplikasi follow-up &amp; pipeline</div>
+         </a>
+       )}
        {MORE_LINKS.map((link) =>(
           <Link key={link.href} href={link.href} className="list-row">
            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>

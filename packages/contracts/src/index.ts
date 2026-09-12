@@ -1407,8 +1407,43 @@ export const OrganizationPlanAccessSchema = z.object({
   limits: PlanLimitsSchema,
   isGracePeriod: z.boolean(),
   effectivePaidProgramsAllowed: z.boolean(),
+  features: z
+    .object({ promotorClass: z.boolean(), promotorFlow: z.boolean() })
+    .optional(),
 });
 export type OrganizationPlanAccess = z.infer<typeof OrganizationPlanAccessSchema>;
+
+export const BridgePreviewSchema = z.object({
+  title: z.string(),
+  dueLabel: z.string(),
+});
+export type BridgePreview = z.infer<typeof BridgePreviewSchema>;
+
+export const BridgeTeaserSchema = z.object({
+  available: z.boolean(),
+  signalsCount: z.number().int().nonnegative(),
+  preview: BridgePreviewSchema.nullable(),
+  dismissedAt: z.string().nullable().optional(),
+});
+export type BridgeTeaser = z.infer<typeof BridgeTeaserSchema>;
+
+export const BridgeMetricEventSchema = z.enum([
+  'teaser_viewed', 'teaser_cta_clicked', 'upgrade_started',
+  'upgrade_completed', 'bridge_action_executed', 'journey_cross_view',
+]);
+export type BridgeMetricEvent = z.infer<typeof BridgeMetricEventSchema>;
+
+export const JourneyItemSchema = z.object({
+  app: z.enum(['CLASS', 'FLOW']),
+  type: z.string(),
+  title: z.string(),
+  detail: z.string().nullable().optional(),
+  occurredAt: z.string(),
+});
+export type JourneyItem = z.infer<typeof JourneyItemSchema>;
+
+export const JourneyResponseSchema = z.object({ items: z.array(JourneyItemSchema) });
+export type JourneyResponse = z.infer<typeof JourneyResponseSchema>;
 
 export const CreateSubscriptionCheckoutRequestSchema = z.object({
   planCode: z.enum(['SOLO']),

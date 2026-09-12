@@ -1,4 +1,4 @@
-import { eq, and, lte } from 'drizzle-orm';
+import { eq, and, lte, sql } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { integrationOutbox, IntegrationOutboxRow, NewIntegrationOutboxRow } from '../../db/schema/integration-outbox';
 import type { PromotorFlowAdapter, LearningNextActionRequest, LearningActivityProjection } from '@promotor/contracts';
@@ -25,6 +25,7 @@ export interface IntegrationOutboxService {
   enqueue(input: EnqueueOutboxInput, tx?: NodePgDatabase): Promise<IntegrationOutboxRow>;
   processPending(options?: { limit?: number; now?: Date; organizationId?: string }): Promise<ProcessPendingResult>;
   dispatchPending(flowAdapter: PromotorFlowAdapter, limit?: number, organizationId?: string): Promise<number>;
+  purgeCompleted(olderThanDays?: number): Promise<number>;
 }
 
 export function createIntegrationOutboxService(
@@ -261,6 +262,15 @@ export function createIntegrationOutboxService(
       }
 
       return processed;
+    },
+
+    async purgeCompleted(olderThanDays = 30): Promise<number> {
+      const res = await db.execute(sql`
+        DELETE FROM integration_outbox
+        WHERE status = 'COMPLETED'
+          AND processed_at < now() - (${olderThanDays} || ' days')::interval
+      `);
+      return res.rowCount ?? 0;
     },
   };
 }

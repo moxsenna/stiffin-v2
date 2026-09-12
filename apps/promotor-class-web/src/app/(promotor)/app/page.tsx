@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { LearnerDetail } from '@/components/promotor/LearnerDetail';
 import { WhatsAppDraftSheet } from '@/components/promotor/WhatsAppDraftSheet';
+import { BridgeTeaserCard } from '@/components/promotor/BridgeTeaserCard';
+import { UpsellSheet } from '@/components/promotor/UpsellSheet';
 import { PageHeader, SectionHead, EmptyState, ErrorState, LoadingRows } from '@/components/ui';
 import { getLearningSignalsQuery } from '@/modules/signals/queries';
 import { getContactsQuery } from '@/modules/contacts/queries';
@@ -67,6 +69,7 @@ export default function PromotorHomePage() {
   const [whatsAppDraftContact, setWhatsAppDraftContact] = useState<Contact | null>(null);
   const [whatsAppDraftMessage, setWhatsAppDraftMessage] = useState<string | undefined>(undefined);
   const [isDevMode, setIsDevMode] = useState(false);
+  const [flowUpsellOpen, setFlowUpsellOpen] = useState(false);
 
   const isDevelopmentEnv = process.env.NODE_ENV === 'development';
 
@@ -273,6 +276,8 @@ export default function PromotorHomePage() {
        </div>
      )}
 
+     <BridgeTeaserCard />
+
       {loadError && (
         <ErrorState title="Gagal memuat sinyal belajar" detail={loadError} onRetry={() =>loadData()} />
      )}
@@ -340,15 +345,33 @@ export default function PromotorHomePage() {
         <section style={{ marginTop: 16 }}>
           <SectionHead title="Peserta Macet" subtitle={`Progres < 50% & tidak aktif — momen emas disapa via WA`} />
           {atRiskLearners.map((l: any) => (
-            <div key={l.contactId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, border: '1px solid var(--border)', marginTop: 8 }}>
+            <div key={l.contactId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: 12, border: '1px solid var(--border)', marginTop: 8 }}>
               <div>
                 <strong style={{ font: '600 14px/1.3 var(--font-sans)' }}>{l.name}</strong>
                 <div className="kicker kicker-muted">{l.programTitle} · {l.progressPercent}% · macet {l.daysInactive ?? 'beberapa'} hari</div>
               </div>
-              <button type="button" className="btn btn-accent btn-sm"
-                onClick={() => openWaSheet({ contactName: l.name, phoneE164: l.phoneE164 ?? l.phone, initialDraft: buildNudgeMessage(l) })}>
-                Kirim WA
-              </button>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flex: 'none' }}>
+                <button type="button" className="btn btn-accent btn-sm"
+                  onClick={() => openWaSheet({ contactName: l.name, phoneE164: l.phoneE164 ?? l.phone, initialDraft: buildNudgeMessage(l) })}>
+                  Kirim WA
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    getPlatformApiClient().recordBridgeMetric('upgrade_started', { product: 'FLOW', surface: 'macet_chip' }).catch(() => null);
+                    setFlowUpsellOpen(true);
+                  }}
+                  aria-label="Jadwalkan otomatis via Flow"
+                  title="Jadwalkan otomatis via Flow"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 10px', borderRadius: 8, border: '1px dashed #93C5FD', background: '#EFF6FF', color: '#1D4ED8', font: '700 11px/1 var(--font-sans)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <rect x="5" y="11" width="14" height="9" rx="2" stroke="#1D4ED8" strokeWidth="1.8" />
+                    <path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="#1D4ED8" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                  Otomatis via Flow
+                </button>
+              </div>
             </div>
           ))}
         </section>
@@ -475,6 +498,8 @@ export default function PromotorHomePage() {
           }}
         />
       )}
+
+      {flowUpsellOpen && <UpsellSheet product="FLOW" onClose={() => setFlowUpsellOpen(false)} />}
     </PromotorShell>
  );
 }

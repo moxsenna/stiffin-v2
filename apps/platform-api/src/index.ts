@@ -33,6 +33,7 @@ export default {
       try {
         const outboxService = createIntegrationOutboxService(db);
         const outboxResult = await outboxService.processPending({ limit: 50 });
+        await outboxService.purgeCompleted(30).catch(() => null);
         logOperation({
           operation: 'SCHEDULED_OUTBOX_DISPATCH',
           result: outboxResult.errors.length === 0 ? 'SUCCESS' : 'PARTIAL',

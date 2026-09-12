@@ -55,6 +55,24 @@ export function requireEntitlement(product: keyof AuthEntitlements): MiddlewareH
 }
 
 /**
+ * Requires at least ONE of the given product entitlements (Class ↔ Flow
+ * shared surfaces seperti /api/v1/journey).
+ */
+export function requireAnyEntitlement(products: Array<keyof AuthEntitlements>): MiddlewareHandler<AuthzEnv> {
+  return createMiddleware<AuthzEnv>(async (c, next) => {
+    const ctx = requireContext(c);
+    if (!ctx.entitlements) {
+      throw new AuthError('ENTITLEMENT_DENIED', 'Product entitlement is not provisioned');
+    }
+    const hasAny = products.some((p) => !!ctx.entitlements?.[p]);
+    if (!hasAny) {
+      throw new AuthError('ENTITLEMENT_DENIED', 'Product is not entitled for this organization');
+    }
+    await next();
+  });
+}
+
+/**
  * Requires one of the given canonical single roles. Role is always the
  * server-resolved canonical role — never browser input.
  */

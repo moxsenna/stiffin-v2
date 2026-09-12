@@ -8,7 +8,10 @@ import {
   LearnersListQuerySchema,
   CreateCouponRequestSchema,
   UpdateCouponRequestSchema,
+  BridgeMetricEventSchema,
 } from '@promotor/contracts';
+import { createBridgeTeaserService } from '../services/class/bridge-teaser-service';
+import { recordBridgeMetric, upsertDismissal } from '../services/integration/bridge-metrics-service';
 import { createEnrollmentService } from '../services/class/enrollment-service';
 import { createPromotorClassAdapter } from '../services/class/promotor-class-adapter';
 import { createLearningEngineService } from '../services/class/learning-engine-service';
@@ -570,6 +573,44 @@ export function registerClassRoutes(app: Hono<AppEnv>) {
           };
         }),
     }, 200);
+  });
+
+  // ==========================================
+  // Bridge teaser: nilai Flow untuk org yang belum punya (attachment path)
+  // ==========================================
+  app.get('/api/v1/class/bridge/teaser', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const svc = createBridgeTeaserService(db);
+    return c.json(await svc.getTeaser(ctx.organizationId), 200);
+  });
+
+  app.post('/api/v1/class/bridge/teaser/dismiss', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    await upsertDismissal(db, ctx.organizationId, 'beranda_flow_teaser');
+    await recordBridgeMetric(db, {
+      organizationId: ctx.organizationId,
+      event: 'teaser_cta_clicked',
+      meta: { kind: 'dismiss' },
+    }).catch(() => null);
+    return c.json({ success: true }, 200);
+  });
+
+  app.post('/api/v1/class/bridge/metrics', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = BridgeMetricEventSchema.safeParse(raw?.event);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', 'Event metrik tidak valid');
+    }
+    await recordBridgeMetric(db, {
+      organizationId: ctx.organizationId,
+      event: parsed.data,
+      meta: raw?.meta ?? {},
+    }).catch(() => null);
+    return c.json({ success: true }, 200);
   });
 }
 
