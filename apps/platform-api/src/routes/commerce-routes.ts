@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { sql } from 'drizzle-orm';
+import { sql, eq } from 'drizzle-orm';
 import type { AppEnv } from '../app';
 import { DomainError } from '../core/errors';
 import {
@@ -30,6 +30,10 @@ import { createPayoutRepository } from '../repositories/payout-repository';
 import { createBankAccountRepository } from '../repositories/bank-account-repository';
 import { createPayoutService } from '../services/payout/payout-service';
 import { calcNetAmount } from '../services/payout/payout-math';
+import { createIntegrationOutboxService } from '../services/integration/integration-outbox-service';
+import { commerceOrders } from '../db/schema/commerce-orders';
+import { programs } from '../db/schema/programs';
+import { contacts } from '../db/schema/contacts';
 import { normalizePhone, normalizeEmail } from '@promotor/platform-core';
 
 function getCommerceServices(c: any) {
@@ -52,6 +56,74 @@ function getCommerceServices(c: any) {
   const enrollmentService = createEnrollmentService(db);
   const learningEventRepo = createLearningEventRepository(db);
 
+  const emitOrderPaid = async (input: {
+    organizationId: string;
+    orderId: string;
+    contactId: string | null;
+    amount: number;
+    programTitle: string | null;
+    buyerName: string | null;
+  }) => {
+    const ent = await createEntitlementRepository(db).getForOrg({ organizationId: input.organizationId });
+    if (!ent?.promotorFlow) return; // gating entitlemen: tanpa Flow, event tidak diproses
+    const outbox = createIntegrationOutboxService(db);
+    const nowIso = new Date().toISOString();
+    const idempotencyKey = `promotorclass:order-paid:${input.orderId}`;
+
+    let programTitle = input.programTitle;
+    let buyerName = input.buyerName;
+    try {
+      const [row] = await db
+        .select({ title: programs.title, buyer: contacts.name })
+        .from(commerceOrders)
+        .leftJoin(programs, eq(commerceOrders.programId, programs.id))
+        .leftJoin(contacts, eq(commerceOrders.contactId, contacts.id))
+        .where(eq(commerceOrders.id, input.orderId))
+        .limit(1);
+      programTitle = programTitle ?? row?.title ?? null;
+      buyerName = buyerName ?? row?.buyer ?? null;
+    } catch {
+      // fallback judul generik bila lookup gagal
+    }
+
+    const title = `Sambut ${buyerName || 'peserta baru'} yang baru lunas ${programTitle || 'program'}`;
+    await outbox.enqueue({
+      organizationId: input.organizationId,
+      destination: 'PROMOTORFLOW',
+      operation: 'CREATE_NEXT_ACTION',
+      idempotencyKey,
+      payloadJson: {
+        organizationId: input.organizationId,
+        contactId: input.contactId,
+        source: 'PROMOTORCLASS',
+        sourceEventId: input.orderId,
+        actionType: 'FOLLOW_UP',
+        title,
+        reason: 'Peserta baru melunasi program — kirim panduan mulai',
+        dueAt: nowIso,
+        context: { orderId: input.orderId, amount: input.amount, programTitle },
+        idempotencyKey,
+      },
+    });
+    await outbox.enqueue({
+      organizationId: input.organizationId,
+      destination: 'PROMOTORFLOW',
+      operation: 'APPEND_ACTIVITY',
+      idempotencyKey: `act_${idempotencyKey}`,
+      payloadJson: {
+        organizationId: input.organizationId,
+        contactId: input.contactId,
+        source: 'PROMOTORCLASS',
+        sourceEventId: input.orderId,
+        eventType: 'ORDER_PAID',
+        summary: title,
+        context: { orderId: input.orderId, amount: input.amount },
+        idempotencyKey: `act_${idempotencyKey}`,
+      },
+    });
+    await outbox.processPending({ limit: 10 }).catch(() => null);
+  };
+
   const commerceService = createCommerceService({
     commerceRepo,
     subscriptionRepo,
@@ -64,6 +136,7 @@ function getCommerceServices(c: any) {
     orgRepo,
     enrollmentService,
     learningEventRepo,
+    emitOrderPaid,
     appUuid: paycoreConfig.appUuid,
     appEnv,
   });

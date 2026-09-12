@@ -118,6 +118,15 @@ export interface CommerceServiceDependencies {
   orgRepo: OrganizationRepository;
   enrollmentService: EnrollmentService;
   learningEventRepo: LearningEventRepository;
+  /** Bridge ORDER_PAID ke Flow via outbox (opsional; di-wire routes dengan gating entitlemen). */
+  emitOrderPaid?: (input: {
+    organizationId: string;
+    orderId: string;
+    contactId: string | null;
+    amount: number;
+    programTitle: string | null;
+    buyerName: string | null;
+  }) => Promise<void>;
   clock?: () => Date;
   appUuid?: string;
   appEnv?: string;
@@ -187,6 +196,29 @@ export interface CommerceService {
 
 export function createCommerceService(deps: CommerceServiceDependencies): CommerceService {
   const clock = deps.clock ?? (() => new Date());
+
+  const bridgeOrderPaid = async (
+    order: {
+      id: string;
+      organizationId: string;
+      contactId: string | null;
+      amount: number;
+      orderType: string;
+    },
+    ctx: { programTitle: string | null; buyerName: string | null }
+  ) => {
+    if (!deps.emitOrderPaid || order.orderType !== 'PROGRAM_PURCHASE') return;
+    await deps
+      .emitOrderPaid({
+        organizationId: order.organizationId,
+        orderId: order.id,
+        contactId: order.contactId,
+        amount: order.amount,
+        programTitle: ctx.programTitle,
+        buyerName: ctx.buyerName,
+      })
+      .catch(() => null); // bridge tidak boleh gagalkan transaksi utama
+  };
 
   return {
     async createProgramCheckout(
@@ -308,6 +340,11 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
           enrollmentId: enrollmentResult.enrollment.id,
           paidAt: nowIso,
         });
+
+        await bridgeOrderPaid(
+          { id: order.id, organizationId: org.id, contactId: contact.id, amount: order.amount, orderType: 'PROGRAM_PURCHASE' },
+          { programTitle: program.title, buyerName: contact.name }
+        );
 
         if (appliedCoupon) {
           await deps.couponService?.incrementUsedCount(org.id, appliedCoupon.id).catch(() => {});
@@ -721,6 +758,8 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
         providerOrderId: data.order_id,
       });
 
+      await bridgeOrderPaid(order, { programTitle: null, buyerName: null });
+
       // Record Platform Fee Entry (flat Rp3.000, 0% percentage fee, strictly idempotent)
       await deps.commerceRepo.createPlatformFeeEntry({
         organizationId: order.organizationId,
@@ -871,6 +910,8 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
         approvedByUserId: userId,
         enrollmentId: enrollmentResult.enrollment.id,
       });
+
+      await bridgeOrderPaid(order, { programTitle: null, buyerName: null });
 
       return updated as any;
     },
