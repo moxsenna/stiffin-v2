@@ -33,7 +33,7 @@ import {
 import { computeRevenueSummary } from '../domain/flow/revenue-summary';
 import { createRevenueSettingsService } from '../services/revenue-settings-service';
 import { createBookingRepository } from '../repositories/booking-repository';
-import { contacts, nextActions } from '../db/schema';
+import { contacts, nextActions, programs, organizations } from '../db/schema';
 import { createContactFlowService } from '../services/contact-flow-service';
 import { createContactLifecycleService } from '../services/contact-lifecycle-service';
 import { createNextActionService } from '../services/next-action-service';
@@ -255,6 +255,35 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
   // =========================================================================
   // 3. NEXT ACTIONS (§5.3, §5.4, §12)
   // =========================================================================
+  // Bridge: rekomendasi program Class untuk kontak Flow (teaser / aktif).
+  flow.get('/bridge/program-suggestions', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const contactId = c.req.query('contactId');
+    if (!contactId) {
+      throw new DomainError('VALIDATION_ERROR', 'contactId wajib diisi');
+    }
+    const rows = await db
+      .select({
+        id: programs.id,
+        title: programs.title,
+        priceAmount: programs.priceAmount,
+        programSlug: programs.slug,
+        workspaceSlug: organizations.slug,
+      })
+      .from(programs)
+      .innerJoin(organizations, eq(organizations.id, programs.organizationId))
+      .where(
+        and(
+          eq(programs.organizationId, ctx.organizationId),
+          eq(programs.status, 'published')
+        )
+      )
+      .orderBy(desc(programs.createdAt))
+      .limit(2);
+    return c.json({ programs: rows }, 200);
+  });
+
   flow.get('/next-actions', async (c) => {
     c.header('Cache-Control', 'no-store');
     const { ctx, db } = getRequestContext(c);

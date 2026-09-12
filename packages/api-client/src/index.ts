@@ -84,6 +84,7 @@ import type {
   UpdateBankAccountRequest,
   DashboardSummary,
   BridgeTeaser,
+  JourneyResponse,
   CommerceOrder,
   RejectOrderRequest,
   ProgramPriceVariant,
@@ -739,6 +740,14 @@ export class PromotorClassContentApiClient {
     return this.client.get<DashboardSummary>('/api/v1/class/dashboard-summary');
   }
 
+  async getContactJourney(contactId: string): Promise<JourneyResponse> {
+    return this.client.get<JourneyResponse>(`/api/v1/journey/${encodeURIComponent(contactId)}`);
+  }
+
+  async getProgramSuggestions(contactId: string): Promise<{ programs: Array<{ id: string; title: string; priceAmount: number; workspaceSlug: string | null; programSlug: string | null }> }> {
+    return this.client.get(`/api/v1/flow/bridge/program-suggestions?contactId=${encodeURIComponent(contactId)}`);
+  }
+
   async getBridgeTeaser(): Promise<BridgeTeaser> {
     return this.client.get<BridgeTeaser>('/api/v1/class/bridge/teaser');
   }
@@ -1146,6 +1155,14 @@ export class PromotorFlowApiClient {
 
   async recordBridgeMetric(event: string, meta?: Record<string, unknown>): Promise<{ success: boolean }> {
     return this.client.post<{ success: boolean }>('/api/v1/class/bridge/metrics', { event, meta });
+  }
+
+  async getContactJourney(contactId: string): Promise<JourneyResponse> {
+    return this.client.get<JourneyResponse>(`/api/v1/journey/${encodeURIComponent(contactId)}`);
+  }
+
+  async getProgramSuggestions(contactId: string): Promise<{ programs: Array<{ id: string; title: string; priceAmount: number; workspaceSlug: string | null; programSlug: string | null }> }> {
+    return this.client.get(`/api/v1/flow/bridge/program-suggestions?contactId=${encodeURIComponent(contactId)}`);
   }
 
   // ==========================================

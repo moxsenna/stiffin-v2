@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
-import { Contact, Enrollment, Program, LearningSignal, IntentBreakdownItem } from '@promotor/contracts';
+import React, { useEffect, useState } from 'react';
+import { Contact, Enrollment, Program, LearningSignal, IntentBreakdownItem, JourneyItem } from '@promotor/contracts';
 import { formatPhoneDisplay } from '@promotor/platform-core';
+import { getPlatformApiClient } from '@/adapters';
+import { JourneyTimeline } from './JourneyTimeline';
 
 interface LearnerDetailProps {
   contact: Contact;
@@ -33,6 +35,20 @@ export function LearnerDetail({
 
   const programTitle = program?.title || 'Program Belajar';
   const defaultDraftMessage = `Halo ${contact.name}, saya promotor Anda dari program "${programTitle}". Saya memperhatikan Anda telah ${primaryReason.toLowerCase()}. Bagaimana perkembangan belajar Anda saat ini?`;
+
+  const [journey, setJourney] = useState<JourneyItem[] | null>(null);
+  useEffect(() => {
+    let alive = true;
+    getPlatformApiClient()
+      .getContactJourney(contact.id)
+      .then((res) => {
+        if (alive) setJourney(res.items ?? []);
+      })
+      .catch(() => null);
+    return () => {
+      alive = false;
+    };
+  }, [contact.id]);
 
   return (
     <div className="side-panel active" style={{ background: 'var(--surface)', padding: 0, display: 'flex', flexDirection: 'column' }}>
@@ -106,6 +122,13 @@ export function LearnerDetail({
          <div className="row-meta" style={{ marginTop: 8 }}>Program: {programTitle}</div>
        </div>
      )}
+
+      {journey && journey.length > 0 && (
+        <div style={{ padding: '16px 18px', borderTop: '1px solid var(--line, #E2E8F0)' }}>
+          <div className="kicker kicker-muted" style={{ marginBottom: 4 }}>Perjalanan {contact.name}</div>
+          <JourneyTimeline items={journey} />
+        </div>
+      )}
 
       <div style={{ padding: 18 }}>
        <button

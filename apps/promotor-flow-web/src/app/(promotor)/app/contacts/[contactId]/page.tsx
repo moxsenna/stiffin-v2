@@ -25,6 +25,8 @@ import { FlowContact, FlowNextAction, FlowBooking, FlowActivity, LifecycleStage 
 import { formatPhoneDisplay } from '@promotor/platform-core';
 import { ProductEntitlements, LearningContext, ProgramSummary, ContactWaOutcome } from '@promotor/contracts';
 import { FlowIntegrationHealth } from '@/modules/promotorclass/ports';
+import { getPlatformApiClient } from '@/adapters';
+import type { JourneyItem } from '@promotor/contracts';
 import { CalendarButtons } from '@/components/calendar/CalendarButtons';
 
 const LIFECYCLE_STEPS = ['BARU', 'DIHUBUNGI', 'TERTARIK', 'FOLLOW-UP', 'BOOKED', 'SELESAI'];
@@ -57,6 +59,8 @@ export default function ContactDetailPage() {
   const [bookings, setBookings] = useState<FlowBooking[]>([]);
   const [activities, setActivities] = useState<FlowActivity[]>([]);
   const [learningContext, setLearningContext] = useState<LearningContext | null>(null);
+  const [journeyItems, setJourneyItems] = useState<JourneyItem[]>([]);
+  const [suggestions, setSuggestions] = useState<Array<{ id: string; title: string; priceAmount: number; workspaceSlug: string | null; programSlug: string | null }>>([]);
   const [classState, setClassState] = useState<{
     entitlements: ProductEntitlements;
     integrationHealth: FlowIntegrationHealth;
@@ -110,6 +114,19 @@ export default function ContactDetailPage() {
         }
       } catch {
         setLearningContext(null);
+      }
+
+      try {
+        const j = await getPlatformApiClient().getContactJourney(contactId);
+        setJourneyItems(j.items ?? []);
+      } catch {
+        setJourneyItems([]);
+      }
+      try {
+        const s = await getPlatformApiClient().getProgramSuggestions(contactId);
+        setSuggestions(s.programs ?? []);
+      } catch {
+        setSuggestions([]);
       }
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Tidak dapat memuat kontak.');
@@ -497,6 +514,98 @@ export default function ContactDetailPage() {
           </div>
        </div>
      )}
+
+      {/* Perjalanan kontak lintas Class & Flow */}
+      {journeyItems.some((i) => i.app === 'CLASS') && (
+        <div>
+          <SectionHead label="Perjalanan kontak" />
+          <div style={{ padding: '10px 18px 16px' }}>
+            {journeyItems.map((it, i) => {
+              const isClass = it.app === 'CLASS';
+              const color = isClass ? '#2563EB' : '#06B6D4';
+              const last = i === journeyItems.length - 1;
+              return (
+                <div key={`${it.app}-${it.type}-${i}`} style={{ display: 'flex', gap: 12, paddingBottom: last ? 0 : 12 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 'none' }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, marginTop: 5, flex: 'none' }} />
+                    {!last && <span style={{ width: 1, flex: 1, background: 'var(--line, #E2E8F0)' }} />}
+                  </div>
+                  <div style={{ minWidth: 0, opacity: isClass ? 1 : 0.55 }}>
+                    <div style={{ font: '700 13px/1.35 var(--font-sans)', color: 'var(--ink)' }}>{it.title}</div>
+                    {it.detail && <div className="row-meta">{it.detail}</div>}
+                    <div style={{ font: '700 9px/1 var(--font-sans)', color, marginTop: 3, letterSpacing: '0.08em' }}>
+                      {isClass ? 'CLASS' : 'FLOW'}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Bridge: rekomendasi program Class (teaser Flow-only / kirim link pemilik keduanya) */}
+      {classState && !classState.entitlements.promotorClass && suggestions.length > 0 && (
+        <div style={{ background: 'var(--surface-muted)', borderBottom: '1px solid var(--line)' }}>
+          <div style={{ padding: '16px 18px' }}>
+            <div className="kicker kicker-muted">Program Class yang cocok</div>
+            {suggestions.map((p) => (
+              <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, paddingTop: 10 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ font: '600 13px/1.35 var(--font-sans)' }}>{p.title}</div>
+                  <div style={{ font: '500 11px/1.4 var(--font-sans)', color: 'var(--muted)' }}>
+                    Rp {p.priceAmount.toLocaleString('id-ID')}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    getPlatformApiClient().recordBridgeMetric('upgrade_started', { product: 'CLASS', surface: 'contact_program_card' }).catch(() => null);
+                    const text = encodeURIComponent(`Halo Tim Ralivo, saya ingin mengaktifkan PromotorClass untuk bisa mengirim program ${p.title} ke kontak saya.`);
+                    window.open(`https://wa.me/6281234567890?text=${text}`, '_blank', 'noopener');
+                  }}
+                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px dashed #93C5FD', background: '#EFF6FF', color: '#1D4ED8', font: '700 11px/1 var(--font-sans)', cursor: 'pointer', flex: 'none' }}
+                >
+                  Aktifkan Class
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {classState?.entitlements.promotorClass && suggestions.length > 0 && (
+        <div style={{ background: 'var(--surface-muted)', borderBottom: '1px solid var(--line)' }}>
+          <div style={{ padding: '16px 18px' }}>
+            <div className="kicker kicker-muted">Tawarkan program Class</div>
+            {suggestions.map((p) => {
+              const checkoutUrl = p.workspaceSlug && p.programSlug ? `https://class.ralivo.biz.id/p/${p.workspaceSlug}/${p.programSlug}` : null;
+              return (
+                <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, paddingTop: 10 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ font: '600 13px/1.35 var(--font-sans)' }}>{p.title}</div>
+                    <div style={{ font: '500 11px/1.4 var(--font-sans)', color: 'var(--muted)' }}>
+                      Rp {p.priceAmount.toLocaleString('id-ID')}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!checkoutUrl}
+                    onClick={() => {
+                      if (!checkoutUrl) return;
+                      getPlatformApiClient().recordBridgeMetric('bridge_action_executed', { kind: 'program_link_sent', programId: p.id }).catch(() => null);
+                      const text = encodeURIComponent(`Halo Kak, saya punya program \"${p.title}\" yang cocok untuk Anda: ${checkoutUrl}`);
+                      window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener');
+                    }}
+                    style={{ padding: '8px 12px', borderRadius: 8, border: 0, background: 'var(--accent, #2563EB)', color: '#fff', font: '700 11px/1 var(--font-sans)', cursor: checkoutUrl ? 'pointer' : 'default', flex: 'none' }}
+                  >
+                    Kirim Link
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Notes */}
       <SectionHead label="Catatan" />
