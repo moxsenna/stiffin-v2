@@ -7,7 +7,7 @@ import { Env } from './env';
 import { executeDbHealthProbe } from './db/client';
 import { authLifecycle, sessionMiddleware } from './auth/session-middleware';
 import { AuthError, authErrorStatus } from './auth/errors';
-import { requireOrganization, requireEntitlement, requireRole } from './auth/authorization';
+import { requireOrganization, requireEntitlement, requireAnyEntitlement, requireRole } from './auth/authorization';
 import type { AuthContext } from './auth/types';
 import type { AuthInstance } from './auth/create-auth';
 import { DomainError, isDomainError } from './core/errors';
@@ -46,6 +46,7 @@ import {
 import { registerFlowRoutes } from './routes/flow-routes';
 import { registerClassRoutes } from './routes/class-routes';
 import { registerCommerceRoutes } from './routes/commerce-routes';
+import { registerJourneyRoutes } from './routes/journey-routes';
 import { createSubscriptionRepository } from './repositories/subscription-repository';
 import { createPlanAccessService } from './services/billing/plan-access-service';
 import { requestLoggerMiddleware, logOperation } from './core/observability';
@@ -1242,6 +1243,23 @@ export function createApp(deps?: AppDependencies) {
     requireOrganization(),
     requireRole(['owner', 'admin'])
   );
+
+  // Journey: permukaan bersama Class ↔ Flow — cukup salah satu entitlemen.
+  app.use(
+    '/api/v1/journey',
+    sessionMiddleware,
+    requireOrganization(),
+    requireAnyEntitlement(['promotorClass', 'promotorFlow']),
+    requireRole(['owner', 'admin'])
+  );
+  app.use(
+    '/api/v1/journey/*',
+    sessionMiddleware,
+    requireOrganization(),
+    requireAnyEntitlement(['promotorClass', 'promotorFlow']),
+    requireRole(['owner', 'admin'])
+  );
+  registerJourneyRoutes(app);
 
   registerClassRoutes(app);
   registerCommerceRoutes(app);
