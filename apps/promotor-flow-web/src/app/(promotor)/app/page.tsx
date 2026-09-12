@@ -139,6 +139,11 @@ export default function TodayPage() {
        <div style={{ marginTop: 8, font: '600 13px/1.3 var(--font-sans)', color: 'var(--ink)' }}>
          {item.action.title}
         </div>
+       {item.action.source === 'PROMOTORCLASS' && (
+         <span style={{ display: 'inline-block', marginTop: 6, padding: '3px 8px', borderRadius: 9999, background: 'var(--accent-soft, #DBEAFE)', color: '#1D4ED8', font: '700 9.5px/1 var(--font-sans)', letterSpacing: '0.02em' }}>
+           dari Class
+         </span>
+       )}
      </button>
       <button type="button" className="row-action" onClick={(e) =>handleOpenWa(item, e)} aria-label={`Kirim WhatsApp ke ${item.contactName}`}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
