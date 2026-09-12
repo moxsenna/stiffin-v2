@@ -1144,6 +1144,10 @@ export class PromotorFlowApiClient {
     return this.client.post<CreateSubscriptionCheckoutResponse>('/api/v1/billing/subscription/checkout', data);
   }
 
+  async recordBridgeMetric(event: string, meta?: Record<string, unknown>): Promise<{ success: boolean }> {
+    return this.client.post<{ success: boolean }>('/api/v1/class/bridge/metrics', { event, meta });
+  }
+
   // ==========================================
   // Public Paid Program Commerce
   // ==========================================

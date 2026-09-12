@@ -6,7 +6,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { BottomNav } from './BottomNav';
 import { Wordmark } from '../ui';
 import { getSession } from '@/lib/auth';
-import { getApiMode } from '@/adapters';
+import { getApiMode, getPlatformApiClient } from '@/adapters';
+import { PARTNER_APP_URL } from '@/config/partner-app';
 
 export interface AppShellProps {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children, showBottomNav = tr
   const pathname = usePathname();
   const router = useRouter();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [hasClass, setHasClass] = useState<boolean | null>(null);
 
   useEffect(() => {
     getSession().then((sess) => {
@@ -31,6 +33,10 @@ export const AppShell: React.FC<AppShellProps> = ({ children, showBottomNav = tr
         return;
       }
       setIsCheckingAuth(false);
+      getPlatformApiClient()
+        .getPlanAccess()
+        .then((p) => setHasClass(!!(p as any).features?.promotorClass))
+        .catch(() => setHasClass(null));
     }).catch(() => {
       if (getApiMode() === 'http') {
         router.push(`/login?returnTo=${encodeURIComponent(pathname)}`);
@@ -74,6 +80,15 @@ export const AppShell: React.FC<AppShellProps> = ({ children, showBottomNav = tr
             <Link href="/app/more" className={isActive(pathname, '/app/more') ? 'desktop-nav-link is-active' : 'desktop-nav-link'}>
               Lainnya
             </Link>
+            {hasClass !== false && (
+              <a
+                href={PARTNER_APP_URL}
+                className="desktop-nav-link"
+                onClick={() => getPlatformApiClient().recordBridgeMetric('bridge_action_executed', { kind: 'switcher_flow_to_class' }).catch(() => null)}
+              >
+                Buka PromotorClass ↗
+              </a>
+            )}
           </nav>
         </div>
         <div className="desktop-nav-footer">

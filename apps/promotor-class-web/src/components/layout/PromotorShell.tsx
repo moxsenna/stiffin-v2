@@ -6,7 +6,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { PromotorTabBar } from './PromotorTabBar';
 import { Wordmark } from '../ui';
 import { getSession, signOut, UserSession } from '@/lib/auth';
-import { getApiMode } from '@/adapters';
+import { getApiMode, getPlatformApiClient } from '@/adapters';
+import { UpsellSheet } from '@/components/promotor/UpsellSheet';
+import { PARTNER_APP_URL } from '@/config/partner-app';
 
 interface PromotorShellProps {
   children: React.ReactNode;
@@ -34,6 +36,8 @@ export function PromotorShell({ children }: PromotorShellProps) {
   const router = useRouter();
   const [session, setSession] = useState<UserSession | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [hasFlow, setHasFlow] = useState<boolean | null>(null);
+  const [flowUpsellOpen, setFlowUpsellOpen] = useState(false);
 
   useEffect(() =>{
     getSession().then((sess) =>{
@@ -43,6 +47,10 @@ export function PromotorShell({ children }: PromotorShellProps) {
       }
       setSession(sess);
       setIsCheckingAuth(false);
+      getPlatformApiClient()
+        .getPlanAccess()
+        .then((p) => setHasFlow(!!(p as any).features?.promotorFlow))
+        .catch(() => setHasFlow(null));
     }).catch(() =>{
       if (getApiMode() === 'http') {
         router.push(`/login?returnTo=${encodeURIComponent(pathname)}`);
@@ -87,6 +95,29 @@ export function PromotorShell({ children }: PromotorShellProps) {
               </Link>
            ))}
           </nav>
+          {hasFlow !== false && (
+            <a
+              href={PARTNER_APP_URL}
+              className="desktop-nav-link"
+              onClick={() => getPlatformApiClient().recordBridgeMetric('bridge_action_executed', { kind: 'switcher_class_to_flow' }).catch(() => null)}
+            >
+              Buka PromotorFlow ↗
+            </a>
+          )}
+          {hasFlow === false && (
+            <button
+              type="button"
+              className="desktop-nav-link"
+              style={{ textAlign: 'left', border: 0, background: 'none', width: '100%', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              onClick={() => setFlowUpsellOpen(true)}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" strokeWidth="1.8" />
+                <path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+              Buka PromotorFlow
+            </button>
+          )}
        </div>
        <div className="desktop-nav-footer">
          <div style={{ minWidth: 0, marginBottom: 10 }}>
@@ -119,6 +150,8 @@ export function PromotorShell({ children }: PromotorShellProps) {
       </main>
 
      <PromotorTabBar />
+
+     {flowUpsellOpen && <UpsellSheet product="FLOW" onClose={() => setFlowUpsellOpen(false)} />}
    </div>
  );
 }

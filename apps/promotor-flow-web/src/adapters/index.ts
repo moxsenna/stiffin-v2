@@ -73,6 +73,10 @@ function getApiClient(): PromotorFlowApiClient {
   });
   return new PromotorFlowApiClient(client);
 }
+export function getPlatformApiClient(): PromotorFlowApiClient {
+  return getApiClient();
+}
+
 
 let contactRepoInstance: ContactRepositoryPort | null = null;
 let lifecycleRepoInstance: LifecycleRepositoryPort | null = null;
