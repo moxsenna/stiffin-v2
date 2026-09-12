@@ -83,6 +83,7 @@ import type {
   CreateBankAccountRequest,
   UpdateBankAccountRequest,
   DashboardSummary,
+  BridgeTeaser,
   CommerceOrder,
   RejectOrderRequest,
   ProgramPriceVariant,
@@ -736,6 +737,18 @@ export class PromotorClassContentApiClient {
 
   async getDashboardSummary(): Promise<DashboardSummary> {
     return this.client.get<DashboardSummary>('/api/v1/class/dashboard-summary');
+  }
+
+  async getBridgeTeaser(): Promise<BridgeTeaser> {
+    return this.client.get<BridgeTeaser>('/api/v1/class/bridge/teaser');
+  }
+
+  async dismissBridgeTeaser(): Promise<{ success: boolean }> {
+    return this.client.post<{ success: boolean }>('/api/v1/class/bridge/teaser/dismiss');
+  }
+
+  async recordBridgeMetric(event: string, meta?: Record<string, unknown>): Promise<{ success: boolean }> {
+    return this.client.post<{ success: boolean }>('/api/v1/class/bridge/metrics', { event, meta });
   }
 
   // ==========================================

@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { PageHeader } from '@/components/ui';
 import { getPlatformApiClient } from '@/adapters';
-import type { OrderItemSummary, OrdersSummary } from '@promotor/contracts';
+import type { OrderItemSummary, OrdersSummary, BridgeTeaser } from '@promotor/contracts';
 import { formatIDR, formatTimeAgo } from '@promotor/platform-core';
+import { UpsellSheet } from '@/components/promotor/UpsellSheet';
 
 type OrderFilterTab = 'ALL' | 'PENDING' | 'PAID' | 'REJECTED';
 type PayoutFilter = 'ALL' | 'AVAILABLE' | 'IN_BATCH' | 'PAID';
@@ -15,6 +16,8 @@ export default function OrdersPage() {
   const [payoutFilter, setPayoutFilter] = useState<PayoutFilter>('ALL');
   const [orders, setOrders] = useState<OrderItemSummary[]>([]);
   const [summary, setSummary] = useState<OrdersSummary | null>(null);
+  const [teaser, setTeaser] = useState<BridgeTeaser | null>(null);
+  const [upsellOpen, setUpsellOpen] = useState(false);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<OrderItemSummary | null>(null);
@@ -43,8 +46,12 @@ export default function OrdersPage() {
       });
       setOrders(res.orders || []);
       setTotal(res.total || 0);
-      const s = await api.listOrdersSummary().catch(() => null);
+      const [s, t] = await Promise.all([
+        api.listOrdersSummary().catch(() => null),
+        api.getBridgeTeaser().catch(() => null),
+      ]);
       setSummary(s?.summary ?? null);
+      setTeaser(t);
     } catch (err: any) {
       console.error('Failed to load orders:', err);
       // Fallback empty if mock mode or network error
@@ -417,6 +424,48 @@ export default function OrdersPage() {
           </div>
         </div>
       )}
+
+      {teaser?.available && !teaser.dismissedAt && paidOrders.length > 0 && (
+        <div
+          style={{
+            marginTop: 14,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
+            padding: '12px 16px',
+            borderRadius: 12,
+            border: '1px solid #BFDBFE',
+            background: '#EFF6FF',
+          }}
+        >
+          <span style={{ font: '600 12.5px/1.4 var(--font-sans)', color: '#1E40AF' }}>
+            Flow akan menyambut pembeli ini otomatis setelah lunas
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              getPlatformApiClient().recordBridgeMetric('upgrade_started', { product: 'FLOW', surface: 'orders' }).catch(() => null);
+              setUpsellOpen(true);
+            }}
+            style={{
+              padding: '8px 14px',
+              borderRadius: 8,
+              border: 0,
+              background: '#2563EB',
+              color: '#FFFFFF',
+              font: '800 12px/1 var(--font-sans)',
+              cursor: 'pointer',
+              flex: 'none',
+            }}
+          >
+            Aktifkan Flow
+          </button>
+        </div>
+      )}
+
+      {upsellOpen && <UpsellSheet product="FLOW" onClose={() => setUpsellOpen(false)} />}
 
       {/* Order Detail Modal */}
       {selectedOrder && (
