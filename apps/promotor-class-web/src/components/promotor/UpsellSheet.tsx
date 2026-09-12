@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { supportWaUrl } from '@/config/support';
 
 const COPY = {
   FLOW: {
@@ -16,7 +17,7 @@ const COPY = {
 
 export function UpsellSheet({ product, onClose }: { product: 'FLOW' | 'CLASS'; onClose: () => void }) {
   const copy = COPY[product];
-  const waText = encodeURIComponent(
+  const waUrl = supportWaUrl(
     `Halo Tim Ralivo, saya ingin mengaktifkan ${product === 'FLOW' ? 'PromotorFlow' : 'PromotorClass'} untuk akun saya.`
   );
   return (
@@ -50,7 +51,7 @@ export function UpsellSheet({ product, onClose }: { product: 'FLOW' | 'CLASS'; o
         <p style={{ fontSize: 13.5, lineHeight: 1.55, color: '#475569', margin: '0 0 12px' }}>{copy.body}</p>
         <div style={{ fontSize: 13, fontWeight: 800, color: '#1D4ED8', marginBottom: 16 }}>{copy.price}</div>
         <a
-          href={`https://wa.me/6281234567890?text=${waText}`}
+          href={waUrl}
           target="_blank"
           rel="noopener noreferrer"
           style={{

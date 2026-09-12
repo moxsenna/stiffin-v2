@@ -26,6 +26,7 @@ import { formatPhoneDisplay } from '@promotor/platform-core';
 import { ProductEntitlements, LearningContext, ProgramSummary, ContactWaOutcome } from '@promotor/contracts';
 import { FlowIntegrationHealth } from '@/modules/promotorclass/ports';
 import { getPlatformApiClient } from '@/adapters';
+import { SUPPORT_WA_NUMBER } from '@/config/partner-app';
 import type { JourneyItem } from '@promotor/contracts';
 import { CalendarButtons } from '@/components/calendar/CalendarButtons';
 
@@ -562,7 +563,7 @@ export default function ContactDetailPage() {
                   onClick={() => {
                     getPlatformApiClient().recordBridgeMetric('upgrade_started', { product: 'CLASS', surface: 'contact_program_card' }).catch(() => null);
                     const text = encodeURIComponent(`Halo Tim Ralivo, saya ingin mengaktifkan PromotorClass untuk bisa mengirim program ${p.title} ke kontak saya.`);
-                    window.open(`https://wa.me/6281234567890?text=${text}`, '_blank', 'noopener');
+                    window.open(`https://wa.me/${SUPPORT_WA_NUMBER}?text=${text}`, '_blank', 'noopener');
                   }}
                   style={{ padding: '8px 12px', borderRadius: 8, border: '1px dashed #93C5FD', background: '#EFF6FF', color: '#1D4ED8', font: '700 11px/1 var(--font-sans)', cursor: 'pointer', flex: 'none' }}
                 >
