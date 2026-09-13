@@ -51,7 +51,7 @@ export function BridgeTeaserCard() {
         background: '#EFF6FF',
         borderRadius: 14,
         padding: '14px 16px',
-        marginBottom: 18,
+        margin: '0 18px 18px',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>

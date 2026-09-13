@@ -122,6 +122,7 @@ export default function OrdersPage() {
         }
       />
 
+      <div style={{ padding: '16px 18px 24px' }}>
       {message && (
         <div
           style={{
@@ -621,6 +622,7 @@ export default function OrdersPage() {
           </div>
         </div>
       )}
+      </div>
     </PromotorShell>
   );
 }
