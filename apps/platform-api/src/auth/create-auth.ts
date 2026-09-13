@@ -5,7 +5,7 @@ import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { and, eq, isNull } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { authSchema, MODEL_NAMES, FIELD_MAPS } from './schema';
-import { users, organizations, organizationMembers } from '../db/schema';
+import { users, organizations, organizationMembers, productEntitlements, organizationSubscriptions, workspaceProfiles } from '../db/schema';
 import { EMAIL_PASSWORD_POLICY } from './policy';
 import { isCanonicalUuid } from './roles';
 import type { Env } from '../env';
@@ -75,10 +75,20 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
       maxPasswordLength: EMAIL_PASSWORD_POLICY.maxPasswordLength,
       sendResetPassword: async ({ user, url }) => {
         const { resolveEmailService } = await import('../services/email/email-service');
+        let resetUrl = url;
+        try {
+          const parsed = new URL(url);
+          const token = parsed.searchParams.get('token') || parsed.pathname.split('/').pop();
+          if (token) {
+            resetUrl = `https://class.ralivo.biz.id/reset-password?token=${encodeURIComponent(token)}`;
+          }
+        } catch {
+          // ignore
+        }
         await resolveEmailService(env as never).sendEmail(
           user.email,
           'Reset kata sandi Ralivo',
-          `<p>Klik link berikut untuk reset kata sandi:</p><p><a href="${url}">${url}</a></p>`
+          `<p>Klik link berikut untuk reset kata sandi:</p><p><a href="${resetUrl}">${resetUrl}</a></p>`
         );
       },
     },
@@ -87,10 +97,21 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
       autoSignInAfterVerification: false,
       sendVerificationEmail: async ({ user, url }) => {
         const { resolveEmailService } = await import('../services/email/email-service');
+        let verifyUrl = url;
+        try {
+          const parsed = new URL(url);
+          const callbackParam = parsed.searchParams.get('callbackURL');
+          if (!callbackParam || callbackParam === '/' || callbackParam.startsWith(parsed.origin)) {
+            parsed.searchParams.set('callbackURL', 'https://class.ralivo.biz.id/login?verified=1');
+          }
+          verifyUrl = parsed.toString();
+        } catch {
+          // ignore
+        }
         await resolveEmailService(env as never).sendEmail(
           user.email,
           'Verifikasi email Ralivo',
-          `<p>Klik link berikut untuk verifikasi email:</p><p><a href="${url}">${url}</a></p>`
+          `<p>Klik link berikut untuk verifikasi email:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p>`
         );
       },
     },
@@ -143,6 +164,75 @@ export function createAuth(db: NodePgDatabase, env: CreateAuthEnv, options?: Cre
       },
     },
     databaseHooks: {
+      user: {
+        create: {
+          after: async (user) => {
+            try {
+              const existingMembers = await db
+                .select({ id: organizationMembers.id })
+                .from(organizationMembers)
+                .where(eq(organizationMembers.userId, user.id))
+                .limit(1);
+
+              if (existingMembers.length === 0) {
+                const rawSlug = (user.name || user.email.split('@')[0])
+                  .toLowerCase()
+                  .replace(/[^a-z0-9]/g, '-')
+                  .replace(/-+/g, '-')
+                  .replace(/^-|-$/g, '') || 'workspace';
+                const uniqueSlug = `${rawSlug}-${user.id.slice(0, 6)}`;
+
+                const [newOrg] = await db
+                  .insert(organizations)
+                  .values({
+                    name: user.name ? `${user.name} Promotor` : 'Workspace Promotor',
+                    slug: uniqueSlug,
+                    timezone: 'Asia/Jakarta',
+                  })
+                  .returning({ id: organizations.id });
+
+                if (newOrg?.id) {
+                  await db.insert(organizationMembers).values({
+                    userId: user.id,
+                    organizationId: newOrg.id,
+                    role: 'owner',
+                  });
+
+                  await db.insert(productEntitlements).values({
+                    organizationId: newOrg.id,
+                    promotorClass: true,
+                    promotorFlow: true,
+                  });
+
+                  await db.insert(organizationSubscriptions).values({
+                    organizationId: newOrg.id,
+                    planCode: 'SOLO',
+                    status: 'ACTIVE',
+                    billingCycle: 'MONTHLY',
+                    provider: 'NONE',
+                    currentPeriodStart: new Date().toISOString(),
+                    currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+                  });
+
+                  await db.insert(workspaceProfiles).values({
+                    organizationId: newOrg.id,
+                    displayName: user.name || 'Promotor Ralivo',
+                    headline: 'Promotor Resmi Ralivo',
+                    tagline: 'Membantu keluarga memahami potensi diri',
+                    bio: 'Konsultan dan praktisi edukasi berlisensi.',
+                    city: 'Jakarta',
+                    roleLabel: 'Licensed Promotor',
+                    whatsappPhoneE164: null,
+                    stats: {},
+                  });
+                }
+              }
+            } catch (err) {
+              console.error('[auth] failed to auto-provision user org:', err);
+            }
+          },
+        },
+      },
       session: {
         create: {
           before: async (session) => {

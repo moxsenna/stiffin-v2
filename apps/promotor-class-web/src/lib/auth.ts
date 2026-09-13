@@ -119,12 +119,16 @@ export async function signOut(): Promise<void> {
 
 export async function signUp(name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+  const callbackURL =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/login?verified=1`
+      : 'https://class.ralivo.biz.id/login?verified=1';
   try {
     const res = await fetch(`${apiUrl}/api/auth/sign-up/email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, callbackURL }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -138,12 +142,16 @@ export async function signUp(name: string, email: string, password: string): Pro
 
 export async function requestPasswordReset(email: string): Promise<{ success: boolean; error?: string }> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+  const redirectTo =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/reset-password`
+      : 'https://class.ralivo.biz.id/reset-password';
   try {
     await fetch(`${apiUrl}/api/auth/request-password-reset`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, redirectTo }),
     });
     return { success: true };
   } catch (err: any) {

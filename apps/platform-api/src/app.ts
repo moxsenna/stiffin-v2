@@ -162,6 +162,11 @@ export function createApp(deps?: AppDependencies) {
     return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, 500);
   });
 
+  // Root redirect — fail-safe for Better Auth default callbacks and accidental root visits
+  app.get('/', (c) => {
+    return c.redirect('https://class.ralivo.biz.id/login?verified=1', 302);
+  });
+
   // GET /health — Light probe (Zero DB calls)
   app.get('/health', (c) => {
     c.header('Cache-Control', 'no-store');

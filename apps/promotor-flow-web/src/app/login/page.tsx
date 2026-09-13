@@ -10,6 +10,9 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const rawReturnTo = searchParams.get('returnTo');
   const returnTo = sanitizeReturnTo(rawReturnTo);
+  const isVerified = searchParams.get('verified') === '1';
+  const isRegistered = searchParams.get('registered') === '1';
+  const isReset = searchParams.get('reset') === '1';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -72,6 +75,21 @@ function LoginForm() {
        </div>
 
        <div style={{ background: 'var(--surface)', border: 'var(--sep-strong)', padding: 22 }}>
+         {isVerified && (
+           <div style={{ background: 'rgba(16, 185, 129, 0.12)', border: '1px solid #10b981', color: '#059669', padding: '10px 14px', borderRadius: 6, fontSize: 13, marginBottom: 16, lineHeight: 1.4 }}>
+             ✓ Email Anda berhasil diverifikasi! Silakan masuk dengan akun Anda.
+           </div>
+         )}
+         {isRegistered && (
+           <div style={{ background: 'rgba(59, 130, 246, 0.12)', border: '1px solid #3b82f6', color: '#2563eb', padding: '10px 14px', borderRadius: 6, fontSize: 13, marginBottom: 16, lineHeight: 1.4 }}>
+             Pendaftaran berhasil. Silakan periksa email Anda (termasuk folder spam) untuk mengklik link verifikasi.
+           </div>
+         )}
+         {isReset && (
+           <div style={{ background: 'rgba(16, 185, 129, 0.12)', border: '1px solid #10b981', color: '#059669', padding: '10px 14px', borderRadius: 6, fontSize: 13, marginBottom: 16, lineHeight: 1.4 }}>
+             ✓ Kata sandi berhasil diperbarui. Silakan masuk.
+           </div>
+         )}
          {errorMessage && (
             <div className="field-error" role="alert" style={{ marginBottom: 16 }}>
 

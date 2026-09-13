@@ -1,4 +1,7 @@
 export interface Env {
+  APP_ENV?: string;
+  ENVIRONMENT?: string;
+  NODE_ENV?: string;
   HYPERDRIVE?: {
     connectionString: string;
   };
