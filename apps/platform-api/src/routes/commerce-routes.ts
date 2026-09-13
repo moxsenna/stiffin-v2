@@ -55,6 +55,7 @@ function getCommerceServices(c: any) {
   const orgRepo = createOrganizationRepository(db);
   const enrollmentService = createEnrollmentService(db);
   const learningEventRepo = createLearningEventRepository(db);
+  const entitlementRepo = createEntitlementRepository(db);
 
   const emitOrderPaid = async (input: {
     organizationId: string;
@@ -136,6 +137,7 @@ function getCommerceServices(c: any) {
     orgRepo,
     enrollmentService,
     learningEventRepo,
+    entitlementRepo,
     emitOrderPaid,
     appUuid: paycoreConfig.appUuid,
     appEnv,

@@ -86,7 +86,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children, showBottomNav = tr
                 className="desktop-nav-link"
                 onClick={() => getPlatformApiClient().recordBridgeMetric('bridge_action_executed', { kind: 'switcher_flow_to_class' }).catch(() => null)}
               >
-                Buka PromotorClass ↗
+                Buka Ralivo Class ↗
               </a>
             )}
           </nav>

@@ -28,12 +28,12 @@ export default function MorePage() {
 
   return (
     <PromotorShell>
-     <PageHeader kicker="PromotorClass" title="Lainnya" sub="Aktivitas, storefront, dan pengaturan" />
+     <PageHeader kicker="Ralivo Class" title="Lainnya" sub="Aktivitas, storefront, dan pengaturan" />
      <div>
        {hasFlow !== false && (
          <a href={PARTNER_APP_URL} className="list-row" onClick={() => getPlatformApiClient().recordBridgeMetric('bridge_action_executed', { kind: 'switcher_class_to_flow' }).catch(() => null)}>
            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
-             <span style={{ font: '600 13px/1 var(--font-sans)' }}>Buka PromotorFlow ↗</span>
+             <span style={{ font: '600 13px/1 var(--font-sans)' }}>Buka Ralivo Flow ↗</span>
              <span style={{ font: '500 11px/1 var(--font-sans)', color: 'var(--muted-light)' }}>→</span>
            </div>
            <div className="row-meta">Pindah ke aplikasi follow-up &amp; pipeline</div>

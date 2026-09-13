@@ -57,7 +57,7 @@ export function BridgeTeaserCard() {
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ font: '800 12px/1.4 var(--font-sans)', color: '#1D4ED8' }}>
-            {teaser.signalsCount} sinyal siap jadi tindak lanjut otomatis di Flow
+            {teaser.signalsCount} sinyal siap jadi tindak lanjut otomatis di Ralivo Flow
           </div>
           {teaser.preview && (
             <div
@@ -106,7 +106,7 @@ export function BridgeTeaserCard() {
           cursor: 'pointer',
         }}
       >
-        Aktifkan Flow
+        Aktifkan Ralivo Flow
       </button>
       {upsellOpen && <UpsellSheet product="FLOW" onClose={() => setUpsellOpen(false)} />}
     </section>

@@ -21,6 +21,7 @@ import { EnrollmentService } from '../class/enrollment-service';
 import { LearningEventRepository } from '../../repositories/learning-event-repository';
 import { PriceVariantRepository } from '../../repositories/price-variant-repository';
 import { CouponService } from './coupon-service';
+import { EntitlementRepository } from '../../repositories/entitlement-repository';
 import type { PromoCoupon } from '@promotor/contracts';
 
 export const MANUAL_BANK_ENABLED = false;
@@ -118,6 +119,7 @@ export interface CommerceServiceDependencies {
   orgRepo: OrganizationRepository;
   enrollmentService: EnrollmentService;
   learningEventRepo: LearningEventRepository;
+  entitlementRepo?: EntitlementRepository;
   /** Bridge ORDER_PAID ke Flow via outbox (opsional; di-wire routes dengan gating entitlemen). */
   emitOrderPaid?: (input: {
     organizationId: string;
@@ -718,6 +720,14 @@ export function createCommerceService(deps: CommerceServiceDependencies): Commer
           graceEndsAt: null,
           cancelAtPeriodEnd: false,
         });
+
+        if (deps.entitlementRepo) {
+          await deps.entitlementRepo.upsert({
+            context: { organizationId: order.organizationId },
+            promotorClass: true,
+            promotorFlow: true,
+          });
+        }
 
         await deps.commerceRepo.updateOrderStatus(order.id, 'PAID', {
           paidAt: data.paid_at || nowIso,

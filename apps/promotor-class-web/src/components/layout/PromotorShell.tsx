@@ -101,7 +101,7 @@ export function PromotorShell({ children }: PromotorShellProps) {
               className="desktop-nav-link"
               onClick={() => getPlatformApiClient().recordBridgeMetric('bridge_action_executed', { kind: 'switcher_class_to_flow' }).catch(() => null)}
             >
-              Buka PromotorFlow ↗
+              Buka Ralivo Flow ↗
             </a>
           )}
           {hasFlow === false && (
@@ -115,7 +115,7 @@ export function PromotorShell({ children }: PromotorShellProps) {
                 <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" strokeWidth="1.8" />
                 <path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
               </svg>
-              Buka PromotorFlow
+              Buka Ralivo Flow
             </button>
           )}
        </div>

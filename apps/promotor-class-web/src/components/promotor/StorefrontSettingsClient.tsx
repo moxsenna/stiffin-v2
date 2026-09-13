@@ -1,9 +1,9 @@
 'use client';
 /* eslint-disable @next/next/no-img-element */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { getPublicStorefrontRepository } from '@/adapters';
+import { getPublicStorefrontRepository, getPlatformApiClient, getApiMode } from '@/adapters';
 import { getProgramsQuery } from '@/modules/programs/queries';
 import { PublicWorkspaceProfile } from '@/modules/public-storefront/types';
 import { Program } from '@promotor/contracts';
@@ -17,6 +17,15 @@ const PRESET_AVATARS = [
   { label: 'Logo Minimalis Hijau', url: '/images/og-card.png' },
 ];
 
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Gagal membaca file gambar'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function StorefrontSettingsClient({ programs: initialPrograms = [] }: StorefrontSettingsClientProps) {
   const [programs, setPrograms] = useState<Program[]>(initialPrograms);
   const [profile, setProfile] = useState<PublicWorkspaceProfile | null>(null);
@@ -25,6 +34,69 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [origin, setOrigin] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('Ukuran file maksimal 5MB');
+      return;
+    }
+
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+    if (!allowed.includes(file.type)) {
+      setUploadError('Tipe file harus berupa gambar (JPG, PNG, WebP, GIF, SVG)');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(null);
+    setUploadSuccess(false);
+
+    try {
+      const mode = getApiMode();
+      let uploadedUrl = '';
+
+      if (mode === 'http') {
+        try {
+          const api = getPlatformApiClient();
+          const res = await api.uploadAsset(file);
+          if (res?.url) {
+            uploadedUrl = res.url;
+          }
+        } catch (apiErr: any) {
+          if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+            uploadedUrl = await readFileAsDataUrl(file);
+          } else {
+            throw apiErr;
+          }
+        }
+      } else {
+        uploadedUrl = await readFileAsDataUrl(file);
+      }
+
+      if (uploadedUrl) {
+        setCustomAvatarUrl(uploadedUrl);
+        if (profile) {
+          setProfile({ ...profile, avatarUrl: uploadedUrl });
+        }
+        setUploadSuccess(true);
+        setTimeout(() => setUploadSuccess(false), 4000);
+      }
+    } catch (err: any) {
+      setUploadError(err?.message || 'Gagal mengunggah gambar. Silakan coba lagi.');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   useEffect(() =>{
     if (typeof window !== 'undefined') {
@@ -247,54 +319,131 @@ export function StorefrontSettingsClient({ programs: initialPrograms = [] }: Sto
          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
            <div>
              <label style={{ display: 'block', fontSize: '13px', fontWeight: 750, marginBottom: '8px' }}>
-               Pilih Foto Profil Bawaan atau Masukkan URL Gambar Eksternal
+               Foto Profil / Logo Storefront
               </label>
 
-             <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
-               <img
-                  src={customAvatarUrl || profile.avatarUrl || PRESET_AVATARS[0].url}
-                  alt={profile.displayName}
-                  style={{
-                    width: '76px',
-                    height: '76px',
-                    borderRadius: '0px',
-                    objectFit: 'cover',
-                    border: '3px solid var(--color-primary-border)',
-                  }}
-                />
+             <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: '12px' }}>
+               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                 <img
+                    src={customAvatarUrl || profile.avatarUrl || PRESET_AVATARS[0].url}
+                    alt={profile.displayName}
+                    style={{
+                      width: '84px',
+                      height: '84px',
+                      borderRadius: '0px',
+                      objectFit: 'cover',
+                      border: '3px solid var(--color-primary-border)',
+                      backgroundColor: 'var(--color-surface)',
+                    }}
+                  />
+                 <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600 }}>
+                   Pratinjau
+                 </span>
+               </div>
 
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: '240px' }}>
-                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                   {PRESET_AVATARS.map(p =>(
-                      <button
-                        key={p.url}
-                        type="button"
-                        onClick={() =>{
-                          setCustomAvatarUrl('');
-                          setProfile({ ...profile, avatarUrl: p.url });
-                        }}
-                        style={{
-                          padding: '6px 12px',
-                          borderRadius: '0px',
-                          border: profile.avatarUrl === p.url && !customAvatarUrl ? '2px solid var(--color-primary)' : '1px solid var(--color-divider)',
-                          backgroundColor: profile.avatarUrl === p.url && !customAvatarUrl ? '#ffe0d9' : 'var(--color-surface)',
-                          color: 'var(--color-text-main)',
-                          fontSize: '12px',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                        }}
-                      >
-                       {p.label}
-                      </button>
-                   ))}
-                  </div>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, minWidth: '260px' }}>
+                 {/* Upload File */}
+                 <div
+                   style={{
+                     padding: '12px 14px',
+                     border: '1px dashed var(--accent-dark)',
+                     backgroundColor: 'rgba(235, 94, 65, 0.04)',
+                     display: 'flex',
+                     flexDirection: 'column',
+                     gap: '8px',
+                   }}
+                 >
+                   <input
+                     type="file"
+                     ref={fileInputRef}
+                     onChange={handleFileUpload}
+                     accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                     style={{ display: 'none' }}
+                   />
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                     <button
+                       type="button"
+                       onClick={() => fileInputRef.current?.click()}
+                       disabled={isUploading}
+                       style={{
+                         display: 'inline-flex',
+                         alignItems: 'center',
+                         gap: '6px',
+                         padding: '8px 16px',
+                         borderRadius: '0px',
+                         backgroundColor: isUploading ? 'var(--color-surface-hover)' : 'var(--accent-dark)',
+                         color: '#FFFFFF',
+                         border: 'none',
+                         fontSize: '13px',
+                         fontWeight: 750,
+                         cursor: isUploading ? 'not-allowed' : 'pointer',
+                       }}
+                     >
+                       {isUploading ? (
+                         <span>⏳ Mengunggah gambar...</span>
+                       ) : (
+                         <span>📷 Unggah Foto / Logo</span>
+                       )}
+                     </button>
+                     <span style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>
+                       Maksimal 5 MB. Format JPG, PNG, WebP, atau SVG.
+                     </span>
+                   </div>
 
+                   {uploadSuccess && (
+                     <div style={{ fontSize: '12px', color: 'var(--color-status-success)', fontWeight: 700 }}>
+                       ✓ Foto berhasil diunggah dan terpasang!
+                     </div>
+                   )}
+
+                   {uploadError && (
+                     <div style={{ fontSize: '12px', color: '#EF4444', fontWeight: 700 }}>
+                       ⚠ {uploadError}
+                     </div>
+                   )}
+                 </div>
+
+                 {/* Preset Pilihan */}
                  <div>
+                   <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-subtle)', marginBottom: '6px' }}>
+                     Atau pilih preset cepat:
+                   </div>
+                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                     {PRESET_AVATARS.map(p =>(
+                        <button
+                          key={p.url}
+                          type="button"
+                          onClick={() =>{
+                            setCustomAvatarUrl('');
+                            setProfile({ ...profile, avatarUrl: p.url });
+                          }}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '0px',
+                            border: profile.avatarUrl === p.url && !customAvatarUrl ? '2px solid var(--color-primary)' : '1px solid var(--color-divider)',
+                            backgroundColor: profile.avatarUrl === p.url && !customAvatarUrl ? '#ffe0d9' : 'var(--color-surface)',
+                            color: 'var(--color-text-main)',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                          }}
+                        >
+                         {p.label}
+                        </button>
+                     ))}
+                    </div>
+                 </div>
+
+                 {/* Custom URL Input */}
+                 <div>
+                   <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-subtle)', marginBottom: '6px' }}>
+                     Atau masukkan URL gambar langsung:
+                   </div>
                    <input
                       type="url"
                       value={customAvatarUrl}
                       onChange={e =>setCustomAvatarUrl(e.target.value)}
-                      placeholder="Atau masukkan URL gambar foto/logo eksternal (https://...)"
+                      placeholder="https://... (URL gambar eksternal)"
                       style={{
                         width: '100%',
                         padding: '8px 12px',

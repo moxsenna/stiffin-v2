@@ -27,7 +27,7 @@ export const FlowFeatureGrid: React.FC = () => {
       icon: <MessageSquareIcon size={24} color="var(--color-primary)" />,
       title: 'Siklus Otomatis Aftercare D+7 & Referral',
       description: 'Jangan biarkan hubungan putus setelah tes selesai. Sistem secara otomatis menjadwalkan follow-up tepat 7 hari pasca tes untuk evaluasi hasil dan penawaran kelas parenting lanjutan.',
-      highlights: ['Jadwal evaluasi D+7 terpasang otomatis', 'Integrasi sinyal belajar PromotorClass', 'Peluang repeat order & permohonan referral keluarga'],
+      highlights: ['Jadwal evaluasi D+7 terpasang otomatis', 'Integrasi sinyal belajar Ralivo Class', 'Peluang repeat order & permohonan referral keluarga'],
     },
   ];
 

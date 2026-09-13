@@ -115,7 +115,7 @@ export default function CouponsPage() {
   return (
     <PromotorShell>
       <PageHeader
-        kicker="PromotorClass"
+        kicker="Ralivo Class"
         title="Kupon Promo"
         sub="Kelola voucher diskon & potongan harga untuk penjualan program Anda"
         action={

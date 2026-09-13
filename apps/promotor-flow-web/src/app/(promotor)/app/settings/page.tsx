@@ -264,11 +264,11 @@ export default function SettingsPage() {
         <div className="section-block" style={{ borderBottom: 'none' }}>
          <div className="kicker kicker-accent">Dev controls · skenario demo</div>
          <p className="muted-note" style={{ marginTop: 8 }}>
-           Pilih skenario integrasi PromotorClass untuk menguji perilaku entitlement dan outage:
+           Pilih skenario integrasi Ralivo Class untuk menguji perilaku entitlement dan outage:
           </p>
          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
            {[
-              { key: 'FLOW_ONLY', label: 'FLOW_ONLY (PromotorFlow Standalone)' },
+              { key: 'FLOW_ONLY', label: 'FLOW_ONLY (Ralivo Flow Standalone)' },
               { key: 'BUNDLE_AVAILABLE', label: 'BUNDLE_AVAILABLE (Integrasi Class Aktif)' },
               { key: 'BUNDLE_CLASS_UNAVAILABLE', label: 'BUNDLE_CLASS_UNAVAILABLE (Class Outage)' },
             ].map((sc) =>(

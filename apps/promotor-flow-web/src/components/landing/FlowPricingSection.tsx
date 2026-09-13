@@ -6,7 +6,7 @@ import { TALIRA_PLANS } from '@promotor/contracts';
 
 export const FlowPricingSection: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
-  const [includeUpsell, setIncludeUpsell] = useState<boolean>(true);
+  const [includeUpsell, setIncludeUpsell] = useState<boolean>(false);
 
   const baseMonthly = 99000;
   const baseAnnual = 990000;
@@ -129,7 +129,6 @@ export const FlowPricingSection: React.FC = () => {
           <div
             onClick={() => {
               setBillingCycle('annual');
-              setIncludeUpsell(true);
             }}
             className="flow-pricing-annual-banner"
             style={{
@@ -408,20 +407,38 @@ export const FlowPricingSection: React.FC = () => {
                       <span style={{ fontSize: '13px', fontWeight: 800, color: '#111827' }}>
                         + Tambah Ralivo Class (LMS Edukasi)
                       </span>
-                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#059669', backgroundColor: '#DCFCE7', padding: '2px 8px', borderRadius: '6px' }}>
-                        {billingCycle === 'annual' ? '+Rp 200.000/thn' : '+Rp 50.000/bln'}
-                      </span>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        {billingCycle === 'monthly' ? (
+                          <>
+                            <span style={{ fontSize: '11.5px', color: '#6B7280', textDecoration: 'line-through' }}>
+                              Rp 99.000
+                            </span>
+                            <span style={{ fontSize: '11px', fontWeight: 850, color: '#059669', backgroundColor: '#DCFCE7', padding: '3px 8px', borderRadius: '6px' }}>
+                              cuma nambah Rp 50.000/bln
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span style={{ fontSize: '11.5px', color: '#6B7280', textDecoration: 'line-through' }}>
+                              Rp 600.000
+                            </span>
+                            <span style={{ fontSize: '11px', fontWeight: 850, color: '#059669', backgroundColor: '#DCFCE7', padding: '3px 8px', borderRadius: '6px' }}>
+                              cuma nambah Rp 200.000/thn
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
                     <p style={{ fontSize: '12px', color: '#4B5563', margin: '4px 0 0', lineHeight: 1.45 }}>
                       Buka fitur jual kelas berbayar, modul materi video, form refleksi pengunci, dan sinyal belajar Hot/Warm otomatis.
                     </p>
                     {billingCycle === 'monthly' ? (
-                      <div style={{ marginTop: '6px', fontSize: '11.5px', color: '#B45309', fontWeight: 700 }}>
-                        🔥 <strong>Trik Hemat:</strong> Di paket tahunan, cukup tambah <strong>Rp 200.000/thn</strong> untuk 1 tahun penuh (bukan Rp 600.000)!
+                      <div style={{ marginTop: '6px', fontSize: '11.5px', color: '#047857', fontWeight: 700 }}>
+                        🎁 <strong>Harga Coret Bundling:</strong> Harga normal <span style={{ textDecoration: 'line-through' }}>Rp 99.000</span> dicoret — cuma nambah <strong>Rp 50.000/bln</strong>!
                       </div>
                     ) : (
                       <div style={{ marginTop: '6px', fontSize: '11.5px', color: '#047857', fontWeight: 700 }}>
-                        ✓ <strong>Super Hemat:</strong> Hanya tambah Rp 200rb/thn (~Rp 16.600/bln) — hemat Rp 400.000 dibanding bulanan!
+                        ✓ <strong>Super Hemat Tahunan:</strong> Harga normal <span style={{ textDecoration: 'line-through' }}>Rp 600.000</span> dicoret — cuma nambah <strong>Rp 200.000/thn</strong> (~Rp 16.600/bln)!
                       </div>
                     )}
                   </div>

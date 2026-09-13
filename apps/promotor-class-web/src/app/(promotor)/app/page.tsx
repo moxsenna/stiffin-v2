@@ -126,7 +126,7 @@ export default function PromotorHomePage() {
   return (
     <PromotorShell>
      <PageHeader
-        kicker="PromotorClass"
+        kicker="Ralivo Class"
         title="Beranda"
         sub={signals ? `${signals.length} peserta perlu perhatian` : 'Memuat sinyal belajar...'}
         action={
@@ -271,7 +271,7 @@ export default function PromotorHomePage() {
         <div className="section-block">
          <div className="kicker kicker-accent">Mode QA / Simulator Integrasi</div>
          <p className="muted-note" style={{ marginTop: 6 }}>
-           Status Koneksi PromotorFlow: <strong>Sistem Berjalan Normal (AVAILABLE)</strong>
+           Status Koneksi Ralivo Flow: <strong>Sistem Berjalan Normal (AVAILABLE)</strong>
          </p>
        </div>
      )}

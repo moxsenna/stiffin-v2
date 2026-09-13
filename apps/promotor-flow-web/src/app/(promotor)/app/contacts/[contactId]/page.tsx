@@ -477,7 +477,7 @@ export default function ContactDetailPage() {
       {classState?.entitlements.promotorClass && (
         <div style={{ background: 'var(--surface-muted)', borderBottom: '1px solid var(--line)' }}>
          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 18px 0' }}>
-           <div className="kicker kicker-muted">Konteks belajar · PromotorClass</div>
+           <div className="kicker kicker-muted">Konteks belajar · Ralivo Class</div>
            <button type="button" className="btn btn-secondary btn-sm" onClick={handleOpenEnrollModal}>
              + Daftarkan ke Kelas
             </button>
@@ -485,9 +485,9 @@ export default function ContactDetailPage() {
          <div style={{ padding: '12px 18px 16px' }}>
            {classState.integrationHealth.promotorClass === 'UNAVAILABLE' ? (
               <div style={{ font: '400 12px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>
-               Integrasi PromotorClass sedang tidak tersedia (degraded mode). Fungsi utama Flow tetap berjalan.
+               Integrasi Ralivo Class sedang tidak tersedia (degraded mode). Fungsi utama Flow tetap berjalan.
               </div>
-           ) : learningContext && learningContext.activeEnrollments.length >0 ? (
+           ) : learningContext && learningContext.activeEnrollments.length > 0 ? (
               learningContext.activeEnrollments.map((enr: LearningContext['activeEnrollments'][number]) =>(
                 <div key={enr.enrollmentId} style={{ paddingTop: 10 }}>
                  <div style={{ font: '600 13px/1.35 var(--font-sans)' }}>{enr.programTitle}</div>
@@ -501,7 +501,7 @@ export default function ContactDetailPage() {
                     type="button"
                     className="btn btn-ghost btn-sm"
                     style={{ marginTop: 8, paddingLeft: 0 }}
-                    onClick={() => alert(`Navigasi ke Detail Peserta PromotorClass: /learners/${contact.id}`)}
+                    onClick={() => alert(`Navigasi ke Detail Peserta Ralivo Class: /learners/${contact.id}`)}
                   >
                    Lihat aktivitas belajar →
                   </button>
@@ -509,7 +509,7 @@ export default function ContactDetailPage() {
              ))
             ) : (
               <div style={{ font: '400 12px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>
-               Belum ada enrollment aktif di PromotorClass.
+               Belum ada pendaftaran aktif di Ralivo Class.
               </div>
            )}
           </div>
@@ -560,14 +560,24 @@ export default function ContactDetailPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     getPlatformApiClient().recordBridgeMetric('upgrade_started', { product: 'CLASS', surface: 'contact_program_card' }).catch(() => null);
-                    const text = encodeURIComponent(`Halo Tim Ralivo, saya ingin mengaktifkan PromotorClass untuk bisa mengirim program ${p.title} ke kontak saya.`);
-                    window.open(`https://wa.me/${SUPPORT_WA_NUMBER}?text=${text}`, '_blank', 'noopener');
+                    try {
+                      const res = await getPlatformApiClient().createSubscriptionCheckout({
+                        planCode: 'SOLO',
+                        billingCycle: 'MONTHLY',
+                        returnUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+                      });
+                      if (res?.checkoutUrl) {
+                        window.location.href = res.checkoutUrl;
+                      }
+                    } catch (e: any) {
+                      alert(e?.message || 'Gagal menyiapkan pembayaran Paycore.');
+                    }
                   }}
-                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px dashed #93C5FD', background: '#EFF6FF', color: '#1D4ED8', font: '700 11px/1 var(--font-sans)', cursor: 'pointer', flex: 'none' }}
+                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #BFDBFE', background: '#EFF6FF', color: '#1D4ED8', font: '700 11px/1 var(--font-sans)', cursor: 'pointer', flex: 'none' }}
                 >
-                  Aktifkan Class
+                  Aktifkan Ralivo Class
                 </button>
               </div>
             ))}

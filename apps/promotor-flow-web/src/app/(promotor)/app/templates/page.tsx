@@ -26,7 +26,7 @@ export default function TemplatesPage() {
 
   return (
     <AppShell showBottomNav={true}>
-      <PageHeader kicker="PromotorFlow" title="Template Pesan WhatsApp" sub="Draft pesan standar untuk tindak lanjut cepat." />
+      <PageHeader kicker="Ralivo Flow" title="Template Pesan WhatsApp" sub="Draft pesan standar untuk tindak lanjut cepat." />
 
       <div style={{ padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--line)' }}>
         <label htmlFor="tone-filter" style={{ font: '600 13px/1.4 var(--font-sans)', color: 'var(--muted-strong)', flexShrink: 0 }}>

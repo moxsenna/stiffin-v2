@@ -116,7 +116,7 @@ export default function LearnersPage() {
   return (
     <PromotorShell>
      <PageHeader
-        kicker="PromotorClass"
+        kicker="Ralivo Class"
         title="Daftar Peserta & Follow-up"
         sub={contacts ? `${filteredContacts.length} peserta pembelajaran` : 'Memuat peserta...'}
       />
@@ -180,61 +180,103 @@ export default function LearnersPage() {
               sig?.primaryReason ||
               (prog ? `Terdaftar pada ${prog.title}` : 'Peserta terdaftar');
 
+            const isSelected = selectedContact?.id === contact.id;
+
             return (
-              <div
-                key={contact.id}
-                data-testid="learner-item"
-                onClick={() =>setSelectedContact(contact)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) =>{
-                  if (e.key === 'Enter' || e.key === ' ') setSelectedContact(contact);
-                }}
-                style={{
-                  minHeight: 44,
-                  padding: '14px 18px',
-                  borderBottom: '1px solid var(--line)',
-                  cursor: 'pointer',
-                  background: 'var(--surface)',
-                }}
-              >
-               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline' }}>
-                 <span style={{ font: '700 15px/1.2 var(--font-sans)' }}>{contact.name}</span>
-                 <span className={intentTagClass(effectiveSignalLevel)} style={{ flex: 'none' }}>{effectiveSignalLevel}</span>
-               </div>
-               <div className="row-meta">
-                 {formatPhoneDisplay(contact.phoneE164)} · {prog ? prog.title : 'Program tidak diketahui'}
-                </div>
-               <div style={{ marginTop: 4, font: '400 11px/1.45 var(--font-sans)', color: 'var(--muted-strong)' }}>
-                 Alasan: {reasonDisplay}
-                </div>
-               {enr && (
-                  <div style={{ marginTop: 9, display: 'flex', alignItems: 'center', gap: 9 }}>
-                   <ProgressBar pct={enr.progressPercent} thin label={`Progres ${enr.progressPercent}%`} />
-                   <span style={{ font: '700 11px/1 var(--font-sans)', whiteSpace: 'nowrap' }} className="tabular-nums">
-                     Progres: {enr.progressPercent}%
-                    </span>
+              <React.Fragment key={contact.id}>
+                <div
+                  data-testid="learner-item"
+                  onClick={() => setSelectedContact(isSelected ? null : contact)}
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isSelected}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setSelectedContact(isSelected ? null : contact);
+                    }
+                  }}
+                  style={{
+                    minHeight: 44,
+                    padding: '14px 18px',
+                    borderBottom: isSelected ? '1px dashed var(--line)' : '1px solid var(--line)',
+                    cursor: 'pointer',
+                    background: isSelected ? 'var(--surface-hover)' : 'var(--surface)',
+                    borderLeft: isSelected ? '4px solid var(--accent)' : '4px solid transparent',
+                    transition: 'background-color 0.15s ease, border-left-color 0.15s ease',
+                  }}
+                >
+                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+                   <span style={{ font: '700 15px/1.2 var(--font-sans)', color: isSelected ? 'var(--accent-dark)' : 'var(--ink)' }}>
+                     {contact.name}
+                   </span>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>
+                     <span className={intentTagClass(effectiveSignalLevel)}>{effectiveSignalLevel}</span>
+                     <span
+                       aria-hidden="true"
+                       style={{
+                         display: 'inline-flex',
+                         alignItems: 'center',
+                         justifyContent: 'center',
+                         width: 22,
+                         height: 22,
+                         borderRadius: '50%',
+                         backgroundColor: isSelected ? 'var(--accent-soft, #dbeafe)' : 'var(--surface-muted, #f1f5f9)',
+                         color: isSelected ? 'var(--accent, #2563eb)' : 'var(--muted)',
+                         transform: isSelected ? 'rotate(180deg)' : 'rotate(0deg)',
+                         transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, color 0.2s ease',
+                       }}
+                     >
+                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                         <polyline points="6 9 12 15 18 9" />
+                       </svg>
+                     </span>
+                   </div>
                  </div>
-               )}
-              </div>
+                 <div className="row-meta">
+                   {formatPhoneDisplay(contact.phoneE164)} · {prog ? prog.title : 'Program tidak diketahui'}
+                  </div>
+                 <div style={{ marginTop: 4, font: '400 11px/1.45 var(--font-sans)', color: 'var(--muted-strong)' }}>
+                   Alasan: {reasonDisplay}
+                  </div>
+                 {enr && (
+                    <div style={{ marginTop: 9, display: 'flex', alignItems: 'center', gap: 9 }}>
+                     <ProgressBar pct={enr.progressPercent} thin label={`Progres ${enr.progressPercent}%`} />
+                     <span style={{ font: '700 11px/1 var(--font-sans)', whiteSpace: 'nowrap' }} className="tabular-nums">
+                       Progres: {enr.progressPercent}%
+                      </span>
+                   </div>
+                 )}
+                </div>
+
+                {isSelected && (
+                  <div
+                    data-testid="learner-drawer-container"
+                    className="learner-inline-detail-wrapper"
+                    role="region"
+                    aria-label={`Detail peserta ${contact.name}`}
+                    style={{
+                      borderBottom: '2px solid var(--ink)',
+                      borderLeft: '4px solid var(--accent)',
+                      background: 'var(--surface)',
+                    }}
+                  >
+                    <LearnerDetail
+                      contact={selectedContact}
+                      enrollment={getEnrollmentForContact(selectedContact.id)}
+                      program={programsMap.get(getEnrollmentForContact(selectedContact.id)?.programId || '')}
+                      signal={getSignalForContact(selectedContact.id)}
+                      onOpenWhatsAppDraft={handleOpenDraft}
+                      onClose={() => setSelectedContact(null)}
+                    />
+                  </div>
+                )}
+              </React.Fragment>
            );
           })}
         </>
      )}
       <div style={{ height: 24 }} />
-
-     {selectedContact && (
-        <div data-testid="learner-drawer-container">
-         <LearnerDetail
-            contact={selectedContact}
-            enrollment={getEnrollmentForContact(selectedContact.id)}
-            program={programsMap.get(getEnrollmentForContact(selectedContact.id)?.programId || '')}
-            signal={getSignalForContact(selectedContact.id)}
-            onOpenWhatsAppDraft={handleOpenDraft}
-            onClose={() =>setSelectedContact(null)}
-          />
-       </div>
-     )}
 
       {draftState.isOpen && (
         <WhatsAppDraftSheet

@@ -8,6 +8,7 @@ import { BankAccountsSection } from '@/components/promotor/BankAccountsSection';
 import { OrganizationPlanAccess } from '@promotor/contracts';
 import { formatIDR } from '@promotor/platform-core';
 import { signOut } from '@/lib/auth';
+import { supportWaUrl } from '@/config/support';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -81,12 +82,12 @@ export default function SettingsPage() {
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '16px',
-              border: '1px solid #E5E7EB',
+              border: '1px solid #E2E8F0',
               padding: '24px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+              boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
               <div>
                 <span
                   style={{
@@ -95,22 +96,23 @@ export default function SettingsPage() {
                     borderRadius: '9999px',
                     fontSize: '11px',
                     fontWeight: 800,
-                    backgroundColor: isSolo ? '#EEF2FF' : '#F3F4F6',
-                    color: isSolo ? '#4F46E5' : '#4B5563',
+                    backgroundColor: isSolo ? '#EFF6FF' : '#F1F5F9',
+                    color: isSolo ? '#1D4ED8' : '#475569',
                     marginBottom: '8px',
+                    letterSpacing: '0.04em',
                   }}
                 >
                   PAKET AKTIF: {planAccess?.plan?.name?.toUpperCase() || 'RALIVO FREE'}
                 </span>
-                <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', margin: 0 }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
                   Kapasitas & Penggunaan Akun
                 </h2>
               </div>
 
               {planAccess?.subscription?.currentPeriodEnd && (
-                <div style={{ textAlign: 'right', fontSize: '12px', color: '#6B7280' }}>
+                <div style={{ textAlign: 'right', fontSize: '12px', color: '#64748B' }}>
                   Berlaku hingga:
-                  <div style={{ fontWeight: 700, color: '#111827' }}>
+                  <div style={{ fontWeight: 700, color: '#0F172A', marginTop: '2px' }}>
                     {new Date(planAccess.subscription.currentPeriodEnd).toLocaleDateString('id-ID', {
                       day: 'numeric',
                       month: 'long',
@@ -123,36 +125,84 @@ export default function SettingsPage() {
 
             {/* Capacity meters */}
             {isLoadingPlan ? (
-              <div style={{ fontSize: '13px', color: '#9CA3AF', padding: '12px 0' }}>Memuat status paket...</div>
+              <div style={{ fontSize: '13px', color: '#94A3B8', padding: '12px 0' }}>Memuat status paket...</div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginTop: '14px' }}>
-                <div style={{ padding: '14px', backgroundColor: '#F9FAFB', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>PROGRAM TERPUBLIKASI</div>
-                  <div style={{ fontSize: '20px', fontWeight: 800, color: '#111827', marginTop: '4px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '16px', marginTop: '14px' }}>
+                {/* Program Terpublikasi */}
+                <div style={{ padding: '16px', backgroundColor: '#F8FAFC', borderRadius: '12px', border: '1px solid #F1F5F9' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, letterSpacing: '0.04em' }}>PROGRAM TERPUBLIKASI</div>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#2563EB' }}>
+                      {Math.round(((planAccess?.usage?.publishedPrograms ?? 0) / (planAccess?.limits?.maxPublishedPrograms ?? 1)) * 100)}%
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '22px', fontWeight: 800, color: '#0F172A', marginTop: '6px' }}>
                     {planAccess?.usage?.publishedPrograms ?? 0}
-                    <span style={{ fontSize: '13px', fontWeight: 500, color: '#9CA3AF' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 500, color: '#94A3B8' }}>
                       {' '}/ {planAccess?.limits?.maxPublishedPrograms ?? 1}
                     </span>
                   </div>
-                </div>
-
-                <div style={{ padding: '14px', backgroundColor: '#F9FAFB', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>PESERTA BELAJAR AKTIF</div>
-                  <div style={{ fontSize: '20px', fontWeight: 800, color: '#111827', marginTop: '4px' }}>
-                    {planAccess?.usage?.activeLearners ?? 0}
-                    <span style={{ fontSize: '13px', fontWeight: 500, color: '#9CA3AF' }}>
-                      {' '}/ {planAccess?.limits?.maxActiveLearners ?? 50}
-                    </span>
+                  <div style={{ width: '100%', height: '4px', backgroundColor: '#E2E8F0', borderRadius: '9999px', marginTop: '10px', overflow: 'hidden' }}>
+                    <div
+                      style={{
+                        height: '100%',
+                        backgroundColor: '#2563EB',
+                        width: `${Math.min(100, Math.round(((planAccess?.usage?.publishedPrograms ?? 0) / (planAccess?.limits?.maxPublishedPrograms ?? 1)) * 100))}%`,
+                        borderRadius: '9999px',
+                      }}
+                    />
                   </div>
                 </div>
 
-                <div style={{ padding: '14px', backgroundColor: '#F9FAFB', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>KONTAK CRM TERHUBUNG</div>
-                  <div style={{ fontSize: '20px', fontWeight: 800, color: '#111827', marginTop: '4px' }}>
+                {/* Peserta Belajar Aktif */}
+                <div style={{ padding: '16px', backgroundColor: '#F8FAFC', borderRadius: '12px', border: '1px solid #F1F5F9' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, letterSpacing: '0.04em' }}>PESERTA BELAJAR AKTIF</div>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#2563EB' }}>
+                      {Math.round(((planAccess?.usage?.activeLearners ?? 0) / (planAccess?.limits?.maxActiveLearners ?? 50)) * 100)}%
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '22px', fontWeight: 800, color: '#0F172A', marginTop: '6px' }}>
+                    {planAccess?.usage?.activeLearners ?? 0}
+                    <span style={{ fontSize: '13px', fontWeight: 500, color: '#94A3B8' }}>
+                      {' '}/ {planAccess?.limits?.maxActiveLearners ?? 50}
+                    </span>
+                  </div>
+                  <div style={{ width: '100%', height: '4px', backgroundColor: '#E2E8F0', borderRadius: '9999px', marginTop: '10px', overflow: 'hidden' }}>
+                    <div
+                      style={{
+                        height: '100%',
+                        backgroundColor: '#2563EB',
+                        width: `${Math.min(100, Math.round(((planAccess?.usage?.activeLearners ?? 0) / (planAccess?.limits?.maxActiveLearners ?? 50)) * 100))}%`,
+                        borderRadius: '9999px',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Kontak CRM Terhubung */}
+                <div style={{ padding: '16px', backgroundColor: '#F8FAFC', borderRadius: '12px', border: '1px solid #F1F5F9' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, letterSpacing: '0.04em' }}>KONTAK CRM TERHUBUNG</div>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#2563EB' }}>
+                      {Math.round(((planAccess?.usage?.contacts ?? 0) / (planAccess?.limits?.maxContacts ?? 250)) * 100)}%
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '22px', fontWeight: 800, color: '#0F172A', marginTop: '6px' }}>
                     {planAccess?.usage?.contacts ?? 0}
-                    <span style={{ fontSize: '13px', fontWeight: 500, color: '#9CA3AF' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 500, color: '#94A3B8' }}>
                       {' '}/ {planAccess?.limits?.maxContacts ?? 250}
                     </span>
+                  </div>
+                  <div style={{ width: '100%', height: '4px', backgroundColor: '#E2E8F0', borderRadius: '9999px', marginTop: '10px', overflow: 'hidden' }}>
+                    <div
+                      style={{
+                        height: '100%',
+                        backgroundColor: '#2563EB',
+                        width: `${Math.min(100, Math.round(((planAccess?.usage?.contacts ?? 0) / (planAccess?.limits?.maxContacts ?? 250)) * 100))}%`,
+                        borderRadius: '9999px',
+                      }}
+                    />
                   </div>
                 </div>
               </div>
@@ -165,36 +215,51 @@ export default function SettingsPage() {
               style={{
                 backgroundColor: '#FFFFFF',
                 borderRadius: '16px',
-                border: '2px solid #6366F1',
+                border: '1px solid #93C5FD',
                 padding: '24px',
-                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.08)',
+                boxShadow: '0 4px 16px -2px rgba(37, 99, 235, 0.12)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
                 <div>
-                  <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', marginBottom: '6px' }}>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      backgroundColor: '#EFF6FF',
+                      color: '#1D4ED8',
+                      marginBottom: '8px',
+                      letterSpacing: '0.04em',
+                    }}
+                  >
+                    PAKET LENGKAP KELAS &amp; PIPELINE
+                  </span>
+                  <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#0F172A', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
                     Tingkatkan ke Ralivo Solo
                   </h3>
-                  <p style={{ fontSize: '13px', color: '#4B5563', maxWidth: '480px', lineHeight: 1.5, margin: 0 }}>
-                    Buka akses ke fitur penjualan <strong>Kelas Berbayar</strong>, kustomisasi branding storefront penuh, hingga 10 program terpublikasi, 500 peserta aktif, dan 2.500 kontak CRM.
+                  <p style={{ fontSize: '13px', color: '#475569', maxWidth: '520px', lineHeight: 1.55, margin: 0 }}>
+                    Buka akses fitur lengkap: <strong>Ralivo Class</strong> (kelas berbayar, kupon, materi tak terbatas) &amp; <strong>Ralivo Flow</strong> (pipeline prospek, automasi WhatsApp, kalender konsultasi) hingga 10 program, 500 peserta aktif, dan 2.500 kontak CRM.
                   </p>
                 </div>
 
                 {/* Billing Cycle Toggle */}
-                <div style={{ display: 'flex', gap: '6px', backgroundColor: '#F3F4F6', padding: '4px', borderRadius: '10px' }}>
+                <div style={{ display: 'flex', gap: '4px', backgroundColor: '#F1F5F9', padding: '4px', borderRadius: '10px' }}>
                   <button
                     type="button"
                     onClick={() => setBillingCycle('MONTHLY')}
                     style={{
-                      padding: '6px 14px',
+                      padding: '7px 14px',
                       borderRadius: '8px',
                       border: 0,
                       backgroundColor: billingCycle === 'MONTHLY' ? '#FFFFFF' : 'transparent',
-                      color: billingCycle === 'MONTHLY' ? '#111827' : '#6B7280',
+                      color: billingCycle === 'MONTHLY' ? '#0F172A' : '#64748B',
                       fontWeight: 700,
                       fontSize: '12px',
                       cursor: 'pointer',
-                      boxShadow: billingCycle === 'MONTHLY' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                      boxShadow: billingCycle === 'MONTHLY' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                     }}
                   >
                     Bulanan (Rp149rb)
@@ -203,15 +268,15 @@ export default function SettingsPage() {
                     type="button"
                     onClick={() => setBillingCycle('YEARLY')}
                     style={{
-                      padding: '6px 14px',
+                      padding: '7px 14px',
                       borderRadius: '8px',
                       border: 0,
                       backgroundColor: billingCycle === 'YEARLY' ? '#FFFFFF' : 'transparent',
-                      color: billingCycle === 'YEARLY' ? '#111827' : '#6B7280',
+                      color: billingCycle === 'YEARLY' ? '#0F172A' : '#64748B',
                       fontWeight: 700,
                       fontSize: '12px',
                       cursor: 'pointer',
-                      boxShadow: billingCycle === 'YEARLY' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                      boxShadow: billingCycle === 'YEARLY' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                     }}
                   >
                     Tahunan (Hemat 17%)
@@ -220,21 +285,29 @@ export default function SettingsPage() {
               </div>
 
               {upgradeError && (
-                <div style={{ marginTop: '14px', padding: '10px 14px', backgroundColor: '#FEF2F2', color: '#991B1B', fontSize: '12px', borderRadius: '8px' }}>
+                <div style={{ marginTop: '14px', padding: '10px 14px', backgroundColor: '#FEF2F2', color: '#991B1B', fontSize: '12px', borderRadius: '8px', fontWeight: 600 }}>
                   {upgradeError}
                 </div>
               )}
 
-              <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px', borderTop: '1px solid #F3F4F6', paddingTop: '16px' }}>
+              <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px', borderTop: '1px solid #F1F5F9', paddingTop: '16px' }}>
                 <div>
-                  <div style={{ fontSize: '22px', fontWeight: 850, color: '#111827' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '13px', color: '#94A3B8', textDecoration: 'line-through' }}>
+                      {billingCycle === 'YEARLY' ? 'Rp 1.788.000' : 'Rp 198.000'}
+                    </span>
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#059669', backgroundColor: '#ECFDF5', padding: '2px 8px', borderRadius: '6px' }}>
+                      {billingCycle === 'YEARLY' ? 'Hemat s/d 33%' : 'Add-on cuma nambah Rp 50rb'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '22px', fontWeight: 850, color: '#0F172A', letterSpacing: '-0.02em', marginTop: '2px' }}>
                     {billingCycle === 'YEARLY' ? 'Rp 1.490.000' : 'Rp 149.000'}
-                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#6B7280' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 500, color: '#64748B' }}>
                       {billingCycle === 'YEARLY' ? ' / tahun' : ' / bulan'}
                     </span>
                   </div>
-                  <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>
-                    + Rp3.000 flat per transaksi kelas berbayar berhasil (tanpa komisi persentase)
+                  <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '3px' }}>
+                    Aktivasi instan via Paycore (QRIS, VA Bank, Transfer).
                   </div>
                 </div>
 
@@ -243,18 +316,19 @@ export default function SettingsPage() {
                   onClick={handleUpgrade}
                   disabled={isUpgrading}
                   style={{
-                    padding: '12px 24px',
+                    padding: '11px 22px',
                     borderRadius: '10px',
                     border: 0,
-                    backgroundColor: '#4F46E5',
+                    backgroundColor: '#2563EB',
                     color: '#FFFFFF',
                     fontWeight: 700,
-                    fontSize: '14px',
+                    fontSize: '13.5px',
                     cursor: 'pointer',
-                    transition: 'background-color 0.15s',
+                    boxShadow: '0 2px 10px rgba(37, 99, 235, 0.3)',
+                    transition: 'opacity 0.15s',
                   }}
                 >
-                  {isUpgrading ? 'Menyiapkan Checkout...' : 'Upgrade Sekarang →'}
+                  {isUpgrading ? 'Menyiapkan Checkout Paycore...' : 'Aktifkan via Paycore →'}
                 </button>
               </div>
             </div>
@@ -267,18 +341,38 @@ export default function SettingsPage() {
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '16px',
-              border: '1px solid #E5E7EB',
+              border: '1px solid #E2E8F0',
               padding: '24px',
+              boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
             }}
           >
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#111827', marginBottom: '6px' }}>
-              Bantuan & Kontak Dukungan
-            </h3>
-            <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '16px', lineHeight: 1.5 }}>
-              Membutuhkan bantuan teknis, pertanyaan seputar pembayaran, atau konsultasi pengaturan program?
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+              <div
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  backgroundColor: '#ECFDF5',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#059669',
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                </svg>
+              </div>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
+                Bantuan & Kontak Dukungan
+              </h3>
+            </div>
+            <p style={{ fontSize: '13px', color: '#64748B', marginBottom: '16px', lineHeight: 1.5 }}>
+              Membutuhkan bantuan teknis, kendala pembayaran, atau konsultasi pengaturan program Ralivo Anda?
             </p>
             <a
-              href="https://wa.me/6281234567890?text=Halo%20Tim%20Support%20Ralivo,%20saya%20butuh%20bantuan%20terkait%20akun%20saya"
+              href={supportWaUrl('Halo Tim Support Ralivo, saya butuh bantuan terkait akun saya')}
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -292,6 +386,7 @@ export default function SettingsPage() {
                 fontWeight: 700,
                 fontSize: '13px',
                 textDecoration: 'none',
+                boxShadow: '0 2px 8px rgba(37, 211, 102, 0.25)',
               }}
             >
               Chat Support via WhatsApp ↗
@@ -303,21 +398,22 @@ export default function SettingsPage() {
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '16px',
-              border: '1px solid #E5E7EB',
+              border: '1px solid #E2E8F0',
               padding: '24px',
+              boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
             }}
           >
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#111827', marginBottom: '6px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', marginBottom: '6px', letterSpacing: '-0.02em' }}>
               Akun & Keamanan
             </h3>
-            <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '16px' }}>
+            <p style={{ fontSize: '13px', color: '#64748B', marginBottom: '16px' }}>
               Sesi aktif promotor pada peramban ini.
             </p>
             <button
               type="button"
               onClick={handleLogout}
               style={{
-                padding: '10px 18px',
+                padding: '9px 18px',
                 border: '1px solid #FCA5A5',
                 backgroundColor: '#FEF2F2',
                 color: '#DC2626',
@@ -325,6 +421,7 @@ export default function SettingsPage() {
                 fontWeight: 700,
                 fontSize: '13px',
                 cursor: 'pointer',
+                transition: 'background-color 0.15s',
               }}
             >
               Keluar dari Akun

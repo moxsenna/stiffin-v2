@@ -49,7 +49,7 @@ export default function PipelinePage() {
   if (error) {
     return (
       <AppShell showBottomNav={true} fullWidth={true}>
-        <PageHeader kicker="PromotorFlow" title="Pipeline" sub="Papan visual tahap konversi kontak" />
+        <PageHeader kicker="Ralivo Flow" title="Pipeline" sub="Papan visual tahap konversi kontak" />
         <ErrorState title="Terjadi Kesalahan" detail={error} onRetry={loadData} />
       </AppShell>
     );
@@ -58,7 +58,7 @@ export default function PipelinePage() {
   if (!contacts) {
     return (
       <AppShell showBottomNav={true} fullWidth={true}>
-        <PageHeader kicker="PromotorFlow" title="Pipeline" sub="Memuat data prospek..." />
+        <PageHeader kicker="Ralivo Flow" title="Pipeline" sub="Memuat data prospek..." />
         <LoadingRows rows={6} />
       </AppShell>
     );
@@ -69,7 +69,7 @@ export default function PipelinePage() {
   return (
     <AppShell showBottomNav={true} fullWidth={true}>
       <PageHeader
-        kicker="PromotorFlow"
+        kicker="Ralivo Flow"
         title="Pipeline"
         sub={`${contacts.length} kontak terkelola · geser kartu atau tekan pindah tahap`}
       />

@@ -17,6 +17,12 @@
       "id": "1cb577ffc7524f4591a89206bb19d535"
     }
   ],
+  "r2_buckets": [
+    {
+      "binding": "ASSETS_BUCKET",
+      "bucket_name": "promotor-class-assets"
+    }
+  ],
   "vars": {
     "APP_ENV": "production",
     "BETTER_AUTH_URL": "https://stiffin-promotor-api.moxsenna.workers.dev",
@@ -34,6 +40,12 @@
         {
           "binding": "HYPERDRIVE",
           "id": "ea7e56b0c0424b33a8c8156b8bb923bc"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "ASSETS_BUCKET",
+          "bucket_name": "promotor-class-assets-staging"
         }
       ],
       "vars": {

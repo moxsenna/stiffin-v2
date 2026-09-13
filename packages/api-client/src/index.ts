@@ -149,6 +149,38 @@ export class ApiClient {
     return this.request<T>('DELETE', endpoint);
   }
 
+  async postForm<T>(endpoint: string, formData: FormData): Promise<T> {
+    const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+    const headers: Record<string, string> = {};
+    const token = typeof this.authToken === 'function' ? this.authToken() : this.authToken;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const init: RequestInit = {
+      method: 'POST',
+      headers,
+      body: formData,
+    };
+    if (this.credentials) {
+      init.credentials = this.credentials;
+    }
+
+    const res = await fetch(url, init);
+    if (!res.ok) {
+      let errBody: { error?: { code?: string; message?: string; details?: unknown } } | null = null;
+      try {
+        errBody = await res.json();
+      } catch {
+        // non-JSON response
+      }
+      const code = errBody?.error?.code ?? (res.status === 404 ? 'NOT_FOUND' : 'API_ERROR');
+      const message = errBody?.error?.message ?? `API POST request failed: ${res.status} ${res.statusText}`;
+      throw new ApiError(res.status, code, message, errBody?.error?.details);
+    }
+
+    return res.json();
+  }
+
   private async request<T>(method: string, endpoint: string, data?: unknown): Promise<T> {
     const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
     const headers = this.getHeaders();
@@ -784,6 +816,18 @@ export class PromotorClassContentApiClient {
     const qs = variantId ? `?variantId=${encodeURIComponent(variantId)}` : '';
     return this.client.get<CouponQuoteResponse>(
       `/api/v1/public/${encodeURIComponent(slug)}/programs/${encodeURIComponent(programSlug)}/coupons/${encodeURIComponent(code)}${qs}`
+    );
+  }
+
+  // ==========================================
+  // Cloudflare R2 Asset Upload
+  // ==========================================
+  async uploadAsset(file: File | Blob): Promise<{ success: boolean; url: string; key: string; size: number; contentType: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.client.postForm<{ success: boolean; url: string; key: string; size: number; contentType: string }>(
+      '/api/assets/upload',
+      formData
     );
   }
 }

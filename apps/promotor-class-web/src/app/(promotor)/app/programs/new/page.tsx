@@ -1,12 +1,22 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { createProgramDetailedCommand } from '@/modules/programs/commands';
 import { getTemplateByIdQuery } from '@/modules/templates/queries';
 import { ProgramCover } from '@/components/public/ProgramCover';
+import { getPlatformApiClient, getApiMode } from '@/adapters';
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Gagal membaca file gambar'));
+    reader.readAsDataURL(file);
+  });
+}
 
 function NewProgramForm() {
   const router = useRouter();
@@ -21,6 +31,62 @@ function NewProgramForm() {
   const [durationLabel, setDurationLabel] = useState('7 hari');
   const [coverVariant, setCoverVariant] = useState<'cover-a' | 'cover-b' | 'cover-c'>('cover-a');
   const [coverImageUrl, setCoverImageUrl] = useState<string>('');
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [uploadCoverError, setUploadCoverError] = useState<string | null>(null);
+  const coverFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadCoverError('Ukuran file maksimal 5MB');
+      return;
+    }
+
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+    if (!allowed.includes(file.type)) {
+      setUploadCoverError('Tipe file harus berupa gambar (JPG, PNG, WebP, GIF, SVG)');
+      return;
+    }
+
+    setIsUploadingCover(true);
+    setUploadCoverError(null);
+
+    try {
+      const mode = getApiMode();
+      let uploadedUrl = '';
+
+      if (mode === 'http') {
+        try {
+          const api = getPlatformApiClient();
+          const res = await api.uploadAsset(file);
+          if (res?.url) {
+            uploadedUrl = res.url;
+          }
+        } catch (apiErr: any) {
+          if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+            uploadedUrl = await readFileAsDataUrl(file);
+          } else {
+            throw apiErr;
+          }
+        }
+      } else {
+        uploadedUrl = await readFileAsDataUrl(file);
+      }
+
+      if (uploadedUrl) {
+        setCoverImageUrl(uploadedUrl);
+      }
+    } catch (err: any) {
+      setUploadCoverError(err?.message || 'Gagal mengunggah gambar cover. Silakan coba lagi.');
+    } finally {
+      setIsUploadingCover(false);
+      if (coverFileInputRef.current) {
+        coverFileInputRef.current.value = '';
+      }
+    }
+  };
   const [priceAmount, setPriceAmount] = useState(150000);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -474,10 +540,51 @@ function NewProgramForm() {
                </div>
              </div>
 
+             {/* Upload Cover */}
+             <div style={{ marginTop: '14px', padding: '12px 14px', border: '1px dashed var(--accent-dark)', backgroundColor: 'rgba(235, 94, 65, 0.04)' }}>
+               <input
+                 type="file"
+                 ref={coverFileInputRef}
+                 onChange={handleCoverUpload}
+                 accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                 style={{ display: 'none' }}
+               />
+               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                 <button
+                   type="button"
+                   onClick={() => coverFileInputRef.current?.click()}
+                   disabled={isUploadingCover}
+                   style={{
+                     display: 'inline-flex',
+                     alignItems: 'center',
+                     gap: '6px',
+                     padding: '8px 14px',
+                     borderRadius: '0px',
+                     backgroundColor: isUploadingCover ? 'var(--color-surface-hover)' : 'var(--accent-dark)',
+                     color: '#FFFFFF',
+                     border: 'none',
+                     fontSize: '13px',
+                     fontWeight: 750,
+                     cursor: isUploadingCover ? 'not-allowed' : 'pointer',
+                   }}
+                 >
+                   {isUploadingCover ? '⏳ Mengunggah gambar...' : '📷 Unggah Cover Program'}
+                 </button>
+                 <span style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>
+                   Maksimal 5 MB. Format JPG, PNG, WebP, atau SVG.
+                 </span>
+               </div>
+               {uploadCoverError && (
+                 <div style={{ fontSize: '12px', color: '#EF4444', fontWeight: 700, marginTop: '6px' }}>
+                   ⚠ {uploadCoverError}
+                 </div>
+               )}
+             </div>
+
              {/* Optional Custom Image URL */}
               <div style={{ marginTop: '10px' }}>
                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
-                 URL Gambar Kustom (Opsional)
+                 Atau Masukkan URL Gambar Manual (Opsional)
                 </label>
                <input
                   type="url"

@@ -20,6 +20,9 @@ export interface Env {
   /** Shared secret for POST /api/admin/entitlements — Worker secret binding. */
   ADMIN_API_KEY?: string;
 
+  /** Cloudflare R2 Bucket for public assets (profile photos, logos, etc.) */
+  ASSETS_BUCKET?: R2Bucket;
+
   /** Inactivity sweep threshold in days (default: 7). */
   INACTIVITY_SWEEP_DAYS?: string;
 

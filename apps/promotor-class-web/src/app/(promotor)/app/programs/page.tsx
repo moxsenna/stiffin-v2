@@ -34,7 +34,7 @@ export default function ProgramsPage() {
   return (
     <PromotorShell>
      <PageHeader
-        kicker="PromotorClass"
+        kicker="Ralivo Class"
         title="Program"
         sub={programs ? `${programs.length} program · materi edukasi, gratis & berbayar` : 'Memuat program...'}
         action={

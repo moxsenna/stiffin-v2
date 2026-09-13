@@ -38,12 +38,14 @@ export default function OrdersPage() {
           ? 'REJECTED'
           : undefined;
 
-      const res = await api.listOrders({
-        status: statusParam as any,
-        payoutStatus: payoutFilter === 'ALL' ? undefined : payoutFilter,
-        limit: 50,
-        offset: 0,
-      });
+      const res = await api
+        .listOrders({
+          status: statusParam as any,
+          payoutStatus: payoutFilter === 'ALL' ? undefined : payoutFilter,
+          limit: 50,
+          offset: 0,
+        })
+        .catch(() => ({ orders: [], total: 0 }));
       setOrders(res.orders || []);
       setTotal(res.total || 0);
       const [s, t] = await Promise.all([
@@ -52,8 +54,7 @@ export default function OrdersPage() {
       ]);
       setSummary(s?.summary ?? null);
       setTeaser(t);
-    } catch (err: any) {
-      console.error('Failed to load orders:', err);
+    } catch {
       // Fallback empty if mock mode or network error
       setOrders([]);
       setTotal(0);
@@ -111,7 +112,7 @@ export default function OrdersPage() {
   return (
     <PromotorShell>
       <PageHeader
-        kicker="PromotorClass"
+        kicker="Ralivo Class"
         title="Pesanan"
         sub="Kelola transaksi, verifikasi pembayaran, dan akses peserta kelas berbayar"
         action={

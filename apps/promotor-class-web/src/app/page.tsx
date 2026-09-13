@@ -182,7 +182,7 @@ export default function RootPage() {
               { t: 'Program Builder Kilat', d: 'Buat modul & pelajaran (teks/video YouTube), tambah refleksi pengunci & CTA WA dalam menit, bukan jam.', h: ['Video unlisted YouTube', 'Refleksi wajib', 'CTA WA otomatis'] },
               { t: 'Intent Engine HOT/WARM/COLD', d: 'Skor intent otomatis dari progres, refleksi, dan status — promotor tahu siapa yang siap ditawarkan tes.', h: ['Skor 0-100 real-time', 'Label HOT/WARM/COLD', 'Alasan terukur'] },
               { t: 'Lifecycle & Aftercare D+7', d: 'Pantau status belajar, trigger aftercare 7 hari setelah selesai, dan cegah prospek hilang.', h: ['Status aktif/selesai/risiko', 'Aftercare otomatis', 'Timeline lengkap'] },
-              { t: 'Sinkron PromotorFlow', d: 'Enrollment Class otomatis jadi kontak Flow — follow-up WA & booking langsung jalan.', h: ['Shared Contact E.164', 'M17 sync', 'Anti duplikat'] },
+              { t: 'Sinkron Ralivo Flow', d: 'Enrollment Class otomatis jadi kontak Flow — follow-up WA & booking langsung jalan.', h: ['Shared Contact E.164', 'M17 sync', 'Anti duplikat'] },
             ].map((f) => (
               <div key={f.t} style={{ backgroundColor: 'var(--canvas)', border: '1px solid var(--line)', padding: '28px' }}>
                 <h3 style={{ fontSize: 18, fontWeight: 850, marginBottom: 10, lineHeight: 1.3 }}>{f.t}</h3>
@@ -340,7 +340,7 @@ export default function RootPage() {
 
       <section style={{ padding: '48px 24px', backgroundColor: 'var(--ink)', color: '#fff', textAlign: 'center' }}>
         <h2 style={{ fontSize: 'clamp(26px,4vw,36px)', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: 12 }}>Siap Ubah Edukasi Menjadi Pipeline?</h2>
-        <p style={{ fontSize: 16, color: '#94a3b8', maxWidth: 640, margin: '0 auto 24px', lineHeight: 1.6 }}>Bergabung dengan promotor yang sudah pakai PromotorClass — gratis untuk memulai, tanpa kartu kredit.</p>
+        <p style={{ fontSize: 16, color: '#94a3b8', maxWidth: 640, margin: '0 auto 24px', lineHeight: 1.6 }}>Bergabung dengan promotor yang sudah pakai Ralivo Class — gratis untuk memulai, tanpa kartu kredit.</p>
         <Link href="/login" style={{ display: 'inline-flex', padding: '14px 32px', backgroundColor: 'var(--accent)', color: '#fff', fontWeight: 800, fontSize: 15, textDecoration: 'none' }}>Buat Program Pertama Gratis →</Link>
         <div style={{ marginTop: 12, fontSize: 12, color: '#64748b' }}>Gratis • Setup 5 menit • Support STIFIn</div>
       </section>
