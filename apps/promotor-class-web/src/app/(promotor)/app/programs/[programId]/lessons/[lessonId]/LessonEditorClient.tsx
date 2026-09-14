@@ -8,6 +8,7 @@ import { getProgramByIdQuery } from '@/modules/programs/queries';
 import { saveLessonCommand } from '@/modules/programs/commands';
 import { AttachmentRow, emptyAttachmentRow, normalizeAttachmentRows } from '@/modules/programs/attachments';
 import { Program, Lesson } from '@promotor/contracts';
+import { getPlatformApiClient } from '@/adapters';
 
 export function LessonEditorClient() {
   const params = useParams();
@@ -30,9 +31,42 @@ export function LessonEditorClient() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
 
   const updateRow = (idx: number, patch: Partial<AttachmentRow>) =>
     setAttachments(attachments.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, targetIdx?: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const uploadIndex = targetIdx !== undefined ? targetIdx : attachments.length;
+    setUploadingIdx(uploadIndex);
+    try {
+      const api = getPlatformApiClient();
+      const res = await api.uploadAsset(file);
+      if (res?.url) {
+        const isImg = file.type.startsWith('image/');
+        const newRow: AttachmentRow = {
+          kind: isImg ? 'image' : 'download',
+          name: file.name,
+          url: res.url,
+        };
+        if (targetIdx !== undefined) {
+          updateRow(targetIdx, newRow);
+        } else {
+          setAttachments((prev) => [...prev, newRow]);
+        }
+      } else {
+        alert('Gagal mengunggah file.');
+      }
+    } catch (err: any) {
+      alert(`Gagal mengunggah: ${err?.message || 'Terjadi kesalahan'}`);
+    } finally {
+      setUploadingIdx(null);
+      e.target.value = '';
+    }
+  };
 
   useEffect(() => {
     getProgramByIdQuery(programId)
@@ -272,10 +306,10 @@ export function LessonEditorClient() {
 
          {/* Materi Pendukung / Lampiran */}
          <div style={{ marginTop: 16 }}>
-           <div className="field-label">Materi Pendukung (worksheet / handout / audio)</div>
-           <p className="kicker kicker-muted">Tempel link file (Google Drive, Dropbox, dsb). Pastikan link bisa diakses peserta.</p>
+           <div className="field-label">Materi Pendukung (worksheet / handout / audio / gambar)</div>
+           <p className="kicker kicker-muted">Unggah file langsung ke sistem atau tautkan link publik (Google Drive, Dropbox, dsb).</p>
            {attachments.map((att, idx) => (
-             <div key={idx} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 2fr 40px', gap: 8, marginTop: 8 }}>
+             <div key={idx} style={{ display: 'grid', gridTemplateColumns: '110px 1.2fr 2fr auto 40px', gap: 8, marginTop: 8, alignItems: 'center' }}>
                <select className="input" value={att.kind} aria-label={`Tipe lampiran ${idx + 1}`}
                  onChange={(e) => updateRow(idx, { kind: e.target.value as 'image' | 'download' })}>
                  <option value="download">Unduhan</option>
@@ -285,14 +319,52 @@ export function LessonEditorClient() {
                  onChange={(e) => updateRow(idx, { name: e.target.value })} />
                <input className="input" placeholder="https://..." value={att.url} aria-label={`URL lampiran ${idx + 1}`}
                  onChange={(e) => updateRow(idx, { url: e.target.value })} />
+               <label
+                 className="btn btn-secondary btn-sm"
+                 style={{
+                   cursor: uploadingIdx === idx ? 'not-allowed' : 'pointer',
+                   padding: '6px 10px',
+                   fontSize: '11px',
+                   display: 'inline-flex',
+                   alignItems: 'center',
+                   height: '36px',
+                 }}
+               >
+                 <input
+                   type="file"
+                   disabled={uploadingIdx !== null}
+                   onChange={(e) => handleFileUpload(e, idx)}
+                   style={{ display: 'none' }}
+                 />
+                 {uploadingIdx === idx ? '⏳' : '📁 Ganti File'}
+               </label>
                <button type="button" className="btn btn-ghost" aria-label={`Hapus lampiran ${idx + 1}`}
                  onClick={() => setAttachments(attachments.filter((_, i) => i !== idx))}>✕</button>
              </div>
            ))}
-           <button type="button" className="btn btn-secondary btn-sm" style={{ marginTop: 8 }}
-             onClick={() => setAttachments([...attachments, emptyAttachmentRow()])}>
-             + Tambah Lampiran
-           </button>
+           <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+             <label
+               className="btn btn-secondary btn-sm"
+               style={{
+                 cursor: uploadingIdx !== null ? 'not-allowed' : 'pointer',
+                 display: 'inline-flex',
+                 alignItems: 'center',
+                 gap: 6,
+               }}
+             >
+               <input
+                 type="file"
+                 disabled={uploadingIdx !== null}
+                 onChange={(e) => handleFileUpload(e)}
+                 style={{ display: 'none' }}
+               />
+               {uploadingIdx === attachments.length ? '⏳ Mengunggah...' : '📁 Unggah File Baru'}
+             </label>
+             <button type="button" className="btn btn-secondary btn-sm"
+               onClick={() => setAttachments([...attachments, emptyAttachmentRow()])}>
+               + Tambah Link Manual
+             </button>
+           </div>
          </div>
 
          {/* Reflection Setup */}

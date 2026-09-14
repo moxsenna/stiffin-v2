@@ -12,6 +12,7 @@ export const contacts = pgTable(
     name: text('name').notNull(),
     phoneE164: text('phone_e164').notNull(),
     email: text('email'),
+    passwordHash: text('password_hash'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'string' }),

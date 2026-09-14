@@ -16,13 +16,14 @@ export function WhatsAppDraftSheet({
   onClose,
 }: WhatsAppDraftSheetProps) {
   const [message, setMessage] = useState(
-    initialMessage || (contact ? `Halo ${contact.name}, salam dari STIFIn Parenting.` : '')
+    initialMessage || (contact ? `Halo ${contact.name}, semoga kabarnya baik.` : '')
   );
 
   if (!contact) return null;
 
-  const cleanPhone = contact.phoneE164.replace(/\D/g, '');
-  const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+  const cleanPhone = (contact.phoneE164 || '').replace(/\D/g, '');
+  const isValidPhone = cleanPhone.length >= 8;
+  const waUrl = isValidPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}` : '#';
 
   return (
     <BottomSheet open={!!contact} onClose={onClose} labelledBy="wa-draft-title">
@@ -41,15 +42,27 @@ export function WhatsAppDraftSheet({
         style={{ marginTop: 12 }}
       />
 
+     {!isValidPhone && (
+       <p style={{ color: 'var(--color-status-danger, #DC2626)', fontSize: '12px', marginTop: '6px', fontWeight: 600 }}>
+         Nomor WhatsApp peserta tidak valid atau belum lengkap.
+       </p>
+     )}
+
      <p className="sheet-explain">Pesan dibuka di WhatsApp. Anda yang menekan kirim.</p>
 
      <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-       <a href={waUrl} target="_blank" rel="noopener noreferrer" className="btn btn-accent">
-         Buka di WhatsApp
-        </a>
+       {isValidPhone ? (
+         <a href={waUrl} target="_blank" rel="noopener noreferrer" className="btn btn-accent">
+           Buka di WhatsApp
+         </a>
+       ) : (
+         <button type="button" disabled className="btn btn-accent" style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+           Nomor Tidak Valid
+         </button>
+       )}
        <button type="button" onClick={onClose} className="btn btn-ghost">
          Batal
-        </button>
+       </button>
      </div>
    </BottomSheet>
  );

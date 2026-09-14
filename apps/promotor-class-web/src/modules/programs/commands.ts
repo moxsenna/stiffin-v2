@@ -1,6 +1,6 @@
 import { getProgramRepository } from '@/adapters';
 import { Lesson, CreatePriceVariantRequest } from '@promotor/contracts';
-import { CreateProgramDetailedInput } from './ports';
+import { CreateProgramDetailedInput, UpdateProgramInput } from './ports';
 
 export async function createProgramCommand(
   title: string,
@@ -13,6 +13,10 @@ export async function createProgramCommand(
 
 export async function createProgramDetailedCommand(input: CreateProgramDetailedInput) {
   return getProgramRepository().createProgramDetailed(input);
+}
+
+export async function updateProgramCommand(programId: string, input: UpdateProgramInput) {
+  return getProgramRepository().updateProgram(programId, input);
 }
 
 export async function toggleProgramStatusCommand(programId: string) {

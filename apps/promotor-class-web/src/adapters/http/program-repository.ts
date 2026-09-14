@@ -1,5 +1,5 @@
 import { Program, Lesson, ProgramPriceVariant, CreatePriceVariantRequest } from '@promotor/contracts';
-import { ProgramRepositoryPort, CreateProgramDetailedInput } from '@/modules/programs/ports';
+import { ProgramRepositoryPort, CreateProgramDetailedInput, UpdateProgramInput } from '@/modules/programs/ports';
 import { PromotorClassContentApiClient } from '@promotor/api-client';
 
 export class HttpProgramRepository implements ProgramRepositoryPort {
@@ -50,6 +50,28 @@ export class HttpProgramRepository implements ProgramRepositoryPort {
       imageUrl: input.imageUrl,
       outcomes: input.outcomes,
     });
+  }
+
+  async updateProgram(programId: string, input: UpdateProgramInput): Promise<Program> {
+    const updated = await this.client.updateProgram(programId, {
+      title: input.title,
+      subtitle: input.subtitle,
+      description: input.description,
+      pricing: input.pricing,
+      priceAmount: input.priceAmount,
+      programType: input.programType,
+      accessType: input.accessType,
+    });
+    if (input.imageUrl !== undefined) {
+      try {
+        await this.client.updateProgramPresentation(programId, {
+          imageUrl: input.imageUrl,
+        });
+      } catch (err) {
+        console.warn('Failed to update presentation imageUrl:', err);
+      }
+    }
+    return updated;
   }
 
   async toggleProgramStatus(programId: string): Promise<Program> {

@@ -42,15 +42,19 @@ export function BankAccountsSection() {
     const cleanHolder = accountHolderName.trim();
 
     if (!cleanBank) {
-      setFormError('Nama bank wajib diisi.');
+      setFormError('Nama bank wajib dipilih atau diisi.');
       return;
     }
-    if (!cleanNumber || cleanNumber.length < 5) {
-      setFormError('Nomor rekening tidak valid (minimal 5 digit).');
+    if (!cleanNumber || !/^\d{5,25}$/.test(cleanNumber)) {
+      setFormError('Nomor rekening tidak valid. Pastikan hanya berisi angka (5-25 digit).');
       return;
     }
     if (!cleanHolder || cleanHolder.length < 3) {
-      setFormError('Nama pemilik rekening wajib diisi lengkap.');
+      setFormError('Nama pemilik rekening wajib diisi lengkap sesuai buku tabungan.');
+      return;
+    }
+    if (!/^[a-zA-Z\s.,'-]{3,100}$/.test(cleanHolder)) {
+      setFormError('Nama pemilik rekening hanya boleh berisi huruf dan tanda baca umum.');
       return;
     }
 
@@ -403,7 +407,7 @@ export function BankAccountsSection() {
                 inputMode="numeric"
                 placeholder="1234567890"
                 value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value)}
+                onChange={(e) => setAccountNumber(e.target.value.replace(/[^0-9]/g, ''))}
                 style={{
                   width: '100%',
                   padding: '9px 12px',

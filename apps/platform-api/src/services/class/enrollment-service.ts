@@ -61,7 +61,7 @@ export interface EnrollmentService {
   redeemLearnerToken(tokenRaw: string): Promise<{ contactId: string; organizationId: string }>;
   getEnrollmentById(organizationId: string, enrollmentId: string): Promise<EnrollmentRow | null>;
   listEnrollmentsByOrg(organizationId: string, filter?: { programId?: string; contactId?: string }): Promise<EnrollmentRow[]>;
-  getLearnerPrograms(contactId: string, organizationId: string): Promise<Array<EnrollmentRow & { programTitle: string; programSlug: string }>>;
+  getLearnerPrograms(contactId: string, organizationId: string): Promise<Array<EnrollmentRow & { programTitle: string; programSlug: string; [key: string]: any }>>;
 }
 
 export function createEnrollmentService(
@@ -375,9 +375,9 @@ export function createEnrollmentService(
       return await enrollmentRepo.listByOrg(organizationId, filter);
     },
 
-    async getLearnerPrograms(contactId: string, organizationId: string): Promise<Array<EnrollmentRow & { programTitle: string; programSlug: string }>> {
+    async getLearnerPrograms(contactId: string, organizationId: string): Promise<Array<EnrollmentRow & { programTitle: string; programSlug: string; [key: string]: any }>> {
       const enrs = await enrollmentRepo.listByContact(organizationId, contactId);
-      const results: Array<EnrollmentRow & { programTitle: string; programSlug: string }> = [];
+      const results: Array<EnrollmentRow & { programTitle: string; programSlug: string; [key: string]: any }> = [];
 
       for (const e of enrs) {
         const p = await programRepo.findById({ organizationId }, e.programId);
@@ -386,6 +386,10 @@ export function createEnrollmentService(
             ...e,
             programTitle: p.title,
             programSlug: p.programSlug,
+            programSubtitle: p.subtitle,
+            coverImageUrl: p.presentation?.imageUrl || null,
+            modulesCount: p.modules?.length ?? 0,
+            modules: p.modules ?? [],
           });
         }
       }

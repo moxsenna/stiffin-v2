@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { eq } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
+import { z } from 'zod';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { organizations, productEntitlements } from './db/schema';
+import { organizations, productEntitlements, contacts, enrollments, programs } from './db/schema';
 import { Env } from './env';
 import { executeDbHealthProbe } from './db/client';
 import { authLifecycle, sessionMiddleware } from './auth/session-middleware';
@@ -11,6 +12,8 @@ import { requireOrganization, requireEntitlement, requireAnyEntitlement, require
 import type { AuthContext } from './auth/types';
 import type { AuthInstance } from './auth/create-auth';
 import { DomainError, isDomainError } from './core/errors';
+import { hashPassword, verifyPassword } from '@better-auth/utils/password';
+import { normalizePhone } from '@promotor/platform-core';
 import { createProgramRepository } from './repositories/program-repository';
 import { createWorkspaceProfileRepository } from './repositories/workspace-profile-repository';
 import { createPublicContentRepository } from './repositories/public-content-repository';
@@ -616,7 +619,7 @@ export function createApp(deps?: AppDependencies) {
       code: parsed.data.code,
     });
 
-    setCookie(c, 'promotor_learner_session', result.sessionToken, {
+      setCookie(c, 'promotor_learner_session', result.sessionToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'None',
@@ -628,6 +631,257 @@ export function createApp(deps?: AppDependencies) {
         contactId: result.contactId,
         organizationId: result.organizationId,
         workspaceSlug: result.workspaceSlug,
+      },
+      200
+    );
+  });
+
+  const LearnerRegisterSchema = z.object({
+    name: z.string().min(1, 'Nama wajib diisi').max(100),
+    email: z.string().email('Format email tidak valid'),
+    password: z.string().min(6, 'Password minimal 6 karakter'),
+    phoneRaw: z.string().optional(),
+    workspaceSlug: z.string().optional(),
+    programSlug: z.string().optional(),
+  });
+
+  const LearnerLoginSchema = z.object({
+    email: z.string().email('Format email tidak valid'),
+    password: z.string().min(1, 'Password wajib diisi'),
+  });
+
+  app.post('/api/v1/learner/auth/register', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = LearnerRegisterSchema.safeParse(raw);
+    if (!parsed.success) {
+      const details = parsed.error.issues.map((i) => i.message).join(', ');
+      throw new DomainError('VALIDATION_ERROR', `Data pendaftaran tidak valid: ${details}`);
+    }
+
+    const email = parsed.data.email.trim().toLowerCase();
+    const name = parsed.data.name.trim();
+    const passwordHash = await hashPassword(parsed.data.password);
+
+    // 1. Resolve Organization
+    let org: { id: string; slug: string } | undefined;
+    if (parsed.data.workspaceSlug) {
+      const [foundOrg] = await db
+        .select({ id: organizations.id, slug: organizations.slug })
+        .from(organizations)
+        .where(eq(organizations.slug, parsed.data.workspaceSlug.trim()))
+        .limit(1);
+      org = foundOrg;
+    }
+
+    if (!org && parsed.data.programSlug) {
+      const [foundProg] = await db
+        .select({ organizationId: programs.organizationId, orgSlug: organizations.slug })
+        .from(programs)
+        .innerJoin(organizations, eq(organizations.id, programs.organizationId))
+        .where(eq(programs.slug, parsed.data.programSlug.trim()))
+        .limit(1);
+      if (foundProg) {
+        org = { id: foundProg.organizationId, slug: foundProg.orgSlug };
+      }
+    }
+
+    if (!org) {
+      const [firstOrg] = await db
+        .select({ id: organizations.id, slug: organizations.slug })
+        .from(organizations)
+        .limit(1);
+      org = firstOrg;
+    }
+
+    if (!org) {
+      throw new DomainError('NOT_FOUND', 'Workspace promotor belum dikonfigurasi.');
+    }
+
+    // 2. Resolve phoneE164
+    let phoneE164: string;
+    if (parsed.data.phoneRaw && parsed.data.phoneRaw.trim().length >= 8) {
+      try {
+        phoneE164 = normalizePhone(parsed.data.phoneRaw.trim());
+      } catch {
+        const randDigits = Math.floor(10000000 + Math.random() * 90000000);
+        phoneE164 = `+62899${randDigits}`;
+      }
+    } else {
+      const randDigits = Math.floor(10000000 + Math.random() * 90000000);
+      phoneE164 = `+62899${randDigits}`;
+    }
+
+    // 3. Check existing contact in this org with this email
+    const [existingContact] = await db
+      .select()
+      .from(contacts)
+      .where(and(eq(contacts.organizationId, org.id), eq(contacts.email, email)))
+      .limit(1);
+
+    let contactId: string;
+    if (existingContact) {
+      contactId = existingContact.id;
+      await db
+        .update(contacts)
+        .set({
+          name,
+          passwordHash,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(contacts.id, contactId));
+    } else {
+      // Check phone uniqueness in this org
+      const [phoneConflict] = await db
+        .select({ id: contacts.id })
+        .from(contacts)
+        .where(and(eq(contacts.organizationId, org.id), eq(contacts.phoneE164, phoneE164)))
+        .limit(1);
+      if (phoneConflict) {
+        phoneE164 = `+62899${Date.now().toString().slice(-8)}`;
+      }
+
+      const [newContact] = await db
+        .insert(contacts)
+        .values({
+          organizationId: org.id,
+          name,
+          email,
+          phoneE164,
+          passwordHash,
+        })
+        .returning({ id: contacts.id });
+      contactId = newContact.id;
+    }
+
+    // 4. Enroll in program if programSlug provided
+    if (parsed.data.programSlug) {
+      const [targetProg] = await db
+        .select({ id: programs.id })
+        .from(programs)
+        .where(and(eq(programs.organizationId, org.id), eq(programs.slug, parsed.data.programSlug.trim())))
+        .limit(1);
+
+      if (targetProg) {
+        const [existingEnr] = await db
+          .select({ id: enrollments.id })
+          .from(enrollments)
+          .where(
+            and(
+              eq(enrollments.organizationId, org.id),
+              eq(enrollments.programId, targetProg.id),
+              eq(enrollments.contactId, contactId)
+            )
+          )
+          .limit(1);
+
+        if (!existingEnr) {
+          await db.insert(enrollments).values({
+            organizationId: org.id,
+            programId: targetProg.id,
+            contactId,
+            status: 'ENROLLED',
+            enrolledAt: new Date().toISOString(),
+            progressPercent: 0,
+            intentScore: 10,
+            intentLabel: 'COLD',
+            intentBreakdown: [{ label: 'Pendaftaran Program', points: 10 }],
+            learningStatus: 'NOT_STARTED',
+          });
+        }
+      }
+    }
+
+    // 5. Create learner session
+    const sessionService = createLearnerSessionService(db);
+    const session = await sessionService.createSessionForContact(org.id, contactId);
+
+    setCookie(c, 'promotor_learner_session', session.sessionToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'None',
+      path: '/',
+      maxAge: 30 * 24 * 3600,
+    });
+
+    return c.json(
+      {
+        success: true,
+        contactId,
+        organizationId: org.id,
+        workspaceSlug: org.slug,
+        name,
+        email,
+      },
+      201
+    );
+  });
+
+  app.post('/api/v1/learner/auth/login', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = LearnerLoginSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new DomainError('VALIDATION_ERROR', 'Email dan password wajib diisi');
+    }
+
+    const email = parsed.data.email.trim().toLowerCase();
+    const candidateContacts = await db
+      .select({
+        contact: contacts,
+        workspaceSlug: organizations.slug,
+      })
+      .from(contacts)
+      .innerJoin(organizations, eq(organizations.id, contacts.organizationId))
+      .where(and(eq(contacts.email, email), isNull(contacts.deletedAt)));
+
+    if (candidateContacts.length === 0) {
+      throw new DomainError('UNAUTHORIZED', 'Email atau kata sandi salah. Silakan periksa kembali.');
+    }
+
+    let authenticated: (typeof candidateContacts)[0] | null = null;
+    for (const candidate of candidateContacts) {
+      if (candidate.contact.passwordHash) {
+        try {
+          const match = await verifyPassword(candidate.contact.passwordHash, parsed.data.password);
+          if (match) {
+            authenticated = candidate;
+            break;
+          }
+        } catch {
+          // ignore error and continue
+        }
+      }
+    }
+
+    if (!authenticated) {
+      throw new DomainError('UNAUTHORIZED', 'Email atau kata sandi salah. Silakan periksa kembali.');
+    }
+
+    const sessionService = createLearnerSessionService(db);
+    const session = await sessionService.createSessionForContact(
+      authenticated.contact.organizationId,
+      authenticated.contact.id
+    );
+
+    setCookie(c, 'promotor_learner_session', session.sessionToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'None',
+      path: '/',
+      maxAge: 30 * 24 * 3600,
+    });
+
+    return c.json(
+      {
+        success: true,
+        contactId: authenticated.contact.id,
+        organizationId: authenticated.contact.organizationId,
+        workspaceSlug: authenticated.workspaceSlug,
+        name: authenticated.contact.name,
+        email: authenticated.contact.email,
       },
       200
     );
@@ -655,6 +909,30 @@ export function createApp(deps?: AppDependencies) {
   app.use('/api/v1/learner/me', learnerAuthMiddleware);
   app.use('/api/v1/learner/me/*', learnerAuthMiddleware);
   app.use('/api/v1/learner/enrollments/*', learnerAuthMiddleware);
+
+  app.get('/api/v1/learner/me', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const learnerCtx = c.get('learnerContext' as any) as any;
+    const [row] = await db
+      .select({
+        contactId: contacts.id,
+        name: contacts.name,
+        email: contacts.email,
+        phoneE164: contacts.phoneE164,
+        organizationId: contacts.organizationId,
+        workspaceSlug: organizations.slug,
+      })
+      .from(contacts)
+      .innerJoin(organizations, eq(organizations.id, contacts.organizationId))
+      .where(eq(contacts.id, learnerCtx.contactId))
+      .limit(1);
+
+    if (!row) {
+      throw new DomainError('NOT_FOUND', 'Data peserta tidak ditemukan');
+    }
+    return c.json({ learner: row }, 200);
+  });
 
   app.get('/api/v1/learner/me/enrollments', async (c) => {
     c.header('Cache-Control', 'no-store');

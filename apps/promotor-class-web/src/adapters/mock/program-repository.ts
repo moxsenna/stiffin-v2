@@ -1,6 +1,6 @@
 import { Program, Module, Lesson, ProgramPriceVariant, CreatePriceVariantRequest } from '@promotor/contracts';
 import { MockStateStore } from './mock-state-store';
-import { ProgramRepositoryPort, CreateProgramDetailedInput } from '@/modules/programs/ports';
+import { ProgramRepositoryPort, CreateProgramDetailedInput, UpdateProgramInput } from '@/modules/programs/ports';
 import { extractYoutubeId } from '@/lib/video/parse-youtube-url';
 
 export class MockProgramRepository implements ProgramRepositoryPort {
@@ -141,6 +141,39 @@ export class MockProgramRepository implements ProgramRepositoryPort {
     }));
 
     return newProgram;
+  }
+
+  async updateProgram(programId: string, input: UpdateProgramInput): Promise<Program> {
+    MockStateStore.updateState(curr => {
+      const programs = curr.programs.map(p => {
+        if (p.id !== programId) return p;
+        return {
+          ...p,
+          ...(input.title !== undefined && { title: input.title.trim() }),
+          ...(input.subtitle !== undefined && { subtitle: input.subtitle.trim() }),
+          ...(input.description !== undefined && { description: input.description.trim() }),
+          ...(input.pricing !== undefined && { pricing: input.pricing }),
+          ...(input.priceAmount !== undefined && { priceAmount: input.priceAmount }),
+          ...(input.programType !== undefined && { programType: input.programType }),
+          ...(input.accessType !== undefined && { accessType: input.accessType }),
+          updatedAt: new Date().toISOString(),
+        };
+      });
+
+      const presentations = { ...curr.programPresentations };
+      if (input.imageUrl !== undefined && presentations[programId]) {
+        presentations[programId] = {
+          ...presentations[programId],
+          imageUrl: input.imageUrl,
+        };
+      }
+
+      return { ...curr, programs, programPresentations: presentations };
+    });
+
+    const updated = await this.getProgramById(programId);
+    if (!updated) throw new Error('Program not found after update');
+    return updated;
   }
 
   async addModule(programId: string, title: string): Promise<Program> {

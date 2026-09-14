@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { getProgramByIdQuery } from '@/modules/programs/queries';
+import { getPlatformApiClient } from '@/adapters';
 import {
   toggleProgramStatusCommand,
   reorderModulesCommand,
@@ -14,6 +15,7 @@ import {
   deleteLessonCommand,
   createPriceVariantCommand,
   deletePriceVariantCommand,
+  updateProgramCommand,
 } from '@/modules/programs/commands';
 import { Program, Module, Lesson } from '@promotor/contracts';
 
@@ -23,6 +25,24 @@ export function ProgramDetailClient() {
   const [program, setProgram] = useState<Program | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showEditProgramModal, setShowEditProgramModal] = useState(false);
+  const [isSavingProgram, setIsSavingProgram] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [editForm, setEditForm] = useState<{
+    title: string;
+    subtitle: string;
+    description: string;
+    programType: 'lead_magnet' | 'aftersales' | 'paid' | 'private';
+    priceAmount: number;
+    imageUrl: string;
+  }>({
+    title: '',
+    subtitle: '',
+    description: '',
+    programType: 'lead_magnet',
+    priceAmount: 99000,
+    imageUrl: '',
+  });
 
   // Modals & Drawers state
   const [showAddModuleModal, setShowAddModuleModal] = useState(false);
@@ -127,6 +147,55 @@ export function ProgramDetailClient() {
       showToast(`Status program diubah menjadi: ${updated.status === 'published' ? 'Terbit di Storefront' : 'Draf'}`);
     } catch (err: any) {
       showToast(`Gagal mengubah status: ${err?.message || 'Terjadi kesalahan'}`);
+    }
+  };
+
+  // Upload Cover Image via Cloudflare R2
+  const handleUploadCover = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingCover(true);
+    try {
+      const api = getPlatformApiClient();
+      const res = await api.uploadAsset(file);
+      if (res?.url) {
+        setEditForm((prev) => ({ ...prev, imageUrl: res.url }));
+        showToast('Foto sampul berhasil diunggah');
+      } else {
+        showToast('Gagal mengunggah gambar sampul');
+      }
+    } catch (err: any) {
+      showToast(`Gagal mengunggah: ${err?.message || 'Terjadi kesalahan'}`);
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
+
+  // Save Program Metadata handler
+  const handleSaveProgramMetadata = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!program || !editForm.title.trim()) return;
+    setIsSavingProgram(true);
+    try {
+      const pricing = editForm.programType === 'paid' ? 'one_time' : 'free';
+      const priceAmount = editForm.programType === 'paid' ? Number(editForm.priceAmount) || 0 : 0;
+      const updated = await updateProgramCommand(program.id, {
+        title: editForm.title.trim(),
+        subtitle: editForm.subtitle.trim(),
+        description: editForm.description.trim(),
+        programType: editForm.programType,
+        pricing,
+        priceAmount,
+        imageUrl: editForm.imageUrl.trim() || undefined,
+      });
+      setProgram(updated);
+      setShowEditProgramModal(false);
+      showToast('Informasi program berhasil diperbarui');
+      await loadProgramData();
+    } catch (err: any) {
+      showToast(`Gagal memperbarui program: ${err?.message || 'Terjadi kesalahan'}`);
+    } finally {
+      setIsSavingProgram(false);
     }
   };
 
@@ -302,11 +371,21 @@ export function ProgramDetailClient() {
             marginBottom: '24px',
           }}
         >
-         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
-           <div>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
-               <h1 style={{ fontSize: '22px', fontWeight: 750 }}>{program.title}</h1>
-               <span
+          {Boolean((program as any).presentation?.imageUrl) && (
+            <div style={{ marginBottom: '16px', overflow: 'hidden', maxHeight: '200px' }}>
+              <img
+                src={(program as any).presentation.imageUrl}
+                alt={program.title}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                <h1 style={{ fontSize: '22px', fontWeight: 750 }}>{program.title}</h1>
+                <span
                   style={{
                     fontSize: '11px',
                     padding: '3px 10px',
@@ -316,9 +395,9 @@ export function ProgramDetailClient() {
                     fontWeight: 750,
                   }}
                 >
-                 {program.status === 'published' ? 'Terbit di Storefront' : 'Draf (Tersembunyi)'}
+                  {program.status === 'published' ? 'Terbit di Storefront' : 'Draf (Tersembunyi)'}
                 </span>
-               <span
+                <span
                   style={{
                     fontSize: '11px',
                     padding: '3px 10px',
@@ -328,17 +407,44 @@ export function ProgramDetailClient() {
                     fontWeight: 750,
                   }}
                 >
-                 {program.programType === 'lead_magnet' ? 'Gratis (Lead Magnet)' : program.programType === 'aftersales' ? 'Khusus Peserta Tes' : 'Berbayar'}
+                  {program.programType === 'lead_magnet' ? 'Gratis (Lead Magnet)' : program.programType === 'aftersales' ? 'Khusus Peserta Tes' : 'Berbayar'}
                 </span>
-             </div>
-             <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
-               {program.subtitle || program.description}
+              </div>
+              <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                {program.subtitle || program.description}
               </p>
-           </div>
+            </div>
 
-           {/* Quick Actions */}
+            {/* Quick Actions */}
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-             <button
+              <button
+                type="button"
+                onClick={() => {
+                  setEditForm({
+                    title: program.title,
+                    subtitle: program.subtitle || '',
+                    description: program.description || '',
+                    programType: (program.programType === 'challenge' ? 'paid' : program.programType) as 'lead_magnet' | 'aftersales' | 'paid' | 'private',
+                    priceAmount: program.priceAmount || 99000,
+                    imageUrl: (program as any).presentation?.imageUrl || '',
+                  });
+                  setShowEditProgramModal(true);
+                }}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: '0px',
+                  border: '1px solid var(--color-divider)',
+                  backgroundColor: 'var(--color-surface)',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  color: 'var(--color-text-main)',
+                  cursor: 'pointer',
+                }}
+              >
+                ✎ Edit Program
+              </button>
+
+              <button
                 onClick={handleToggleStatus}
                 style={{
                   padding: '8px 14px',
@@ -1044,6 +1150,269 @@ export function ProgramDetailClient() {
            </div>
          </>
        )}
+
+        {/* MODAL 3: Edit Program Metadata & Cover (R2 Upload) */}
+        {showEditProgramModal && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 3000,
+              backgroundColor: 'rgba(0, 0, 0, 0.45)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '16px',
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '0px',
+                padding: '24px',
+                maxWidth: '580px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+                boxShadow: 'var(--shadow-sheet)',
+              }}
+            >
+              <h3 style={{ fontSize: '18px', fontWeight: 750, marginBottom: '6px' }}>Edit Informasi & Sampul Program</h3>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '18px' }}>
+                Perbarui detail judul, skema harga, dan gambar sampul utama program edukasi Anda.
+              </p>
+
+              <form onSubmit={handleSaveProgramMetadata} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                    Judul Program *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.title}
+                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                    placeholder="Contoh: Fondasi Komunikasi Efektif Pasangan"
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: '0px',
+                      border: '1px solid var(--color-divider)',
+                      fontSize: '14px',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                    Subjudul / Tagline Singkat
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.subtitle}
+                    onChange={(e) => setEditForm({ ...editForm, subtitle: e.target.value })}
+                    placeholder="Contoh: Panduan praktis membangun hubungan harmonis dalam 14 hari"
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: '0px',
+                      border: '1px solid var(--color-divider)',
+                      fontSize: '14px',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                    Deskripsi Lengkap Program
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={editForm.description}
+                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                    placeholder="Jelaskan manfaat dan materi yang akan didapatkan peserta..."
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: '0px',
+                      border: '1px solid var(--color-divider)',
+                      fontSize: '14px',
+                      outline: 'none',
+                      lineHeight: 1.5,
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                    Tipe Akses Program
+                  </label>
+                  <select
+                    value={editForm.programType}
+                    onChange={(e) => setEditForm({ ...editForm, programType: e.target.value as any })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: '0px',
+                      border: '1px solid var(--color-divider)',
+                      fontSize: '14px',
+                      outline: 'none',
+                    }}
+                  >
+                    <option value="lead_magnet">Gratis (Lead Magnet)</option>
+                    <option value="paid">Berbayar (One-time Payment)</option>
+                    <option value="aftersales">Khusus Peserta Tes (Aftersales)</option>
+                  </select>
+                </div>
+
+                {editForm.programType === 'paid' && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                      Harga Program (Rp) *
+                    </label>
+                    <input
+                      type="number"
+                      min={10000}
+                      step={5000}
+                      value={editForm.priceAmount}
+                      onChange={(e) => setEditForm({ ...editForm, priceAmount: Number(e.target.value) || 0 })}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        borderRadius: '0px',
+                        border: '1px solid var(--color-divider)',
+                        fontSize: '14px',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Cover Image Upload via R2 */}
+                <div style={{ borderTop: '1px solid var(--color-divider)', paddingTop: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                    Foto Sampul Program
+                  </label>
+
+                  {editForm.imageUrl ? (
+                    <div style={{ marginBottom: '10px', position: 'relative' }}>
+                      <img
+                        src={editForm.imageUrl}
+                        alt="Preview Sampul"
+                        style={{
+                          width: '100%',
+                          maxHeight: '160px',
+                          objectFit: 'cover',
+                          border: '1px solid var(--color-divider)',
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setEditForm({ ...editForm, imageUrl: '' })}
+                        style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          backgroundColor: 'rgba(0,0,0,0.7)',
+                          color: '#FFF',
+                          border: 0,
+                          padding: '4px 8px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Hapus Gambar
+                      </button>
+                    </div>
+                  ) : null}
+
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <label
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 14px',
+                        backgroundColor: isUploadingCover ? '#F3F4F6' : '#FAFAFA',
+                        border: '1px solid var(--color-divider)',
+                        cursor: isUploadingCover ? 'not-allowed' : 'pointer',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                      }}
+                    >
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={isUploadingCover}
+                        onChange={handleUploadCover}
+                        style={{ display: 'none' }}
+                      />
+                      {isUploadingCover ? '⏳ Mengunggah...' : '📁 Unggah Gambar Sampul'}
+                    </label>
+
+                    <input
+                      type="url"
+                      placeholder="Atau masukkan URL gambar..."
+                      value={editForm.imageUrl}
+                      onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
+                      style={{
+                        flex: 1,
+                        minWidth: '220px',
+                        padding: '8px 12px',
+                        borderRadius: '0px',
+                        border: '1px solid var(--color-divider)',
+                        fontSize: '13px',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowEditProgramModal(false)}
+                    style={{
+                      flex: 1,
+                      minHeight: '44px',
+                      borderRadius: '0px',
+                      border: '1px solid var(--color-divider)',
+                      backgroundColor: '#FFFFFF',
+                      fontWeight: 700,
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingProgram || isUploadingCover}
+                    style={{
+                      flex: 1,
+                      minHeight: '44px',
+                      borderRadius: '0px',
+                      backgroundColor: 'var(--accent-dark)',
+                      color: '#FFF',
+                      fontWeight: 750,
+                      fontSize: '14px',
+                      border: 0,
+                      cursor: isSavingProgram ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {isSavingProgram ? 'Menyimpan...' : 'Simpan Perubahan'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
    </PromotorShell>
  );

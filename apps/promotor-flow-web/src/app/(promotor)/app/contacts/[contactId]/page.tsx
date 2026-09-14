@@ -84,6 +84,23 @@ export default function ContactDetailPage() {
   const [enrollLoading, setEnrollLoading] = useState(false);
   const [enrollError, setEnrollError] = useState<string | null>(null);
   const [enrollSuccess, setEnrollSuccess] = useState<string | null>(null);
+  const [programOfferModal, setProgramOfferModal] = useState<{
+    programId: string;
+    programTitle: string;
+    programPrice: number;
+    checkoutUrl: string;
+    couponCode: string;
+  } | null>(null);
+
+  const buildOfferMessage = (modal: { programTitle: string; checkoutUrl: string; couponCode: string }) => {
+    const fullUrl = modal.couponCode
+      ? `${modal.checkoutUrl}?coupon=${encodeURIComponent(modal.couponCode)}`
+      : modal.checkoutUrl;
+    const couponText = modal.couponCode
+      ? `Gunakan kode kupon: *${modal.couponCode}* saat mendaftar untuk mendapatkan potongan khusus.\n\n`
+      : '';
+    return `Halo Kak ${contact?.name || ''}, menindaklanjuti obrolan kita, saya rekomendasikan program *"${modal.programTitle}"* yang sangat relevan dengan kebutuhan Kakak.\n\nDetail materi & pendaftaran langsung dapat diakses di tautan ini:\n${fullUrl}\n\n${couponText}Bila ada pertanyaan mengenai materi atau pendaftaran, silakan kabari saya ya Kak!`;
+  };
 
   const loadData = useCallback(async () =>{
     if (!contactId) return;
@@ -603,13 +620,17 @@ export default function ContactDetailPage() {
                     disabled={!checkoutUrl}
                     onClick={() => {
                       if (!checkoutUrl) return;
-                      getPlatformApiClient().recordBridgeMetric('bridge_action_executed', { kind: 'program_link_sent', programId: p.id }).catch(() => null);
-                      const text = encodeURIComponent(`Halo Kak, saya punya program \"${p.title}\" yang cocok untuk Anda: ${checkoutUrl}`);
-                      window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener');
+                      setProgramOfferModal({
+                        programId: p.id,
+                        programTitle: p.title,
+                        programPrice: p.priceAmount,
+                        checkoutUrl,
+                        couponCode: '',
+                      });
                     }}
                     style={{ padding: '8px 12px', borderRadius: 8, border: 0, background: 'var(--accent, #2563EB)', color: '#fff', font: '700 11px/1 var(--font-sans)', cursor: checkoutUrl ? 'pointer' : 'default', flex: 'none' }}
                   >
-                    Kirim Link
+                    Tawarkan via WA
                   </button>
                 </div>
               );
@@ -885,6 +906,78 @@ export default function ContactDetailPage() {
           onConfirmSent={handleConfirmWaSent}
         />
      )}
+
+      {/* Program WhatsApp Offer sheet */}
+      {programOfferModal && (
+        <BottomSheet
+          open={!!programOfferModal}
+          onClose={() => setProgramOfferModal(null)}
+          labelledBy="offer-sheet-title"
+        >
+          <div style={{ padding: '0 0 16px' }}>
+            <h2 id="offer-sheet-title" className="sheet-title-lg">Tawarkan Program via WhatsApp</h2>
+            <p className="sheet-explain" style={{ marginTop: 6 }}>
+              Kirim pesan rekomendasi program <strong>{programOfferModal.programTitle}</strong> langsung ke WhatsApp {contact.name}.
+            </p>
+
+            <div style={{ marginTop: 12 }}>
+              <label className="field-label" htmlFor="coupon-input">Kode Kupon Diskon (Opsional)</label>
+              <input
+                id="coupon-input"
+                className="input"
+                placeholder="Contoh: SPESIAL50 atau biarkan kosong"
+                value={programOfferModal.couponCode}
+                onChange={(e) => setProgramOfferModal({ ...programOfferModal, couponCode: e.target.value.toUpperCase().trim() })}
+              />
+            </div>
+
+            <div style={{ marginTop: 14 }}>
+              <label className="field-label">Pratinjau Pesan WhatsApp</label>
+              <textarea
+                className="input"
+                rows={6}
+                readOnly
+                value={buildOfferMessage(programOfferModal)}
+                style={{ font: '400 13px/1.5 var(--font-sans)', background: 'var(--surface-muted)', width: '100%', resize: 'none' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
+              <button
+                type="button"
+                className="btn btn-accent"
+                onClick={async () => {
+                  const message = buildOfferMessage(programOfferModal);
+                  const waUrl = messagingQueries.buildWhatsAppUrl(contact.phoneE164, message);
+                  getPlatformApiClient().recordBridgeMetric('bridge_action_executed', {
+                    kind: 'program_link_sent',
+                    programId: programOfferModal.programId,
+                  }).catch(() => null);
+                  await addContactNoteCommand(
+                    contact.id,
+                    `Rekomendasi Program Dikirim: ${programOfferModal.programTitle}. Tautan checkout dikirim ke WhatsApp${programOfferModal.couponCode ? ` (Kupon: ${programOfferModal.couponCode})` : ''}.`,
+                    contact.organizationId
+                  ).catch(() => null);
+                  window.open(waUrl, '_blank', 'noopener');
+                  setProgramOfferModal(null);
+                  showToast('Pesan WhatsApp siap dikirim!');
+                  await loadData();
+                }}
+              >
+                Kirim via WhatsApp
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setProgramOfferModal(null)}
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </BottomSheet>
+      )}
+
       <Toast message={toast} />
     </AppShell>
  );

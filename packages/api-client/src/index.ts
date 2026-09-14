@@ -476,6 +476,51 @@ export class PromotorClassContentApiClient {
     return this.client.post('/api/v1/learner/auth/otp/verify', { phoneRaw, code });
   }
 
+  async registerLearner(data: {
+    name: string;
+    email: string;
+    password: string;
+    phoneRaw?: string;
+    workspaceSlug?: string;
+    programSlug?: string;
+  }): Promise<{
+    success: boolean;
+    contactId: string;
+    organizationId: string;
+    workspaceSlug: string;
+    name: string;
+    email: string;
+  }> {
+    return this.client.post('/api/v1/learner/auth/register', data);
+  }
+
+  async loginLearner(data: {
+    email: string;
+    password: string;
+  }): Promise<{
+    success: boolean;
+    contactId: string;
+    organizationId: string;
+    workspaceSlug: string;
+    name: string;
+    email: string;
+  }> {
+    return this.client.post('/api/v1/learner/auth/login', data);
+  }
+
+  async getLearnerMe(): Promise<{
+    learner: {
+      contactId: string;
+      name: string;
+      email: string;
+      phoneE164: string;
+      organizationId: string;
+      workspaceSlug: string;
+    };
+  }> {
+    return this.client.get('/api/v1/learner/me');
+  }
+
   async getLearnerPrograms(): Promise<{ programs: Array<CanonicalEnrollmentDto & { programTitle: string; programSlug: string }> }> {
     return this.client.get('/api/v1/learner/programs');
   }

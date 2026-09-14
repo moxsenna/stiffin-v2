@@ -13,12 +13,24 @@ export interface CreateProgramDetailedInput {
   outcomes?: Array<{ title: string; description: string }>;
 }
 
+export interface UpdateProgramInput {
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  programType?: 'lead_magnet' | 'aftersales' | 'paid' | 'private';
+  accessType?: 'private' | 'public' | 'manual';
+  pricing?: 'free' | 'one_time';
+  priceAmount?: number;
+  imageUrl?: string;
+}
+
 export interface ProgramRepositoryPort {
   getPrograms(): Promise<Program[]>;
   getProgramById(id: string): Promise<Program | undefined>;
   getProgramBySlugs(workspaceSlug: string, programSlug: string): Promise<Program | undefined>;
   createProgram(title: string, subtitle: string, description: string, priceType: 'free' | 'paid'): Promise<Program>;
   createProgramDetailed(input: CreateProgramDetailedInput): Promise<Program>;
+  updateProgram(programId: string, input: UpdateProgramInput): Promise<Program>;
   deleteProgram(programId: string): Promise<void>;
   toggleProgramStatus(programId: string): Promise<Program>;
   addModule(programId: string, title: string): Promise<Program>;
