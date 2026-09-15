@@ -163,7 +163,13 @@ export function createApp(deps?: AppDependencies) {
       },
     });
 
-    return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal error' } }, 500);
+    const isDevOrAdmin = c.req.path.startsWith('/api/v1/admin/');
+    return c.json({
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: isDevOrAdmin ? (err?.message || 'Internal server error') : 'Internal error',
+      },
+    }, 500);
   });
 
   // Root redirect — fail-safe for Better Auth default callbacks and accidental root visits

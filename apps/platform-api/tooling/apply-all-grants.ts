@@ -17,6 +17,7 @@ async function main() {
     'grants_v01.sql',
     'grants_billing.sql',
     'grants_fase2.sql',
+    'grants_admin.sql',
   ];
 
   const docsDir = join(process.cwd(), '../../docs/sql');
