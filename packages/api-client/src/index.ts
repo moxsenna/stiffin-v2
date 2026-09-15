@@ -129,24 +129,24 @@ export class ApiClient {
     this.credentials = config.credentials;
   }
 
-  async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>('GET', endpoint);
+  async get<T>(endpoint: string, customHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>('GET', endpoint, undefined, customHeaders);
   }
 
-  async post<T>(endpoint: string, data?: unknown): Promise<T> {
-    return this.request<T>('POST', endpoint, data);
+  async post<T>(endpoint: string, data?: unknown, customHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>('POST', endpoint, data, customHeaders);
   }
 
-  async put<T>(endpoint: string, data?: unknown): Promise<T> {
-    return this.request<T>('PUT', endpoint, data);
+  async put<T>(endpoint: string, data?: unknown, customHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>('PUT', endpoint, data, customHeaders);
   }
 
-  async patch<T>(endpoint: string, data?: unknown): Promise<T> {
-    return this.request<T>('PATCH', endpoint, data);
+  async patch<T>(endpoint: string, data?: unknown, customHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>('PATCH', endpoint, data, customHeaders);
   }
 
-  async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>('DELETE', endpoint);
+  async delete<T>(endpoint: string, customHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>('DELETE', endpoint, undefined, customHeaders);
   }
 
   async postForm<T>(endpoint: string, formData: FormData): Promise<T> {
@@ -181,9 +181,12 @@ export class ApiClient {
     return res.json();
   }
 
-  private async request<T>(method: string, endpoint: string, data?: unknown): Promise<T> {
+  private async request<T>(method: string, endpoint: string, data?: unknown, customHeaders?: Record<string, string>): Promise<T> {
     const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-    const headers = this.getHeaders();
+    const headers = {
+      ...this.getHeaders(),
+      ...(customHeaders || {}),
+    };
     const init: RequestInit = {
       method,
       headers,
@@ -874,6 +877,149 @@ export class PromotorClassContentApiClient {
       '/api/assets/upload',
       formData
     );
+  }
+
+  // ==========================================
+  // RALIVO ADMIN PANEL APIS (7 MODUL)
+  // ==========================================
+  private adminHeader(adminKey?: string): Record<string, string> | undefined {
+    return adminKey ? { 'x-admin-key': adminKey } : undefined;
+  }
+
+  async adminLogin(adminKey: string): Promise<{ success: boolean; admin: { role: string; name: string } }> {
+    return this.client.post('/api/v1/admin/auth/login', { adminKey });
+  }
+
+  async adminGetMe(adminKey?: string): Promise<{ authenticated: boolean; role?: string; name?: string }> {
+    return this.client.get('/api/v1/admin/auth/me', this.adminHeader(adminKey));
+  }
+
+  async adminLogout(): Promise<{ success: boolean }> {
+    return this.client.post('/api/v1/admin/auth/logout');
+  }
+
+  // Modul 1: Payout & Arus Kas
+  async adminListPayoutBatches(status?: string, adminKey?: string): Promise<{ batches: any[] }> {
+    const q = status && status !== 'all' ? `?status=${encodeURIComponent(status)}` : '';
+    return this.client.get(`/api/v1/admin/payouts/batches${q}`, this.adminHeader(adminKey));
+  }
+
+  async adminGetEscrowSummary(adminKey?: string): Promise<{ escrow: { totalGrossGmv: number; totalPlatformFees: number; totalSettledPaid: number; totalInBatches: number; totalEscrowPending: number } }> {
+    return this.client.get('/api/v1/admin/payouts/escrow', this.adminHeader(adminKey));
+  }
+
+  async adminApprovePayoutBatch(batchId: string, proofUrl?: string, adminKey?: string): Promise<{ success: boolean; batchId: string; status: string }> {
+    return this.client.post(`/api/v1/admin/payouts/batches/${encodeURIComponent(batchId)}/approve`, { proofUrl }, this.adminHeader(adminKey));
+  }
+
+  async adminRejectPayoutBatch(batchId: string, reason: string, adminKey?: string): Promise<{ success: boolean; batchId: string; status: string }> {
+    return this.client.post(`/api/v1/admin/payouts/batches/${encodeURIComponent(batchId)}/reject`, { reason }, this.adminHeader(adminKey));
+  }
+
+  // Modul 2: Payment Ops & Transaksi Paycore
+  async adminListOrders(query?: { status?: string; q?: string }, adminKey?: string): Promise<{ orders: any[] }> {
+    const q = new URLSearchParams();
+    if (query?.status && query.status !== 'all') q.set('status', query.status);
+    if (query?.q) q.set('q', query.q);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return this.client.get(`/api/v1/admin/orders${qs}`, this.adminHeader(adminKey));
+  }
+
+  async adminForcePaidOrder(orderId: string, adminKey?: string): Promise<{ success: boolean; orderId: string; status: string; enrollmentId?: string }> {
+    return this.client.post(`/api/v1/admin/orders/${encodeURIComponent(orderId)}/force-paid`, {}, this.adminHeader(adminKey));
+  }
+
+  async adminRefundOrder(orderId: string, reason?: string, adminKey?: string): Promise<{ success: boolean; orderId: string; status: string }> {
+    return this.client.post(`/api/v1/admin/orders/${encodeURIComponent(orderId)}/refund`, { reason }, this.adminHeader(adminKey));
+  }
+
+  // Modul 3: Tenant Management & Impersonation
+  async adminListTenants(adminKey?: string): Promise<{ tenants: any[] }> {
+    return this.client.get('/api/v1/admin/tenants', this.adminHeader(adminKey));
+  }
+
+  async adminOverrideSubscription(organizationId: string, data: any, adminKey?: string): Promise<{ success: boolean }> {
+    return this.client.post(`/api/v1/admin/tenants/${encodeURIComponent(organizationId)}/override-subscription`, data, this.adminHeader(adminKey));
+  }
+
+  async adminSuspendTenant(organizationId: string, reason: string, adminKey?: string): Promise<{ success: boolean; suspended: boolean }> {
+    return this.client.post(`/api/v1/admin/tenants/${encodeURIComponent(organizationId)}/suspend`, { reason }, this.adminHeader(adminKey));
+  }
+
+  async adminActivateTenant(organizationId: string, adminKey?: string): Promise<{ success: boolean; activated: boolean }> {
+    return this.client.post(`/api/v1/admin/tenants/${encodeURIComponent(organizationId)}/activate`, {}, this.adminHeader(adminKey));
+  }
+
+  async adminImpersonateTenant(organizationId: string, adminKey?: string): Promise<{ success: boolean; token: string; organizationSlug: string; launchPath: string }> {
+    return this.client.post(`/api/v1/admin/tenants/${encodeURIComponent(organizationId)}/impersonate`, {}, this.adminHeader(adminKey));
+  }
+
+  // Modul 4: Helpdesk Peserta Global
+  async adminSearchContacts(q: string, adminKey?: string): Promise<{ contacts: any[] }> {
+    return this.client.get(`/api/v1/admin/helpdesk/search?q=${encodeURIComponent(q)}`, this.adminHeader(adminKey));
+  }
+
+  async adminUpdateContact(contactId: string, data: { name?: string; email?: string; phoneRaw?: string }, adminKey?: string): Promise<{ success: boolean }> {
+    return this.client.post(`/api/v1/admin/helpdesk/contacts/${encodeURIComponent(contactId)}/update`, data, this.adminHeader(adminKey));
+  }
+
+  async adminEnrollContact(contactId: string, programId: string, adminKey?: string): Promise<{ success: boolean; enrollmentId: string }> {
+    return this.client.post(`/api/v1/admin/helpdesk/contacts/${encodeURIComponent(contactId)}/enroll`, { programId }, this.adminHeader(adminKey));
+  }
+
+  // Modul 5: Moderasi Konten & Anti-Fraud
+  async adminListPrograms(status?: string, adminKey?: string): Promise<{ programs: any[] }> {
+    const q = status && status !== 'all' ? `?status=${encodeURIComponent(status)}` : '';
+    return this.client.get(`/api/v1/admin/moderation/programs${q}`, this.adminHeader(adminKey));
+  }
+
+  async adminGetAnomalies(adminKey?: string): Promise<{ anomalies: any[] }> {
+    return this.client.get('/api/v1/admin/moderation/anomalies', this.adminHeader(adminKey));
+  }
+
+  async adminTakedownProgram(programId: string, reason: string, adminKey?: string): Promise<{ success: boolean; status: string }> {
+    return this.client.post(`/api/v1/admin/moderation/programs/${encodeURIComponent(programId)}/takedown`, { reason }, this.adminHeader(adminKey));
+  }
+
+  async adminRestoreProgram(programId: string, adminKey?: string): Promise<{ success: boolean; status: string }> {
+    return this.client.post(`/api/v1/admin/moderation/programs/${encodeURIComponent(programId)}/restore`, {}, this.adminHeader(adminKey));
+  }
+
+  // Modul 6: Engine Room & Monitoring Integrasi
+  async adminGetOutboxStatus(adminKey?: string): Promise<{ summary: { pending: number; processing: number; completed: number; failed: number }; events: any[] }> {
+    return this.client.get('/api/v1/admin/engine/outbox', this.adminHeader(adminKey));
+  }
+
+  async adminRetryOutbox(id?: string, adminKey?: string): Promise<{ success: boolean }> {
+    return this.client.post('/api/v1/admin/engine/outbox/retry', { id }, this.adminHeader(adminKey));
+  }
+
+  async adminGetHealth(adminKey?: string): Promise<{ health: { dbLatencyMs: number; r2Bucket: string; hyperdrive: string; environment: string; emailMode: string; senderEmail: string } }> {
+    return this.client.get('/api/v1/admin/engine/health', this.adminHeader(adminKey));
+  }
+
+  async adminGetAuditLogs(adminKey?: string): Promise<{ logs: any[] }> {
+    return this.client.get('/api/v1/admin/engine/audit-logs', this.adminHeader(adminKey));
+  }
+
+  // Modul 7: Executive Dashboard
+  async adminGetDashboardOverview(adminKey?: string): Promise<{
+    metrics: {
+      totalGmv: number;
+      totalOrdersCount: number;
+      netPlatformRevenue: number;
+      totalSettledPayouts: number;
+      totalTenants: number;
+      totalLearnersCount: number;
+      attachmentRate: number;
+      classEntitledCount: number;
+      flowEntitledCount: number;
+      bothEntitledCount: number;
+      mrrEstimate: number;
+    };
+    recentOrders: any[];
+  }> {
+    return this.client.get('/api/v1/admin/dashboard/overview', this.adminHeader(adminKey));
   }
 }
 

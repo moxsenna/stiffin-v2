@@ -51,6 +51,7 @@ import { registerClassRoutes } from './routes/class-routes';
 import { registerCommerceRoutes } from './routes/commerce-routes';
 import { registerJourneyRoutes } from './routes/journey-routes';
 import { registerAssetRoutes } from './routes/asset-routes';
+import { registerAdminRoutes } from './routes/admin-routes';
 import { createSubscriptionRepository } from './repositories/subscription-repository';
 import { createPlanAccessService } from './services/billing/plan-access-service';
 import { requestLoggerMiddleware, logOperation } from './core/observability';
@@ -1548,6 +1549,7 @@ export function createApp(deps?: AppDependencies) {
   registerClassRoutes(app);
   registerCommerceRoutes(app);
   registerAssetRoutes(app);
+  registerAdminRoutes(app);
 
   return app;
 }
