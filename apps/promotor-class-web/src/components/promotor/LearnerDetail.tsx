@@ -5,6 +5,7 @@ import { Contact, Enrollment, Program, LearningSignal, IntentBreakdownItem, Jour
 import { formatPhoneDisplay } from '@promotor/platform-core';
 import { getPlatformApiClient } from '@/adapters';
 import { JourneyTimeline } from './JourneyTimeline';
+import { PwaProgress } from '@/components/pwa/pwa';
 
 interface LearnerDetailProps {
   contact: Contact;
@@ -30,8 +31,8 @@ export function LearnerDetail({
   const primaryReason = signal?.primaryReason || 'Memulai pembelajaran';
   const rawQuote = signal?.rawReflectionQuote;
 
-  const intentTagClass =
-    signalLevel === 'Minat tinggi' ? 'tag tag-hot' : signalLevel === 'Minat sedang' ? 'tag tag-warm' : 'tag tag-cold';
+  const intentClass =
+    signalLevel === 'Minat tinggi' ? 'intent-hot' : signalLevel === 'Minat sedang' ? 'intent-warm' : 'intent-cold';
 
   const programTitle = program?.title || 'Program Belajar';
   const defaultDraftMessage = `Halo ${contact.name}, saya promotor Anda dari program "${programTitle}". Saya memperhatikan Anda telah ${primaryReason.toLowerCase()}. Bagaimana perkembangan belajar Anda saat ini?`;
@@ -51,94 +52,96 @@ export function LearnerDetail({
   }, [contact.id]);
 
   return (
-    <div className="side-panel active" style={{ background: 'var(--surface)', padding: 0, display: 'flex', flexDirection: 'column' }}>
-     <div style={{ borderBottom: 'var(--sep-strong)', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
         <div style={{ minWidth: 0 }}>
-          <div className="kicker kicker-muted">Detail peserta</div>
-          <h2 style={{ font: '800 22px/1.1 var(--font-sans)', letterSpacing: '-0.02em', marginTop: 7 }}>{contact.name}</h2>
-          <div className="row-meta">{formatPhoneDisplay(contact.phoneE164)}</div>
+          <div className="pwa-kicker">Detail peserta</div>
+          <h2 style={{ fontSize: 20, fontWeight: 850, letterSpacing: '-0.02em', margin: '6px 0 0' }}>{contact.name}</h2>
+          <div className="pwa-muted" style={{ marginTop: 2 }}>
+            {formatPhoneDisplay(contact.phoneE164)}
+          </div>
         </div>
-        {onClose && (
-          <button type="button" onClick={onClose} aria-label="Tutup detail peserta" className="header-action" style={{ width: 40, height: 40 }}>
-           ✕
-          </button>
-       )}
+        <div style={{ display: 'flex', gap: 8, flex: 'none', alignItems: 'center' }}>
+          <span className={intentClass}>{signalLevel}</span>
+          {onClose && (
+            <button type="button" onClick={onClose} aria-label="Tutup detail peserta" className="pwa-icon-btn">
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
-     <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <div>
-            <div className="kicker kicker-muted">Intent score</div>
-            <div style={{ marginTop: 8, font: '800 40px/1 var(--font-sans)', letterSpacing: '-0.04em' }} className="tabular-nums">
-              {signal?.intentScore ?? '—'}
-            </div>
-          </div>
-          <span className={intentTagClass}>{signalLevel}</span>
+      <div className="detail-hero">
+        <div className="pwa-kicker">Intent score</div>
+        <div className="detail-score tabular-nums" style={{ marginTop: 8 }}>
+          {signal?.intentScore ?? '—'}
         </div>
         {(learner.intentBreakdown?.length ?? 0) > 0 && (
           <details style={{ marginTop: 8 }}>
-            <summary style={{ font: '600 12px/1.4 var(--font-sans)', cursor: 'pointer' }}>Mengapa skor ini?</summary>
+            <summary style={{ fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 32, display: 'inline-flex', alignItems: 'center' }}>
+              Mengapa skor ini?
+            </summary>
             <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
               {learner.intentBreakdown!.map((b, i) => (
-                <li key={i} style={{ font: '400 12px/1.5 var(--font-sans)' }}>
+                <li key={i} style={{ fontSize: 12, lineHeight: 1.5 }}>
                   {b.label} <strong>+{b.points}</strong>
                 </li>
               ))}
             </ul>
           </details>
         )}
-       {signal?.intentScore !== undefined && (
+        {signal?.intentScore !== undefined && (
           <>
-           <div className="progress progress-thick" style={{ marginTop: 12 }} role="progressbar" aria-valuenow={signal.intentScore} aria-valuemin={0} aria-valuemax={100} aria-label={`Intent score ${signal.intentScore}`}>
-             <span className="progress-fill progress-accent" style={{ width: `${signal.intentScore}%` }} />
-           </div>
-           <div style={{ marginTop: 10, font: '400 11px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>
-             Alasan: {primaryReason}
+            <div style={{ marginTop: 12 }}>
+              <PwaProgress pct={signal.intentScore} />
             </div>
-         </>
-       )}
+            <div className="pwa-muted" style={{ marginTop: 10 }}>
+              Alasan: {primaryReason}
+            </div>
+          </>
+        )}
       </div>
 
-     {rawQuote && (
-        <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
-         <div className="kicker kicker-muted">Refleksi terakhir</div>
-         <blockquote className="quote-block" style={{ marginTop: 11 }}>
-           &ldquo;{rawQuote}&rdquo;
-          </blockquote>
-       </div>
-     )}
+      {rawQuote && (
+        <div>
+          <div className="pwa-kicker">Refleksi terakhir</div>
+          <blockquote className="detail-quote">&ldquo;{rawQuote}&rdquo;</blockquote>
+        </div>
+      )}
 
       {enrollment && (
-        <div style={{ padding: '16px 18px', borderBottom: '2px solid var(--ink)' }}>
-         <div className="kicker kicker-muted" style={{ marginBottom: 12 }}>Progres pembelajaran</div>
-         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-           <div className="progress progress-thin" style={{ flex: 1 }}>
-             <span className="progress-fill" style={{ width: `${enrollment.progressPercent}%` }} />
-           </div>
-           <span style={{ font: '700 11px/1 var(--font-sans)' }} className="tabular-nums">
-             Progres: {enrollment.progressPercent}%
-            </span>
-         </div>
-         <div className="row-meta" style={{ marginTop: 8 }}>Program: {programTitle}</div>
-       </div>
-     )}
+        <div className="detail-hero">
+          <div className="pwa-kicker" style={{ marginBottom: 12 }}>
+            Progres pembelajaran
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <PwaProgress pct={enrollment.progressPercent} />
+            </div>
+            <span className="learner-pct tabular-nums">Progres: {enrollment.progressPercent}%</span>
+          </div>
+          <div className="pwa-muted" style={{ marginTop: 8 }}>
+            Program: {programTitle}
+          </div>
+        </div>
+      )}
 
       {journey && journey.length > 0 && (
-        <div style={{ padding: '16px 18px', borderTop: '1px solid var(--line, #E2E8F0)' }}>
-          <div className="kicker kicker-muted" style={{ marginBottom: 4 }}>Perjalanan {contact.name}</div>
+        <div>
+          <div className="pwa-kicker" style={{ marginBottom: 4 }}>
+            Perjalanan {contact.name}
+          </div>
           <JourneyTimeline items={journey} />
         </div>
       )}
 
-      <div style={{ padding: 18 }}>
-       <button
-          type="button"
-          onClick={() =>onOpenWhatsAppDraft(contact, defaultDraftMessage)}
-          className="btn btn-primary btn-block"
-        >
-         Buat Draf WhatsApp
-        </button>
-     </div>
-   </div>
- );
+      <button
+        type="button"
+        onClick={() => onOpenWhatsAppDraft(contact, defaultDraftMessage)}
+        className="pwa-cta"
+      >
+        Buat Draf WhatsApp
+      </button>
+    </div>
+  );
 }

@@ -134,17 +134,17 @@ export function PromotorShell({ children }: PromotorShellProps) {
        </div>
      </aside>
 
-     <main
+      <main
         style={{
           flex: 1,
           minWidth: 0,
           width: '100%',
-          maxWidth: '860px',
+          maxWidth: '720px',
           margin: '0 auto',
           minHeight: '100dvh',
-          background: 'var(--surface)',
+          background: 'var(--pwa-canvas, var(--canvas))',
         }}
-        className="page-wrapper-with-bottom-nav"
+        className="pwa-screen-pad-dock"
       >
        {children}
       </main>

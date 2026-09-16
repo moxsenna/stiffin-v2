@@ -29,7 +29,7 @@
   --on-ink-line: #1e293b;
 
   /* Typography */
-  --font-sans: 'Archivo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   /* Separators */
   --sep-strong: 2px solid var(--ink);
@@ -37,6 +37,38 @@
 
   /* Interaction */
   --tap-min: 44px;
+
+  /* ------------------------------------------------------------
+     RALIVO PWA BENTO SYSTEM (mobile storefront & learner OS)
+     Electric Blue #0D52FF / #2563EB + Highlight Cyan #06B6D4 / #38BDF8
+     Surface #F8FAFC canvas, #FFFFFF card, #E2E8F0 hairline border.
+     Radius: 16px bento card, 10-12px nested, 9999px pill & dock.
+     ------------------------------------------------------------ */
+  --pwa-primary: #0d52ff;
+  --pwa-primary-deep: #2563eb;
+  --pwa-primary-ink: #1d4ed8;
+  --pwa-primary-soft: #eff6ff;
+  --pwa-cyan: #06b6d4;
+  --pwa-sky: #38bdf8;
+  --pwa-canvas: #f8fafc;
+  --pwa-card: #ffffff;
+  --pwa-border: #e2e8f0;
+  --pwa-text: #0f172a;
+  --pwa-muted: #64748b;
+  --pwa-subtle: #94a3b8;
+  --pwa-success: #059669;
+  --pwa-success-bg: #ecfdf5;
+  --pwa-warning: #d97706;
+  --pwa-warning-bg: #fffbeb;
+  --pwa-danger: #ef4444;
+  --pwa-danger-bg: #fee2e2;
+  --pwa-radius-card: 16px;
+  --pwa-radius-lg: 18px;
+  --pwa-radius-nested: 12px;
+  --pwa-radius-sm: 10px;
+  --pwa-radius-pill: 9999px;
+  --pwa-shadow-card: 0 4px 14px -2px rgba(11, 15, 25, 0.08);
+  --pwa-shadow-cta: 0 4px 14px rgba(13, 82, 255, 0.35);
 }
 
 /* Legacy aliases — keep old variable names rendering coherently

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getLearnerReferralSummaryQuery } from '@/modules/referrals/queries';
 import { LearnerReferralSummary } from '@/modules/referrals/types';
-import { LearnerTabBar } from '@/components/layout/LearnerTabBar';
+import { PwaDock } from '@/components/pwa/pwa';
 
 export default function LearnerReferralPage() {
   const [summary, setSummary] = useState<LearnerReferralSummary | null>(null);
@@ -37,7 +37,7 @@ export default function LearnerReferralPage() {
 
   return (
     <div
-      className="page-wrapper-with-bottom-nav"
+      className="pwa-screen"
       style={{
         backgroundColor: 'var(--color-canvas)',
         minHeight: '100vh',
@@ -378,7 +378,7 @@ export default function LearnerReferralPage() {
      </div>
 
      {/* Bottom Nav Bar - Profil tab active */}
-      <LearnerTabBar />
+      <PwaDock />
    </div>
  );
 }

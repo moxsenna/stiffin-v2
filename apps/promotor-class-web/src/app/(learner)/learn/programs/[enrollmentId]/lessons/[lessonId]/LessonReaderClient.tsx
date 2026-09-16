@@ -41,6 +41,7 @@ export function LessonReaderClient() {
   const [noteBody, setNoteBody] = useState('');
   const [savedNoteBody, setSavedNoteBody] = useState('');
   const [noteStatus, setNoteStatus] = useState('');
+  const [tab, setTab] = useState<'materi' | 'diskusi' | 'catatan'>('materi');
 
   useEffect(() => {
     getLessonNoteQuery(enrollmentId, lessonId)
@@ -275,161 +276,223 @@ export function LessonReaderClient() {
   }
 
   return (
-    <LearnerShell title={lesson.title}>
-     <div style={{ borderBottom: 'var(--sep-strong)', padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-       <div className="kicker kicker-muted">{moduleLabel}</div>
-       <Link href={`/learn/programs/${enrollmentId}`} className="btn btn-ghost btn-sm" style={{ padding: 0 }}>
-         ← Kurikulum
-        </Link>
-     </div>
-
-     <article style={{ maxWidth: 700, margin: '0 auto', padding: '18px' }}>
-       <h1 style={{ font: '800 21px/1.2 var(--font-sans)', letterSpacing: '-0.02em' }}>{lesson.title}</h1>
-
-       {videoId && (
-         <div style={{ marginTop: 14 }}>
-           <YoutubeLessonPlayer
-             videoId={lesson.videoExternalId ?? videoId}
-             startSeconds={savedPosition}
-             isCompleted={lesson.isCompleted === true}
-             onEnded={() => setShowVideoDonePrompt(true)}
-             onPositionChange={(seconds) => {
-               submitLessonPositionCommand(enrollmentId, lessonId, seconds).catch(() => {});
-             }}
-           />
-           {showVideoDonePrompt && (
-             <div style={{ marginTop: 12, padding: 14, border: '1px solid var(--accent)', background: 'var(--accent-soft, #eff6ff)' }}>
-               <strong style={{ font: '700 14px/1.4 var(--font-sans)' }}>Video selesai.</strong>
-               <p style={{ font: '400 13px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>
-                 Lanjutkan ke refleksi di bawah untuk mengunci modul ini.
-               </p>
-               <button
-                 type="button"
-                 className="btn btn-primary btn-sm"
-                 onClick={() => document.getElementById('refleksi-section')?.scrollIntoView({ behavior: 'smooth' })}
-               >
-                 Isi Refleksi
-               </button>
-             </div>
-           )}
-         </div>
-       )}
-
-        {lesson.textContent && (
-          <p className="body-copy" style={{ marginTop: 16, whiteSpace: 'pre-wrap' }}>
-           {lesson.textContent}
-          </p>
-       )}
-
-        {lesson.attachments && lesson.attachments.length >0 && (
-          <div style={{ marginTop: 20, borderTop: '1px solid var(--line)', paddingTop: 14 }}>
-           {lesson.attachments.map(att =>(
-              <a
-                key={att.id}
-                href={att.url}
-                download
-                className="list-row"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 10,
-                  border: '2px solid var(--ink)',
-                  marginBottom: 8,
-                  paddingLeft: 14,
-                  paddingRight: 14,
-                }}
-              >
-               <span style={{ font: '600 12px/1.3 var(--font-sans)' }}>{att.name}</span>
-               <span style={{ color: 'var(--accent-dark)', font: '700 11px/1 var(--font-sans)' }} className="tabular-nums">
-                 {att.sizeFormatted || 'Unduh'}
-                </span>
-             </a>
-           ))}
+    <LearnerShell title={lesson.title} subtitle={moduleLabel || 'Ruang Belajar & Modul'} showBack backHref={`/learn/programs/${enrollmentId}`}>
+      <div style={{ paddingTop: 12 }}>
+        {/* Session context header */}
+        <div className="pwa-card pwa-card-pad">
+          <div className="pwa-muted" style={{ fontSize: 11, fontWeight: 800 }}>MODUL AKTIF • {moduleLabel || 'Silabus Kelas'}</div>
+          <h1 style={{ fontSize: 17, fontWeight: 850, margin: '6px 0 0', lineHeight: 1.3 }}>{lesson.title}</h1>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+            <span className="pwa-pill pwa-pill-blue">Hands-on Lab</span>
+            <span className="pwa-pill pwa-pill-cyan">CC INDO</span>
+            {lesson.isCompleted && <span className="pwa-pill pwa-pill-green">Selesai ✓</span>}
           </div>
-       )}
+          <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+            <button type="button" className="pwa-btn-secondary" style={{ flex: 1 }}>Slides PDF</button>
+            <button type="button" className="pwa-btn-secondary" style={{ flex: 1 }}>Source Code</button>
+          </div>
+        </div>
 
-        <section id="refleksi-section" style={{ marginTop: 22, border: 'var(--sep-strong)', padding: 16, background: 'var(--surface-muted)' }}>
-         <h3 className="kicker kicker-accent" style={{ fontSize: 10 }}>Refleksi Wajib *</h3>
-         <p style={{ marginTop: 10, font: '600 14px/1.45 var(--font-sans)' }}>
-           {lesson.reflectionPrompt || 'Tuliskan pemikiran dan hasil pengamatan Anda:'}
-          </p>
-
-         <textarea
-            rows={4}
-            value={reflectionAnswer}
-            onChange={e =>setReflectionAnswer(e.target.value)}
-            placeholder="Tuliskan refleksi Anda di sini..."
-            aria-label="Jawaban refleksi"
-            className="textarea"
-            style={{ marginTop: 12 }}
-          />
-          {isButtonDisabled && (
-            <div style={{ fontSize: 11, color: 'var(--muted-strong)', marginTop: 8 }}>
-             * Anda wajib mengisi refleksi di atas untuk membuka tombol Selesai.
+        {videoId && (
+          <div style={{ marginTop: 10 }}>
+            <div className="pwa-player" style={{ borderRadius: 16 }}>
+              <YoutubeLessonPlayer
+                videoId={lesson.videoExternalId ?? videoId}
+                startSeconds={savedPosition}
+                isCompleted={lesson.isCompleted === true}
+                onEnded={() => setShowVideoDonePrompt(true)}
+                onPositionChange={(seconds) => {
+                  submitLessonPositionCommand(enrollmentId, lessonId, seconds).catch(() => {});
+                }}
+              />
             </div>
-         )}
-        </section>
-
-        {/* Catatan Pribadi */}
-        <section style={{ marginTop: 22, border: '1px solid var(--line, #e2e8f0)', padding: 16, background: 'var(--surface, #ffffff)' }}>
-          <div className="kicker kicker-muted" style={{ fontSize: 10 }}>Catatan Pribadi</div>
-          <p style={{ font: '400 11px/1.4 var(--font-sans)', color: 'var(--muted-strong)', marginTop: 4 }}>
-            Hanya Anda yang bisa melihat catatan ini.
-          </p>
-          <textarea
-            className="textarea"
-            rows={4}
-            value={noteBody}
-            onChange={(e) => setNoteBody(e.target.value)}
-            placeholder="Ringkasan insight penting dari materi ini..."
-            aria-label="Catatan pribadi"
-            style={{ marginTop: 10 }}
-          />
-          {noteStatus && (
-            <div style={{ font: '400 11px/1.4 var(--font-sans)', color: 'var(--muted-strong)', marginTop: 6 }}>
-              {noteStatus}
+            <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span className="pwa-pill pwa-pill-dark">1.25x Playback</span>
+              <span className="pwa-pill pwa-pill-live"><span className="pwa-dot-live" /> LIVE/RECORD</span>
+              <Link href={`/learn/programs/${enrollmentId}`} className="pwa-btn-secondary" style={{ marginLeft: 'auto' }}>
+                ← Kurikulum
+              </Link>
             </div>
-          )}
-        </section>
-
-       {(lesson.hasCta || lesson.ctaLabel) && (lesson.ctaUrl || (lesson.ctaConfig as any)?.url || lesson.ctaLabel) && (
-          <div style={{ marginTop: 18 }}>
-           <a
-              href={lesson.ctaUrl || (lesson.ctaConfig as any)?.url || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) =>{
-                e.preventDefault();
-                handleCtaClick(lesson.ctaUrl || (lesson.ctaConfig as any)?.url || '#');
-              }}
-              className="btn btn-accent btn-block"
-            >
-             {lesson.ctaLabel || 'Konsultasi via WhatsApp'}
-            </a>
-         </div>
-       )}
-
-        {errorMsg && (
-          <div className="field-error" role="alert" style={{ marginTop: 12 }}>{errorMsg}</div>
-       )}
-
-        {lesson?.hasReflection !== false && (
-          <p style={{ font: '400 11px/1.4 var(--font-sans)', color: 'var(--muted-strong)' }}>
-            Draf tersimpan otomatis di perangkat ini.
-          </p>
+            {showVideoDonePrompt && (
+              <div className="pwa-card pwa-card-pad" style={{ marginTop: 8, borderColor: '#A7F3D0', background: '#F0FDF4' }}>
+                <strong style={{ fontSize: 13.5 }}>Video selesai.</strong>
+                <p className="pwa-muted" style={{ marginTop: 4 }}>Lanjutkan ke refleksi di bawah untuk mengunci modul ini.</p>
+                <button
+                  type="button"
+                  className="pwa-btn-secondary"
+                  style={{ marginTop: 8 }}
+                  onClick={() => document.getElementById('refleksi-section')?.scrollIntoView({ behavior: 'smooth' })}
+                >
+                  Isi Refleksi
+                </button>
+              </div>
+            )}
+          </div>
         )}
 
-        <button
-          onClick={handleComplete}
-          disabled={isButtonDisabled || isSubmitting}
-          className="btn btn-primary btn-block"
-          style={{ marginTop: 18 }}
-        >
-         {isSubmitting ? 'Menyimpan...' : 'Tandai Selesai & Lanjut'}
+        {/* Tab switcher */}
+        <div className="pwa-tabs" role="tablist" aria-label="Konten sesi" style={{ marginTop: 12 }}>
+          {([
+            { id: 'materi', label: 'Materi Silabus' },
+            { id: 'diskusi', label: 'Diskusi Tanya Jawab' },
+            { id: 'catatan', label: 'Catatan Pribadi' },
+          ] as Array<{ id: 'materi' | 'diskusi' | 'catatan'; label: string }>).map((t) => (
+            <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'is-active' : undefined} onClick={() => setTab(t.id)}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'materi' && (
+          <article style={{ marginTop: 10 }}>
+            {lesson.textContent && (
+              <div className="pwa-card pwa-card-pad">
+                <p style={{ fontSize: 13.5, lineHeight: 1.7, whiteSpace: 'pre-wrap', margin: 0 }}>{lesson.textContent}</p>
+              </div>
+            )}
+
+            {/* Interactive syllabus checklist */}
+            <div style={{ marginTop: 10 }}>
+              <strong style={{ fontSize: 13.5 }}>Checklist Silabus Modul</strong>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+                {program.modules.flatMap((m) => m.lessons || []).slice(0, 6).map((l) => {
+                  const lp = enrollment.lessonProgress?.[l.id];
+                  const done = (l as { isCompleted?: boolean }).isCompleted ?? lp?.completed;
+                  const playing = l.id === lessonId;
+                  return (
+                    <Link
+                      key={l.id}
+                      href={`/learn/programs/${enrollmentId}/lessons/${l.id}`}
+                      className="pwa-nested"
+                      style={{ padding: '10px 12px', display: 'flex', gap: 8, alignItems: 'center', textDecoration: 'none', color: 'inherit' }}
+                    >
+                      <span style={{
+                        width: 24, height: 24, flex: 'none', borderRadius: '50%',
+                        background: done ? 'var(--pwa-success)' : playing ? 'var(--pwa-primary)' : '#CBD5E1',
+                        color: '#fff', fontSize: 12, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {done ? '✓' : playing ? '▶' : '•'}
+                      </span>
+                      <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700 }}>{l.title}</span>
+                      {playing && <span className="pwa-pill pwa-pill-blue">DIPUTAR</span>}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            {lesson.attachments && lesson.attachments.length > 0 && (
+              <div style={{ marginTop: 12 }}>
+                {lesson.attachments.map((att) => (
+                  <a
+                    key={att.id}
+                    href={att.url}
+                    download
+                    className="pwa-card"
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '12px 14px', marginBottom: 8, textDecoration: 'none', color: 'inherit' }}
+                  >
+                    <span style={{ fontSize: 12.5, fontWeight: 700 }}>{att.name}</span>
+                    <span style={{ color: 'var(--pwa-primary)', fontSize: 11.5, fontWeight: 800 }} className="tabular-nums">
+                      {att.sizeFormatted || 'Unduh'}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            )}
+
+            <section id="refleksi-section" className="pwa-card pwa-card-pad" style={{ marginTop: 10 }}>
+              <div className="pwa-kicker">Refleksi Wajib *</div>
+              <p style={{ marginTop: 8, fontSize: 13.5, fontWeight: 700 }}>
+                {lesson.reflectionPrompt || 'Tuliskan pemikiran dan hasil pengamatan Anda:'}
+              </p>
+              <textarea
+                rows={4}
+                value={reflectionAnswer}
+                onChange={(e) => setReflectionAnswer(e.target.value)}
+                placeholder="Tuliskan refleksi Anda di sini..."
+                aria-label="Jawaban refleksi"
+                className="pwa-input"
+                style={{ marginTop: 10, padding: '10px 12px', resize: 'vertical' }}
+              />
+              {isButtonDisabled && (
+                <div className="pwa-muted" style={{ fontSize: 11, marginTop: 6 }}>
+                  * Anda wajib mengisi refleksi di atas untuk membuka tombol Selesai.
+                </div>
+              )}
+            </section>
+          </article>
+        )}
+
+        {tab === 'diskusi' && (
+          <div style={{ marginTop: 10 }}>
+            <div className="pwa-card pwa-card-pad">
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span className="pwa-avatar" style={{ width: 32, height: 32, fontSize: 12 }}>DR</span>
+                <div style={{ fontSize: 12.5, fontWeight: 800 }}>Daffa Raihan • <span style={{ fontWeight: 400, color: 'var(--pwa-subtle)' }}>25m lalu</span></div>
+              </div>
+              <p style={{ fontSize: 13, margin: '8px 0 0' }}>Bagaimana cara memilih chunk size yang tepat untuk materi ini?</p>
+              <div className="pwa-nested" style={{ marginTop: 8, padding: 10, background: '#F0FDF4', borderColor: '#A7F3D0' }}>
+                <span className="pwa-pill pwa-pill-green">JAWABAN MENTOR</span>
+                <p style={{ fontSize: 12.5, margin: '6px 0 0' }}>Mulai dari 512 token + overlap 64, lalu ukur skor retrieval sebelum menaikkan ukuran.</p>
+              </div>
+            </div>
+            <div className="pwa-card" style={{ marginTop: 8, padding: 10, display: 'flex', gap: 8 }}>
+              <input className="pwa-input" placeholder="Tulis pertanyaan ke mentor..." aria-label="Tulis pertanyaan" />
+              <button type="button" className="pwa-cta" style={{ width: 'auto', flex: 'none', padding: '0 16px' }}>Kirim</button>
+            </div>
+          </div>
+        )}
+
+        {tab === 'catatan' && (
+          <section className="pwa-card pwa-card-pad" style={{ marginTop: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+              <div className="pwa-kicker">Catatan Sinkron</div>
+              <span className="pwa-pill pwa-pill-blue">+ Timestamp ({Math.floor(savedPosition / 60)}:{String(savedPosition % 60).padStart(2, '0')})</span>
+            </div>
+            <p className="pwa-muted" style={{ fontSize: 11, marginTop: 4 }}>Hanya Anda yang bisa melihat catatan ini. Otomatis bertag timestamp video saat ini.</p>
+            <textarea
+              className="pwa-input"
+              rows={4}
+              value={noteBody}
+              onChange={(e) => setNoteBody(e.target.value)}
+              placeholder="Ringkasan insight penting dari materi ini..."
+              aria-label="Catatan pribadi"
+              style={{ marginTop: 10, padding: '10px 12px', resize: 'vertical' }}
+            />
+            {noteStatus && <div className="pwa-muted" style={{ fontSize: 11, marginTop: 6 }}>{noteStatus}</div>}
+          </section>
+        )}
+
+        {(lesson.hasCta || lesson.ctaLabel) && (lesson.ctaUrl || (lesson.ctaConfig as unknown as { url?: string })?.url || lesson.ctaLabel) && (
+          <div style={{ marginTop: 12 }}>
+            <a
+              href={lesson.ctaUrl || (lesson.ctaConfig as unknown as { url?: string })?.url || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => {
+                e.preventDefault();
+                handleCtaClick(lesson.ctaUrl || (lesson.ctaConfig as unknown as { url?: string })?.url || '#');
+              }}
+              className="pwa-cta"
+            >
+              {lesson.ctaLabel || 'Konsultasi via WhatsApp'}
+            </a>
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="pwa-card" role="alert" style={{ marginTop: 10, padding: '10px 12px', borderColor: '#FECACA', background: '#FEF2F2', color: '#9B1C1C', fontSize: 13 }}>{errorMsg}</div>
+        )}
+
+        {lesson?.hasReflection !== false && (
+          <p className="pwa-muted" style={{ fontSize: 11, marginTop: 8 }}>Draf tersimpan otomatis di perangkat ini.</p>
+        )}
+
+        <button onClick={handleComplete} disabled={isButtonDisabled || isSubmitting} className="pwa-cta" style={{ marginTop: 10 }}>
+          {isSubmitting ? 'Menyimpan...' : 'Tandai Selesai & Lanjut'}
         </button>
-       <div style={{ height: 24 }} />
-     </article>
-   </LearnerShell>
- );
+        <div style={{ height: 12 }} />
+      </div>
+    </LearnerShell>
+  );
 }

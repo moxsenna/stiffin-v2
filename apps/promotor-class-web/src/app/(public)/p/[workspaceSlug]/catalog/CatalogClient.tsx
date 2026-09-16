@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { PublicWorkspaceProfile, PublicProgramCatalogItem } from '@/modules/public-storefront/types';
-import { PublicHeader } from '@/components/public/PublicHeader';
 import { PublicFooter } from '@/components/public/PublicFooter';
-import { ProgramCard } from '@/components/public/ProgramCard';
-import { MobileAppHeader } from '@/components/layout/MobileAppHeader';
-import { LearnerTabBar } from '@/components/layout/LearnerTabBar';
+import { PwaAppHeader, PwaChips, PwaDock, PwaSearchBar, PwaSectionHead, PwaStars } from '@/components/pwa/pwa';
+import { formatIDR } from '@promotor/platform-core';
 
 interface CatalogClientProps {
   profile: PublicWorkspaceProfile;
@@ -15,197 +14,76 @@ interface CatalogClientProps {
 
 export function CatalogClient({ profile, catalog }: CatalogClientProps) {
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'free' | 'client'>('all');
+  const [cat, setCat] = useState('Semua');
 
-  const filteredCatalog = catalog.filter(item =>{
-    // Search matching
-    const matchesSearch =
-      item.program.title.toLowerCase().includes(search.toLowerCase()) ||
-      (item.program.subtitle || '').toLowerCase().includes(search.toLowerCase()) ||
-      (item.presentation.shortOutcome || '').toLowerCase().includes(search.toLowerCase());
-
-    if (!matchesSearch) return false;
-
-    // Filter matching
-    if (filter === 'free') {
-      return item.program.priceAmount === 0 || item.program.programType === 'lead_magnet';
-    }
-    if (filter === 'client') {
-      return item.program.programType === 'aftersales';
-    }
-    return true;
-  });
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return catalog.filter((item) => {
+      const hay = `${item.program.title} ${item.program.subtitle ?? ''} ${item.presentation.shortOutcome ?? ''}`.toLowerCase();
+      if (cat === 'Gratis' && item.program.priceAmount !== 0 && item.program.programType !== 'lead_magnet') return false;
+      if (cat === 'Berbayar' && !(item.program.priceAmount > 0)) return false;
+      return !q || hay.includes(q);
+    });
+  }, [catalog, search, cat]);
 
   return (
-    <div
-      className="page-wrapper-with-bottom-nav"
-      style={{
-        backgroundColor: 'var(--color-surface-muted)',
-        minHeight: '100vh',
-        color: 'var(--color-text-main)',
-      }}
-    >
-     {/* Mobile Top App Header */}
-      <MobileAppHeader
-        title="Katalog Program"
-        subtitle={`Ruang Belajar ${profile.displayName.split(' ')[0]}`}
-        showProfile={true}
-        workspaceSlug={profile.workspaceSlug}
-      />
+    <div className="pwa-screen">
+      <PwaAppHeader workspaceSlug={profile.workspaceSlug} brandName="Ralivo" />
 
-     {/* Desktop Header */}
-      <div className="desktop-only">
-       <PublicHeader
-          workspaceSlug={profile.workspaceSlug}
-          displayName={profile.displayName}
-          tagline={profile.tagline}
-        />
-     </div>
+      <main className="pwa-wrap pwa-screen-pad-dock">
+        <div style={{ paddingTop: 12 }}>
+          <PwaSearchBar value={search} onChange={setSearch} placeholder="Cari e-course, materi, atau program..." onFilterClick={() => setCat('Semua')} />
+        </div>
+        <div style={{ marginTop: 10 }}>
+          <PwaChips items={['Semua', 'Gratis', 'Berbayar']} active={cat} onChange={setCat} />
+        </div>
 
-     <main className="container" style={{ paddingTop: '24px', paddingBottom: '48px' }}>
-       {/* Title & Description */}
-        <div style={{ marginBottom: '24px' }}>
-         <h1 style={{ fontSize: 'clamp(24px, 3.5vw, 32px)', fontWeight: 750, letterSpacing: '-0.03em', marginBottom: '8px' }}>
-           Katalog Program & Pendampingan STIFIn
-          </h1>
-         <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', lineHeight: 1.6 }}>
-           Selamat datang! Baik Anda yang sedang mengenal STIFIn maupun peserta yang sudah melakukan tes, temukan program edukasi, e-course, dan pendampingan lanjutan yang dirancang sesuai kebutuhan Anda.
-          </p>
-       </div>
+        <PwaSectionHead title={`Katalog Program (${filtered.length})`} />
 
-       {/* Search & Filter Controls */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-            marginBottom: '28px',
-          }}
-        >
-         {/* Search Input */}
-          <div style={{ position: 'relative', width: '100%' }}>
-           <input
-              type="text"
-              value={search}
-              onChange={e =>setSearch(e.target.value)}
-              placeholder="Cari e-course, materi, atau program pendampingan..."
-              style={{
-                width: '100%',
-                minHeight: '44px',
-                padding: '0 16px 0 40px',
-                borderRadius: '0px',
-                border: '1px solid var(--color-divider)',
-                backgroundColor: 'var(--color-surface)',
-                fontSize: '14px',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-           <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--color-text-muted)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{
-                position: 'absolute',
-                left: '14px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-              }}
-            >
-             <circle cx="11" cy="11" r="8" />
-             <line x1="21" y1="21" x2="16.65" y2="16.65" />
-           </svg>
-         </div>
-
-         {/* Filter Chips */}
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-           <button
-              onClick={() =>setFilter('all')}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '0px',
-                fontSize: '13px',
-                fontWeight: filter === 'all' ? 700 : 500,
-                backgroundColor: filter === 'all' ? 'var(--accent-dark)' : 'var(--color-surface)',
-                color: filter === 'all' ? '#FFFFFF' : 'var(--color-text-main)',
-                border: filter === 'all' ? 'none' : '1px solid var(--color-divider)',
-                cursor: 'pointer',
-              }}
-            >
-             Semua Program ({catalog.length})
-            </button>
-           <button
-              onClick={() =>setFilter('free')}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '0px',
-                fontSize: '13px',
-                fontWeight: filter === 'free' ? 700 : 500,
-                backgroundColor: filter === 'free' ? 'var(--accent-dark)' : 'var(--color-surface)',
-                color: filter === 'free' ? '#FFFFFF' : 'var(--color-text-main)',
-                border: filter === 'free' ? 'none' : '1px solid var(--color-divider)',
-                cursor: 'pointer',
-              }}
-            >
-             Umum & Calon Peserta
-            </button>
-           <button
-              onClick={() =>setFilter('client')}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '0px',
-                fontSize: '13px',
-                fontWeight: filter === 'client' ? 700 : 500,
-                backgroundColor: filter === 'client' ? 'var(--accent-dark)' : 'var(--color-surface)',
-                color: filter === 'client' ? '#FFFFFF' : 'var(--color-text-main)',
-                border: filter === 'client' ? 'none' : '1px solid var(--color-divider)',
-                cursor: 'pointer',
-              }}
-            >
-             Pendampingan Pasca-Tes
-            </button>
-         </div>
-       </div>
-
-       {/* Program Cards Grid */}
-        {filteredCatalog.length === 0 ? (
-          <div
-            style={{
-              padding: '40px 20px',
-              textAlign: 'center',
-              backgroundColor: 'var(--color-surface)',
-              borderRadius: '0px',
-              border: '1px solid var(--color-divider)',
-              color: 'var(--color-text-muted)',
-              fontSize: '14px',
-            }}
-          >
-           Tidak ada program yang sesuai dengan kriteria pencarian.
+        {filtered.length === 0 ? (
+          <div className="pwa-card pwa-card-pad pwa-muted" style={{ textAlign: 'center' }}>
+            Tidak ada program yang sesuai dengan kriteria pencarian.
           </div>
-       ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-              gap: '24px',
-            }}
-          >
-           {filteredCatalog.map(item =>(
-              <ProgramCard key={item.program.id} item={item} workspaceSlug={profile.workspaceSlug} />
-           ))}
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {filtered.map((item) => {
+              const paid = item.program.pricing === 'one_time' && item.program.priceAmount > 0;
+              const lessons = item.program.totalLessonsCount || item.program.totalModulesCount || 0;
+              return (
+                <article key={item.program.id} className="pwa-card pwa-card-pad">
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <span className="pwa-pill pwa-pill-blue">{(item.presentation.heroEyebrow || 'Program').toUpperCase()}</span>
+                    {paid ? <span className="pwa-pill pwa-pill-amber">Berbayar</span> : <span className="pwa-pill pwa-pill-green">Gratis</span>}
+                  </div>
+                  <h3 style={{ fontSize: 15.5, fontWeight: 850, margin: '8px 0 0', lineHeight: 1.3 }}>
+                    <Link href={`/p/${profile.workspaceSlug}/${item.program.programSlug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                      {item.program.title}
+                    </Link>
+                  </h3>
+                  <p className="pwa-muted" style={{ marginTop: 4 }}>
+                    {item.presentation.shortOutcome || item.program.subtitle || item.program.description}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, fontSize: 12.5 }}>
+                    <PwaStars value={5} size={12} />
+                    <strong>4.9</strong>
+                    <span style={{ color: 'var(--pwa-subtle)' }}>• {lessons} Materi • {item.presentation.durationLabel || 'Mandiri'}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 10 }}>
+                    <strong style={{ fontSize: 16 }}>{paid ? formatIDR(item.program.priceAmount) : 'Gratis'}</strong>
+                    <Link href={`/p/${profile.workspaceSlug}/${item.program.programSlug}`} className="pwa-cta" style={{ width: 'auto', flex: 'none', padding: '0 18px' }}>
+                      {paid ? 'Ikuti Kelas' : 'Mulai Gratis'}
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
           </div>
-       )}
+        )}
+
+        <PublicFooter displayName={profile.displayName.split(' ')[0]} />
       </main>
 
-     <PublicFooter displayName={profile.displayName.split(' ')[0]} />
-
-     {/* Global Bottom Navigation */}
-      <LearnerTabBar workspaceSlug={profile.workspaceSlug} />
-   </div>
- );
+      <PwaDock workspaceSlug={profile.workspaceSlug} />
+    </div>
+  );
 }

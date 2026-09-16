@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import { LearnerTabBar } from './LearnerTabBar';
-import { MobileAppHeader } from './MobileAppHeader';
+import { PwaAppHeader, PwaDock } from '@/components/pwa/pwa';
 
 interface LearnerShellProps {
   children: React.ReactNode;
@@ -13,6 +12,7 @@ interface LearnerShellProps {
   workspaceSlug?: string;
 }
 
+/** Learner shell di atas sistem PWA: App Header + konten 480px + dock liquid-glass. */
 export function LearnerShell({
   children,
   title = 'Program Saya',
@@ -22,31 +22,19 @@ export function LearnerShell({
   workspaceSlug,
 }: LearnerShellProps) {
   return (
-    <div className="page-wrapper-with-bottom-nav" style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--surface)' }}>
-     {/* Mobile Top App Header */}
-      <MobileAppHeader
+    <div className="pwa-screen">
+      <PwaAppHeader
         title={title}
-        subtitle={subtitle}
+        subtitle={subtitle ?? 'Learning Platform PWA'}
         showBack={showBack}
         backHref={backHref}
-        showProfile={true}
+        showCart={false}
         workspaceSlug={workspaceSlug}
       />
-
-     {/* Main Content Area */}
-      <main
-        style={{
-          flex: 1,
-          maxWidth: '760px',
-          width: '100%',
-          margin: '0 auto',
-        }}
-      >
-       {children}
+      <main className="pwa-wrap pwa-screen-pad-dock" style={{ maxWidth: 480 }}>
+        {children}
       </main>
-
-     {/* Mobile Sticky Tab Bar */}
-      <LearnerTabBar workspaceSlug={workspaceSlug} />
-   </div>
- );
+      <PwaDock workspaceSlug={workspaceSlug} />
+    </div>
+  );
 }

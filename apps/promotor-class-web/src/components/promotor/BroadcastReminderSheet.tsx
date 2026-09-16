@@ -27,7 +27,10 @@ export function BroadcastReminderSheet({ isOpen, learners, onClose }: BroadcastR
 
   const openNext = () => {
     const nextIndex = (cursor ?? -1) + 1;
-    if (nextIndex >= queue.length) { onClose(); return; }
+    if (nextIndex >= queue.length) {
+      onClose();
+      return;
+    }
     const learner = queue[nextIndex];
     window.open(buildWaUrl(learner.phoneE164, buildReminderDraft(learner)), '_blank');
     setCursor(nextIndex);
@@ -35,35 +38,55 @@ export function BroadcastReminderSheet({ isOpen, learners, onClose }: BroadcastR
 
   return (
     <BottomSheet open={isOpen} onClose={onClose} labelledBy="broadcast-title">
-      <h2 id="broadcast-title" style={{ font: '700 16px/1.3 var(--font-sans)' }}>Kirim Pengingat Belajar</h2>
+      <h2 id="broadcast-title" style={{ fontSize: 17, fontWeight: 850, letterSpacing: '-0.01em' }}>
+        Kirim Pengingat Belajar
+      </h2>
       {current ? (
         <>
-          <p className="kicker kicker-muted" style={{ marginTop: 8 }}>
+          <p className="pwa-muted" style={{ marginTop: 8 }}>
             Mengirim {cursor! + 1} dari {queue.length}: {current.name}
           </p>
-          <textarea className="textarea" rows={5} readOnly value={buildReminderDraft(current)} aria-label="Draf pengingat" />
+          <textarea className="pwa-input" rows={5} readOnly value={buildReminderDraft(current)} aria-label="Draf pengingat" style={{ marginTop: 10 }} />
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            <button type="button" className="btn btn-primary" onClick={openNext}>Sudah Terkirim — Lanjut</button>
-            <button type="button" className="btn btn-ghost" onClick={onClose}>Selesai</button>
+            <button type="button" className="pwa-cta" style={{ flex: 1 }} onClick={openNext}>
+              Sudah Terkirim — Lanjut
+            </button>
+            <button type="button" className="pwa-btn-secondary" onClick={onClose}>
+              Selesai
+            </button>
           </div>
         </>
       ) : (
         <>
-          <p className="kicker kicker-muted" style={{ marginTop: 8 }}>Pilih peserta yang mau dikirimi pengingat ({selected.size}/{learners.length}).</p>
-          <div style={{ maxHeight: 260, overflowY: 'auto', marginTop: 8 }}>
+          <p className="pwa-muted" style={{ marginTop: 8 }}>
+            Pilih peserta yang mau dikirimi pengingat ({selected.size}/{learners.length}).
+          </p>
+          <div style={{ maxHeight: 260, overflowY: 'auto', marginTop: 10 }}>
             {learners.map((l) => (
-              <label key={l.contactId} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0' }}>
-                <input type="checkbox" checked={selected.has(l.contactId)}
+              <label key={l.contactId} className="check-row">
+                <input
+                  type="checkbox"
+                  checked={selected.has(l.contactId)}
                   onChange={(e) => {
                     const next = new Set(selected);
-                    if (e.target.checked) next.add(l.contactId); else next.delete(l.contactId);
+                    if (e.target.checked) next.add(l.contactId);
+                    else next.delete(l.contactId);
                     setSelected(next);
-                  }} />
-                <span style={{ font: '400 13px/1.4 var(--font-sans)' }}>{l.name} · {l.programTitle} · {l.progressPercent}%</span>
+                  }}
+                />
+                <span style={{ fontSize: 13, fontWeight: 600 }}>
+                  {l.name} · {l.programTitle} · <span className="tabular-nums">{l.progressPercent}%</span>
+                </span>
               </label>
             ))}
           </div>
-          <button type="button" className="btn btn-primary btn-block" style={{ marginTop: 12 }} disabled={queue.length === 0} onClick={openNext}>
+          <button
+            type="button"
+            className="pwa-cta"
+            style={{ marginTop: 12 }}
+            disabled={queue.length === 0}
+            onClick={openNext}
+          >
             Mulai Kirim via WhatsApp
           </button>
         </>

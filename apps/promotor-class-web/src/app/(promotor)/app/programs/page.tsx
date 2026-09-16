@@ -3,10 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PromotorShell } from '@/components/layout/PromotorShell';
-import { PageHeader, SectionHead, EmptyState, ErrorState, LoadingRows } from '@/components/ui';
+import { PwaLogo } from '@/components/pwa/pwa';
+import { EmptyState, ErrorState, LoadingRows } from '@/components/ui';
 import { getProgramsQuery } from '@/modules/programs/queries';
 import { getPublicStorefrontRepository } from '@/adapters';
 import { Program } from '@promotor/contracts';
+
+function programTypeLabel(programType: string): string {
+  if (programType === 'lead_magnet') return 'Gratis · magnet peserta';
+  if (programType === 'aftersales') return 'Khusus peserta tes';
+  return 'Berbayar';
+}
 
 export default function ProgramsPage() {
   const [programs, setPrograms] = useState<Program[] | null>(null);
@@ -33,78 +40,130 @@ export default function ProgramsPage() {
 
   return (
     <PromotorShell>
-     <PageHeader
-        kicker="Ralivo Class"
-        title="Program"
-        sub={programs ? `${programs.length} program · materi edukasi, gratis & berbayar` : 'Memuat program...'}
-        action={
-          <Link href="/app/programs/new" className="btn btn-primary btn-sm" style={{ alignSelf: 'center', whiteSpace: 'nowrap' }}>
-           + Buat Program Baru
+      <div className="pwa-screen pwa-screen-pad-dock" style={{ minHeight: '100dvh' }}>
+        <div className="promotor-top">
+          <div className="promotor-brandrow">
+            <PwaLogo />
+            <div style={{ minWidth: 0 }}>
+              <div className="promotor-brandname">Ralivo Class</div>
+              <div className="promotor-brandtag">Promotor workspace · katalog program</div>
+            </div>
+          </div>
+          <h1 className="promotor-title">Program</h1>
+          <div className="promotor-sub">
+            {programs ? `${programs.length} program · materi edukasi, gratis & berbayar` : 'Memuat program...'}
+          </div>
+
+          <div className="promo-stats" aria-label="Ringkasan program">
+            <div className="promo-stat">
+              <div className="promo-stat-num">{programs ? programs.length : '–'}</div>
+              <div className="promo-stat-label">Total program</div>
+            </div>
+            <div className="promo-stat">
+              <div className="promo-stat-num" style={{ color: 'var(--pwa-primary)' }}>
+                {programs ? programs.filter((p) => p.status === 'published').length : '–'}
+              </div>
+              <div className="promo-stat-label">Terbit</div>
+            </div>
+            <div className="promo-stat">
+              <div className="promo-stat-num" style={{ color: 'var(--pwa-warning)' }}>
+                {programs ? programs.filter((p) => p.status !== 'published').length : '–'}
+              </div>
+              <div className="promo-stat-label">Draf</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="promotor-wrap">
+          <Link href="/app/programs/new" className="pwa-cta" style={{ marginTop: 4 }}>
+            + Buat Program Baru
           </Link>
-       }
-      />
 
-     {loadError && <ErrorState title="Gagal memuat program" detail={loadError} onRetry={() =>loadData()} />}
+          {loadError && (
+            <div style={{ marginTop: 12 }}>
+              <ErrorState title="Gagal memuat program" detail={loadError} onRetry={() =>loadData()} />
+            </div>
+          )}
 
-      {!programs && !loadError && (
-        <>
-         <SectionHead label="Daftar program" />
-         <LoadingRows rows={4} />
-       </>
-     )}
+          {!programs && !loadError && (
+            <>
+              <div className="pwa-section-head">
+                <h2 className="pwa-section-title">Daftar program</h2>
+              </div>
+              <LoadingRows rows={4} />
+            </>
+          )}
 
-      {programs && programs.length === 0 && !loadError && (
-        <EmptyState
-          title="Belum ada program"
-          explanation="Buat program pertama Anda untuk mulai menerima peserta di storefront."
-          action={
-            <Link href="/app/programs/new" className="btn btn-primary btn-sm">
-             + Buat Program Pertama Anda
-            </Link>
-         }
-        />
-     )}
+          {programs && programs.length === 0 && !loadError && (
+            <div style={{ marginTop: 12 }} className="pwa-card pwa-card-pad">
+              <EmptyState
+                title="Belum ada program"
+                explanation="Buat program pertama Anda untuk mulai menerima peserta di storefront."
+                action={
+                  <Link href="/app/programs/new" className="pwa-btn-primary">
+                    + Buat Program Pertama Anda
+                  </Link>
+                }
+              />
+            </div>
+          )}
 
-      {programs && programs.length >0 && (
-        <>
-         <SectionHead label="Daftar program" count={`${programs.length}`} />
-         {programs.map(prog =>(
-            <div key={prog.id} style={{ padding: '15px 18px', borderBottom: '1px solid var(--line)' }}>
-             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline' }}>
-               <span style={{ font: '700 15px/1.25 var(--font-sans)', letterSpacing: '-0.01em', minWidth: 0 }}>{prog.title}</span>
-               <span className={`tag ${prog.status === 'published' ? 'tag-neutral' : 'tag-outline'}`} style={{ flex: 'none' }}>
-                 {prog.status === 'published' ? 'Terbit di Storefront' : 'Draf'}
+          {programs && programs.length > 0 && (
+            <>
+              <div className="pwa-section-head">
+                <h2 className="pwa-section-title">Daftar program</h2>
+                <span className="pwa-muted tabular-nums" style={{ fontWeight: 800, fontSize: 12 }}>
+                  {programs.length}
                 </span>
-             </div>
+              </div>
+              {programs.map(prog =>{
+                const published = prog.status === 'published';
+                const lessonCount = prog.modules.reduce((acc, m) =>acc + m.lessons.length, 0);
+                return (
+                  <div key={prog.id} className="pwa-card pwa-card-pad" style={{ marginTop: 10 }}>
+                    <div className="learner-namerow">
+                      <span className="learner-name">{prog.title}</span>
+                      <span className={published ? 'pwa-pill-green' : 'pwa-pill-amber'} style={{ flex: 'none' }}>
+                        {published ? 'Terbit' : 'Draf'}
+                      </span>
+                    </div>
 
-             {(prog.subtitle || prog.description) && (
-                <div style={{ marginTop: 5, font: '400 12px/1.45 var(--font-sans)', color: 'var(--muted-strong)' }}>
-                 {prog.subtitle || prog.description}
-                </div>
-             )}
+                    {(prog.subtitle || prog.description) && (
+                      <div className="learner-reason" style={{ whiteSpace: 'normal' }}>
+                        {prog.subtitle || prog.description}
+                      </div>
+                    )}
 
-              <div style={{ marginTop: 8, display: 'flex', gap: 14, flexWrap: 'wrap', font: '500 11px/1 var(--font-sans)', color: 'var(--muted)' }}>
-               <span>{prog.programType === 'lead_magnet' ? 'Gratis (Lead Magnet)' : prog.programType === 'aftersales' ? 'Khusus Peserta Tes' : 'Berbayar'}</span>
-               <span>{prog.modules.length} bab</span>
-               <span>{prog.modules.reduce((acc, m) =>acc + m.lessons.length, 0)} pelajaran</span>
-             </div>
+                    <div className="learner-meta" style={{ marginTop: 6 }}>
+                      {programTypeLabel(prog.programType)} · {prog.modules.length} bab · {lessonCount} pelajaran
+                    </div>
 
-             <div style={{ marginTop: 12, display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
-               <Link href={`/app/programs/${prog.id}`} className="btn btn-secondary btn-sm">
-                 Kelola Kurikulum & Materi
+                    <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <Link href={`/app/programs/${prog.id}`} className="pwa-btn-primary">
+                        Kelola kurikulum
+                      </Link>
+                      <Link
+                        href={`/p/${workspaceSlug}/${prog.programSlug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="pwa-btn-soft"
+                      >
+                        Lihat landing ↗
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+              <div style={{ marginTop: 12 }}>
+                <Link href="/app/settings" className="pwa-btn-secondary" style={{ width: '100%' }}>
+                  Pengaturan Storefront
                 </Link>
-               <Link href={`/p/${workspaceSlug}/${prog.programSlug}`} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
-                 Lihat Landing ↗
-                </Link>
-             </div>
-           </div>
-         ))}
-          <div style={{ padding: 18 }}>
-           <Link href="/app/settings" className="btn btn-secondary btn-block">Pengaturan Storefront</Link>
-         </div>
-       </>
-     )}
-      <div style={{ height: 24 }} />
-   </PromotorShell>
+              </div>
+            </>
+          )}
+          <div style={{ height: 12 }} />
+        </div>
+      </div>
+    </PromotorShell>
  );
 }

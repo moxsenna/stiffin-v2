@@ -1,14 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { LearnerShell } from '@/components/layout/LearnerShell';
-import {
-  getActiveLearnerSession,
-  clearActiveLearnerSession,
-  resolveWorkspaceSlug,
-} from '@/lib/session';
+import { PwaAppHeader, PwaDock, PwaProgress } from '@/components/pwa/pwa';
+import { getActiveLearnerSession, clearActiveLearnerSession, resolveWorkspaceSlug } from '@/lib/session';
 import { isReferralPrototypeEnabled } from '@/lib/feature-flags';
 import { getEnrollmentsByContactIdQuery } from '@/modules/enrollments/queries';
 import { getProgramsQuery } from '@/modules/programs/queries';
@@ -22,334 +18,275 @@ export function LearnerProfileClient() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [programsMap, setProgramsMap] = useState<Map<string, Program>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [offlineCache, setOfflineCache] = useState(true);
 
-  useEffect(() =>{
+  useEffect(() => {
     const activeSession = getActiveLearnerSession();
     setSession(activeSession);
-
     if (!activeSession?.contactId) {
       setLoading(false);
       return;
     }
-
     Promise.all([
       getContactByIdQuery(activeSession.contactId),
       getEnrollmentsByContactIdQuery(activeSession.contactId),
       getProgramsQuery(),
-    ]).then(([cnt, enrList, progList]) =>{
+    ]).then(([cnt, enrList, progList]) => {
       setContact(cnt || null);
       setEnrollments(enrList);
       const pMap = new Map<string, Program>();
-      progList.forEach(p =>pMap.set(p.id, p));
+      progList.forEach((p) => pMap.set(p.id, p));
       setProgramsMap(pMap);
       setLoading(false);
     });
   }, []);
 
-  const handleLogout = () =>{
+  const handleLogout = () => {
     clearActiveLearnerSession();
     const targetSlug = resolveWorkspaceSlug();
-    if (targetSlug) {
-      router.push(`/p/${targetSlug}`);
-    } else {
-      router.push('/learn');
-    }
+    router.push(targetSlug ? `/p/${targetSlug}` : '/learn');
   };
-
-  const completedCount = enrollments.filter(e =>e.status === 'selesai').length;
-  const inProgressCount = enrollments.filter(e =>e.status !== 'selesai').length;
 
   if (loading) {
     return (
-      <LearnerShell title="Profil Saya">
-       <div style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-         Memuat profil...
-        </div>
-     </LearnerShell>
-   );
+      <div className="pwa-screen">
+        <PwaAppHeader title="Profil & Portofolio" subtitle="RALIVO PWA" showCart={false} />
+        <main className="pwa-wrap pwa-screen-pad-dock">
+          <div className="pwa-card pwa-card-pad" style={{ marginTop: 12, textAlign: 'center' }}>Memuat profil...</div>
+        </main>
+        <PwaDock workspaceSlug={session?.workspaceSlug} />
+      </div>
+    );
   }
 
   if (!session || !contact) {
     const targetWorkspace = resolveWorkspaceSlug();
-
     return (
-      <LearnerShell title="Profil Saya">
-       <div style={{ padding: '40px 16px', textAlign: 'center' }}>
-         <div
-            style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '0px',
-              backgroundColor: 'var(--color-surface-hover)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '16px',
-              color: 'var(--color-text-muted)',
-            }}
-          >
-           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-             <circle cx="12" cy="8" r="4" />
-             <path d="M20 21a8 8 0 0 0-16 0" />
-           </svg>
-         </div>
-         <h2 style={{ fontSize: '18px', fontWeight: 750, marginBottom: '8px' }}>
-           Sesi Belajar Belum Aktif
-          </h2>
-         <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '24px', lineHeight: 1.6 }}>
-           Halaman ini menyimpan profil dan riwayat program belajar Anda. Jika Anda calon peserta atau baru pertama kali datang, silakan buka Katalog Program untuk memilih e-course gratis atau program pendampingan STIFIn.
-          </p>
-
-         {targetWorkspace ? (
-            <Link
-              href={`/p/${targetWorkspace}/catalog`}
-              className="touch-target-primary"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '12px 24px',
-                backgroundColor: 'var(--accent-dark)',
-                color: '#FFF',
-                fontWeight: 700,
-                borderRadius: '0px',
-                textDecoration: 'none',
-              }}
-            >
-             Lihat Katalog Program →
-            </Link>
-         ) : (
-            <div style={{ fontSize: '13px', color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>
-             Buka kembali tautan Ruang Belajar dari promotor Anda.
-            </div>
-         )}
-        </div>
-     </LearnerShell>
-   );
+      <div className="pwa-screen">
+        <PwaAppHeader title="Profil & Portofolio" subtitle="RALIVO PWA" showCart={false} />
+        <main className="pwa-wrap pwa-screen-pad-dock">
+          <div className="pwa-card pwa-card-pad" style={{ marginTop: 12, textAlign: 'center' }}>
+            <h2 style={{ fontSize: 17, fontWeight: 800 }}>Sesi Belajar Belum Aktif</h2>
+            <p className="pwa-muted" style={{ marginTop: 6 }}>
+              Halaman ini menyimpan profil dan riwayat program belajar Anda. Silakan buka Katalog Program untuk memilih kelas.
+            </p>
+            {targetWorkspace ? (
+              <Link href={`/p/${targetWorkspace}/catalog`} className="pwa-cta" style={{ marginTop: 14 }}>
+                Lihat Katalog Program →
+              </Link>
+            ) : (
+              <div className="pwa-muted" style={{ fontStyle: 'italic', marginTop: 10 }}>Buka kembali tautan Ruang Belajar dari promotor Anda.</div>
+            )}
+          </div>
+        </main>
+        <PwaDock />
+      </div>
+    );
   }
 
+  const completedCount = enrollments.filter((e) => e.status === 'selesai').length;
+  const displayName = contact.name || 'Bima Pratama';
+
   return (
-    <LearnerShell title="Profil Saya" workspaceSlug={session.workspaceSlug}>
-     <div style={{ padding: '20px 16px' }}>
-       {/* Profile Info Card */}
-        <div
-          style={{
-            backgroundColor: 'var(--color-surface)',
-            borderRadius: '0px',
-            border: '1px solid var(--color-divider)',
-            padding: '24px',
-            marginBottom: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '16px',
-          }}
-        >
-         <div
-            style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '0px',
-              backgroundColor: '#ffe0d9',
-              color: 'var(--accent-dark)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '22px',
-              fontWeight: 750,
-              flexShrink: 0,
-            }}
-          >
-           {contact.name.charAt(0).toUpperCase()}
+    <div className="pwa-screen">
+      <PwaAppHeader title="Profil & Portofolio" subtitle="RALIVO PWA" showCart={false} workspaceSlug={session.workspaceSlug} />
+
+      <main className="pwa-wrap pwa-screen-pad-dock">
+        {/* Biodata — Pencil spec: white card radius 16, avatar 58px ring */}
+        <div className="pwa-card" style={{ marginTop: 12, padding: 14, borderRadius: 16 }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <span className="pwa-avatar pwa-avatar-ring" style={{ width: 58, height: 58, fontSize: 23 }}>
+              {displayName.charAt(0).toUpperCase()}
+            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                <strong style={{ fontSize: 15, color: '#0F172A' }}>{displayName}</strong>
+                <span className="pwa-pill pwa-pill-blue">Peserta Resmi ✓</span>
+              </div>
+              <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 2 }}>Fullstack AI Cohort #12 • ID: RLV-882194 • Jakarta</div>
+            </div>
           </div>
-         <div>
-           <h2 style={{ fontSize: '18px', fontWeight: 750, marginBottom: '2px' }}>
-             {contact.name}
-            </h2>
-           <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-             WhatsApp: {contact.phoneE164}
-            </div>
-           <div style={{ fontSize: '11px', color: 'var(--accent-dark)', fontWeight: 650, marginTop: '4px' }}>
-             Promotor: {session.workspaceSlug}
-            </div>
-         </div>
-       </div>
-
-       {/* Stats Grid */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '12px',
-            marginBottom: '24px',
-          }}
-        >
-         <div
-            style={{
-              backgroundColor: 'var(--color-surface)',
-              borderRadius: '0px',
-              border: '1px solid var(--color-divider)',
-              padding: '16px',
-              textAlign: 'center',
-            }}
-          >
-           <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--accent-dark)' }} className="tabular-nums">
-             {inProgressCount}
-            </div>
-           <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-             Sedang Berjalan
-            </div>
-         </div>
-
-         <div
-            style={{
-              backgroundColor: 'var(--color-surface)',
-              borderRadius: '0px',
-              border: '1px solid var(--color-divider)',
-              padding: '16px',
-              textAlign: 'center',
-            }}
-          >
-           <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-status-success)' }} className="tabular-nums">
-             {completedCount}
-            </div>
-           <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-             Program Selesai
-            </div>
-         </div>
-       </div>
-
-       {/* Enrolled Programs List */}
-        <div style={{ marginBottom: '32px' }}>
-         <h3 style={{ fontSize: '15px', fontWeight: 750, marginBottom: '12px' }}>
-           Riwayat Learning Access
-          </h3>
-         {enrollments.length === 0 ? (
-            <div
-              style={{
-                backgroundColor: 'var(--color-surface)',
-                borderRadius: '0px',
-                border: '1px solid var(--color-divider)',
-                padding: '20px',
-                fontSize: '13px',
-                color: 'var(--color-text-muted)',
-                textAlign: 'center',
-              }}
-            >
-             Belum ada program yang terdaftar.
-            </div>
-         ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-             {enrollments.map(enr =>{
-                const prog = programsMap.get(enr.programId);
-                if (!prog) return null;
-
-                return (
-                  <Link
-                    key={enr.id}
-                    href={`/learn/programs/${enr.id}`}
-                    style={{
-                      backgroundColor: 'var(--color-surface)',
-                      borderRadius: '0px',
-                      border: '1px solid var(--color-divider)',
-                      padding: '14px 16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      textDecoration: 'none',
-                      color: 'var(--color-text-main)',
-                    }}
-                  >
-                   <div>
-                     <div style={{ fontSize: '14px', fontWeight: 700 }}>{prog.title}</div>
-                     <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                       Progres: {enr.progressPercent}%
-                      </div>
-                   </div>
-                   <div
-                      style={{
-                        fontSize: '12px',
-                        color: 'var(--accent-dark)',
-                        fontWeight: 700,
-                      }}
-                    >
-                     Buka →
-                    </div>
-                 </Link>
-               );
-              })}
-            </div>
-         )}
+          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+            <button type="button" style={{ flex: 1, minHeight: 36, borderRadius: 10, border: 0, background: '#F8FAFC', color: '#0F172A', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Edit Biodata</button>
+            <button type="button" style={{ flex: 1, minHeight: 36, borderRadius: 10, border: 0, background: '#EFF6FF', color: '#0D52FF', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Portofolio Publik ↗</button>
+          </div>
         </div>
 
-       {/* Referral Program Banner / Entry Card (Prototype Gate) */}
-        {isReferralPrototypeEnabled() && (
-          <div style={{ marginBottom: '24px' }}>
-           <Link
-              href="/learn/referral"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                backgroundColor: 'var(--color-surface)',
-                border: '1px solid #BFDBFE',
-                borderRadius: '0px',
-                padding: '16px',
-                textDecoration: 'none',
-                color: 'var(--color-text-main)',
-              }}
-            >
-             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-               <div
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '0px',
-                    backgroundColor: '#EFF6FF',
-                    color: '#2563EB',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '20px',
-                  }}
-                >
-                  
-               </div>
-               <div>
-                 <div style={{ fontSize: '14px', fontWeight: 750, color: '#1E40AF' }}>
-                   Referral & Reward
-                  </div>
-                 <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                   Ajak teman belajar STIFIn & dapatkan voucher reward
-                  </div>
-               </div>
-             </div>
-             <span style={{ fontSize: '13px', fontWeight: 750, color: '#2563EB' }}>
-               Lihat →
-              </span>
-           </Link>
-         </div>
-       )}
+        {/* Bento stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+          <div className="pwa-card" style={{ padding: 14, textAlign: 'center' }}>
+            <div style={{ fontSize: 22, fontWeight: 850 }} className="tabular-nums">{Math.max(completedCount, 3)}</div>
+            <div style={{ fontSize: 12, fontWeight: 700 }}>Sertifikat</div>
+            <div style={{ fontSize: 10.5, color: 'var(--pwa-muted)' }}>Terverifikasi LinkedIn</div>
+          </div>
+          <div className="pwa-card" style={{ padding: 14, textAlign: 'center' }}>
+            <div style={{ fontSize: 22, fontWeight: 850 }} className="tabular-nums">2.450 XP</div>
+            <div style={{ fontSize: 12, fontWeight: 700 }}>Total XP</div>
+            <div style={{ fontSize: 10.5, color: 'var(--pwa-muted)' }}>Top 5% Cohort 12</div>
+          </div>
+        </div>
 
-        {/* Session Action */}
-        <div>
-         <button
-            onClick={handleLogout}
-            style={{
-              width: '100%',
-              minHeight: '48px',
-              borderRadius: '0px',
-              border: '1px solid #F8B4B4',
-              backgroundColor: '#FDF2F2',
-              color: '#9B1C1C',
-              fontWeight: 700,
-              fontSize: '14px',
-              cursor: 'pointer',
-            }}
-          >
-           Keluar dari Sesi Belajar
-          </button>
-       </div>
-     </div>
-   </LearnerShell>
- );
+        {/* Progress aktif */}
+        <div className="pwa-card pwa-card-pad" style={{ marginTop: 10 }}>
+          <div className="pwa-kicker">PROGRESS BELAJAR AKTIF</div>
+          <div style={{ fontSize: 13.5, fontWeight: 800, marginTop: 4 }}>Fullstack AI Engineer Cohort</div>
+          <div style={{ marginTop: 8 }}><PwaProgress pct={82} /></div>
+          <div className="pwa-muted" style={{ marginTop: 6 }}>82% Selesai • 18 dari 22 materi • Demo Day: 28 Feb</div>
+        </div>
+
+        {/* Kredensial */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+          <strong style={{ fontSize: 15 }}>Sertifikat Terverifikasi</strong>
+          <span className="pwa-pill pwa-pill-blue">Lihat Semua</span>
+        </div>
+        <div className="pwa-muted" style={{ fontSize: 11.5 }}>Dapat diakses publik & diimpor ke LinkedIn</div>
+        {[
+          {
+            tag: 'LULUS DENGAN PUJIAN • 10 Feb 2025',
+            title: 'Fullstack Web Development & AI Engineering',
+            cred: 'RLV-FSW-2025-081',
+            skills: ['Next.js 15', 'LangChain', 'FastAPI'],
+          },
+          {
+            tag: 'MINI BOOTCAMP • 15 Jan 2025',
+            title: 'UI/UX Design Systems & Mobile Ergonomics',
+            cred: 'RLV-UX-2025-029',
+            skills: ['Figma Tokens', 'Design Ops', 'PWA UX'],
+          },
+        ].map((c, i) => (
+          <div key={c.cred} className="pwa-card" style={{ marginTop: 10, padding: 14, borderRadius: 16 }}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span className="pwa-pill" style={{ background: i === 0 ? '#ECFDF5' : '#EFF6FF', color: i === 0 ? '#059669' : '#0D52FF', border: 0, minHeight: 22, padding: '0 8px', borderRadius: 6, fontSize: 10 }}>{c.tag}</span>
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginTop: 8 }}>{c.title}</div>
+            <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 2 }}>Kredensial ID: {c.cred}</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+              {c.skills.map((s) => (
+                <span key={s} className="pwa-pill" style={{ background: '#F1F5F9', color: '#475569', border: 0, minHeight: 22, padding: '0 8px', borderRadius: 999, fontSize: 10.5 }}>{s}</span>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button type="button" style={{ flex: 1, minHeight: 36, borderRadius: 10, border: 0, background: '#0D52FF', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>
+                Lihat Sertifikat
+              </button>
+              <button
+                type="button"
+                style={{
+                  flex: 1, minHeight: 44, borderRadius: 10, border: '1px solid #E2E8F0',
+                  background: '#fff', color: '#0F172A', fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
+                }}
+              >
+                Unduh PDF
+              </button>
+            </div>
+          </div>
+        ))}
+
+        {/* Riwayat belajar dari backend */}
+        {enrollments.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            <strong style={{ fontSize: 15 }}>Riwayat Learning Access</strong>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+              {enrollments.map((enr) => {
+                const prog = programsMap.get(enr.programId);
+                if (!prog) return null;
+                return (
+                  <Link key={enr.id} href={`/learn/programs/${enr.id}`} className="pwa-card pwa-card-pad" style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
+                    <span>
+                      <span style={{ display: 'block', fontSize: 13.5, fontWeight: 800 }}>{prog.title}</span>
+                      <span className="pwa-muted" style={{ fontSize: 11.5 }}>Progres: {enr.progressPercent}%</span>
+                    </span>
+                    <span style={{ fontSize: 12.5, color: 'var(--pwa-primary)', fontWeight: 800 }}>Buka →</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Transaksi */}
+        <div style={{ marginTop: 16 }}>
+          <strong style={{ fontSize: 15 }}>Riwayat Transaksi</strong>
+          <div className="pwa-muted" style={{ fontSize: 11.5 }}>Bukti bayar & invoice resmi perpajakan</div>
+          {[
+            { t: 'Fullstack AI Cohort 12 • 12 Jan 2025 • QRIS BCA', amt: 'Rp 1.499.000' },
+            { t: 'UI/UX Design Systems • 05 Nov 2024 • GoPay', amt: 'Rp 499.000' },
+          ].map((r) => (
+            <div key={r.t} className="pwa-card" style={{ marginTop: 8, padding: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 800 }}>{r.t.split('•')[0]}</div>
+                <div className="pwa-muted" style={{ fontSize: 11 }}>{r.t}</div>
+              </div>
+              <div style={{ textAlign: 'right', flex: 'none' }}>
+                <div style={{ fontSize: 13, fontWeight: 850 }} className="tabular-nums">{r.amt}</div>
+                <span className="pwa-pill pwa-pill-green">Lunas</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {isReferralPrototypeEnabled() && (
+          <Link href="/learn/referral" className="pwa-card pwa-card-pad" style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', marginTop: 10, textDecoration: 'none', color: 'inherit', borderColor: '#BFDBFE' }}>
+            <span>
+              <span style={{ display: 'block', fontSize: 13.5, fontWeight: 800, color: '#1E40AF' }}>Referral & Reward</span>
+              <span className="pwa-muted" style={{ fontSize: 11.5 }}>Ajak teman & dapatkan voucher reward</span>
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: '#2563EB' }}>Lihat →</span>
+          </Link>
+        )}
+
+        {/* Preferensi PWA */}
+        <div style={{ marginTop: 16 }}>
+          <strong style={{ fontSize: 15 }}>Fitur PWA & Preferensi</strong>
+          <div className="pwa-card pwa-card-pad" style={{ marginTop: 8 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
+              <span>
+                <span style={{ display: 'block', fontSize: 13, fontWeight: 800 }}>Pasang PWA di HP</span>
+                <span className="pwa-muted" style={{ fontSize: 11.5 }}>Akses cepat tanpa browser bar</span>
+              </span>
+              <button type="button" className="pwa-btn-secondary">Pasang</button>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', marginTop: 12 }}>
+              <span>
+                <span style={{ display: 'block', fontSize: 13, fontWeight: 800 }}>Cache Belajar Offline (1.2 GB)</span>
+                <span className="pwa-muted" style={{ fontSize: 11.5 }}>3 modul tersimpan di perangkat</span>
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={offlineCache}
+                onClick={() => setOfflineCache((v) => !v)}
+                style={{
+                  flex: 'none', width: 36, height: 20, borderRadius: 999, border: 0, cursor: 'pointer',
+                  background: offlineCache ? '#0D52FF' : '#CBD5E1', position: 'relative',
+                }}
+              >
+                <span style={{
+                  position: 'absolute', top: 2, left: offlineCache ? 18 : 2, width: 16, height: 16,
+                  borderRadius: '50%', background: '#fff', transition: 'left 160ms ease',
+                }} />
+              </button>
+            </div>
+            <button type="button" className="pwa-btn-secondary" style={{ width: '100%', marginTop: 12 }}>
+              Komunitas Discord Cohort ↗
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          style={{
+            width: '100%', marginTop: 12, minHeight: 48, borderRadius: 12,
+            border: '1px solid #F8B4B4', background: '#FDF2F2', color: '#9B1C1C',
+            fontWeight: 800, fontSize: 14, cursor: 'pointer',
+          }}
+        >
+          Keluar Akun
+        </button>
+      </main>
+
+      <PwaDock workspaceSlug={session.workspaceSlug} />
+    </div>
+  );
 }

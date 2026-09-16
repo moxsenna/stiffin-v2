@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { PromotorShell } from '@/components/layout/PromotorShell';
 import { LearnerDetail } from '@/components/promotor/LearnerDetail';
 import { WhatsAppDraftSheet } from '@/components/promotor/WhatsAppDraftSheet';
 import { BridgeTeaserCard } from '@/components/promotor/BridgeTeaserCard';
 import { UpsellSheet } from '@/components/promotor/UpsellSheet';
-import { PageHeader, SectionHead, EmptyState, ErrorState, LoadingRows } from '@/components/ui';
+import { PwaLogo } from '@/components/pwa/pwa';
+import { EmptyState, ErrorState, LoadingRows } from '@/components/ui';
 import { getLearningSignalsQuery } from '@/modules/signals/queries';
 import { getContactsQuery } from '@/modules/contacts/queries';
 import { getReflectionsQuery } from '@/modules/reflections/queries';
@@ -25,10 +27,10 @@ function buildNudgeMessage(l: { name: string; programTitle: string }): string {
   return `Halo Kak ${l.name} 😊 Semangat belajarnya! Terakhir Kakak berhenti di program "${l.programTitle}". Ada yang bisa saya bantu biar lancar lagi? Materinya menarik lho, tinggal sedikit lagi ✨`;
 }
 
-function signalTagClass(level: string): string {
-  if (level === 'Minat tinggi') return 'tag tag-hot';
-  if (level === 'Minat sedang') return 'tag tag-warm';
-  return 'tag tag-cold';
+function intentPillClass(level: string): string {
+  if (level === 'Minat tinggi') return 'intent-hot';
+  if (level === 'Minat sedang') return 'intent-warm';
+  return 'intent-cold';
 }
 
 function ActivityGlyph() {
@@ -125,383 +127,382 @@ export default function PromotorHomePage() {
 
   return (
     <PromotorShell>
-     <PageHeader
-        kicker="Ralivo Class"
-        title="Beranda"
-        sub={signals ? `${signals.length} peserta perlu perhatian` : 'Memuat sinyal belajar...'}
-        action={
-          isDevelopmentEnv ? (
-            <button
-              type="button"
-              onClick={() =>setIsDevMode(!isDevMode)}
-              className="btn btn-secondary btn-sm"
-              style={{ alignSelf: 'center' }}
-            >
-             {isDevMode ? 'Sembunyikan Dev Tools' : 'Dev Tools'}
-            </button>
-         ) : undefined
-        }
-      />
+      <div className="pwa-screen pwa-screen-pad-dock" style={{ minHeight: '100dvh' }}>
+        <div className="promotor-top">
+          <div className="promotor-brandrow">
+            <PwaLogo />
+            <div style={{ minWidth: 0 }}>
+              <div className="promotor-brandname">Ralivo Class</div>
+              <div className="promotor-brandtag">Promotor workspace · ringkasan bisnis</div>
+            </div>
+          </div>
+          <h1 className="promotor-title">Beranda</h1>
+          <div className="promotor-sub">
+            {signals ? `${signals.length} peserta perlu perhatian` : 'Memuat sinyal belajar...'}
+          </div>
 
-      {summary && (
-        <section style={{ margin: '16px 18px 22px' }}>
-          <div
-            style={{
-              background: 'linear-gradient(160deg, #2563EB 0%, #1D4ED8 82%)',
-              borderRadius: 16,
-              padding: '18px 20px 16px',
-              color: '#FFFFFF',
-              boxShadow: '0 14px 30px -14px rgba(29, 78, 216, 0.55)',
-            }}
-          >
-           <div
-             style={{
-               font: '800 10.5px/1 var(--font-sans)',
-               letterSpacing: '0.09em',
-               textTransform: 'uppercase',
-               color: 'rgba(255, 255, 255, 0.75)',
-             }}
-           >
-             Estimasi omzet bulan ini
-           </div>
-           <div
-             style={{
-               font: '850 clamp(26px, 7vw, 31px)/1.2 var(--font-sans)',
-               letterSpacing: '-0.025em',
-               marginTop: 7,
-             }}
-           >
-             {formatIDR(summary.monthlyOmzet)}
-           </div>
-           <div style={{ height: 1, background: 'rgba(255, 255, 255, 0.22)', margin: '14px 0 12px' }} />
-           <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap' }}>
-             <div>
-               <div style={{ font: '600 10.5px/1.4 var(--font-sans)', color: 'rgba(255, 255, 255, 0.72)' }}>Peserta</div>
-               <div style={{ font: '800 14.5px/1.4 var(--font-sans)' }}>{summary.pesertaCount}</div>
-             </div>
-             <div>
-               <div style={{ font: '600 10.5px/1.4 var(--font-sans)', color: 'rgba(255, 255, 255, 0.72)' }}>Penyelesaian</div>
-               <div style={{ font: '800 14.5px/1.4 var(--font-sans)' }}>{summary.completionPercent}%</div>
-             </div>
-             <div>
-               <div style={{ font: '600 10.5px/1.4 var(--font-sans)', color: 'rgba(255, 255, 255, 0.72)' }}>Pertumbuhan</div>
-               <div style={{ font: '800 14.5px/1.4 var(--font-sans)' }}>
-                 {summary.growthPercent >= 0 ? '+' : ''}
-                 {summary.growthPercent}%
-               </div>
-             </div>
-           </div>
-         </div>
-       </section>
-     )}
-     {summary && summary.programAktif.length > 0 && (
-       <section style={{ marginBottom: 6 }}>
-         <SectionHead label="Program Edukasi Aktif" />
-         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 18px 4px' }}>
-           {summary.programAktif.map((p) => (
-             <div
-               key={p.id}
-               style={{
-                 display: 'flex',
-                 alignItems: 'center',
-                 gap: 13,
-                 backgroundColor: '#FFFFFF',
-                 border: '1px solid var(--color-divider, #E2E8F0)',
-                 borderRadius: 14,
-                 padding: '12px 14px',
-                 boxShadow: '0 4px 14px -6px rgba(11, 15, 25, 0.08)',
-               }}
-             >
-               <div
-                 aria-hidden="true"
-                 style={{
-                   width: 46,
-                   height: 46,
-                   flex: 'none',
-                   borderRadius: 12,
-                   background: 'linear-gradient(150deg, var(--accent-soft, #DBEAFE) 0%, #EFF6FF 100%)',
-                   display: 'flex',
-                   alignItems: 'center',
-                   justifyContent: 'center',
-                 }}
-               >
-                 <ActivityGlyph />
-               </div>
-               <div style={{ minWidth: 0 }}>
-                 <span
-                   style={{
-                     display: 'inline-flex',
-                     alignItems: 'center',
-                     gap: 4,
-                     padding: '3px 8px',
-                     borderRadius: 9999,
-                     font: '700 9.5px/1 var(--font-sans)',
-                     letterSpacing: '0.02em',
-                     backgroundColor: '#ECFDF5',
-                     color: '#047857',
-                   }}
-                 >
-                   <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#059669' }} />
-                   Aktif Berjalan
-                 </span>
-                 <div
-                   style={{
-                     font: '700 14px/1.35 var(--font-sans)',
-                     letterSpacing: '-0.01em',
-                     color: 'var(--text-main, #0B0F19)',
-                     marginTop: 5,
-                     overflow: 'hidden',
-                     textOverflow: 'ellipsis',
-                     whiteSpace: 'nowrap',
-                   }}
-                 >
-                   {p.title}
-                 </div>
-                 <div className="row-meta" style={{ marginTop: 2 }}>
-                   {formatIDR(p.priceAmount)} · {p.pesertaCount} Peserta Terdaftar
-                 </div>
-               </div>
-             </div>
-           ))}
-         </div>
-       </section>
-     )}
-
-     {isDevelopmentEnv && isDevMode && (
-        <div className="section-block">
-         <div className="kicker kicker-accent">Mode QA / Simulator Integrasi</div>
-         <p className="muted-note" style={{ marginTop: 6 }}>
-           Status Koneksi Ralivo Flow: <strong>Sistem Berjalan Normal (AVAILABLE)</strong>
-         </p>
-       </div>
-     )}
-
-     <BridgeTeaserCard />
-
-      {loadError && (
-        <ErrorState title="Gagal memuat sinyal belajar" detail={loadError} onRetry={() =>loadData()} />
-     )}
-
-      {!signals && !loadError && (
-        <>
-         <SectionHead label="Perlu perhatian" />
-         <LoadingRows rows={3} />
-       </>
-     )}
-
-      {signals && signals.length >0 && (
-        <>
-         <SectionHead label="Perlu perhatian" count={`${signals.length}`} />
-         {signals.map(sig =>{
-            const contact = contactMap.get(sig.contactId);
-            if (!contact) return null;
-
-            return (
-              <div key={sig.id} style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
-               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline' }}>
-                 <span style={{ font: '700 16px/1.2 var(--font-sans)', letterSpacing: '-0.01em' }}>{contact.name}</span>
-                 <span className={signalTagClass(sig.signalLevel)} style={{ flex: 'none' }}>{sig.signalLevel}</span>
-               </div>
-               <div style={{ marginTop: 8, font: '600 12px/1.35 var(--font-sans)', color: 'var(--accent-dark)' }}>
-                 {sig.primaryReason}
+          {summary && (
+            <div className="pwa-card pwa-card-pad" style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', color: 'var(--pwa-muted)' }}>
+                Estimasi omzet bulan ini
+              </div>
+              <div className="tabular-nums" style={{ fontSize: 26, fontWeight: 850, letterSpacing: '-0.025em', marginTop: 6 }}>
+                {formatIDR(summary.monthlyOmzet)}
+              </div>
+              <div className="promo-stats" style={{ marginTop: 10 }}>
+                <div className="promo-stat">
+                  <div className="promo-stat-num tabular-nums">{summary.pesertaCount}</div>
+                  <div className="promo-stat-label">Peserta</div>
                 </div>
-                <div className="row-meta">
-                  Skor minat: {sig.intentScore}/100
+                <div className="promo-stat">
+                  <div className="promo-stat-num tabular-nums">{summary.completionPercent}%</div>
+                  <div className="promo-stat-label">Penyelesaian</div>
                 </div>
-                <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <button type="button" className="btn btn-primary btn-sm" onClick={() => setSelectedContactId(sig.contactId)}>
-                    Lihat peserta
-                  </button>
-                  {sig.recommendedActionType === 'WHATSAPP_REPLY' && (
+                <div className="promo-stat">
+                  <div className="promo-stat-num tabular-nums" style={{ color: 'var(--pwa-primary)' }}>
+                    {summary.growthPercent >= 0 ? '+' : ''}{summary.growthPercent}%
+                  </div>
+                  <div className="promo-stat-label">Pertumbuhan</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="promotor-wrap">
+          {isDevelopmentEnv && (
+            <div style={{ marginTop: 4 }}>
+              <button type="button" className="pwa-btn-secondary" onClick={() =>setIsDevMode(!isDevMode)}>
+                {isDevMode ? 'Sembunyikan Dev Tools' : 'Dev Tools'}
+              </button>
+            </div>
+          )}
+
+          {isDevelopmentEnv && isDevMode && (
+            <div className="pwa-nested" style={{ marginTop: 10, padding: '12px 14px' }}>
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--pwa-primary)' }}>
+                Mode QA / Simulator Integrasi
+              </div>
+              <p className="muted-note" style={{ marginTop: 6 }}>
+                Status Koneksi Ralivo Flow: <strong>Sistem Berjalan Normal (AVAILABLE)</strong>
+              </p>
+            </div>
+          )}
+
+          {summary && summary.programAktif.length > 0 && (
+            <>
+              <div className="pwa-section-head">
+                <h2 className="pwa-section-title">Program edukasi aktif</h2>
+                <Link href="/app/programs" className="pwa-section-link">Kelola →</Link>
+              </div>
+              {summary.programAktif.map((p) => (
+                <div key={p.id} className="pwa-card pwa-card-pad" style={{ marginTop: 10 }}>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        width: 46,
+                        height: 46,
+                        flex: 'none',
+                        borderRadius: 12,
+                        background: 'var(--pwa-canvas)',
+                        border: '1px solid var(--pwa-border)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <ActivityGlyph />
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <span className="pwa-pill-green">Aktif berjalan</span>
+                      <div className="learner-name" style={{ marginTop: 5 }}>
+                        {p.title}
+                      </div>
+                      <div className="learner-meta">
+                        {formatIDR(p.priceAmount)} · {p.pesertaCount} peserta terdaftar
+                      </div>
+                    </div>
+                    <Link
+                      href={`/app/programs/${p.id}`}
+                      className="pwa-section-link"
+                      style={{ flex: 'none' }}
+                      aria-label={`Kelola ${p.title}`}
+                    >
+                      Kelola →
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+
+          <BridgeTeaserCard />
+
+          {loadError && (
+            <div style={{ marginTop: 12 }}>
+              <ErrorState title="Gagal memuat sinyal belajar" detail={loadError} onRetry={() =>loadData()} />
+            </div>
+          )}
+
+          {!signals && !loadError && (
+            <>
+              <div className="pwa-section-head">
+                <h2 className="pwa-section-title">Perlu perhatian</h2>
+              </div>
+              <LoadingRows rows={3} />
+            </>
+          )}
+
+          {signals && signals.length > 0 && (
+            <>
+              <div className="pwa-section-head">
+                <h2 className="pwa-section-title">Perlu perhatian</h2>
+                <span className="pwa-muted tabular-nums" style={{ fontWeight: 800, fontSize: 12 }}>
+                  {signals.length}
+                </span>
+              </div>
+              {signals.map(sig =>{
+                const contact = contactMap.get(sig.contactId);
+                if (!contact) return null;
+
+                return (
+                  <div key={sig.id} className="pwa-card pwa-card-pad" style={{ marginTop: 10 }}>
+                    <div className="learner-namerow">
+                      <span className="learner-name">{contact.name}</span>
+                      <span className={intentPillClass(sig.signalLevel)}>{sig.signalLevel}</span>
+                    </div>
+                    <div style={{ marginTop: 6, fontSize: 12, fontWeight: 700, lineHeight: 1.4, color: 'var(--pwa-primary)' }}>
+                      {sig.primaryReason}
+                    </div>
+                    <div className="learner-meta">
+                      Skor minat: {sig.intentScore}/100
+                    </div>
+                    <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <button type="button" className="pwa-btn-primary" onClick={() => setSelectedContactId(sig.contactId)}>
+                        Lihat peserta
+                      </button>
+                      {sig.recommendedActionType === 'WHATSAPP_REPLY' && (
+                        <button
+                          type="button"
+                          className="pwa-btn-soft"
+                          onClick={() =>{
+                            const learnerName = contact.name || 'Peserta';
+                            const lessonTitle = (sig.metadata?.lessonTitle as string | undefined) || 'materi';
+                            const draft = `Halo Kak ${learnerName}, terima kasih refleksinya di ${lessonTitle}! Sangat mendalam. Boleh saya bantu jalankan penerapannya di rumah? 😊`;
+                            setWhatsAppDraftMessage(draft);
+                            setWhatsAppDraftContact(contact);
+                          }}
+                        >
+                          Kirim WhatsApp
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
+
+          {signals && signals.length === 0 && !loadError && (
+            <div style={{ marginTop: 12 }} className="pwa-card pwa-card-pad">
+              <EmptyState
+                title="Tidak ada yang perlu perhatian"
+                explanation="Sinyal belajar dari aktivitas peserta akan muncul di sini saat ada yang bisa ditindaklanjuti."
+              />
+            </div>
+          )}
+
+          {(atRiskLearners.length > 0) && (
+            <>
+              <div className="pwa-section-head">
+                <h2 className="pwa-section-title">Peserta macet</h2>
+                <span className="pwa-muted tabular-nums" style={{ fontWeight: 800, fontSize: 12 }}>
+                  {atRiskLearners.length}
+                </span>
+              </div>
+              <div className="pwa-muted" style={{ fontSize: 11.5, margin: '-6px 0 2px' }}>
+                Progres &lt; 50% &amp; tidak aktif — momen emas disapa via WA
+              </div>
+              {atRiskLearners.map((l: any) => (
+                <div key={l.contactId} className="pwa-card pwa-card-pad" style={{ marginTop: 10 }}>
+                  <div className="learner-namerow">
+                    <span className="learner-name">{l.name}</span>
+                  </div>
+                  <div className="learner-meta">
+                    {l.programTitle} · {l.progressPercent}% · macet {l.daysInactive ?? 'beberapa'} hari
+                  </div>
+                  <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <button
                       type="button"
-                      className="btn btn-accent btn-sm"
-                      onClick={() =>{
-                        const learnerName = contact.name || 'Peserta';
-                        const lessonTitle = (sig.metadata?.lessonTitle as string | undefined) || 'materi';
-                        const draft = `Halo Kak ${learnerName}, terima kasih refleksinya di ${lessonTitle}! Sangat mendalam. Boleh saya bantu jalankan penerapannya di rumah? 😊`;
-                        setWhatsAppDraftMessage(draft);
-                        setWhatsAppDraftContact(contact);
-                      }}
+                      className="pwa-btn-primary"
+                      onClick={() => openWaSheet({ contactName: l.name, phoneE164: l.phoneE164 ?? l.phone, initialDraft: buildNudgeMessage(l) })}
                     >
-                      Kirim WhatsApp
+                      Kirim WA
                     </button>
-                  )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        getPlatformApiClient().recordBridgeMetric('upgrade_started', { product: 'FLOW', surface: 'macet_chip' }).catch(() => null);
+                        setFlowUpsellOpen(true);
+                      }}
+                      aria-label="Jadwalkan otomatis via Flow"
+                      title="Jadwalkan otomatis via Flow"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '0 10px', minHeight: 32, borderRadius: 8, border: '1px dashed #93C5FD', background: '#EFF6FF', color: '#1D4ED8', font: '700 11px/1 var(--font-sans)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <rect x="5" y="11" width="14" height="9" rx="2" stroke="#1D4ED8" strokeWidth="1.8" />
+                        <path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="#1D4ED8" strokeWidth="1.8" strokeLinecap="round" />
+                      </svg>
+                      Otomatis via Flow
+                    </button>
+                  </div>
                 </div>
+              ))}
+            </>
+          )}
+
+          {summary && summary.aktivitasTerbaru.length > 0 && (
+            <>
+              <div className="pwa-section-head">
+                <h2 className="pwa-section-title">Aktivitas peserta terbaru</h2>
               </div>
-            );
-          })}
-        </>
-      )}
-
-      {signals && signals.length === 0 && !loadError && (
-        <EmptyState
-          title="Tidak ada yang perlu perhatian"
-          explanation="Sinyal belajar dari aktivitas peserta akan muncul di sini saat ada yang bisa ditindaklanjuti."
-        />
-      )}
-
-      {(atRiskLearners.length > 0) && (
-        <section style={{ marginTop: 16 }}>
-          <SectionHead title="Peserta Macet" subtitle={`Progres < 50% & tidak aktif — momen emas disapa via WA`} />
-          <div style={{ padding: '4px 18px 0' }}>
-            {atRiskLearners.map((l: any) => (
-              <div key={l.contactId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: 12, border: '1px solid var(--border)', borderRadius: 12, marginTop: 8 }}>
-                <div>
-                  <strong style={{ font: '600 14px/1.3 var(--font-sans)' }}>{l.name}</strong>
-                  <div className="kicker kicker-muted">{l.programTitle} · {l.progressPercent}% · macet {l.daysInactive ?? 'beberapa'} hari</div>
-                </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flex: 'none' }}>
-                  <button type="button" className="btn btn-accent btn-sm"
-                    onClick={() => openWaSheet({ contactName: l.name, phoneE164: l.phoneE164 ?? l.phone, initialDraft: buildNudgeMessage(l) })}>
-                    Kirim WA
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      getPlatformApiClient().recordBridgeMetric('upgrade_started', { product: 'FLOW', surface: 'macet_chip' }).catch(() => null);
-                      setFlowUpsellOpen(true);
-                    }}
-                    aria-label="Jadwalkan otomatis via Flow"
-                    title="Jadwalkan otomatis via Flow"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 10px', borderRadius: 8, border: '1px dashed #93C5FD', background: '#EFF6FF', color: '#1D4ED8', font: '700 11px/1 var(--font-sans)', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <rect x="5" y="11" width="14" height="9" rx="2" stroke="#1D4ED8" strokeWidth="1.8" />
-                      <path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="#1D4ED8" strokeWidth="1.8" strokeLinecap="round" />
-                    </svg>
-                    Otomatis via Flow
-                  </button>
-                </div>
+              <div className="pwa-card" style={{ marginTop: 10, padding: '4px 14px' }}>
+                {summary.aktivitasTerbaru.map((act, idx, arr) => {
+                  const tone = ACTIVITY_TONE[act.kind] ?? ACTIVITY_TONE.reflection;
+                  const initial = (act.actorName ?? act.summary).trim().charAt(0).toUpperCase();
+                  return (
+                    <div
+                      key={act.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: '11px 0',
+                        borderBottom: idx < arr.length - 1 ? '1px solid var(--pwa-border)' : '0',
+                      }}
+                    >
+                      <div
+                        aria-hidden="true"
+                        style={{
+                          width: 34,
+                          height: 34,
+                          flex: 'none',
+                          borderRadius: '50%',
+                          backgroundColor: tone.avatarBg,
+                          color: tone.avatarColor,
+                          font: '800 13px/34px var(--font-sans)',
+                          textAlign: 'center',
+                        }}
+                      >
+                        {initial}
+                      </div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 700,
+                            lineHeight: 1.35,
+                            color: 'var(--pwa-text)',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {act.actorName ?? 'Peserta'}
+                        </div>
+                        <div
+                          className="learner-meta"
+                          style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                        >
+                          {act.detail ?? act.summary}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5, flex: 'none' }}>
+                        <span
+                          style={{
+                            padding: '4px 9px',
+                            borderRadius: 9999,
+                            fontSize: 9.5,
+                            fontWeight: 700,
+                            letterSpacing: '0.02em',
+                            backgroundColor: tone.pillBg,
+                            color: tone.pillColor,
+                          }}
+                        >
+                          {tone.label}
+                        </span>
+                        <span
+                          className="tabular-nums"
+                          style={{ fontSize: 10, fontWeight: 500, color: 'var(--pwa-subtle)' }}
+                        >
+                          {formatTimeAgo(act.occurredAt)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        </section>
-      )}
+            </>
+          )}
 
-      {summary && summary.aktivitasTerbaru.length > 0 && (
-        <>
-          <SectionHead label="Aktivitas Peserta Terbaru" />
-          <div style={{ display: 'flex', flexDirection: 'column', padding: '4px 18px 8px' }}>
-            {summary.aktivitasTerbaru.map((act) => {
-              const tone = ACTIVITY_TONE[act.kind] ?? ACTIVITY_TONE.reflection;
-              const initial = (act.actorName ?? act.summary).trim().charAt(0).toUpperCase();
-              return (
-                <div
-                  key={act.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '11px 2px',
-                    borderBottom: '1px solid var(--line, #E2E8F0)',
-                  }}
-                >
+          {!summary && activityItems.length > 0 && (
+            <>
+              <div className="pwa-section-head">
+                <h2 className="pwa-section-title">Aktivitas pembelajaran terbaru</h2>
+              </div>
+              <div className="pwa-card" style={{ marginTop: 10, padding: '4px 14px' }}>
+                {activityItems.slice(0, 10).map((act, idx, arr) => (
                   <div
-                    aria-hidden="true"
+                    key={act.id}
                     style={{
-                      width: 34,
-                      height: 34,
-                      flex: 'none',
-                      borderRadius: '50%',
-                      backgroundColor: tone.avatarBg,
-                      color: tone.avatarColor,
-                      font: '800 13px/34px var(--font-sans)',
-                      textAlign: 'center',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '11px 0',
+                      borderBottom: idx < Math.min(arr.length, 10) - 1 ? '1px solid var(--pwa-border)' : '0',
                     }}
                   >
-                    {initial}
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div
-                      style={{
-                        font: '700 13px/1.35 var(--font-sans)',
-                        color: 'var(--text-main, #0B0F19)',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {act.actorName ?? 'Peserta'}
+                    <div style={{ minWidth: 0, flex: 1, fontSize: 13, fontWeight: 600, lineHeight: 1.4 }}>
+                      {act.summary}
                     </div>
-                    <div
-                      className="row-meta"
-                      style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                    >
-                      {act.detail ?? act.summary}
+                    <div className="tabular-nums" style={{ fontSize: 10, fontWeight: 500, color: 'var(--pwa-subtle)', flex: 'none' }}>
+                      {act.timeAgo}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5, flex: 'none' }}>
-                    <span
-                      style={{
-                        padding: '4px 9px',
-                        borderRadius: 9999,
-                        font: '700 9.5px/1 var(--font-sans)',
-                        letterSpacing: '0.02em',
-                        backgroundColor: tone.pillBg,
-                        color: tone.pillColor,
-                      }}
-                    >
-                      {tone.label}
-                    </span>
-                    <span
-                      className="tabular-nums"
-                      style={{ font: '500 10px/1.4 var(--font-sans)', color: 'var(--muted-light, #94A3B8)' }}
-                    >
-                      {formatTimeAgo(act.occurredAt)}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
-
-      {!summary && activityItems.length > 0 && (
-        <>
-          <SectionHead label="Aktivitas pembelajaran terbaru" />
-          <div style={{ padding: '10px 18px' }}>
-            {activityItems.slice(0, 10).map((act) => (
-              <div key={act.id} className="timeline-row">
-                <div className="timeline-body">
-                  <div className="timeline-title">{act.summary}</div>
-                </div>
-                <div style={{ marginLeft: 'auto', font: '500 10px/1.4 var(--font-sans)', color: 'var(--muted-light)', flex: 'none' }} className="tabular-nums">
-                  {act.timeAgo}
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </>
-      )}
-      <div style={{ height: 24 }} />
+            </>
+          )}
+          <div style={{ height: 12 }} />
+        </div>
 
-      {selectedContact && (
-        <LearnerDetail
-          contact={selectedContact}
-          onClose={() =>setSelectedContactId(null)}
-          onOpenWhatsAppDraft={(c, msg) =>{
-            setSelectedContactId(null);
-            setWhatsAppDraftMessage(msg);
-            setWhatsAppDraftContact(c);
-          }}
-        />
-      )}
+        {selectedContact && (
+          <LearnerDetail
+            contact={selectedContact}
+            onClose={() =>setSelectedContactId(null)}
+            onOpenWhatsAppDraft={(c, msg) =>{
+              setSelectedContactId(null);
+              setWhatsAppDraftMessage(msg);
+              setWhatsAppDraftContact(c);
+            }}
+          />
+        )}
 
-      {whatsAppDraftContact && (
-        <WhatsAppDraftSheet
-          key={whatsAppDraftContact.id + (whatsAppDraftMessage ?? '')}
-          contact={whatsAppDraftContact}
-          initialMessage={whatsAppDraftMessage}
-          onClose={() =>{
-            setWhatsAppDraftContact(null);
-            setWhatsAppDraftMessage(undefined);
-          }}
-        />
-      )}
+        {whatsAppDraftContact && (
+          <WhatsAppDraftSheet
+            key={whatsAppDraftContact.id + (whatsAppDraftMessage ?? '')}
+            contact={whatsAppDraftContact}
+            initialMessage={whatsAppDraftMessage}
+            onClose={() =>{
+              setWhatsAppDraftContact(null);
+              setWhatsAppDraftMessage(undefined);
+            }}
+          />
+        )}
 
-      {flowUpsellOpen && <UpsellSheet product="FLOW" onClose={() => setFlowUpsellOpen(false)} />}
+        {flowUpsellOpen && <UpsellSheet product="FLOW" onClose={() => setFlowUpsellOpen(false)} />}
+      </div>
     </PromotorShell>
  );
 }

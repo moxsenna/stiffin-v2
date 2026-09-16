@@ -1240,3 +1240,1113 @@ svg {
   align-items: center;
   justify-content: center;
 }
+
+/* ============================================================
+   RALIVO PWA BENTO SYSTEM — mobile storefront & learner OS
+   Canvas #F8FAFC · card #FFFFFF · border #E2E8F0
+   Radius 16px bento / 10-12px nested / 9999px pill & dock.
+   Touch target min 44px. No horizontal overflow.
+   ============================================================ */
+
+.pwa-screen {
+  background: var(--pwa-canvas);
+  color: var(--pwa-text);
+  min-height: 100dvh;
+  overflow-x: clip;
+}
+
+.pwa-wrap {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px 20px;
+  overflow-x: clip;
+}
+
+.pwa-wrap-wide {
+  max-width: 760px;
+}
+
+/* PWA app header */
+.pwa-header {
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  background: rgba(248, 250, 252, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--pwa-border);
+}
+
+.pwa-header-inner {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 6px 16px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pwa-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pwa-logo {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--pwa-primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1;
+  box-shadow: var(--pwa-shadow-cta);
+}
+
+.pwa-brand-name {
+  font-weight: 800;
+  font-size: 17px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.pwa-brand-tag {
+  font-size: 10px;
+  color: var(--pwa-subtle);
+  margin-top: 1px;
+  white-space: nowrap;
+}
+
+.pwa-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.pwa-install-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: var(--pwa-radius-pill);
+  background: var(--pwa-primary-soft);
+  border: 1px solid var(--pwa-sky);
+  color: var(--pwa-primary);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.pwa-icon-btn {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--pwa-card);
+  border: 1px solid var(--pwa-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pwa-text);
+  cursor: pointer;
+}
+
+/* Search + chips */
+.pwa-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--pwa-card);
+  border: 1px solid var(--pwa-border);
+  border-radius: 14px;
+  padding: 0 8px 0 14px;
+  min-height: 46px;
+}
+
+.pwa-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 13px;
+  min-height: 44px;
+  color: var(--pwa-text);
+}
+
+.pwa-search input::placeholder {
+  color: var(--pwa-subtle);
+}
+
+.pwa-filter-btn {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 10px;
+  border: 0;
+  background: #f1f5f9;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--pwa-text);
+}
+
+.pwa-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 16px 2px 0;
+  margin-right: -16px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pwa-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.pwa-chip {
+  flex: none;
+  min-height: 34px;
+  padding: 0 13px;
+  border-radius: var(--pwa-radius-pill);
+  border: 1px solid var(--pwa-border);
+  background: var(--pwa-card);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--pwa-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pwa-chip.is-active {
+  background: var(--pwa-primary);
+  border-color: var(--pwa-primary);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: var(--pwa-shadow-cta);
+}
+
+/* Bento cards */
+.pwa-card {
+  background: var(--pwa-card);
+  border: 1px solid var(--pwa-border);
+  border-radius: var(--pwa-radius-card);
+  box-shadow: var(--pwa-shadow-card);
+  overflow: hidden;
+}
+
+.pwa-card-pad {
+  padding: 16px;
+}
+
+.pwa-nested {
+  background: var(--pwa-canvas);
+  border: 1px solid var(--pwa-border);
+  border-radius: var(--pwa-radius-nested);
+}
+
+.pwa-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 20px 0 10px;
+}
+
+.pwa-section-title {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.pwa-section-link {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--pwa-primary);
+  white-space: nowrap;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pwa-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 22px;
+  padding: 3px 9px;
+  border-radius: var(--pwa-radius-pill);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.pwa-pill-live {
+  background: var(--pwa-danger-bg);
+  color: var(--pwa-danger);
+  border: 1px solid #fecdd3;
+}
+
+.pwa-pill-blue {
+  background: var(--pwa-primary-soft);
+  color: var(--pwa-primary);
+  border: 1px solid #bfdbfe;
+}
+
+.pwa-pill-cyan {
+  background: #ecfeff;
+  color: #0e7490;
+  border: 1px solid #a5f3fc;
+}
+
+.pwa-pill-green {
+  background: var(--pwa-success-bg);
+  color: var(--pwa-success);
+  border: 1px solid #a7f3d0;
+}
+
+.pwa-pill-amber {
+  background: var(--pwa-warning-bg);
+  color: var(--pwa-warning);
+  border: 1px solid #fde68a;
+}
+
+.pwa-pill-dark {
+  background: var(--pwa-text);
+  color: #fff;
+  border: 1px solid var(--pwa-text);
+}
+
+.pwa-pill-disc {
+  background: var(--pwa-danger);
+  color: #fff;
+  border: 1px solid var(--pwa-danger);
+}
+
+.pwa-dot-live {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pwa-danger);
+  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.18);
+  flex: none;
+}
+
+.pwa-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--pwa-radius-nested);
+  background: linear-gradient(135deg, var(--pwa-primary) 0%, var(--pwa-primary-deep) 100%);
+  color: #fff;
+  font-size: 14.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--pwa-shadow-cta);
+  text-decoration: none;
+  text-align: center;
+}
+
+.pwa-cta:active {
+  transform: translateY(1px);
+}
+
+.pwa-cta:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pwa-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--pwa-radius-nested);
+  border: 1px solid var(--pwa-border);
+  background: var(--pwa-card);
+  color: var(--pwa-text);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+}
+
+/* Small blue action used inside bento cards (signals, programs, at-risk). */
+.pwa-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--pwa-radius-sm);
+  background: var(--pwa-primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.pwa-btn-soft {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--pwa-sky);
+  border-radius: var(--pwa-radius-sm);
+  background: var(--pwa-primary-soft);
+  color: var(--pwa-primary);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.pwa-price-now {
+  font-size: 19px;
+  font-weight: 850;
+  letter-spacing: -0.01em;
+}
+
+.pwa-price-was {
+  font-size: 12.5px;
+  color: var(--pwa-subtle);
+}
+
+.pwa-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+
+.pwa-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--pwa-primary);
+}
+
+/* Featured gradient hero card */
+.pwa-featured {
+  position: relative;
+  border: 0;
+  border-radius: var(--pwa-radius-card);
+  background: linear-gradient(140deg, #0b1f5c 0%, #0d52ff 55%, #06b6d4 130%);
+  color: #fff;
+  overflow: hidden;
+  box-shadow: 0 10px 26px -8px rgba(13, 82, 255, 0.55);
+}
+
+.pwa-featured::after {
+  content: '';
+  position: absolute;
+  right: -70px;
+  top: -70px;
+  width: 210px;
+  height: 210px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.28) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* Mentor rail */
+.pwa-mentor-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 132px;
+  gap: 10px;
+  overflow-x: auto;
+  margin-right: -16px;
+  padding: 2px 16px 6px 0;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pwa-mentor-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.pwa-avatar {
+  border-radius: 50%;
+  background: linear-gradient(135deg, #dbeafe, #cffafe);
+  color: var(--pwa-primary-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  flex: none;
+}
+
+.pwa-avatar-ring {
+  border: 2px solid var(--pwa-sky);
+  padding: 2px;
+}
+
+/* Offline feature card — Pencil spec: #EFF6FF bg, sky border, blue action. */
+.pwa-offline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--pwa-radius-card);
+  background: var(--pwa-primary-soft);
+  border: 1px solid var(--pwa-sky);
+  color: var(--pwa-text);
+}
+
+/* Sticky bottom enrollment bar */
+.pwa-sticky-cta {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  z-index: 940;
+  padding: 0 12px;
+  pointer-events: none;
+}
+
+.pwa-sticky-cta-inner {
+  pointer-events: auto;
+  max-width: 456px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--pwa-border);
+  border-radius: var(--pwa-radius-card);
+  box-shadow: 0 12px 32px -8px rgba(11, 15, 25, 0.28);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Floating tab bar — Pencil spec: white pill, hairline border, h56.
+   Active tab gets #EFF6FF pill + blue label; inactive slate. */
+.pwa-dock-wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  z-index: 1000;
+  padding: 0 16px;
+  pointer-events: none;
+}
+
+.pwa-dock {
+  pointer-events: auto;
+  max-width: 448px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 0;
+  min-height: 56px;
+  padding: 6px 10px;
+  border-radius: var(--pwa-radius-pill);
+  background: var(--pwa-card);
+  border: 1px solid var(--pwa-border);
+  box-shadow: 0 8px 24px -10px rgba(11, 15, 25, 0.18);
+}
+
+.pwa-dock a {
+  flex: none;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 14px;
+  border-radius: var(--pwa-radius-pill);
+  background: transparent;
+  color: var(--pwa-subtle);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+.pwa-dock a.is-active {
+  background: var(--pwa-primary-soft);
+  color: var(--pwa-primary);
+  font-weight: 800;
+}
+
+.pwa-screen-pad-dock {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+}
+
+.pwa-screen-pad-dock-cta {
+  padding-bottom: calc(168px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 900px) {
+  .pwa-sticky-cta {
+    bottom: 20px;
+  }
+}
+
+/* Accordion */
+.pwa-acc {
+  border: 1px solid var(--pwa-border);
+  border-radius: var(--pwa-radius-nested);
+  background: var(--pwa-card);
+  overflow: hidden;
+}
+
+.pwa-acc + .pwa-acc {
+  margin-top: 8px;
+}
+
+.pwa-acc-head {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+/* Video player — Pencil spec: dark navy, radius 20. */
+.pwa-player {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #020617;
+  border: 1px solid #1e293b;
+}
+
+.pwa-player-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(2, 6, 23, 0.25) 0%, transparent 30%, transparent 62%, rgba(2, 6, 23, 0.72) 100%);
+  pointer-events: none;
+}
+
+/* Tabs — Pencil spec: white bordered container radius 14;
+   active tab #EFF6FF with blue border, radius 10. */
+.pwa-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--pwa-card);
+  border: 1px solid var(--pwa-border);
+  border-radius: 14px;
+}
+
+.pwa-tabs button {
+  flex: 1;
+  min-height: 40px;
+  padding: 8px 6px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--pwa-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pwa-tabs button.is-active {
+  background: var(--pwa-primary-soft);
+  border-color: var(--pwa-primary);
+  color: var(--pwa-primary);
+  font-weight: 700;
+}
+
+/* Forms */
+.pwa-input {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--pwa-border);
+  border-radius: var(--pwa-radius-nested);
+  background: var(--pwa-card);
+  padding: 0 14px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  color: var(--pwa-text);
+}
+
+.pwa-input:focus {
+  border-color: var(--pwa-primary);
+  box-shadow: 0 0 0 3px rgba(13, 82, 255, 0.14);
+}
+
+.pwa-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--pwa-muted);
+  margin-bottom: 6px;
+}
+
+/* Tables / invoice rows */
+.pwa-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 0;
+  font-size: 13px;
+}
+
+.pwa-row + .pwa-row {
+  border-top: 1px dashed var(--pwa-border);
+}
+
+.pwa-kicker {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pwa-primary);
+}
+
+.pwa-muted {
+  color: var(--pwa-muted);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+img {
+  max-width: 100%;
+}
+
+/* ============================================================
+   PROMOTOR APP BENTO — learners & follow-up
+   Same language as the PWA bento above: canvas #F8FAFC,
+   card #FFFFFF, hairline #E2E8F0, radius 16, pills 9999.
+   ============================================================ */
+
+.promotor-top {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 18px 16px 2px;
+}
+
+.promotor-brandrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.promotor-brandname {
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.promotor-brandtag {
+  font-size: 10px;
+  color: var(--pwa-subtle);
+  margin-top: 1px;
+  white-space: nowrap;
+}
+
+.promotor-title {
+  margin: 12px 0 0;
+  font-size: 24px;
+  line-height: 1.1;
+  font-weight: 850;
+  letter-spacing: -0.025em;
+}
+
+.promotor-sub {
+  margin-top: 5px;
+  font-size: 12.5px;
+  color: var(--pwa-muted);
+}
+
+.promotor-wrap {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 12px 16px 20px;
+  overflow-x: clip;
+}
+
+@media (min-width: 900px) {
+  .promotor-top,
+  .promotor-wrap {
+    max-width: 640px;
+  }
+}
+
+/* Summary strip: 3 mini bento cells */
+.promo-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.promo-stat {
+  background: var(--pwa-canvas);
+  border: 1px solid var(--pwa-border);
+  border-radius: var(--pwa-radius-nested);
+  padding: 10px 6px;
+  text-align: center;
+  min-width: 0;
+}
+
+.promo-stat-num {
+  font-size: 20px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.promo-stat-label {
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--pwa-muted);
+  line-height: 1.3;
+}
+
+/* Learner bento card */
+.learner-card {
+  margin-top: 10px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.learner-card.is-open {
+  border-color: #bfdbfe;
+  box-shadow: 0 8px 22px -8px rgba(13, 82, 255, 0.28);
+}
+
+.learner-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  width: 100%;
+  padding: 14px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  min-height: 44px;
+}
+
+.learner-head:focus-visible {
+  outline: 2px solid var(--pwa-primary);
+  outline-offset: -2px;
+  border-radius: var(--pwa-radius-card);
+}
+
+.avatar-initial {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #dbeafe, #cffafe);
+  color: var(--pwa-primary-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 17px;
+}
+
+.learner-main {
+  flex: 1;
+  min-width: 0;
+  display: block;
+}
+
+.learner-namerow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.learner-name {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.learner-meta {
+  display: block;
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--pwa-muted);
+}
+
+.learner-reason {
+  display: block;
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--pwa-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.learner-progress {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.learner-progress .pwa-progress {
+  flex: 1;
+}
+
+.learner-pct {
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.learner-chevron {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin-top: 2px;
+  border-radius: 50%;
+  background: var(--pwa-canvas);
+  border: 1px solid var(--pwa-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pwa-muted);
+  transition: transform 200ms ease, background-color 200ms ease;
+}
+
+.is-open .learner-chevron {
+  transform: rotate(180deg);
+  background: var(--pwa-primary-soft);
+  color: var(--pwa-primary);
+  border-color: #bfdbfe;
+}
+
+.learner-drawer {
+  border-top: 1px dashed var(--pwa-border);
+  margin: 0 14px;
+  padding: 14px 0;
+}
+
+/* Intent pills — hot solid blue, warm amber soft, cold slate soft */
+.intent-hot,
+.intent-warm,
+.intent-cold {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  min-height: 24px;
+  padding: 3px 10px;
+  border-radius: var(--pwa-radius-pill);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.intent-hot {
+  background: var(--pwa-primary);
+  border: 1px solid var(--pwa-primary-ink);
+  color: #fff;
+}
+
+.intent-warm {
+  background: var(--pwa-warning-bg);
+  border: 1px solid #fde68a;
+  color: var(--pwa-warning);
+}
+
+.intent-cold {
+  background: #f1f5f9;
+  border: 1px solid var(--pwa-border);
+  color: var(--pwa-muted);
+}
+
+/* Detail sections inside the drawer */
+.detail-hero {
+  background: var(--pwa-canvas);
+  border: 1px solid var(--pwa-border);
+  border-radius: var(--pwa-radius-nested);
+  padding: 14px;
+}
+
+.detail-score {
+  font-size: 40px;
+  font-weight: 850;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-quote {
+  margin-top: 10px;
+  background: var(--pwa-canvas);
+  border: 1px solid var(--pwa-border);
+  border-radius: var(--pwa-radius-nested);
+  padding: 12px 14px 12px 16px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  box-shadow: inset 3px 0 0 var(--pwa-primary);
+}
+
+/* Sheet + form polish to match bento */
+.sheet {
+  border: 1px solid var(--pwa-border);
+  border-bottom: 0;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -12px 40px rgba(11, 15, 25, 0.18);
+}
+
+textarea.pwa-input {
+  padding: 12px 14px;
+  min-height: 120px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.check-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--pwa-canvas);
+  border: 1px solid var(--pwa-border);
+  border-radius: var(--pwa-radius-nested);
+  cursor: pointer;
+  min-height: 48px;
+}
+
+.check-row + .check-row {
+  margin-top: 8px;
+}
+
+.check-row input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  accent-color: var(--pwa-primary);
+}
+
+/* Promotor bottom nav → floating white pill dock (same as PWA dock) */
+.bottom-nav {
+  left: 12px;
+  right: 12px;
+  max-width: 448px;
+  margin: 0 auto;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  background: var(--pwa-card);
+  border: 1px solid var(--pwa-border);
+  border-radius: var(--pwa-radius-pill);
+  box-shadow: 0 8px 24px -10px rgba(11, 15, 25, 0.18);
+  padding: 6px 10px;
+}
+
+.bottom-nav a,
+.bottom-nav button {
+  border: 0;
+  margin-top: 0;
+  min-height: 44px;
+  min-width: 44px;
+  border-radius: var(--pwa-radius-pill);
+  color: var(--pwa-subtle);
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  padding: 6px 14px;
+  gap: 3px;
+}
+
+.bottom-nav a:hover,
+.bottom-nav button:hover {
+  color: var(--pwa-text);
+}
+
+.bottom-nav a.is-active,
+.bottom-nav button.is-active {
+  border-top-color: transparent;
+  background: var(--pwa-primary-soft);
+  color: var(--pwa-primary);
+  font-weight: 800;
+}
+
+/* Desktop rail softened to hairline + rounded active */
+@media (min-width: 900px) {
+  .desktop-nav {
+    border-right: 1px solid var(--line);
+  }
+
+  .desktop-nav-brand,
+  .desktop-nav-group {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .desktop-nav-group {
+    gap: 4px;
+  }
+
+  .desktop-nav-link {
+    border-radius: 12px;
+  }
+
+  .desktop-nav-link.is-active {
+    background: var(--accent);
+  }
+
+  .desktop-nav-footer {
+    border-top: 1px solid var(--line);
+  }
+}

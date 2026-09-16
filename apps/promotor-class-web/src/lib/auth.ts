@@ -89,8 +89,8 @@ export async function signIn(email: string, password: string): Promise<{ success
       return { success: false, error: err?.message || 'Email atau kata sandi tidak valid' };
     }
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err?.message || 'Gagal terhubung ke server autentikasi' };
+  } catch {
+    return { success: false, error: 'Tidak dapat terhubung ke server autentikasi. Pastikan API lokal berjalan lalu coba lagi.' };
   }
 }
 

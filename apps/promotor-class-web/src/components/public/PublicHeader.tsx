@@ -2,146 +2,60 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { PwaLogo } from '@/components/pwa/pwa';
 
 interface PublicHeaderProps {
   workspaceSlug: string;
   displayName?: string | null;
   tagline?: string | null;
-  onPrimaryClick?: () =>void;
+  onPrimaryClick?: () => void;
 }
 
+/** Desktop companion header — mobile memakai PwaAppHeader (logo 38px + Install pill). */
 export function PublicHeader({
   workspaceSlug,
   displayName = '',
   tagline = '',
   onPrimaryClick,
 }: PublicHeaderProps) {
-  const avatarLetter = displayName ? displayName.charAt(0).toUpperCase() : 'R';
-
   return (
-    <header
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 30,
-        backgroundColor: 'rgba(247, 247, 245, 0.94)',
-        borderBottom: '1px solid var(--color-divider)',
-      }}
-    >
-     <div
+    <header className="desktop-only" style={{ background: 'var(--pwa-canvas)', borderBottom: '1px solid var(--pwa-border)' }}>
+      <div
         className="container"
-        style={{
-          height: '68px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '16px',
-        }}
+        style={{ height: 68, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}
       >
-       <Link
-          href={`/p/${workspaceSlug}`}
-          style={{
-            display: 'flex',
-            gap: '12px',
-            alignItems: 'center',
-            textDecoration: 'none',
-            color: 'inherit',
-          }}
-        >
-         <div
-            style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '0px',
-              backgroundColor: 'var(--accent-dark)',
-              color: '#FFFFFF',
-              display: 'grid',
-              placeItems: 'center',
-              fontWeight: 800,
-              fontSize: '15px',
-              flexShrink: 0,
-            }}
-          >
-           {avatarLetter}
-          </div>
-         <div>
-           <span style={{ display: 'block', fontSize: '14px', fontWeight: 760, lineHeight: 1.2 }}>
-             {displayName}
-            </span>
-           <span
-              style={{
-                display: 'block',
-                fontSize: '11px',
-                color: 'var(--color-text-muted)',
-                marginTop: '2px',
-              }}
-            >
-             {tagline}
-            </span>
-         </div>
-       </Link>
+        <Link href={`/p/${workspaceSlug}`} style={{ display: 'flex', gap: 10, alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
+          <PwaLogo letter={(displayName || 'R').charAt(0).toUpperCase()} />
+          <span>
+            <span style={{ display: 'block', fontSize: 14, fontWeight: 800 }}>{displayName}</span>
+            <span style={{ display: 'block', fontSize: 11, color: 'var(--pwa-muted)' }}>{tagline || 'Learning Platform PWA'}</span>
+          </span>
+        </Link>
 
-       <nav className="desktop-only" style={{ alignItems: 'center', gap: '8px' }}>
-         <a
-            href="#programs"
-            style={{
-              padding: '8px 12px',
-              borderRadius: '0px',
-              color: 'var(--color-text-muted)',
-              fontWeight: 650,
-              fontSize: '13px',
-              textDecoration: 'none',
-            }}
-          >
-           Program
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <a href="#programs" style={{ padding: '8px 12px', color: 'var(--pwa-muted)', fontWeight: 650, fontSize: 13, textDecoration: 'none' }}>
+            Program
           </a>
-         <a
-            href="#about"
-            style={{
-              padding: '8px 12px',
-              borderRadius: '0px',
-              color: 'var(--color-text-muted)',
-              fontWeight: 650,
-              fontSize: '13px',
-              textDecoration: 'none',
-            }}
-          >
-           Tentang
+          <a href="#about" style={{ padding: '8px 12px', color: 'var(--pwa-muted)', fontWeight: 650, fontSize: 13, textDecoration: 'none' }}>
+            Tentang
           </a>
-         {onPrimaryClick ? (
+          {onPrimaryClick ? (
             <button
               onClick={onPrimaryClick}
-              style={{
-                border: 0,
-                backgroundColor: 'var(--accent-dark)',
-                color: '#FFFFFF',
-                fontWeight: 780,
-                fontSize: '13px',
-                padding: '8px 16px',
-                borderRadius: '0px',
-                cursor: 'pointer',
-              }}
+              style={{ border: 0, background: 'linear-gradient(135deg,#0D52FF,#2563EB)', color: '#fff', fontWeight: 800, fontSize: 13, padding: '10px 18px', borderRadius: 12, cursor: 'pointer', minHeight: 44 }}
             >
-             Mulai belajar
+              Mulai belajar
             </button>
-         ) : (
+          ) : (
             <a
               href="#programs"
-              style={{
-                backgroundColor: 'var(--accent-dark)',
-                color: '#FFFFFF',
-                fontWeight: 780,
-                fontSize: '13px',
-                padding: '8px 16px',
-                borderRadius: '0px',
-                textDecoration: 'none',
-              }}
+              style={{ background: 'linear-gradient(135deg,#0D52FF,#2563EB)', color: '#fff', fontWeight: 800, fontSize: 13, padding: '10px 18px', borderRadius: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 44 }}
             >
-             Mulai belajar
+              Mulai belajar
             </a>
-         )}
+          )}
         </nav>
-     </div>
-   </header>
- );
+      </div>
+    </header>
+  );
 }
