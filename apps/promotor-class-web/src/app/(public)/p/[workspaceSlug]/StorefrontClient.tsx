@@ -26,16 +26,14 @@ interface StorefrontClientProps {
   catalog: PublicProgramCatalogItem[];
 }
 
-const CATEGORY_PRESETS = ['Semua', 'UI/UX', 'Fullstack', 'AI & Data', 'Product'];
+const CATEGORY_PRESETS = ['Semua', 'Tes STIFIn', 'Parenting', 'Belajar Anak', 'Konseling'];
 
 function categoryOf(item: PublicProgramCatalogItem): string {
   const hay = `${item.program.title} ${item.program.subtitle ?? ''} ${item.presentation.heroEyebrow ?? ''} ${item.presentation.shortOutcome ?? ''}`.toLowerCase();
-  if (/(figma|design|ui|ux|product)/.test(hay)) {
-    if (/product/.test(hay) && !/design/.test(hay)) return 'Product';
-    return 'UI/UX';
-  }
-  if (/(ai|llm|data|agent|machine)/.test(hay)) return 'AI & Data';
-  if (/(next|fullstack|backend|api|web|engineer)/.test(hay)) return 'Fullstack';
+  if (/(konseling|review|alumni|sesi khusus|konsultasi)/.test(hay)) return 'Konseling';
+  if (/(parenting|pola asuh|mentoring|pengasuhan|asuh)/.test(hay)) return 'Parenting';
+  if (/(kebiasaan|disiplin|tantangan|rutin|mandiri|habit)/.test(hay)) return 'Belajar Anak';
+  if (/(tes|stifin|mesin kecerdasan|identifikasi|bakat|genetik|mengenal cara belajar)/.test(hay)) return 'Tes STIFIn';
   return 'Lainnya';
 }
 
@@ -176,10 +174,10 @@ function CatalogBentoCard({ item, workspaceSlug }: { item: PublicProgramCatalogI
 
 /* -------- Mentor spotlight -------- */
 const MENTORS = [
-  { name: 'Sarah Natasha', role: 'VP Product @ GoTo', track: 'Design & Product', rating: '★ 4.9 • 85+ Sesi' },
-  { name: 'Rizky Ramadhan', role: 'Staff AI Engineer', track: 'AI & Fullstack', rating: '★ 5.0 • 120+ Sesi' },
-  { name: 'Arga Wicaksana', role: 'Lead Designer @ DANA', track: 'UI/UX Systems', rating: '★ 4.9 • 96+ Sesi' },
-  { name: 'Dian Pratama', role: 'Staff AI Engineer', track: 'Fullstack AI', rating: '★ 4.85 • 74+ Sesi' },
+  { name: 'Sarah Natasha', role: 'Konsultan Parenting STIFIn', track: 'Pola Asuh & Komunikasi', rating: '★ 4.9 • 85+ Sesi' },
+  { name: 'Rizky Ramadhan', role: 'Praktisi Tes STIFIn', track: 'Mesin Kecerdasan', rating: '★ 5.0 • 120+ Sesi' },
+  { name: 'Arga Wicaksana', role: 'Mentor Belajar Anak', track: 'Kebiasaan & Disiplin', rating: '★ 4.9 • 96+ Sesi' },
+  { name: 'Dian Pratama', role: 'Konselor Keluarga', track: 'Konseling & Review', rating: '★ 4.85 • 74+ Sesi' },
 ];
 
 function MentorSpotlight() {
