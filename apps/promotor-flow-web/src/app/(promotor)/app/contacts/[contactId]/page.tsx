@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
-import { PageHeader, SectionHead, ErrorState, LoadingRows, BottomSheet, LifecycleStrip, Toast, useToast } from '@/components/ui';
+import { BrandKicker, ErrorState, LoadingRows, BottomSheet, LifecycleStrip, Toast, useToast } from '@/components/ui';
 import { WhatsAppBottomSheet } from '@/components/today/WhatsAppBottomSheet';
 import {
   contactQueries,
@@ -26,7 +26,8 @@ import { formatPhoneDisplay } from '@promotor/platform-core';
 import { ProductEntitlements, LearningContext, ProgramSummary, ContactWaOutcome } from '@promotor/contracts';
 import { FlowIntegrationHealth } from '@/modules/promotorclass/ports';
 import { getPlatformApiClient } from '@/adapters';
-import { SUPPORT_WA_NUMBER } from '@/config/partner-app';
+import { getSession } from '@/lib/auth';
+import { SUPPORT_WA_NUMBER, PARTNER_APP_URL } from '@/config/partner-app';
 import type { JourneyItem } from '@promotor/contracts';
 import { CalendarButtons } from '@/components/calendar/CalendarButtons';
 
@@ -39,14 +40,6 @@ const LIFECYCLE_INDEX: Record<string, number>= {
   BOOKED: 4,
   COMPLETED: 5,
 };
-
-function stageTagClass(stage: string): string {
-  const s = stage.toUpperCase();
-  if (s === 'COMPLETED') return 'tag tag-neutral';
-  if (s === 'BOOKED' || s === 'FOLLOW_UP') return 'tag tag-accent';
-  if (s === 'LOST') return 'tag tag-accent';
-  return 'tag tag-outline';
-}
 
 export default function ContactDetailPage() {
   const params = useParams();
@@ -78,6 +71,7 @@ export default function ContactDetailPage() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState<FlowBooking | null>(null);
   const [activeWaModal, setActiveWaModal] = useState<{ draft: string; waUrl: string } | null>(null);
+  const [bookingSlug, setBookingSlug] = useState<string>('anda');
 
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [eligiblePrograms, setEligiblePrograms] = useState<ProgramSummary[]>([]);
@@ -146,6 +140,12 @@ export default function ContactDetailPage() {
       } catch {
         setSuggestions([]);
       }
+      try {
+        const sess = await getSession();
+        if (sess?.organization?.slug) setBookingSlug(sess.organization.slug);
+      } catch {
+        /* keep default slug */
+      }
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Tidak dapat memuat kontak.');
     }
@@ -158,8 +158,17 @@ export default function ContactDetailPage() {
   if (!contact && !loadError && !notFound) {
     return (
       <AppShell showBottomNav={true}>
-       <PageHeader kicker="Kontak" title="Memuat..." />
-       <LoadingRows rows={5} />
+        <div className="hv-page">
+          <div className="hv-topnav">
+            <div>
+              <BrandKicker />
+              <h1 className="hv-page-title">Memuat kontak…</h1>
+            </div>
+          </div>
+          <div className="hv-column">
+            <LoadingRows rows={5} />
+          </div>
+        </div>
      </AppShell>
    );
   }
@@ -167,8 +176,11 @@ export default function ContactDetailPage() {
   if (loadError) {
     return (
       <AppShell showBottomNav={true}>
-       <PageHeader kicker="Kontak" title="Kontak" onBack={() =>router.push('/app/contacts')} />
-       <ErrorState title="Gagal memuat kontak" detail={loadError} onRetry={() =>loadData()} />
+        <div className="hv-page">
+          <div className="hv-column">
+            <ErrorState title="Gagal memuat kontak" detail={loadError} onRetry={() => loadData()} />
+          </div>
+        </div>
      </AppShell>
    );
   }
@@ -176,10 +188,13 @@ export default function ContactDetailPage() {
   if (notFound || !contact) {
     return (
       <AppShell showBottomNav={true}>
-       <PageHeader kicker="Kontak" title="Kontak tidak ditemukan" onBack={() =>router.push('/app/contacts')} />
-       <div className="empty-state">
-         <div className="empty-title">Kontak ini tidak ada atau sudah dihapus.</div>
-       </div>
+        <div className="hv-page">
+          <div className="hv-column">
+            <div className="empty-state">
+              <div className="empty-title">Kontak ini tidak ada atau sudah dihapus.</div>
+            </div>
+          </div>
+        </div>
      </AppShell>
    );
   }
@@ -207,10 +222,15 @@ export default function ContactDetailPage() {
 
   const handleOpenWaForAction = async () =>{
     if (!primaryAction) return;
+    const stifinResult = learningContext?.activeEnrollments[0]?.programTitle;
     const draft = await messagingQueries.generateDraftMessage(
       primaryAction.actionType,
       contact.name,
-      { serviceTitle: primaryAction.title }
+      {
+        serviceTitle: primaryAction.title,
+        bookingLink: messagingQueries.buildBookingLink(bookingSlug),
+        stifinResult,
+      }
     );
     const waUrl = messagingQueries.buildWhatsAppUrl(contact.phoneE164, draft);
     setActiveWaModal({ draft, waUrl });
@@ -347,99 +367,124 @@ export default function ContactDetailPage() {
 
   return (
     <AppShell showBottomNav={true}>
-     <PageHeader
-        kicker="Kontak"
-        title={contact.name}
-        sub={`${formatPhoneDisplay(contact.phoneE164)} · ${contact.sourceChannel || 'Lead'}`}
-        backLabel="Kembali"
-        onBack={() =>router.push('/app/contacts')}
-      />
-
-     {/* Stage + classification */}
-      <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-       <button type="button" className={stageTagClass(contact.stage)} onClick={() =>setShowStageModal(true)} aria-label="Ubah tahap lifecycle">
-         {contact.stage} ▾
-        </button>
-       <span className={`tag ${contact.classification === 'CLIENT' ? 'tag-neutral' : 'tag-outline'}`}>
-         {contact.classification === 'CLIENT' ? 'Klien' : 'Prospek'}
-        </span>
-     </div>
-
-     {/* Next Action */}
-      <SectionHead label="Tindakan berikutnya" />
-     <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
-       {primaryAction ? (
-          <>
-           <div style={{ font: '700 17px/1.25 var(--font-sans)', letterSpacing: '-0.01em' }}>{primaryAction.title}</div>
-           <div style={{ marginTop: 6, font: '400 12px/1.45 var(--font-sans)', color: 'var(--muted-strong)' }}>
-             {primaryAction.subtitle || `Jatuh tempo: ${clock.formatDayDate(primaryAction.dueAt)}`}
+      <div className="hv-page">
+        <div className="hv-topnav">
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <button
+              type="button"
+              onClick={() => router.push('/app/contacts')}
+              aria-label="Kembali ke daftar kontak"
+              className="hv-copy-btn"
+              style={{ width: 40, flex: 'none' }}
+            >
+              ‹
+            </button>
+            <div style={{ minWidth: 0 }}>
+              <BrandKicker />
+              <h1 className="hv-page-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{contact.name}</h1>
+              <div className="hv-page-sub">{formatPhoneDisplay(contact.phoneE164)} · {contact.sourceChannel || 'Lead'}</div>
             </div>
-           <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-             <button type="button" className="btn btn-primary" onClick={handleOpenWaForAction}>
-               Buka WhatsApp
-              </button>
-             <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={async () =>{
-                  const tomorrow = clock.addDays(clock.now(), 1).toISOString();
-                  await nextActionCommands.rescheduleNextAction(primaryAction.id, tomorrow);
-                  loadData();
-                }}
-              >
-               Tunda
-              </button>
-           </div>
-           <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              style={{ marginTop: 8, paddingLeft: 0 }}
-              onClick={async () =>{
-                const tomorrow = clock.addDays(clock.now(), 1).toISOString();
-                await nextActionCommands.skipNextAction(primaryAction.id, {
-                  type: 'FOLLOW_UP',
-                  title: 'Follow-up prospek',
-                  dueAt: tomorrow,
-                });
-                loadData();
-              }}
-            >
-             Lewati tindakan ini
-            </button>
-         </>
-       ) : (
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-           <span style={{ font: '400 13px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>Belum ada tindakan aktif.</span>
-           <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={async () =>{
-                await nextActionCommands.scheduleNextAction({
-                  contactId: contact.id,
-                  actionType: 'FOLLOW_UP',
-                  title: 'Follow-up prospek',
-                  dueAt: clock.addDays(clock.now(), 1).toISOString(),
-                });
-                loadData();
-              }}
-            >
-             + Tambah tindakan
-            </button>
-         </div>
-       )}
-      </div>
+          </div>
+        </div>
 
-     {/* Lifecycle strip */}
-      {stageIdx >= 0 && (
-        <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
-         <div className="kicker kicker-muted" style={{ marginBottom: 12 }}>Lifecycle</div>
-         <LifecycleStrip stages={LIFECYCLE_STEPS} currentIndex={stageIdx} />
-       </div>
-     )}
+        <div className="hv-column">
+          {/* Hero: stage pill + klasifikasi + sinyal Class */}
+          <div className="hv-card">
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <button
+                type="button"
+                className={`hv-tone-badge ${contact.stage === 'FOLLOW_UP' ? 'hv-tone-badge-urgent' : contact.stage === 'NEW' ? 'hv-tone-badge-class' : contact.stage === 'BOOKED' ? 'hv-tone-badge-formal' : contact.stage === 'COMPLETED' ? 'hv-tone-badge-retensi' : 'hv-tone-badge-hangat'}`}
+                style={{ border: 0, cursor: 'pointer', fontSize: 11, padding: '6px 12px' }}
+                onClick={() => setShowStageModal(true)}
+                aria-label="Ubah tahap lifecycle"
+              >
+                {contact.stage} ▾
+              </button>
+              <span className={`hv-tone-badge ${contact.classification === 'CLIENT' ? 'hv-tone-badge-retensi' : 'hv-tone-badge-formal'}`}>
+                {contact.classification === 'CLIENT' ? 'Klien' : 'Prospek'}
+              </span>
+              {learningContext && learningContext.activeEnrollments.length > 0 && (
+                <span className="hv-tone-badge hv-tone-badge-class">
+                  Sinyal Class · {learningContext.activeEnrollments.length} program
+                </span>
+              )}
+            </div>
+            {stageIdx >= 0 && (
+              <div style={{ marginTop: 4 }}>
+                <LifecycleStrip stages={LIFECYCLE_STEPS} currentIndex={stageIdx} />
+              </div>
+            )}
+          </div>
+
+          {/* Next Action: WA 1-tap */}
+          <div className="hv-card">
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--hv-muted)' }}>TINDAKAN BERIKUTNYA</div>
+            {primaryAction ? (
+              <>
+                <div style={{ fontWeight: 750, fontSize: 15, color: 'var(--hv-text)' }}>{primaryAction.title}</div>
+                <div className="hv-contact-card-meta">
+                  {primaryAction.subtitle || `Jatuh tempo: ${clock.formatDayDate(primaryAction.dueAt)}`}
+                </div>
+                <div className="hv-actions-row">
+                  <button type="button" className="hv-wa-btn" onClick={handleOpenWaForAction}>
+                    Kirim ke WhatsApp
+                  </button>
+                  <button
+                    type="button"
+                    className="hv-btn-sec"
+                    onClick={async () => {
+                      const tomorrow = clock.addDays(clock.now(), 1).toISOString();
+                      await nextActionCommands.rescheduleNextAction(primaryAction.id, tomorrow);
+                      loadData();
+                    }}
+                  >
+                    Tunda
+                  </button>
+                </div>
+                <div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const tomorrow = clock.addDays(clock.now(), 1).toISOString();
+                      await nextActionCommands.skipNextAction(primaryAction.id, {
+                        type: 'FOLLOW_UP',
+                        title: 'Follow-up prospek',
+                        dueAt: tomorrow,
+                      });
+                      loadData();
+                    }}
+                    className="hv-skip-btn"
+                  >
+                    Lewati tindakan ini
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <span className="hv-contact-card-meta">Belum ada tindakan aktif.</span>
+                <button
+                  type="button"
+                  className="hv-wa-btn"
+                  style={{ flex: 'none' }}
+                  onClick={async () => {
+                    await nextActionCommands.scheduleNextAction({
+                      contactId: contact.id,
+                      actionType: 'FOLLOW_UP',
+                      title: 'Follow-up prospek',
+                      dueAt: clock.addDays(clock.now(), 1).toISOString(),
+                    });
+                    loadData();
+                  }}
+                >
+                  + Tambah tindakan
+                </button>
+              </div>
+            )}
+          </div>
 
       {/* Booking */}
-      <SectionHead label="Booking" />
-     <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
+      <div className="hv-card">
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--hv-muted)' }}>BOOKING</div>
        {activeBooking ? (
           <div>
            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
@@ -457,16 +502,16 @@ export default function ContactDetailPage() {
            </div>
            <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
              {activeBooking.status === 'PENDING' && (
-                <button type="button" className="btn btn-primary btn-sm" onClick={handleConfirmBooking}>
+                <button type="button" className="hv-btn-primary" onClick={handleConfirmBooking}>
                  Konfirmasi Booking
                 </button>
              )}
               {activeBooking.paymentStatus === 'UNPAID' && (
-                <button type="button" className="btn btn-primary btn-sm" onClick={handleMarkPaid}>
+                <button type="button" className="hv-btn-primary" onClick={handleMarkPaid}>
                  Tandai Lunas
                 </button>
              )}
-              <button type="button" className="btn btn-secondary btn-sm" onClick={handleCompleteActiveBooking}>
+              <button type="button" className="hv-btn-sec" onClick={handleCompleteActiveBooking}>
                Tandai Layanan Selesai
               </button>
            </div>
@@ -483,7 +528,7 @@ export default function ContactDetailPage() {
        ) : (
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
            <span style={{ font: '400 13px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>Belum ada booking aktif.</span>
-           <button type="button" className="btn btn-secondary btn-sm" onClick={() =>setShowBookingModal(true)}>
+           <button type="button" className="hv-btn-sec" onClick={() =>setShowBookingModal(true)}>
              + Buat booking
             </button>
          </div>
@@ -492,14 +537,14 @@ export default function ContactDetailPage() {
 
      {/* PromotorClass learning context */}
       {classState?.entitlements.promotorClass && (
-        <div style={{ background: 'var(--surface-muted)', borderBottom: '1px solid var(--line)' }}>
-         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 18px 0' }}>
-           <div className="kicker kicker-muted">Konteks belajar · Ralivo Class</div>
-           <button type="button" className="btn btn-secondary btn-sm" onClick={handleOpenEnrollModal}>
+        <div className="hv-card">
+         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+           <div className="hv-kicker">Konteks belajar · Ralivo Class</div>
+           <button type="button" className="hv-btn-sec" onClick={handleOpenEnrollModal}>
              + Daftarkan ke Kelas
             </button>
          </div>
-         <div style={{ padding: '12px 18px 16px' }}>
+         <div style={{ marginTop: 10 }}>
            {classState.integrationHealth.promotorClass === 'UNAVAILABLE' ? (
               <div style={{ font: '400 12px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>
                Integrasi Ralivo Class sedang tidak tersedia (degraded mode). Fungsi utama Flow tetap berjalan.
@@ -514,14 +559,18 @@ export default function ContactDetailPage() {
                    </div>
                    <span style={{ font: '700 11px/1 var(--font-sans)', width: 34, textAlign: 'right' }}>{enr.progressPercent}%</span>
                  </div>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    style={{ marginTop: 8, paddingLeft: 0 }}
-                    onClick={() => alert(`Navigasi ke Detail Peserta Ralivo Class: /learners/${contact.id}`)}
+                  <a
+                    href={`${PARTNER_APP_URL}/learners/${contact.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hv-btn-ghost"
+                    style={{ marginTop: 8, paddingLeft: 0, textDecoration: 'none', display: 'inline-block' }}
+                    onClick={() => {
+                      getPlatformApiClient().recordBridgeMetric('bridge_action_executed', { kind: 'contact_detail_to_class' }).catch(() => null);
+                    }}
                   >
                    Lihat aktivitas belajar →
-                  </button>
+                  </a>
                </div>
              ))
             ) : (
@@ -535,9 +584,9 @@ export default function ContactDetailPage() {
 
       {/* Perjalanan kontak lintas Class & Flow */}
       {journeyItems.some((i) => i.app === 'CLASS') && (
-        <div>
-          <SectionHead label="Perjalanan kontak" />
-          <div style={{ padding: '10px 18px 16px' }}>
+        <div className="hv-card">
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--hv-muted)' }}>PERJALANAN KONTAK</div>
+          <div>
             {journeyItems.map((it, i) => {
               const isClass = it.app === 'CLASS';
               const color = isClass ? '#2563EB' : '#06B6D4';
@@ -589,7 +638,7 @@ export default function ContactDetailPage() {
                         window.location.href = res.checkoutUrl;
                       }
                     } catch (e: any) {
-                      alert(e?.message || 'Gagal menyiapkan pembayaran Paycore.');
+                      showToast(e?.message || 'Gagal menyiapkan pembayaran Paycore.');
                     }
                   }}
                   style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #BFDBFE', background: '#EFF6FF', color: '#1D4ED8', font: '700 11px/1 var(--font-sans)', cursor: 'pointer', flex: 'none' }}
@@ -640,56 +689,57 @@ export default function ContactDetailPage() {
       )}
 
       {/* Notes */}
-      <SectionHead label="Catatan" />
-     <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
+      <div className="hv-card">
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--hv-muted)' }}>CATATAN</div>
        {!isEditingNotes ? (
           <>
            <div style={{ font: '400 14px/1.6 var(--font-sans)', whiteSpace: 'pre-wrap' }}>
              {contact.notes || 'Belum ada catatan.'}
             </div>
-           <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() =>setIsEditingNotes(true)}>
+           <button type="button" className="hv-btn-ghost" style={{ marginTop: 8 }} onClick={() =>setIsEditingNotes(true)}>
              Edit catatan
             </button>
          </>
        ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-           <textarea className="textarea" value={notesText} onChange={(e) =>setNotesText(e.target.value)} rows={4} aria-label="Catatan kontak" />
+           <textarea className="hv-textarea" value={notesText} onChange={(e) =>setNotesText(e.target.value)} rows={4} aria-label="Catatan kontak" />
            <div style={{ display: 'flex', gap: 8 }}>
-             <button type="button" className="btn btn-primary btn-sm" onClick={handleSaveNotes}>Simpan</button>
-             <button type="button" className="btn btn-secondary btn-sm" onClick={() =>setIsEditingNotes(false)}>Batal</button>
+             <button type="button" className="hv-btn-primary" onClick={handleSaveNotes}>Simpan</button>
+             <button type="button" className="hv-btn-sec" onClick={() =>setIsEditingNotes(false)}>Batal</button>
            </div>
          </div>
        )}
       </div>
 
       {/* Quick Activity Note Composer */}
-      <div style={{ padding: '0 18px' }}>
-        <section style={{ marginTop: 12 }}>
-          <div className="field-label">Catatan Cepat</div>
-          <textarea
-            className="textarea"
-            rows={2}
-            value={quickNote}
-            onChange={(e) => setQuickNote(e.target.value)}
-            placeholder="mis. Anak kelas 2 SMP, pemalu, suka melukis..."
-            aria-label="Catatan cepat"
-          />
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              disabled={quickNote.trim().length === 0 || savingNote}
-              onClick={handleSaveNote}
-            >
-              {savingNote ? 'Menyimpan...' : 'Simpan Catatan'}
-            </button>
-          </div>
-        </section>
+      <div className="hv-card">
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--hv-muted)' }}>CATATAN CEPAT</div>
+        <textarea
+          className="hv-textarea"
+          rows={2}
+          value={quickNote}
+          onChange={(e) => setQuickNote(e.target.value)}
+          placeholder="mis. Anak kelas 2 SMP, pemalu, suka melukis..."
+          aria-label="Catatan cepat"
+        />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            type="button"
+            className="hv-btn-primary"
+            disabled={quickNote.trim().length === 0 || savingNote}
+            onClick={handleSaveNote}
+          >
+            {savingNote ? 'Menyimpan...' : 'Simpan Catatan'}
+          </button>
+        </div>
       </div>
 
       {/* Activity timeline */}
-      <SectionHead label="Aktivitas" count={`${activities.length}`} />
-     <div style={{ padding: '10px 18px 24px' }}>
+      <div className="hv-card">
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--hv-muted)' }}>
+          AKTIVITAS · {activities.length}
+        </div>
+        <div>
        {activities.length >0 ? (
           activities.map((ev) =>(
             <div key={ev.id} className="timeline-row">
@@ -703,6 +753,9 @@ export default function ContactDetailPage() {
         ) : (
           <div style={{ font: '400 12px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>Belum ada riwayat aktivitas.</div>
        )}
+        </div>
+      </div>
+      </div>
       </div>
 
      {/* Stage selection sheet */}
@@ -726,99 +779,99 @@ export default function ContactDetailPage() {
             </button>
          ))}
         </div>
-       <button type="button" className="btn btn-ghost btn-block" style={{ marginTop: 14 }} onClick={() =>setShowStageModal(false)}>
-         Batal
-        </button>
-     </BottomSheet>
+	       <button type="button" className="hv-btn-ghost" style={{ width: '100%', marginTop: 14 }} onClick={() =>setShowStageModal(false)}>
+	         Batal
+	        </button>
+	     </BottomSheet>
 
-     {/* Lost reason sheet */}
-      <BottomSheet open={showLostModal} onClose={() =>setShowLostModal(false)} labelledBy="lost-sheet-title">
-       <h2 id="lost-sheet-title" className="sheet-title-lg" style={{ color: 'var(--accent-dark)' }}>Alasan Tidak Lanjut (Lost Reason)</h2>
-       <p className="sheet-explain">
-         Wajib mengisi alasan mengapa prospek tidak lanjut. Tindakan aktif akan dibatalkan (riwayat histori tetap tersimpan).
-        </p>
-       <select
-          className="select"
-          value={lostReasonInput}
-          onChange={(e) =>setLostReasonInput(e.target.value)}
-          aria-label="Alasan tidak lanjut"
-          style={{ marginTop: 14 }}
-        >
-         <option value="">-- Pilih Alasan --</option>
-         <option value="Harga terlalu mahal">Harga terlalu mahal</option>
-         <option value="Tidak merespon chat">Tidak merespon chat</option>
-         <option value="Memilih kompetitor lain">Memilih kompetitor lain</option>
-         <option value="Jadwal tidak cocok">Jadwal tidak cocok</option>
-         <option value="Batal kebutuhan">Batal kebutuhan</option>
-       </select>
-       <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-         <button type="button" className="btn btn-secondary" onClick={() =>setShowLostModal(false)}>Batal</button>
-         <button
-            type="button"
-            className="btn btn-accent"
-            onClick={handleConfirmLost}
-            disabled={!lostReasonInput.trim()}
-          >
-           Konfirmasi Lost
-          </button>
-       </div>
-     </BottomSheet>
+	     {/* Lost reason sheet */}
+	      <BottomSheet open={showLostModal} onClose={() =>setShowLostModal(false)} labelledBy="lost-sheet-title">
+	       <h2 id="lost-sheet-title" className="sheet-title-lg" style={{ color: 'var(--hv-danger, var(--accent-dark))' }}>Alasan Tidak Lanjut (Lost Reason)</h2>
+	       <p className="sheet-explain">
+	         Wajib mengisi alasan mengapa prospek tidak lanjut. Tindakan aktif akan dibatalkan (riwayat histori tetap tersimpan).
+	        </p>
+	       <select
+	          className="hv-select"
+	          value={lostReasonInput}
+	          onChange={(e) =>setLostReasonInput(e.target.value)}
+	          aria-label="Alasan tidak lanjut"
+	          style={{ marginTop: 14 }}
+	        >
+	         <option value="">-- Pilih Alasan --</option>
+	         <option value="Harga terlalu mahal">Harga terlalu mahal</option>
+	         <option value="Tidak merespon chat">Tidak merespon chat</option>
+	         <option value="Memilih kompetitor lain">Memilih kompetitor lain</option>
+	         <option value="Jadwal tidak cocok">Jadwal tidak cocok</option>
+	         <option value="Batal kebutuhan">Batal kebutuhan</option>
+	       </select>
+	       <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+	         <button type="button" className="hv-btn-sec" onClick={() =>setShowLostModal(false)}>Batal</button>
+	         <button
+	            type="button"
+	            className="hv-btn-primary"
+	            onClick={handleConfirmLost}
+	            disabled={!lostReasonInput.trim()}
+	          >
+	           Konfirmasi Lost
+	          </button>
+	       </div>
+	     </BottomSheet>
 
-     {/* Enrollment sheet */}
-      <BottomSheet open={showEnrollModal} onClose={() =>setShowEnrollModal(false)} labelledBy="enroll-sheet-title">
-       <h2 id="enroll-sheet-title" className="sheet-title-lg">Daftarkan ke Program Kelas</h2>
-       <p className="sheet-explain">Pilih program edukasi yang akan diberikan kepada peserta {contact.name}.</p>
+	     {/* Enrollment sheet */}
+	      <BottomSheet open={showEnrollModal} onClose={() =>setShowEnrollModal(false)} labelledBy="enroll-sheet-title">
+	       <h2 id="enroll-sheet-title" className="sheet-title-lg">Daftarkan ke Program Kelas</h2>
+	       <p className="sheet-explain">Pilih program edukasi yang akan diberikan kepada peserta {contact.name}.</p>
 
-       {enrollError && (
-          <div className="field-error" role="alert" style={{ marginTop: 12 }}>{enrollError}</div>
-       )}
-        {enrollSuccess && (
-          <div style={{ marginTop: 12, padding: '8px 12px', border: '2px solid var(--ink)', font: '600 12px/1.4 var(--font-sans)', background: 'var(--surface-muted)' }}>
-           {enrollSuccess}
-          </div>
-       )}
+	       {enrollError && (
+	          <div className="field-error" role="alert" style={{ marginTop: 12 }}>{enrollError}</div>
+	       )}
+	        {enrollSuccess && (
+	          <div style={{ marginTop: 12, padding: '8px 12px', border: '1px solid var(--hv-line)', borderRadius: 'var(--hv-radius-md)', font: '600 12px/1.4 var(--font-sans)', background: 'var(--hv-canvas)' }}>
+	           {enrollSuccess}
+	          </div>
+	       )}
 
-        {enrollLoading ? (
-          <div style={{ marginTop: 14 }}><LoadingRows rows={3} /></div>
-       ) : eligiblePrograms.length === 0 ? (
-          <div style={{ marginTop: 14, font: '400 12px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>
-           Tidak ada program kelas yang tersedia.
-          </div>
-       ) : (
-          <div style={{ marginTop: 14, maxHeight: 300, overflowY: 'auto' }}>
-           {eligiblePrograms.map((prog) =>{
-              const isEnrolled = learningContext?.activeEnrollments.some((e) =>e.programId === prog.programId);
-              return (
-                <div
-                  key={prog.programId}
-                  data-testid="eligible-program-row"
-                  className="list-row"
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, cursor: 'default' }}
-                >
-                 <div style={{ minWidth: 0 }}>
-                   <div style={{ font: '600 13px/1.3 var(--font-sans)' }}>{prog.title}</div>
-                   <div style={{ font: '400 11px/1.4 var(--font-sans)', color: 'var(--muted-strong)' }}>
-                     {prog.programType} · {prog.pricing}
-                    </div>
-                 </div>
-                 <button
-                    type="button"
-                    onClick={() =>handleEnrollProgram(prog.programId)}
-                    disabled={enrollLoading}
-                    className={isEnrolled ? 'btn btn-secondary btn-sm' : 'btn btn-primary btn-sm'}
-                    style={isEnrolled ? { opacity: 0.55, cursor: 'default' } : undefined}
-                  >
-                   {isEnrolled ? 'Terdaftar' : 'Daftarkan'}
-                  </button>
-               </div>
-             );
-            })}
-          </div>
-       )}
+	        {enrollLoading ? (
+	          <div style={{ marginTop: 14 }}><LoadingRows rows={3} /></div>
+	       ) : eligiblePrograms.length === 0 ? (
+	          <div style={{ marginTop: 14, font: '400 12px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>
+	           Tidak ada program kelas yang tersedia.
+	          </div>
+	       ) : (
+	          <div style={{ marginTop: 14, maxHeight: 300, overflowY: 'auto' }}>
+	           {eligiblePrograms.map((prog) =>{
+	              const isEnrolled = learningContext?.activeEnrollments.some((e) =>e.programId === prog.programId);
+	              return (
+	                <div
+	                  key={prog.programId}
+	                  data-testid="eligible-program-row"
+	                  className="list-row"
+	                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, cursor: 'default' }}
+	                >
+	                 <div style={{ minWidth: 0 }}>
+	                   <div style={{ font: '600 13px/1.3 var(--font-sans)' }}>{prog.title}</div>
+	                   <div style={{ font: '400 11px/1.4 var(--font-sans)', color: 'var(--muted-strong)' }}>
+	                     {prog.programType} · {prog.pricing}
+	                    </div>
+	                 </div>
+	                 <button
+	                    type="button"
+	                    onClick={() =>handleEnrollProgram(prog.programId)}
+	                    disabled={enrollLoading}
+	                    className={isEnrolled ? 'hv-btn-sec' : 'hv-btn-primary'}
+	                    style={isEnrolled ? { opacity: 0.55, cursor: 'default' } : undefined}
+	                  >
+	                   {isEnrolled ? 'Terdaftar' : 'Daftarkan'}
+	                  </button>
+	               </div>
+	             );
+	            })}
+	          </div>
+	       )}
 
-        <button type="button" className="btn btn-secondary btn-block" style={{ marginTop: 16 }} onClick={() =>setShowEnrollModal(false)}>
-         Tutup
-        </button>
+	        <button type="button" className="hv-btn-sec" style={{ width: '100%', marginTop: 16 }} onClick={() =>setShowEnrollModal(false)}>
+	         Tutup
+	        </button>
      </BottomSheet>
 
      {/* Create booking confirm sheet */}
@@ -852,8 +905,8 @@ export default function ContactDetailPage() {
            />
            <button
              type="button"
-             className="btn btn-secondary btn-block"
-             style={{ marginTop: 16 }}
+             className="hv-btn-sec"
+             style={{ width: '100%', marginTop: 16 }}
              onClick={() => {
                setShowBookingModal(false);
                setConfirmedBooking(null);
@@ -866,12 +919,12 @@ export default function ContactDetailPage() {
          <>
            <p className="sheet-explain">Jadwal diatur 2 hari dari sekarang, lokasi di tempat (on site), status pembayaran belum dibayar.</p>
            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-             <button type="button" className="btn btn-primary" onClick={handleCreateNewBooking}>
+             <button type="button" className="hv-btn-primary" onClick={handleCreateNewBooking}>
                Konfirmasi Booking
              </button>
              <button
                type="button"
-               className="btn btn-ghost"
+               className="hv-btn-ghost"
                onClick={() => {
                  setShowBookingModal(false);
                  setConfirmedBooking(null);
@@ -888,6 +941,8 @@ export default function ContactDetailPage() {
       {activeWaModal && (
         <WhatsAppBottomSheet
           isOpen={!!activeWaModal}
+          contactId={contact.id}
+          nextActionId={primaryAction?.id}
           contactName={contact.name}
           phoneE164={contact.phoneE164}
           initialDraft={activeWaModal.draft}
@@ -924,7 +979,7 @@ export default function ContactDetailPage() {
               <label className="field-label" htmlFor="coupon-input">Kode Kupon Diskon (Opsional)</label>
               <input
                 id="coupon-input"
-                className="input"
+                className="hv-input"
                 placeholder="Contoh: SPESIAL50 atau biarkan kosong"
                 value={programOfferModal.couponCode}
                 onChange={(e) => setProgramOfferModal({ ...programOfferModal, couponCode: e.target.value.toUpperCase().trim() })}
@@ -934,18 +989,18 @@ export default function ContactDetailPage() {
             <div style={{ marginTop: 14 }}>
               <label className="field-label">Pratinjau Pesan WhatsApp</label>
               <textarea
-                className="input"
+                className="hv-textarea"
                 rows={6}
                 readOnly
                 value={buildOfferMessage(programOfferModal)}
-                style={{ font: '400 13px/1.5 var(--font-sans)', background: 'var(--surface-muted)', width: '100%', resize: 'none' }}
+                style={{ background: 'var(--hv-canvas)', resize: 'none' }}
               />
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
               <button
                 type="button"
-                className="btn btn-accent"
+                className="hv-btn-primary"
                 onClick={async () => {
                   const message = buildOfferMessage(programOfferModal);
                   const waUrl = messagingQueries.buildWhatsAppUrl(contact.phoneE164, message);
@@ -968,7 +1023,7 @@ export default function ContactDetailPage() {
               </button>
               <button
                 type="button"
-                className="btn btn-ghost"
+                className="hv-btn-ghost"
                 onClick={() => setProgramOfferModal(null)}
               >
                 Batal

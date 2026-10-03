@@ -111,6 +111,9 @@ export const ProgramPublicPresentationSchema = z.object({
   heroEyebrow: z.string().optional().nullable(),
   shortOutcome: z.string().optional().nullable(),
   durationLabel: z.string().optional().nullable(),
+  strikePriceAmount: z.number().optional().nullable(),
+  category: z.string().optional().nullable(),
+  trailerVideoUrl: z.string().optional().nullable(),
   learningOutcomes: z.array(LearningOutcomeSchema).default([]),
 });
 export type ProgramPublicPresentation = z.infer<typeof ProgramPublicPresentationSchema>;
@@ -920,6 +923,72 @@ export const ConfirmWhatsAppSentResponseSchema = z.object({
   }).nullable().optional(),
 });
 export type ConfirmWhatsAppSentResponse = z.infer<typeof ConfirmWhatsAppSentResponseSchema>;
+
+// --- Wakonek WhatsApp Gateway Integration ---
+export const WaStageSchema = z.enum([
+  'unconfigured',
+  'not_connected',
+  'needs_pairing',
+  'connecting',
+  'connected',
+  'disconnected',
+  'error',
+]);
+export type WaStage = z.infer<typeof WaStageSchema>;
+
+export const WaStatusResponseSchema = z.object({
+  stage: WaStageSchema,
+  phone: z.string().nullable().optional(),
+  deviceId: z.string().nullable().optional(),
+});
+export type WaStatusResponse = z.infer<typeof WaStatusResponseSchema>;
+
+export const WaPairingStartResponseSchema = z.object({
+  stage: z.literal('unconfigured').optional(),
+  deviceId: z.string().optional(),
+  pairingToken: z.string().optional(),
+  gatewayUrl: z.string().optional(),
+});
+export type WaPairingStartResponse = z.infer<typeof WaPairingStartResponseSchema>;
+
+export const SendWaMessageRequestSchema = z.object({
+  contactId: z.string().uuid(),
+  text: z.string().min(1).max(4096),
+  nextActionId: z.string().uuid().optional(),
+  outcome: ContactWaOutcomeSchema.optional(),
+  scheduleNextFollowUpDays: z.number().int().positive().optional(),
+});
+export type SendWaMessageRequest = z.infer<typeof SendWaMessageRequestSchema>;
+
+export const SendWaMessageResponseSchema = z.object({
+  messageId: z.string().optional(),
+  status: z.string().optional(),
+  code: z.string().optional(),
+  error: z.string().optional(),
+});
+export type SendWaMessageResponse = z.infer<typeof SendWaMessageResponseSchema>;
+
+export const WaInboxMessageSchema = z.object({
+  id: z.string(),
+  contactId: z.string().nullable(),
+  contactName: z.string().nullable(),
+  phoneE164: z.string(),
+  type: z.string(),
+  text: z.string(),
+  receivedAt: z.string(),
+  isRead: z.boolean(),
+});
+export type WaInboxMessage = z.infer<typeof WaInboxMessageSchema>;
+
+export const WaInboxResponseSchema = z.object({
+  messages: z.array(WaInboxMessageSchema),
+});
+export type WaInboxResponse = z.infer<typeof WaInboxResponseSchema>;
+
+export const MarkWaInboxReadResponseSchema = z.object({
+  ok: z.boolean(),
+});
+export type MarkWaInboxReadResponse = z.infer<typeof MarkWaInboxReadResponseSchema>;
 
 // --- B6.1 Availability & Public Booking ----
 export const AvailabilityRuleSchema = z.object({
@@ -1854,6 +1923,106 @@ export const LessonNoteDtoSchema = z.object({
   updatedAt: z.string(),
 });
 export type LessonNoteDto = z.infer<typeof LessonNoteDtoSchema>;
+
+// ==========================================
+// 14. Lesson Discussions & Community
+// ==========================================
+
+export const LessonDiscussionItemSchema = z.object({
+  id: z.string(),
+  enrollmentId: z.string(),
+  lessonId: z.string(),
+  authorName: z.string(),
+  authorRole: z.enum(['learner', 'mentor', 'promoter']).default('learner'),
+  message: z.string(),
+  createdAt: z.string(),
+});
+export type LessonDiscussionItem = z.infer<typeof LessonDiscussionItemSchema>;
+
+export const ListLessonDiscussionsResponseSchema = z.object({
+  discussions: z.array(LessonDiscussionItemSchema),
+});
+export type ListLessonDiscussionsResponse = z.infer<typeof ListLessonDiscussionsResponseSchema>;
+
+export const PostLessonDiscussionRequestSchema = z.object({
+  message: z.string().trim().min(1, 'Pesan tidak boleh kosong').max(2000, 'Pesan maksimal 2000 karakter'),
+});
+export type PostLessonDiscussionRequest = z.infer<typeof PostLessonDiscussionRequestSchema>;
+
+// ==========================================
+// 15. Learner Schedules, Assignments & Cohort Ops
+// ==========================================
+
+export const LearnerScheduleItemSchema = z.object({
+  id: z.string(),
+  programId: z.string(),
+  programTitle: z.string(),
+  title: z.string(),
+  startAt: z.string(),
+  endAt: z.string().nullable().optional(),
+  locationType: z.enum(['ZOOM', 'MEET', 'OFFLINE', 'LMS']),
+  locationUrl: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+});
+export type LearnerScheduleItem = z.infer<typeof LearnerScheduleItemSchema>;
+
+export const LearnerAssignmentItemSchema = z.object({
+  id: z.string(),
+  programId: z.string(),
+  programTitle: z.string(),
+  lessonId: z.string(),
+  lessonTitle: z.string(),
+  title: z.string(),
+  dueAt: z.string().nullable().optional(),
+  status: z.enum(['PENDING', 'SUBMITTED', 'GRADED']),
+  reflectionRequired: z.boolean().default(false),
+});
+export type LearnerAssignmentItem = z.infer<typeof LearnerAssignmentItemSchema>;
+
+export const ProgramReviewItemSchema = z.object({
+  id: z.string(),
+  authorName: z.string(),
+  role: z.string().nullable().optional(),
+  rating: z.number().min(1).max(5),
+  comment: z.string(),
+  createdAt: z.string(),
+});
+export type ProgramReviewItem = z.infer<typeof ProgramReviewItemSchema>;
+
+export const ProgramBatchItemSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  startDate: z.string(),
+  endDate: z.string().nullable().optional(),
+  scheduleText: z.string(),
+  quotaTotal: z.number().int().nonnegative(),
+  quotaRemaining: z.number().int().nonnegative(),
+  status: z.enum(['OPEN', 'LIMITED', 'CLOSED']),
+});
+export type ProgramBatchItem = z.infer<typeof ProgramBatchItemSchema>;
+
+export const ProgramMentorItemSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  role: z.string(),
+  bio: z.string().nullable().optional(),
+  avatarUrl: z.string().nullable().optional(),
+  expertise: z.array(z.string()).default([]),
+});
+export type ProgramMentorItem = z.infer<typeof ProgramMentorItemSchema>;
+
+export const LearnerOrderItemSchema = z.object({
+  id: z.string(),
+  reference: z.string(),
+  programTitle: z.string(),
+  amount: z.number().int().nonnegative(),
+  currency: z.literal('IDR'),
+  status: z.string(),
+  createdAt: z.string(),
+  paidAt: z.string().nullable().optional(),
+});
+export type LearnerOrderItem = z.infer<typeof LearnerOrderItemSchema>;
+
 
 
 

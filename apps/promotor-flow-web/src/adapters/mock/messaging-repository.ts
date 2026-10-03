@@ -3,7 +3,14 @@ import { NextActionRepositoryPort } from '@/modules/next-actions/ports';
 import { ActivityRepositoryPort } from '@/modules/activities/ports';
 import { LifecycleRepositoryPort } from '@/modules/lifecycle/ports';
 import { ClockPort } from '@/modules/clock/ports';
-import type { ContactWaOutcome } from '@promotor/contracts';
+import type {
+  ContactWaOutcome,
+  WaStatusResponse,
+  WaPairingStartResponse,
+  SendWaMessageResponse,
+  WaInboxMessage,
+  MarkWaInboxReadResponse,
+} from '@promotor/contracts';
 
 const DAY_MS = 24 * 3600_000;
 
@@ -48,6 +55,20 @@ function resolveMockOutcomeEffect(
 }
 
 export class MockMessagingRepository implements MessagingPort {
+  private pairingRequestedAt: number | null = null;
+  private mockInbox: WaInboxMessage[] = [
+    {
+      id: 'mock-inbox-1',
+      contactId: 'mock-contact-1',
+      contactName: 'Budi Santoso',
+      phoneE164: '+6281234567890',
+      type: 'text',
+      text: 'Halo kak, tes STIFIn hari Sabtu besok masih ada slot?',
+      receivedAt: new Date(Date.now() - 10 * 60_000).toISOString(),
+      isRead: false,
+    },
+  ];
+
   constructor(
     private actionRepo: NextActionRepositoryPort,
     private activityRepo: ActivityRepositoryPort,
@@ -133,5 +154,79 @@ export class MockMessagingRepository implements MessagingPort {
       success: true,
       nextActionId: input.nextActionId,
     };
+  }
+
+  async getWhatsAppStatus(): Promise<WaStatusResponse> {
+    if (!this.pairingRequestedAt) {
+      return {
+        stage: 'not_connected',
+        phone: null,
+        deviceId: null,
+      };
+    }
+    const elapsed = Date.now() - this.pairingRequestedAt;
+    if (elapsed < 2000) {
+      return {
+        stage: 'connecting',
+        phone: null,
+        deviceId: 'mock-device-id',
+      };
+    }
+    return {
+      stage: 'connected',
+      phone: '+6281234567890',
+      deviceId: 'mock-device-id',
+    };
+  }
+
+  async startWhatsAppPairing(): Promise<WaPairingStartResponse> {
+    this.pairingRequestedAt = Date.now();
+    return {
+      deviceId: 'mock-device-id',
+      pairingToken: 'mock-pairing-token',
+      gatewayUrl: 'http://localhost:3000/mock-gateway',
+    };
+  }
+
+  async sendWhatsApp(input: {
+    contactId: string;
+    text: string;
+    nextActionId?: string;
+    outcome?: ContactWaOutcome;
+    scheduleNextFollowUpDays?: number;
+  }): Promise<SendWaMessageResponse> {
+    if (input.nextActionId) {
+      await this.confirmWhatsAppSent({
+        contactId: input.contactId,
+        nextActionId: input.nextActionId,
+        messageText: input.text,
+        scheduleNextFollowUpDays: input.scheduleNextFollowUpDays,
+        outcome: input.outcome,
+      });
+    } else {
+      await this.activityRepo.appendActivity({
+        contactId: input.contactId,
+        organizationId: '',
+        title: 'WhatsApp dikirim',
+        detail: input.text,
+        timestamp: this.clock.nowIso(),
+        type: 'WA_SENT',
+      });
+    }
+    return {
+      messageId: `mock-msg-${Date.now()}`,
+      status: 'sent',
+    };
+  }
+
+  async listWhatsAppInbox(): Promise<WaInboxMessage[]> {
+    return [...this.mockInbox];
+  }
+
+  async markWhatsAppInboxRead(): Promise<MarkWaInboxReadResponse> {
+    this.mockInbox.forEach((m) => {
+      m.isRead = true;
+    });
+    return { ok: true };
   }
 }

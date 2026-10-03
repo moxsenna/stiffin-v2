@@ -96,8 +96,9 @@ export const serviceCommands = createServiceCommands(serviceRepo);
 export const activityQueries = createActivityQueries(activityRepo);
 export const activityCommands = createActivityCommands(activityRepo);
 
-export const messagingQueries = createMessagingQueries(templateRepo);
+export const messagingQueries = createMessagingQueries(templateRepo, messagingRepo);
 export const messagingCommands = createMessagingCommands(messagingRepo);
+export { messagingRepo };
 
 export const aftercareQueries = createAftercareQueries();
 export const aftercareCommands = createAftercareCommands(aftercareRepo, nextActionRepo, activityRepo, activeClock);

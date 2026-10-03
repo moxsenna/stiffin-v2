@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { BottomSheet } from '../ui';
+import { WaStatusPill, useWhatsAppStatus } from '@/components/whatsapp';
+import { messagingRepo } from '@/lib/container';
 import type { ContactWaOutcome, MessageTemplateTone } from '@promotor/contracts';
 
 export interface WhatsAppBottomSheetProps {
@@ -11,6 +13,8 @@ export interface WhatsAppBottomSheetProps {
   initialDraft: string;
   waUrl: string;
   initialTone?: MessageTemplateTone;
+  contactId?: string;
+  nextActionId?: string;
   onRegenerateDraft?: (tone: MessageTemplateTone) => string | Promise<string>;
   onClose: () => void;
   onConfirmSent: (scheduleNextDays?: number, outcome?: ContactWaOutcome) => Promise<void>;
@@ -24,6 +28,8 @@ export const WhatsAppBottomSheet: React.FC<WhatsAppBottomSheetProps> = ({
   initialDraft,
   waUrl,
   initialTone,
+  contactId,
+  nextActionId,
   onRegenerateDraft,
   onClose,
   onConfirmSent,
@@ -31,14 +37,23 @@ export const WhatsAppBottomSheet: React.FC<WhatsAppBottomSheetProps> = ({
   const [draft, setDraft] = useState(initialDraft);
   const [tone, setTone] = useState<MessageTemplateTone | undefined>(initialTone);
   const [hasOpenedWa, setHasOpenedWa] = useState(false);
+  const [isDirectSent, setIsDirectSent] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const [nextFollowUpDays, setNextFollowUpDays] = useState<number | undefined>(2);
   const [delayTouched, setDelayTouched] = useState(false);
   const [outcome, setOutcome] = useState<ContactWaOutcome | undefined>(undefined);
+
+  const { status } = useWhatsAppStatus(30_000);
+  const isConnected = status?.stage === 'connected';
 
   useEffect(() => {
     setDraft(initialDraft);
     setTone(initialTone);
     setHasOpenedWa(false);
+    setIsDirectSent(false);
+    setIsSending(false);
+    setSendError(null);
     setNextFollowUpDays(2);
     setDelayTouched(false);
     setOutcome(undefined);
@@ -63,6 +78,43 @@ export const WhatsAppBottomSheet: React.FC<WhatsAppBottomSheetProps> = ({
     setHasOpenedWa(true);
   };
 
+  const handleDirectSend = async () => {
+    if (!contactId) {
+      handleOpenWa();
+      return;
+    }
+    setIsSending(true);
+    setSendError(null);
+    try {
+      const res = await messagingRepo.sendWhatsApp({
+        contactId,
+        text: draft,
+        nextActionId,
+        outcome,
+        scheduleNextFollowUpDays: delayTouched ? nextFollowUpDays : undefined,
+      });
+
+      if (res.status === 'failed' || res.error) {
+        setSendError(res.error || 'Pengiriman pesan WhatsApp gagal.');
+        setIsSending(false);
+        return;
+      }
+
+      setIsSending(false);
+      setIsDirectSent(true);
+
+      if (outcome) {
+        await onConfirmSent(delayTouched ? nextFollowUpDays : undefined, outcome);
+        onClose();
+      } else {
+        setHasOpenedWa(true);
+      }
+    } catch (err: any) {
+      setIsSending(false);
+      setSendError(err?.message || 'Gagal mengirim pesan via WhatsApp.');
+    }
+  };
+
   const handleConfirm = async () => {
     const systemScheduled = outcome === 'INTERESTED_TEST' || outcome === 'ASK_SCHEDULE';
     // WAIT_PAYDAY defaults to 3d and NO_RESPONSE to 2d on the backend. Only send
@@ -78,11 +130,23 @@ export const WhatsAppBottomSheet: React.FC<WhatsAppBottomSheetProps> = ({
 
   return (
     <BottomSheet open={isOpen} onClose={onClose} labelledBy="wa-sheet-title">
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 8,
+          gap: 8,
+        }}
+      >
+        <h2 id="wa-sheet-title" style={{ font: '700 16px/1.3 var(--font-sans)', margin: 0 }}>
+          {!hasOpenedWa ? 'Kirim WhatsApp' : isDirectSent ? 'Pesan Terkirim' : 'Pesan sudah terkirim?'}
+        </h2>
+        <WaStatusPill />
+      </div>
+
       {!hasOpenedWa ? (
         <>
-          <h2 id="wa-sheet-title" style={{ font: '700 16px/1.3 var(--font-sans)', marginBottom: 8 }}>
-            Kirim WhatsApp
-          </h2>
           <div className="kicker kicker-muted">
             Draf pesan · {contactName}
           </div>
@@ -109,83 +173,140 @@ export const WhatsAppBottomSheet: React.FC<WhatsAppBottomSheetProps> = ({
             className="textarea"
             style={{ marginTop: 12 }}
           />
+
           <div style={{ marginTop: 10, font: '400 11px/1.45 var(--font-sans)', color: 'var(--muted-strong)' }}>
-            Pesan dibuka di WhatsApp. Anda yang menekan kirim.
+            {isConnected && contactId
+              ? 'Pesan dikirim langsung via koneksi WhatsApp.'
+              : 'Pesan dibuka di WhatsApp. Anda yang menekan kirim.'}
           </div>
+
+          {sendError && (
+            <div
+              style={{
+                marginTop: 8,
+                font: '400 12px/1.4 var(--font-sans)',
+                color: '#B42318',
+              }}
+            >
+              {sendError}
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-            <button type="button" className="btn btn-accent" onClick={handleOpenWa}>
-              Buka WhatsApp
-            </button>
-            <button type="button" className="btn btn-ghost" onClick={onClose}>
-              Batal
-            </button>
+            {isConnected && contactId ? (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-accent"
+                  onClick={handleDirectSend}
+                  disabled={isSending}
+                >
+                  {isSending ? 'Mengirim…' : 'Kirim via WhatsApp'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={handleOpenWa}
+                  disabled={isSending}
+                >
+                  Buka WhatsApp
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={onClose}
+                  disabled={isSending}
+                >
+                  Batal
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" className="btn btn-accent" onClick={handleOpenWa}>
+                  Buka WhatsApp
+                </button>
+                <button type="button" className="btn btn-ghost" onClick={onClose}>
+                  Batal
+                </button>
+              </>
+            )}
           </div>
         </>
       ) : (
         <>
-          <h2 id="wa-sheet-title" className="sheet-title-lg">
-            Pesan sudah terkirim?
-          </h2>
-         <div className="sheet-explain">
-           Jika sudah, tindakan ditutup dan Next Action berikutnya dibuat otomatis.
+          <div className="sheet-explain" style={{ marginTop: 4 }}>
+            {isDirectSent
+              ? 'Pesan terkirim via WhatsApp. Pilih hasil percakapan untuk memperbarui tahap kontak dan Next Action.'
+              : 'Jika sudah, tindakan ditutup dan Next Action berikutnya dibuat otomatis.'}
           </div>
 
-         <div style={{ marginTop: 14 }}>
-           <div className="field-label">Apa hasil chat barusan?</div>
-           <div className="segmented">
-             {[
-               { label: 'Tertarik Tes STIFIn', value: 'INTERESTED_TEST' as const },
-               { label: 'Minta Jadwal', value: 'ASK_SCHEDULE' as const },
-               { label: 'Tunggu Gajian', value: 'WAIT_PAYDAY' as const },
-               { label: 'Tidak Merespons', value: 'NO_RESPONSE' as const },
-             ].map((opt) => (
-               <button
-                 key={opt.value}
-                 type="button"
-                 className={outcome === opt.value ? 'is-active' : undefined}
-                 aria-pressed={outcome === opt.value}
-                 onClick={() => setOutcome(outcome === opt.value ? undefined : opt.value)}
-               >
-                 {opt.label}
-               </button>
-             ))}
-           </div>
-         </div>
-
-         {showDelayPicker && (
-         <div style={{ marginTop: 14 }}>
-           <div className="field-label">Jadwalkan follow-up berikutnya</div>
-           <div className="segmented">
-             {[
-                { label: '2 Hari', value: 2 as number | undefined },
-                { label: '5 Hari', value: 5 },
-                { label: '1 Minggu', value: 7 },
-                { label: 'Tidak', value: undefined },
-              ].map((opt) =>(
+          <div style={{ marginTop: 14 }}>
+            <div className="field-label">Apa hasil chat barusan?</div>
+            <div className="segmented">
+              {[
+                { label: 'Tertarik Tes STIFIn', value: 'INTERESTED_TEST' as const },
+                { label: 'Minta Jadwal', value: 'ASK_SCHEDULE' as const },
+                { label: 'Tunggu Gajian', value: 'WAIT_PAYDAY' as const },
+                { label: 'Tidak Merespons', value: 'NO_RESPONSE' as const },
+              ].map((opt) => (
                 <button
-                  key={opt.label}
+                  key={opt.value}
                   type="button"
-                  className={nextFollowUpDays === opt.value ? 'is-active' : undefined}
-                  aria-pressed={nextFollowUpDays === opt.value}
-                  onClick={() =>{setNextFollowUpDays(opt.value); setDelayTouched(true);}}
+                  className={outcome === opt.value ? 'is-active' : undefined}
+                  aria-pressed={outcome === opt.value}
+                  onClick={() => setOutcome(outcome === opt.value ? undefined : opt.value)}
                 >
-                 {opt.label}
+                  {opt.label}
                 </button>
-             ))}
+              ))}
             </div>
-         </div>
-         )}
+          </div>
 
-         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-           <button type="button" className="btn btn-primary" onClick={handleConfirm}>
-             Ya, Sudah Dikirim
+          {showDelayPicker && (
+            <div style={{ marginTop: 14 }}>
+              <div className="field-label">Jadwalkan follow-up berikutnya</div>
+              <div className="segmented">
+                {[
+                  { label: '2 Hari', value: 2 as number | undefined },
+                  { label: '5 Hari', value: 5 },
+                  { label: '1 Minggu', value: 7 },
+                  { label: 'Tidak', value: undefined },
+                ].map((opt) => (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    className={nextFollowUpDays === opt.value ? 'is-active' : undefined}
+                    aria-pressed={nextFollowUpDays === opt.value}
+                    onClick={() => {
+                      setNextFollowUpDays(opt.value);
+                      setDelayTouched(true);
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+            <button type="button" className="btn btn-primary" onClick={handleConfirm}>
+              {isDirectSent ? 'Simpan Hasil' : 'Ya, Sudah Dikirim'}
             </button>
-           <button type="button" className="btn btn-secondary" onClick={() =>setHasOpenedWa(false)}>
-             Belum
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => {
+                setHasOpenedWa(false);
+                setIsDirectSent(false);
+              }}
+            >
+              Kembali
             </button>
-         </div>
-       </>
-     )}
+          </div>
+        </>
+      )}
     </BottomSheet>
- );
+  );
 };
+

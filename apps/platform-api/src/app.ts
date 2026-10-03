@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { organizations, productEntitlements, contacts, enrollments, programs } from './db/schema';
+import { organizations, productEntitlements, contacts, enrollments, programs, commerceOrders } from './db/schema';
 import { Env } from './env';
 import { executeDbHealthProbe } from './db/client';
 import { authLifecycle, sessionMiddleware } from './auth/session-middleware';
@@ -45,6 +45,7 @@ import {
   CreatePriceVariantRequestSchema,
   UpdatePriceVariantRequestSchema,
   UpsertLessonNoteRequestSchema,
+  PostLessonDiscussionRequestSchema,
 } from '@promotor/contracts';
 import { registerFlowRoutes } from './routes/flow-routes';
 import { registerClassRoutes } from './routes/class-routes';
@@ -52,7 +53,20 @@ import { registerCommerceRoutes } from './routes/commerce-routes';
 import { registerJourneyRoutes } from './routes/journey-routes';
 import { registerAssetRoutes } from './routes/asset-routes';
 import { registerAdminRoutes } from './routes/admin-routes';
+import { registerWebhookRoutes } from './routes/webhook-routes';
 import { createSubscriptionRepository } from './repositories/subscription-repository';
+
+interface LessonDiscussionRecord {
+  id: string;
+  enrollmentId: string;
+  lessonId: string;
+  authorName: string;
+  authorRole: 'learner' | 'mentor' | 'promoter';
+  message: string;
+  createdAt: string;
+}
+
+const lessonDiscussionsStore = new Map<string, LessonDiscussionRecord[]>();
 import { createPlanAccessService } from './services/billing/plan-access-service';
 import { requestLoggerMiddleware, logOperation } from './core/observability';
 
@@ -537,6 +551,30 @@ export function createApp(deps?: AppDependencies) {
 
   app.post('/api/v1/public/:slug/programs/:programSlug/register', handlePublicRegistration);
   app.post('/api/v1/public/workspaces/:workspaceSlug/programs/:programSlug/register', handlePublicRegistration);
+
+  // ==========================================
+  // Public Program Reviews, Batches, Mentors (Honest Endpoints)
+  // ==========================================
+  const handlePublicReviews = async (c: any) => {
+    c.header('Cache-Control', 'no-store');
+    return c.json({ reviews: [] }, 200);
+  };
+  app.get('/api/v1/public/:slug/programs/:programSlug/reviews', handlePublicReviews);
+  app.get('/api/v1/public/workspaces/:workspaceSlug/programs/:programSlug/reviews', handlePublicReviews);
+
+  const handlePublicBatches = async (c: any) => {
+    c.header('Cache-Control', 'no-store');
+    return c.json({ batches: [] }, 200);
+  };
+  app.get('/api/v1/public/:slug/programs/:programSlug/batches', handlePublicBatches);
+  app.get('/api/v1/public/workspaces/:workspaceSlug/programs/:programSlug/batches', handlePublicBatches);
+
+  const handlePublicMentors = async (c: any) => {
+    c.header('Cache-Control', 'no-store');
+    return c.json({ mentors: [] }, 200);
+  };
+  app.get('/api/v1/public/:slug/programs/:programSlug/mentors', handlePublicMentors);
+  app.get('/api/v1/public/workspaces/:workspaceSlug/programs/:programSlug/mentors', handlePublicMentors);
 
   // ==========================================
   // Learner Auth & Session Redemption (§4, §5)
@@ -1191,6 +1229,106 @@ export function createApp(deps?: AppDependencies) {
   });
 
   // ==========================================
+  // Learner Discussions API
+  // ==========================================
+  app.get('/api/v1/learner/enrollments/:enrollmentId/lessons/:lessonId/discussions', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const lessonId = c.req.param('lessonId');
+    const discussions = lessonDiscussionsStore.get(lessonId) ?? [];
+    return c.json({ discussions }, 200);
+  });
+
+  app.post('/api/v1/learner/enrollments/:enrollmentId/lessons/:lessonId/discussions', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const enrollmentId = c.req.param('enrollmentId');
+    const lessonId = c.req.param('lessonId');
+    const learnerCtx = c.get('learnerContext' as any) as any;
+    const raw = await c.req.json().catch(() => ({}));
+    const parsed = PostLessonDiscussionRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      const details = parsed.error.issues.map((i) => i.message).join(', ');
+      throw new DomainError('VALIDATION_ERROR', `Pesan diskusi tidak valid: ${details}`);
+    }
+
+    const [contact] = await db
+      .select({ name: contacts.name })
+      .from(contacts)
+      .where(eq(contacts.id, learnerCtx.contactId))
+      .limit(1);
+
+    const newDiscussion: LessonDiscussionRecord = {
+      id: crypto.randomUUID(),
+      enrollmentId,
+      lessonId,
+      authorName: contact?.name || 'Peserta',
+      authorRole: 'learner',
+      message: parsed.data.message,
+      createdAt: new Date().toISOString(),
+    };
+
+    const existing = lessonDiscussionsStore.get(lessonId) ?? [];
+    existing.push(newDiscussion);
+    lessonDiscussionsStore.set(lessonId, existing);
+
+    return c.json({ discussion: newDiscussion }, 201);
+  });
+
+  // ==========================================
+  // Learner Schedules & Live Sessions API
+  // ==========================================
+  app.get('/api/v1/learner/me/schedules', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    return c.json({ schedules: [] }, 200);
+  });
+
+  // ==========================================
+  // Learner Assignments & Deadlines API
+  // ==========================================
+  app.get('/api/v1/learner/me/assignments', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    return c.json({ assignments: [] }, 200);
+  });
+
+  // ==========================================
+  // Learner Orders & Payment Invoices API
+  // ==========================================
+  app.get('/api/v1/learner/me/orders', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const db = c.get('db');
+    const learnerCtx = c.get('learnerContext' as any) as any;
+
+    const rows = await db
+      .select({
+        id: commerceOrders.id,
+        reference: commerceOrders.reference,
+        amount: commerceOrders.amount,
+        currency: commerceOrders.currency,
+        status: commerceOrders.status,
+        createdAt: commerceOrders.createdAt,
+        paidAt: commerceOrders.paidAt,
+        programTitle: programs.title,
+      })
+      .from(commerceOrders)
+      .leftJoin(programs, eq(programs.id, commerceOrders.programId))
+      .where(eq(commerceOrders.contactId, learnerCtx.contactId))
+      .orderBy(desc(commerceOrders.createdAt));
+
+    const orders = rows.map((r: any) => ({
+      id: r.id,
+      reference: r.reference,
+      programTitle: r.programTitle || 'Program Edukasi',
+      amount: r.amount,
+      currency: r.currency || 'IDR',
+      status: r.status,
+      createdAt: r.createdAt,
+      paidAt: r.paidAt,
+    }));
+
+    return c.json({ orders }, 200);
+  });
+
+  // ==========================================
   // B3 Admin Content API (Auth + Entitlement Gated)
   // ==========================================
   app.use('/api/v1/programs', sessionMiddleware, requireOrganization(), requireEntitlement('promotorClass'), requireRole(['owner', 'admin']));
@@ -1558,6 +1696,7 @@ export function createApp(deps?: AppDependencies) {
   registerCommerceRoutes(app);
   registerAssetRoutes(app);
   registerAdminRoutes(app);
+  registerWebhookRoutes(app);
 
   return app;
 }

@@ -1,6 +1,14 @@
 import { MessagingPort } from '@/modules/messaging/ports';
 import { PromotorFlowApiClient } from '@promotor/api-client';
-import type { ConfirmWhatsAppSentResponse, ContactWaOutcome } from '@promotor/contracts';
+import type {
+  ConfirmWhatsAppSentResponse,
+  ContactWaOutcome,
+  WaStatusResponse,
+  WaPairingStartResponse,
+  SendWaMessageResponse,
+  WaInboxMessage,
+  MarkWaInboxReadResponse,
+} from '@promotor/contracts';
 
 export class HttpMessagingRepository implements MessagingPort {
   constructor(private api: PromotorFlowApiClient) {}
@@ -28,5 +36,32 @@ export class HttpMessagingRepository implements MessagingPort {
       success: true,
       nextActionId: res.nextAction.id,
     };
+  }
+
+  async getWhatsAppStatus(): Promise<WaStatusResponse> {
+    return this.api.getWhatsAppStatus();
+  }
+
+  async startWhatsAppPairing(): Promise<WaPairingStartResponse> {
+    return this.api.startWhatsAppPairing();
+  }
+
+  async sendWhatsApp(input: {
+    contactId: string;
+    text: string;
+    nextActionId?: string;
+    outcome?: ContactWaOutcome;
+    scheduleNextFollowUpDays?: number;
+  }): Promise<SendWaMessageResponse> {
+    return this.api.sendWhatsApp(input);
+  }
+
+  async listWhatsAppInbox(): Promise<WaInboxMessage[]> {
+    const res = await this.api.listWhatsAppInbox();
+    return res.messages;
+  }
+
+  async markWhatsAppInboxRead(): Promise<MarkWaInboxReadResponse> {
+    return this.api.markWhatsAppInboxRead();
   }
 }

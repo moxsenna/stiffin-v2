@@ -48,3 +48,4 @@ export * from './payout-items';
 export * from './bridge-metrics';
 export * from './bridge-dismissals';
 export * from './admin-audit-logs';
+export * from './whatsapp';

@@ -21,6 +21,7 @@
     "@promotor/platform-core": "workspace:*",
     "@promotor/promotor-flow-fixtures": "workspace:*",
     "next": "15.3.8",
+    "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "styled-jsx": "5.1.1"

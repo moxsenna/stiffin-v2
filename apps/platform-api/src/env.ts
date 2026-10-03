@@ -35,4 +35,9 @@ export interface Env {
   PAYCORE_KEY_ID?: string;
   PAYCORE_APP_SECRET?: string;
   PAYCORE_WEBHOOK_SECRET?: string;
+
+  /** Wakonek (WhatsApp Gateway) Configuration */
+  WAKONEK_GATEWAY_URL?: string;
+  WAKONEK_API_KEY?: string;
+  WAKONEK_WEBHOOK_SECRET?: string;
 }

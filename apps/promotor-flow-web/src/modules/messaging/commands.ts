@@ -1,5 +1,10 @@
 import { MessagingPort } from './ports';
-import type { ContactWaOutcome } from '@promotor/contracts';
+import type {
+  ContactWaOutcome,
+  SendWaMessageResponse,
+  WaPairingStartResponse,
+  MarkWaInboxReadResponse,
+} from '@promotor/contracts';
 
 export interface ConfirmWASentInput {
   organizationId?: string;
@@ -24,6 +29,24 @@ export function createMessagingCommands(messagingPort: MessagingPort) {
         scheduleNextFollowUpDays: input.scheduleNextFollowUpDays,
         outcome: input.outcome,
       });
+    },
+
+    async sendWhatsApp(input: {
+      contactId: string;
+      text: string;
+      nextActionId?: string;
+      outcome?: ContactWaOutcome;
+      scheduleNextFollowUpDays?: number;
+    }): Promise<SendWaMessageResponse> {
+      return messagingPort.sendWhatsApp(input);
+    },
+
+    async startWhatsAppPairing(): Promise<WaPairingStartResponse> {
+      return messagingPort.startWhatsAppPairing();
+    },
+
+    async markWhatsAppInboxRead(): Promise<MarkWaInboxReadResponse> {
+      return messagingPort.markWhatsAppInboxRead();
     },
   };
 }

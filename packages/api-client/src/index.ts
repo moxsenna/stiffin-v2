@@ -32,6 +32,14 @@ import type {
   WhatsAppOpenedRequest,
   ConfirmWhatsAppSentRequest,
   ConfirmWhatsAppSentResponse,
+  WaStage,
+  WaStatusResponse,
+  WaPairingStartResponse,
+  SendWaMessageRequest,
+  SendWaMessageResponse,
+  WaInboxMessage,
+  WaInboxResponse,
+  MarkWaInboxReadResponse,
   AvailabilityRuleDto,
   ReplaceAvailabilityRulesRequest,
   CreateContactNoteRequest,
@@ -96,6 +104,15 @@ import type {
   CouponQuoteResponse,
   UpsertLessonNoteRequest,
   LessonNoteDto,
+  LessonDiscussionItem,
+  ListLessonDiscussionsResponse,
+  PostLessonDiscussionRequest,
+  LearnerScheduleItem,
+  LearnerAssignmentItem,
+  LearnerOrderItem,
+  ProgramReviewItem,
+  ProgramBatchItem,
+  ProgramMentorItem,
 } from '@promotor/contracts';
 
 export interface ApiClientConfig {
@@ -593,6 +610,50 @@ export class PromotorClassContentApiClient {
       `/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/note`,
       data
     );
+  }
+
+  async getLessonDiscussions(
+    enrollmentId: string,
+    lessonId: string
+  ): Promise<ListLessonDiscussionsResponse> {
+    return this.client.get(
+      `/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/discussions`
+    );
+  }
+
+  async postLessonDiscussion(
+    enrollmentId: string,
+    lessonId: string,
+    data: PostLessonDiscussionRequest
+  ): Promise<{ discussion: LessonDiscussionItem }> {
+    return this.client.post(
+      `/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/discussions`,
+      data
+    );
+  }
+
+  async getLearnerSchedules(): Promise<{ schedules: LearnerScheduleItem[] }> {
+    return this.client.get('/api/v1/learner/me/schedules');
+  }
+
+  async getLearnerAssignments(): Promise<{ assignments: LearnerAssignmentItem[] }> {
+    return this.client.get('/api/v1/learner/me/assignments');
+  }
+
+  async getLearnerOrders(): Promise<{ orders: LearnerOrderItem[] }> {
+    return this.client.get('/api/v1/learner/me/orders');
+  }
+
+  async getProgramReviews(workspaceSlug: string, programSlug: string): Promise<{ reviews: ProgramReviewItem[] }> {
+    return this.client.get(`/api/v1/public/workspaces/${encodeURIComponent(workspaceSlug)}/programs/${encodeURIComponent(programSlug)}/reviews`);
+  }
+
+  async getProgramBatches(workspaceSlug: string, programSlug: string): Promise<{ batches: ProgramBatchItem[] }> {
+    return this.client.get(`/api/v1/public/workspaces/${encodeURIComponent(workspaceSlug)}/programs/${encodeURIComponent(programSlug)}/batches`);
+  }
+
+  async getProgramMentors(workspaceSlug: string, programSlug: string): Promise<{ mentors: ProgramMentorItem[] }> {
+    return this.client.get(`/api/v1/public/workspaces/${encodeURIComponent(workspaceSlug)}/programs/${encodeURIComponent(programSlug)}/mentors`);
   }
 
   async recordLearnerEvent(
@@ -1212,6 +1273,26 @@ export class PromotorFlowApiClient {
     return this.client.post('/api/v1/flow/messaging/confirm-sent', data);
   }
 
+  async getWhatsAppStatus(): Promise<WaStatusResponse> {
+    return this.client.get('/api/v1/flow/messaging/wa/status');
+  }
+
+  async startWhatsAppPairing(): Promise<WaPairingStartResponse> {
+    return this.client.post('/api/v1/flow/messaging/wa/pairing/start');
+  }
+
+  async sendWhatsApp(data: SendWaMessageRequest): Promise<SendWaMessageResponse> {
+    return this.client.post('/api/v1/flow/messaging/wa/send', data);
+  }
+
+  async listWhatsAppInbox(): Promise<WaInboxResponse> {
+    return this.client.get('/api/v1/flow/messaging/wa/inbox');
+  }
+
+  async markWhatsAppInboxRead(): Promise<MarkWaInboxReadResponse> {
+    return this.client.post('/api/v1/flow/messaging/wa/inbox/read');
+  }
+
   // Availability
   async getAvailability(): Promise<{ rules: AvailabilityRuleDto[] }> {
     return this.client.get('/api/v1/flow/availability');
@@ -1302,6 +1383,50 @@ export class PromotorFlowApiClient {
       `/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/note`,
       data
     );
+  }
+
+  async getLessonDiscussions(
+    enrollmentId: string,
+    lessonId: string
+  ): Promise<ListLessonDiscussionsResponse> {
+    return this.client.get(
+      `/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/discussions`
+    );
+  }
+
+  async postLessonDiscussion(
+    enrollmentId: string,
+    lessonId: string,
+    data: PostLessonDiscussionRequest
+  ): Promise<{ discussion: LessonDiscussionItem }> {
+    return this.client.post(
+      `/api/v1/learner/enrollments/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/discussions`,
+      data
+    );
+  }
+
+  async getLearnerSchedules(): Promise<{ schedules: LearnerScheduleItem[] }> {
+    return this.client.get('/api/v1/learner/me/schedules');
+  }
+
+  async getLearnerAssignments(): Promise<{ assignments: LearnerAssignmentItem[] }> {
+    return this.client.get('/api/v1/learner/me/assignments');
+  }
+
+  async getLearnerOrders(): Promise<{ orders: LearnerOrderItem[] }> {
+    return this.client.get('/api/v1/learner/me/orders');
+  }
+
+  async getProgramReviews(workspaceSlug: string, programSlug: string): Promise<{ reviews: ProgramReviewItem[] }> {
+    return this.client.get(`/api/v1/public/workspaces/${encodeURIComponent(workspaceSlug)}/programs/${encodeURIComponent(programSlug)}/reviews`);
+  }
+
+  async getProgramBatches(workspaceSlug: string, programSlug: string): Promise<{ batches: ProgramBatchItem[] }> {
+    return this.client.get(`/api/v1/public/workspaces/${encodeURIComponent(workspaceSlug)}/programs/${encodeURIComponent(programSlug)}/batches`);
+  }
+
+  async getProgramMentors(workspaceSlug: string, programSlug: string): Promise<{ mentors: ProgramMentorItem[] }> {
+    return this.client.get(`/api/v1/public/workspaces/${encodeURIComponent(workspaceSlug)}/programs/${encodeURIComponent(programSlug)}/mentors`);
   }
 
   async recordLearnerEvent(enrollmentId: string, data: RecordLearningEventRequest): Promise<RecordLearningEventResponse> {
@@ -1458,6 +1583,18 @@ export interface EligibleProgramDto {
   pricing: string;
   priceAmount: number;
 }
+
+export type {
+  WaStage,
+  WaStatusResponse,
+  WaPairingStartResponse,
+  SendWaMessageRequest,
+  SendWaMessageResponse,
+  WaInboxMessage,
+  WaInboxResponse,
+  MarkWaInboxReadResponse,
+};
+
 
 
 

@@ -26,6 +26,8 @@ import {
   CancelBookingRequestSchema,
   WhatsAppOpenedRequestSchema,
   ConfirmWhatsAppSentRequestSchema,
+  ContactWaOutcomeSchema,
+  type ContactWaOutcome,
   ReplaceAvailabilityRulesRequestSchema,
   CreateContactNoteRequestSchema,
   UpdateRevenueSettingsRequestSchema,
@@ -33,7 +35,8 @@ import {
 import { computeRevenueSummary } from '../domain/flow/revenue-summary';
 import { createRevenueSettingsService } from '../services/revenue-settings-service';
 import { createBookingRepository } from '../repositories/booking-repository';
-import { contacts, nextActions, programs, organizations } from '../db/schema';
+import { contacts, nextActions, programs, organizations, whatsappDevices, whatsappInbox } from '../db/schema';
+import { provisionOrReuseDevice, getWaStatus, sendWaText } from '../services/wakonek-service';
 import { createContactFlowService } from '../services/contact-flow-service';
 import { createContactLifecycleService } from '../services/contact-lifecycle-service';
 import { createNextActionService } from '../services/next-action-service';
@@ -707,29 +710,37 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
     return c.json(result, 200);
   });
 
-  flow.post('/messaging/confirm-sent', async (c) => {
-    c.header('Cache-Control', 'no-store');
-    const { ctx, actor, db } = getRequestContext(c);
-    const raw = await c.req.json().catch(() => ({}));
-    const body = parseBody(ConfirmWhatsAppSentRequestSchema, raw);
+  const SendWaMessageRequestSchema = z.object({
+    contactId: z.string().uuid(),
+    text: z.string().min(1).max(4096),
+    nextActionId: z.string().uuid().optional(),
+    outcome: ContactWaOutcomeSchema.optional(),
+    scheduleNextFollowUpDays: z.number().int().positive().optional(),
+  });
+
+  async function applyPostWhatsAppConfirmSent(
+    db: any,
+    ctx: OrganizationContext,
+    actor: AuthenticatedActor,
+    params: {
+      nextActionId: string;
+      outcome?: ContactWaOutcome;
+      scheduleNextFollowUpDays?: number;
+    }
+  ) {
     const service = createNextActionService(db);
     const completed = await service.completeAction(
       ctx,
-      body.nextActionId,
+      params.nextActionId,
       { confirmedWhatsAppSent: true },
       actor
     );
 
-    // C1: apply deterministic post-WhatsApp outcome effect.
-    // Legacy clients send only nextActionId (outcome undefined) -> neutral effect.
-    const effect = resolveOutcomeEffect(body.outcome, body.nextActionId, new Date());
+    const effect = resolveOutcomeEffect(params.outcome, params.nextActionId, new Date());
     const nextActionRepo = createNextActionRepository(db);
     const activityRepo = createActivityRepository(db);
     let createdAction: { id: string; title: string; dueAt: string } | null = null;
 
-    // Create the explicit follow-up BEFORE the stage transition so the
-    // INTERESTED entry trigger (ENSURE_FOLLOW_UP_IF_NONE) sees it and
-    // skips its generic auto-created follow-up (no duplicate FOLLOW_UP).
     if (effect.followUp) {
       const existing = await nextActionRepo.findByIdempotency(
         ctx,
@@ -765,13 +776,10 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
       }
       createdAction = { id: row.id, title: row.title, dueAt: row.dueAt };
     } else {
-      // WAIT_PAYDAY / NO_RESPONSE: explicit client choice wins, otherwise the
-      // outcome default days apply. Legacy clients (no outcome) sending manual
-      // days keep working through the same path. Idempotent per outcome+action.
-      const days = body.scheduleNextFollowUpDays ?? effect.nextFollowUpDays;
+      const days = params.scheduleNextFollowUpDays ?? effect.nextFollowUpDays;
       if (days && days > 0) {
-        const keyOutcome = body.outcome ?? 'MANUAL';
-        const idempotencyKey = `wa-outcome:${keyOutcome}:${body.nextActionId}`;
+        const keyOutcome = params.outcome ?? 'MANUAL';
+        const idempotencyKey = `wa-outcome:${keyOutcome}:${params.nextActionId}`;
         const existing = await nextActionRepo.findByIdempotency(ctx, 'PROMOTORFLOW', idempotencyKey);
         const dayMs = 24 * 3600_000;
         const row =
@@ -808,7 +816,156 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
       const lifecycle = createContactLifecycleService(db);
       await lifecycle.transitionStage(ctx, completed.contactId, effect.stage, {}, actor);
     }
-    return c.json({ nextAction: completed, createdAction }, 200);
+    return { nextAction: completed, createdAction };
+  }
+
+  flow.post('/messaging/confirm-sent', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, actor, db } = getRequestContext(c);
+    const raw = await c.req.json().catch(() => ({}));
+    const body = parseBody(ConfirmWhatsAppSentRequestSchema, raw);
+    const result = await applyPostWhatsAppConfirmSent(db, ctx, actor, {
+      nextActionId: body.nextActionId,
+      outcome: body.outcome,
+      scheduleNextFollowUpDays: body.scheduleNextFollowUpDays,
+    });
+    return c.json(result, 200);
+  });
+
+  // ==========================================
+  // Wakonek WhatsApp Gateway Integration
+  // ==========================================
+  flow.post('/messaging/wa/pairing/start', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const env = c.env;
+    if (!env?.WAKONEK_API_KEY || !env?.WAKONEK_GATEWAY_URL) {
+      return c.json({ stage: 'unconfigured' }, 200);
+    }
+    const result = await provisionOrReuseDevice(db, env, ctx.organizationId);
+    return c.json({
+      deviceId: result.deviceId,
+      pairingToken: result.pairingToken ?? '',
+      gatewayUrl: env.WAKONEK_GATEWAY_URL,
+    }, 200);
+  });
+
+  flow.get('/messaging/wa/status', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const env = c.env;
+    const result = await getWaStatus(db, env, ctx.organizationId);
+    return c.json(result, 200);
+  });
+
+  flow.post('/messaging/wa/send', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, actor, db } = getRequestContext(c);
+    const env = c.env;
+    if (!env?.WAKONEK_API_KEY || !env?.WAKONEK_GATEWAY_URL) {
+      return c.json({ code: 'UNCONFIGURED', error: 'Wakonek gateway belum dikonfigurasi' }, 503);
+    }
+    const raw = await c.req.json().catch(() => ({}));
+    const body = parseBody(SendWaMessageRequestSchema, raw);
+
+    const [contact] = await db
+      .select()
+      .from(contacts)
+      .where(
+        and(
+          eq(contacts.id, body.contactId),
+          eq(contacts.organizationId, ctx.organizationId),
+          isNull(contacts.deletedAt)
+        )
+      )
+      .limit(1);
+
+    if (!contact) {
+      throw new DomainError('NOT_FOUND', 'Active tenant contact not found');
+    }
+
+    let sendResult;
+    try {
+      sendResult = await sendWaText(db, env, ctx.organizationId, {
+        target: contact.phoneE164,
+        text: body.text,
+      });
+    } catch (err: any) {
+      if (err?.code === 'NOT_CONNECTED') {
+        return c.json({ code: 'NOT_CONNECTED', error: 'WhatsApp belum terhubung' }, 409);
+      }
+      throw err;
+    }
+
+    if (sendResult.status === 'failed') {
+      return c.json({ messageId: sendResult.messageId, status: 'failed' }, 200);
+    }
+
+    const activityRepo = createActivityRepository(db);
+    await activityRepo.append(ctx, actor, {
+      contactId: contact.id,
+      eventType: 'WHATSAPP_SENT',
+      metadataJson: {
+        contactId: contact.id,
+        messageId: sendResult.messageId,
+        target: contact.phoneE164,
+        textLength: body.text.length,
+      },
+    });
+
+    if (body.nextActionId) {
+      await applyPostWhatsAppConfirmSent(db, ctx, actor, {
+        nextActionId: body.nextActionId,
+        outcome: body.outcome,
+        scheduleNextFollowUpDays: body.scheduleNextFollowUpDays,
+      });
+    }
+
+    return c.json({ messageId: sendResult.messageId, status: sendResult.status }, 200);
+  });
+
+  flow.get('/messaging/wa/inbox', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    const rows = await db
+      .select({
+        id: whatsappInbox.id,
+        contactId: whatsappInbox.contactId,
+        contactName: contacts.name,
+        phoneE164: whatsappInbox.phoneE164,
+        type: whatsappInbox.type,
+        text: whatsappInbox.text,
+        receivedAt: whatsappInbox.receivedAt,
+        isRead: whatsappInbox.isRead,
+      })
+      .from(whatsappInbox)
+      .leftJoin(contacts, eq(contacts.id, whatsappInbox.contactId))
+      .where(eq(whatsappInbox.organizationId, ctx.organizationId))
+      .orderBy(desc(whatsappInbox.receivedAt))
+      .limit(50);
+
+    const messages = rows.map((r: any) => ({
+      id: r.id,
+      contactId: r.contactId ?? null,
+      contactName: r.contactName ?? null,
+      phoneE164: r.phoneE164,
+      type: r.type,
+      text: r.text,
+      receivedAt: r.receivedAt,
+      isRead: Boolean(r.isRead),
+    }));
+
+    return c.json({ messages }, 200);
+  });
+
+  flow.post('/messaging/wa/inbox/read', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const { ctx, db } = getRequestContext(c);
+    await db
+      .update(whatsappInbox)
+      .set({ isRead: true })
+      .where(eq(whatsappInbox.organizationId, ctx.organizationId));
+    return c.json({ ok: true }, 200);
   });
 
   // =========================================================================
