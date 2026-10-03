@@ -19,7 +19,7 @@ export function CalendarButtons({ event }: { event: CalendarEvent }) {
     <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
       <button
         type="button"
-        className="btn btn-secondary btn-sm"
+        className="hv-btn-sec"
         onClick={(e) => {
           e.stopPropagation();
           window.open(buildGoogleCalendarUrl(event), '_blank');
@@ -27,7 +27,7 @@ export function CalendarButtons({ event }: { event: CalendarEvent }) {
       >
         + Google Calendar
       </button>
-      <button type="button" className="btn btn-secondary btn-sm" onClick={downloadIcs}>
+      <button type="button" className="hv-btn-sec" onClick={downloadIcs}>
         Unduh .ics
       </button>
     </div>

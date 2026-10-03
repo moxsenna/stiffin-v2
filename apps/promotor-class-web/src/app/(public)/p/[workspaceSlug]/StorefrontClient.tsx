@@ -11,10 +11,8 @@ import {
   PwaChips,
   PwaDock,
   PwaOfflineBanner,
-  PwaProgress,
   PwaSearchBar,
   PwaSectionHead,
-  PwaStars,
 } from '@/components/pwa/pwa';
 import { setLastPublicWorkspaceSlug } from '@/lib/session';
 import { getPublicWorkspaceQuery, listPublicProgramsQuery } from '@/modules/public-storefront/queries';
@@ -29,6 +27,10 @@ interface StorefrontClientProps {
 const CATEGORY_PRESETS = ['Semua', 'Tes STIFIn', 'Parenting', 'Belajar Anak', 'Konseling'];
 
 function categoryOf(item: PublicProgramCatalogItem): string {
+  const masterCategory = (item.presentation as any)?.category;
+  if (masterCategory && typeof masterCategory === 'string' && masterCategory.trim()) {
+    return masterCategory.trim();
+  }
   const hay = `${item.program.title} ${item.program.subtitle ?? ''} ${item.presentation.heroEyebrow ?? ''} ${item.presentation.shortOutcome ?? ''}`.toLowerCase();
   if (/(konseling|review|alumni|sesi khusus|konsultasi)/.test(hay)) return 'Konseling';
   if (/(parenting|pola asuh|mentoring|pengasuhan|asuh)/.test(hay)) return 'Parenting';
@@ -40,8 +42,8 @@ function categoryOf(item: PublicProgramCatalogItem): string {
 function priceOf(item: PublicProgramCatalogItem): { now: number; was: number | null; label: string } {
   const now = item.program.priceAmount || 0;
   if (item.program.pricing !== 'one_time' || now <= 0) return { now: 0, was: null, label: 'Gratis' };
-  const eyebrow = (item.presentation.heroEyebrow ?? '').toLowerCase();
-  const was = /diskon|hemat|promo|early/.test(eyebrow) ? Math.round(now * 1.85) : null;
+  const officialStrike = (item.presentation as any)?.strikePriceAmount;
+  const was = typeof officialStrike === 'number' && officialStrike > now ? officialStrike : null;
   return { now, was, label: formatIDR(now) };
 }
 
@@ -56,41 +58,33 @@ function discountPct(now: number, was: number | null): string | null {
 function FeaturedCohortCard({ item, workspaceSlug }: { item: PublicProgramCatalogItem; workspaceSlug: string }) {
   const price = priceOf(item);
   const pct = discountPct(price.now, price.was);
-  const priceK = price.now > 0 ? `Rp ${(price.now / 1000).toLocaleString('id-ID', { maximumFractionDigits: 0 })}k` : 'Gratis';
+  const lessons = item.program.totalLessonsCount || 0;
+  const modules = item.program.totalModulesCount || 0;
   return (
-    <article className="pwa-card" style={{ padding: 16, borderRadius: 18 }} aria-label={`Live cohort unggulan: ${item.program.title}`}>
+    <article className="pwa-card" style={{ padding: 16, borderRadius: 18 }} aria-label={`Kelas unggulan: ${item.program.title}`}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
         <span className="pwa-pill" style={{ background: '#EFF6FF', color: '#0D52FF', border: 0, minHeight: 24, padding: '0 8px', borderRadius: 6, fontSize: 10 }}>
-          ⚡ LIVE COHORT
+          ⭐ KELAS UNGGULAN
         </span>
-        <span className="pwa-pill" style={{ background: '#FEF3C7', color: '#D97706', border: 0, minHeight: 24, padding: '0 8px', fontSize: 10 }}>
-          ⚡ Sisa 4 Kursi • Batch 12
-        </span>
+        {item.program.pricing === 'one_time' ? (
+          <span className="pwa-pill pwa-pill-blue">Berbayar</span>
+        ) : (
+          <span className="pwa-pill pwa-pill-green">Gratis</span>
+        )}
       </div>
 
       <h2 style={{ fontSize: 17, lineHeight: 1.3, fontWeight: 700, margin: '10px 0 0' }}>
         {item.program.title}
       </h2>
       <div style={{ fontSize: 12, color: '#475569', marginTop: 4 }}>
-        {item.presentation.shortOutcome || '8 minggu live bootcamp intensif. Garansi portfolio nyata & career support.'}
-      </div>
-
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8, fontSize: 11, color: '#94A3B8' }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3.5" y="5" width="17" height="16" rx="2.5" /><line x1="3.5" y1="10" x2="20.5" y2="10" /></svg>
-          Mulai 24 Nov 2025
-        </span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></svg>
-          Jadwal Malam (WIB)
-        </span>
+        {item.presentation.shortOutcome || item.program.subtitle || item.program.description || 'Pelajari detail kurikulum di halaman kelas.'}
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
         {[
-          { v: '4.95 ★', s: '1.240 Lulusan' },
-          { v: '100%', s: 'Portfolio Ready' },
-          { v: priceK, s: pct ? `Diskon ${pct.replace('-', '')}` : 'Harga Spesial' },
+          { v: modules > 0 ? `${modules} Modul` : '—', s: 'Kurikulum' },
+          { v: lessons > 0 ? `${lessons} Materi` : '—', s: 'Konten Belajar' },
+          { v: price.label, s: pct ? `Diskon ${pct.replace('-', '')}` : 'Harga' },
         ].map((st) => (
           <div key={st.s} style={{ flex: '1 1 0', background: '#F8FAFC', borderRadius: 10, padding: 8, textAlign: 'center' }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{st.v}</div>
@@ -104,7 +98,7 @@ function FeaturedCohortCard({ item, workspaceSlug }: { item: PublicProgramCatalo
         className="pwa-cta"
         style={{ marginTop: 12, minHeight: 42, borderRadius: 12, fontSize: 13 }}
       >
-        Daftar Cohort Batch 12 →
+        Lihat Detail Kelas →
       </Link>
     </article>
   );
@@ -140,12 +134,15 @@ function CatalogBentoCard({ item, workspaceSlug }: { item: PublicProgramCatalogI
         </Link>
       </h3>
       <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
-        Mentor Ralivo • Lead Mentor Bersertifikat
+        {item.program.subtitle || (item.program.pricing === 'one_time' ? 'Kelas berbayar' : 'Kelas gratis')}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 12 }}>
-        <PwaStars value={5} size={12} />
-        <strong>4.9</strong>
-        <span style={{ color: '#94A3B8' }}>({120 + lessons}) • {lessons || item.program.totalModulesCount} Materi</span>
+        <span style={{ color: '#475569', fontWeight: 700 }}>
+          {lessons > 0 ? `${lessons} materi` : `${item.program.totalModulesCount} modul`}
+        </span>
+        <span style={{ color: '#94A3B8' }}>
+          • {item.isRegistrationAllowed ? 'Pendaftaran dibuka' : (item.registrationStatusNotice || 'Pendaftaran ditutup')}
+        </span>
       </div>
       <div style={{ height: 1, background: '#E2E8F0', margin: '10px 0' }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -169,44 +166,6 @@ function CatalogBentoCard({ item, workspaceSlug }: { item: PublicProgramCatalogI
         </Link>
       </div>
     </article>
-  );
-}
-
-/* -------- Mentor spotlight -------- */
-const MENTORS = [
-  { name: 'Sarah Natasha', role: 'Konsultan Parenting STIFIn', track: 'Pola Asuh & Komunikasi', rating: '★ 4.9 • 85+ Sesi' },
-  { name: 'Rizky Ramadhan', role: 'Praktisi Tes STIFIn', track: 'Mesin Kecerdasan', rating: '★ 5.0 • 120+ Sesi' },
-  { name: 'Arga Wicaksana', role: 'Mentor Belajar Anak', track: 'Kebiasaan & Disiplin', rating: '★ 4.9 • 96+ Sesi' },
-  { name: 'Dian Pratama', role: 'Konselor Keluarga', track: 'Konseling & Review', rating: '★ 4.85 • 74+ Sesi' },
-];
-
-function MentorSpotlight() {
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }} aria-label="Mentor spotlight">
-      {MENTORS.map((m) => (
-        <div key={m.name} className="pwa-card" style={{ padding: 12, borderRadius: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span className="pwa-avatar pwa-avatar-ring" style={{ width: 52, height: 52, fontSize: 17, flex: 'none' }}>
-              {m.name.charAt(0)}
-            </span>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</div>
-              <div style={{ fontSize: 10.5, color: '#94A3B8' }}>{m.role}</div>
-            </div>
-          </div>
-          <div className="pwa-pill" style={{ display: 'inline-flex', marginTop: 8, background: '#F1F5F9', border: 0, color: '#475569', minHeight: 22, padding: '0 8px', borderRadius: 999, fontSize: 10 }}>
-            {m.track}
-          </div>
-          <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>{m.rating}</div>
-          <button
-            type="button"
-            style={{ width: '100%', marginTop: 8, minHeight: 30, border: 0, borderRadius: 8, background: '#F1F5F9', color: '#0F172A', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
-          >
-            Book
-          </button>
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -283,9 +242,28 @@ export function StorefrontClient({ profile: initialProfile, catalog: initialCata
           </div>
         )}
 
-        {/* Mentor spotlight */}
-        <PwaSectionHead title="Mentor Spotlight" linkLabel="1-on-1 Office Hours" linkHref={`/p/${profile.workspaceSlug}/catalog`} />
-        <MentorSpotlight />
+        {/* Tentang promotor — data nyata dari profil workspace */}
+        <PwaSectionHead title="Tentang Promotor" />
+        <div className="pwa-card pwa-card-pad">
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <span className="pwa-avatar pwa-avatar-ring" style={{ width: 52, height: 52, fontSize: 18, flex: 'none' }}>
+              {profile.displayName.charAt(0).toUpperCase()}
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800 }}>{profile.displayName}</div>
+              <div style={{ fontSize: 11.5, color: '#94A3B8' }}>
+                {[profile.roleLabel, profile.stats.location].filter(Boolean).join(' • ') || 'Promotor Ralivo'}
+              </div>
+            </div>
+          </div>
+          {profile.bio && (
+            <p className="pwa-muted" style={{ fontSize: 12.5, margin: '10px 0 0', lineHeight: 1.6 }}>{profile.bio}</p>
+          )}
+          <div className="pwa-muted tabular-nums" style={{ fontSize: 11.5, marginTop: 8 }}>
+            {String(profile.stats.programCount)} ruang belajar aktif
+            {profile.stats.familiesHelped ? ` • ${profile.stats.familiesHelped} keluarga terbantu` : ''}
+          </div>
+        </div>
 
         {/* Offline banner */}
         <div style={{ marginTop: 16 }}>
@@ -296,18 +274,6 @@ export function StorefrontClient({ profile: initialProfile, catalog: initialCata
         <div style={{ marginTop: 16 }}>
           <PromoterProfile profile={profile} />
         </div>
-
-        {/* Progress teaser (opsional, hanya bila katalog punya hitungan) */}
-        {catalog.length > 0 && (
-          <div className="pwa-card pwa-card-pad" style={{ marginTop: 12 }}>
-            <div className="pwa-kicker">Ruang belajarmu</div>
-            <div style={{ fontSize: 14, fontWeight: 800, marginTop: 4 }}>{profile.headline || `Ruang belajar ${profile.displayName}`}</div>
-            <div style={{ marginTop: 10 }}>
-              <PwaProgress pct={12} />
-            </div>
-            <div className="pwa-muted" style={{ marginTop: 6 }}>{catalog.length} program tersedia • mulai dari yang gratis</div>
-          </div>
-        )}
 
         <PublicFooter displayName={profile.displayName.split(' ')[0]} />
       </main>

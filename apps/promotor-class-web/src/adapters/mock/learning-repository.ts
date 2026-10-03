@@ -152,4 +152,8 @@ export class MockLearningRepository implements LearningRepositoryPort {
     s.updatedAt = new Date().toISOString();
     return s;
   }
+
+  async startLesson(enrollmentId: string, lessonId: string): Promise<any> {
+    return { ok: true, enrollmentId, lessonId, startedAt: new Date().toISOString() };
+  }
 }

@@ -9,7 +9,8 @@ import { isReferralPrototypeEnabled } from '@/lib/feature-flags';
 import { getEnrollmentsByContactIdQuery } from '@/modules/enrollments/queries';
 import { getProgramsQuery } from '@/modules/programs/queries';
 import { getContactByIdQuery } from '@/modules/contacts/queries';
-import { Enrollment, Program, Contact } from '@promotor/contracts';
+import { getPlatformApiClient } from '@/adapters';
+import { Enrollment, Program, Contact, Certificate } from '@promotor/contracts';
 
 export function LearnerProfileClient() {
   const router = useRouter();
@@ -19,6 +20,8 @@ export function LearnerProfileClient() {
   const [programsMap, setProgramsMap] = useState<Map<string, Program>>(new Map());
   const [loading, setLoading] = useState(true);
   const [offlineCache, setOfflineCache] = useState(true);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [cacheSize, setCacheSize] = useState<string | null>(null);
 
   useEffect(() => {
     const activeSession = getActiveLearnerSession();
@@ -27,18 +30,37 @@ export function LearnerProfileClient() {
       setLoading(false);
       return;
     }
+    if (typeof navigator !== 'undefined' && navigator.storage?.estimate) {
+      navigator.storage
+        .estimate()
+        .then((est) => {
+          if (typeof est.usage === 'number' && est.usage > 0) {
+            const mb = est.usage / (1024 * 1024);
+            setCacheSize(mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${Math.round(mb)} MB`);
+          }
+        })
+        .catch(() => {});
+    }
+    const api = getPlatformApiClient();
     Promise.all([
       getContactByIdQuery(activeSession.contactId),
       getEnrollmentsByContactIdQuery(activeSession.contactId),
       getProgramsQuery(),
-    ]).then(([cnt, enrList, progList]) => {
-      setContact(cnt || null);
-      setEnrollments(enrList);
-      const pMap = new Map<string, Program>();
-      progList.forEach((p) => pMap.set(p.id, p));
-      setProgramsMap(pMap);
-      setLoading(false);
-    });
+      api
+        .listMyCertificates()
+        .then((r) => r.certificates ?? [])
+        .catch(() => [] as Certificate[]),
+    ])
+      .then(([cnt, enrList, progList, certs]) => {
+        setContact(cnt || null);
+        setEnrollments(enrList);
+        const pMap = new Map<string, Program>();
+        progList.forEach((p) => pMap.set(p.id, p));
+        setProgramsMap(pMap);
+        setCertificates(certs);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, []);
 
   const handleLogout = () => {
@@ -85,7 +107,11 @@ export function LearnerProfileClient() {
   }
 
   const completedCount = enrollments.filter((e) => e.status === 'selesai').length;
-  const displayName = contact.name || 'Bima Pratama';
+  const displayName = contact.name || 'Peserta';
+  const activeEnrollment =
+    enrollments.find((e) => e.status === 'aktif') || enrollments[0] || null;
+  const activeProgram = activeEnrollment ? programsMap.get(activeEnrollment.programId) : undefined;
+  const shortContactId = contact.id.length > 8 ? `ID: ${contact.id.slice(0, 8).toUpperCase()}` : null;
 
   return (
     <div className="pwa-screen">
@@ -103,84 +129,83 @@ export function LearnerProfileClient() {
                 <strong style={{ fontSize: 15, color: '#0F172A' }}>{displayName}</strong>
                 <span className="pwa-pill pwa-pill-blue">Peserta Resmi ✓</span>
               </div>
-              <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 2 }}>Fullstack AI Cohort #12 • ID: RLV-882194 • Jakarta</div>
+              <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 2 }}>
+                {[activeProgram?.title, shortContactId, contact.phoneE164].filter(Boolean).join(' • ')}
+              </div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            <button type="button" style={{ flex: 1, minHeight: 36, borderRadius: 10, border: 0, background: '#F8FAFC', color: '#0F172A', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Edit Biodata</button>
-            <button type="button" style={{ flex: 1, minHeight: 36, borderRadius: 10, border: 0, background: '#EFF6FF', color: '#0D52FF', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Portofolio Publik ↗</button>
-          </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button type="button" style={{ flex: 1, minHeight: 36, borderRadius: 10, border: 0, background: '#F8FAFC', color: '#0F172A', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }} onClick={() => router.push('/learn')}>
+                Buka Ruang Belajar
+              </button>
+              <button type="button" style={{ flex: 1, minHeight: 36, borderRadius: 10, border: 0, background: '#EFF6FF', color: '#0D52FF', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }} onClick={handleLogout}>
+                Ganti Akun
+              </button>
+            </div>
         </div>
 
         {/* Bento stats */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
           <div className="pwa-card" style={{ padding: 14, textAlign: 'center' }}>
-            <div style={{ fontSize: 22, fontWeight: 850 }} className="tabular-nums">{Math.max(completedCount, 3)}</div>
+            <div style={{ fontSize: 22, fontWeight: 850 }} className="tabular-nums">{certificates.length || completedCount}</div>
             <div style={{ fontSize: 12, fontWeight: 700 }}>Sertifikat</div>
-            <div style={{ fontSize: 10.5, color: 'var(--pwa-muted)' }}>Terverifikasi LinkedIn</div>
+            <div style={{ fontSize: 10.5, color: 'var(--pwa-muted)' }}>Terverifikasi</div>
           </div>
           <div className="pwa-card" style={{ padding: 14, textAlign: 'center' }}>
-            <div style={{ fontSize: 22, fontWeight: 850 }} className="tabular-nums">2.450 XP</div>
-            <div style={{ fontSize: 12, fontWeight: 700 }}>Total XP</div>
-            <div style={{ fontSize: 10.5, color: 'var(--pwa-muted)' }}>Top 5% Cohort 12</div>
+            <div style={{ fontSize: 22, fontWeight: 850 }} className="tabular-nums">{enrollments.length}</div>
+            <div style={{ fontSize: 12, fontWeight: 700 }}>Program Diikuti</div>
+            <div style={{ fontSize: 10.5, color: 'var(--pwa-muted)' }}>
+              {completedCount > 0 ? `${completedCount} selesai` : 'Belum ada yang selesai'}
+            </div>
           </div>
         </div>
 
         {/* Progress aktif */}
-        <div className="pwa-card pwa-card-pad" style={{ marginTop: 10 }}>
-          <div className="pwa-kicker">PROGRESS BELAJAR AKTIF</div>
-          <div style={{ fontSize: 13.5, fontWeight: 800, marginTop: 4 }}>Fullstack AI Engineer Cohort</div>
-          <div style={{ marginTop: 8 }}><PwaProgress pct={82} /></div>
-          <div className="pwa-muted" style={{ marginTop: 6 }}>82% Selesai • 18 dari 22 materi • Demo Day: 28 Feb</div>
-        </div>
+        {activeEnrollment && (
+          <div className="pwa-card pwa-card-pad" style={{ marginTop: 10 }}>
+            <div className="pwa-kicker">PROGRESS BELAJAR AKTIF</div>
+            <div style={{ fontSize: 13.5, fontWeight: 800, marginTop: 4 }}>
+              {activeProgram?.title || 'Program berjalan'}
+            </div>
+            <div style={{ marginTop: 8 }}><PwaProgress pct={activeEnrollment.progressPercent} /></div>
+            <div className="pwa-muted" style={{ marginTop: 6 }}>
+              {activeEnrollment.progressPercent}% Selesai • {activeEnrollment.completedLessonIds.length} materi selesai
+            </div>
+          </div>
+        )}
 
         {/* Kredensial */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
           <strong style={{ fontSize: 15 }}>Sertifikat Terverifikasi</strong>
-          <span className="pwa-pill pwa-pill-blue">Lihat Semua</span>
+          <span className="pwa-pill pwa-pill-blue tabular-nums">{certificates.length} tersimpan</span>
         </div>
-        <div className="pwa-muted" style={{ fontSize: 11.5 }}>Dapat diakses publik & diimpor ke LinkedIn</div>
-        {[
-          {
-            tag: 'LULUS DENGAN PUJIAN • 10 Feb 2025',
-            title: 'Fullstack Web Development & AI Engineering',
-            cred: 'RLV-FSW-2025-081',
-            skills: ['Next.js 15', 'LangChain', 'FastAPI'],
-          },
-          {
-            tag: 'MINI BOOTCAMP • 15 Jan 2025',
-            title: 'UI/UX Design Systems & Mobile Ergonomics',
-            cred: 'RLV-UX-2025-029',
-            skills: ['Figma Tokens', 'Design Ops', 'PWA UX'],
-          },
-        ].map((c, i) => (
-          <div key={c.cred} className="pwa-card" style={{ marginTop: 10, padding: 14, borderRadius: 16 }}>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-              <span className="pwa-pill" style={{ background: i === 0 ? '#ECFDF5' : '#EFF6FF', color: i === 0 ? '#059669' : '#0D52FF', border: 0, minHeight: 22, padding: '0 8px', borderRadius: 6, fontSize: 10 }}>{c.tag}</span>
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginTop: 8 }}>{c.title}</div>
-            <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 2 }}>Kredensial ID: {c.cred}</div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-              {c.skills.map((s) => (
-                <span key={s} className="pwa-pill" style={{ background: '#F1F5F9', color: '#475569', border: 0, minHeight: 22, padding: '0 8px', borderRadius: 999, fontSize: 10.5 }}>{s}</span>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button type="button" style={{ flex: 1, minHeight: 36, borderRadius: 10, border: 0, background: '#0D52FF', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>
-                Lihat Sertifikat
-              </button>
-              <button
-                type="button"
-                style={{
-                  flex: 1, minHeight: 44, borderRadius: 10, border: '1px solid #E2E8F0',
-                  background: '#fff', color: '#0F172A', fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
-                }}
-              >
-                Unduh PDF
-              </button>
-            </div>
+        <div className="pwa-muted" style={{ fontSize: 11.5 }}>Dapat diverifikasi publik via tautan di bawah</div>
+        {certificates.length === 0 ? (
+          <div className="pwa-card pwa-card-pad pwa-muted" style={{ marginTop: 10, textAlign: 'center' }}>
+            Belum ada sertifikat. Sertifikat terbit otomatis setelah Anda menyelesaikan seluruh materi program.
           </div>
-        ))}
+        ) : (
+          certificates.map((c) => (
+            <div key={c.serial} className="pwa-card" style={{ marginTop: 10, padding: 14, borderRadius: 16 }}>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                <span className="pwa-pill" style={{ background: '#ECFDF5', color: '#059669', border: 0, minHeight: 22, padding: '0 8px', borderRadius: 6, fontSize: 10 }}>
+                  LULUS • {new Date(c.issuedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginTop: 8 }}>{c.programTitle}</div>
+              <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 2 }}>Kredensial ID: {c.serial}</div>
+              <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 2 }}>Atas nama: {c.recipientName}</div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <Link
+                  href={`/verify/${c.serial}`}
+                  style={{ flex: 1, minHeight: 36, borderRadius: 10, border: 0, background: '#0D52FF', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
+                >
+                  Lihat Sertifikat
+                </Link>
+              </div>
+            </div>
+          ))
+        )}
 
         {/* Riwayat belajar dari backend */}
         {enrollments.length > 0 && (
@@ -204,25 +229,34 @@ export function LearnerProfileClient() {
           </div>
         )}
 
-        {/* Transaksi */}
+        {/* Riwayat pendaftaran — bukti akses program dari backend */}
         <div style={{ marginTop: 16 }}>
-          <strong style={{ fontSize: 15 }}>Riwayat Transaksi</strong>
-          <div className="pwa-muted" style={{ fontSize: 11.5 }}>Bukti bayar & invoice resmi perpajakan</div>
-          {[
-            { t: 'Fullstack AI Cohort 12 • 12 Jan 2025 • QRIS BCA', amt: 'Rp 1.499.000' },
-            { t: 'UI/UX Design Systems • 05 Nov 2024 • GoPay', amt: 'Rp 499.000' },
-          ].map((r) => (
-            <div key={r.t} className="pwa-card" style={{ marginTop: 8, padding: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 800 }}>{r.t.split('•')[0]}</div>
-                <div className="pwa-muted" style={{ fontSize: 11 }}>{r.t}</div>
-              </div>
-              <div style={{ textAlign: 'right', flex: 'none' }}>
-                <div style={{ fontSize: 13, fontWeight: 850 }} className="tabular-nums">{r.amt}</div>
-                <span className="pwa-pill pwa-pill-green">Lunas</span>
-              </div>
+          <strong style={{ fontSize: 15 }}>Riwayat Pendaftaran</strong>
+          <div className="pwa-muted" style={{ fontSize: 11.5 }}>Program yang pernah Anda ikuti beserta progresnya</div>
+          {enrollments.length === 0 ? (
+            <div className="pwa-card pwa-card-pad pwa-muted" style={{ marginTop: 8, textAlign: 'center' }}>
+              Belum ada riwayat pendaftaran.
             </div>
-          ))}
+          ) : (
+            enrollments.map((enr) => {
+              const prog = programsMap.get(enr.programId);
+              return (
+                <div key={enr.id} className="pwa-card" style={{ marginTop: 8, padding: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800 }}>{prog?.title || 'Program'}</div>
+                    <div className="pwa-muted" style={{ fontSize: 11 }}>
+                      Terdaftar {new Date(enr.enrolledAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} • Progres {enr.progressPercent}%
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', flex: 'none' }}>
+                    <span className={enr.status === 'selesai' ? 'pwa-pill pwa-pill-green' : 'pwa-pill pwa-pill-blue'}>
+                      {enr.status === 'selesai' ? 'Selesai' : enr.status === 'dibatalkan' ? 'Dibatalkan' : 'Aktif'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         {isReferralPrototypeEnabled() && (
@@ -248,8 +282,10 @@ export function LearnerProfileClient() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', marginTop: 12 }}>
               <span>
-                <span style={{ display: 'block', fontSize: 13, fontWeight: 800 }}>Cache Belajar Offline (1.2 GB)</span>
-                <span className="pwa-muted" style={{ fontSize: 11.5 }}>3 modul tersimpan di perangkat</span>
+                <span style={{ display: 'block', fontSize: 13, fontWeight: 800 }}>Cache Belajar Offline{cacheSize ? ` (${cacheSize})` : ''}</span>
+                <span className="pwa-muted" style={{ fontSize: 11.5 }}>
+                  {cacheSize ? 'Estimasi penyimpanan browser di perangkat ini' : 'Aktifkan untuk mengukur penyimpanan offline'}
+                </span>
               </span>
               <button
                 type="button"

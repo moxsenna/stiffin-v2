@@ -77,85 +77,124 @@ export default function AddContactPage() {
 
   return (
     <AppShell showBottomNav={false}>
-     <PageHeader kicker="Kontak" title="Tambah Prospek Baru" onBack={() =>router.back()} />
+      <PageHeader kicker="Kontak" title="Tambah Prospek Baru" onBack={() => router.back()} />
 
-     <form onSubmit={handleSubmit} style={{ padding: '18px', display: 'flex', flexDirection: 'column' }}>
-       {error && (
-          <div className="field-error" role="alert" style={{ marginBottom: 14 }}>
-           {error}
+      <form onSubmit={handleSubmit} style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {error && (
+          <div
+            role="alert"
+            style={{
+              padding: '12px 14px',
+              borderRadius: '12px',
+              background: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              color: '#dc2626',
+              fontSize: '13px',
+              fontWeight: 500,
+            }}
+          >
+            {error}
           </div>
-       )}
+        )}
 
         {existingContact && (
-          <div className="section-block" style={{ padding: 14 }}>
-           <div className="kicker kicker-accent">Kontak sudah ada</div>
-           <div style={{ marginTop: 8, font: '400 13px/1.5 var(--font-sans)' }}>
-             Nomor WhatsApp ini sudah terdaftar sebagai <strong>{existingContact.name}</strong>({formatPhoneDisplay(existingContact.phoneE164)}).
-            </div>
-           <button
-              type="button"
-              onClick={() =>router.push(`/app/contacts/${existingContact.id}`)}
-              className="btn btn-primary btn-sm"
-              style={{ marginTop: 12 }}
-            >
-             Buka Kontak Existing
-            </button>
-         </div>
-       )}
-
-        <div className="form-section">
-         <label className="field-label" htmlFor="contact-name">Nama lengkap *</label>
-         <input
-            id="contact-name"
-            type="text"
-            className="input"
-            placeholder="Nama lengkap prospek"
-            value={name}
-            onChange={(e) =>setName(e.target.value)}
-          />
-
-         <label className="field-label" htmlFor="contact-phone" style={{ marginTop: 16 }}>Nomor WhatsApp / HP *</label>
-         <input
-            id="contact-phone"
-            type="text"
-            className="input"
-            placeholder="08121110001 atau +62812..."
-            value={phone}
-            onChange={(e) =>setPhone(e.target.value)}
-          />
-       </div>
-
-       <div className="form-section">
-         <label className="field-label" htmlFor="contact-source">Sumber / channel</label>
-         <select
-            id="contact-source"
-            className="select"
-            value={sourceChannel}
-            onChange={(e) =>setSourceChannel(e.target.value)}
+          <div
+            className="hv-card"
+            style={{
+              padding: '16px',
+              background: 'rgba(245, 158, 11, 0.06)',
+              borderColor: 'rgba(245, 158, 11, 0.3)',
+            }}
           >
-           <option value="Instagram">Instagram</option>
-           <option value="Google">Google Search</option>
-           <option value="TikTok">TikTok</option>
-           <option value="Referral">Referral / Rekomendasi</option>
-           <option value="WhatsApp Direct">WhatsApp Direct</option>
-           <option value="Event Offline">Event / Workshop Offline</option>
-         </select>
+            <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d97706' }}>
+              Kontak sudah ada
+            </div>
+            <div style={{ marginTop: 8, font: '400 13px/1.5 var(--font-sans)', color: 'var(--ink)' }}>
+              Nomor WhatsApp ini sudah terdaftar sebagai <strong>{existingContact.name}</strong> ({formatPhoneDisplay(existingContact.phoneE164)}).
+            </div>
+            <button
+              type="button"
+              onClick={() => router.push(`/app/contacts/${existingContact.id}`)}
+              className="hv-btn-primary"
+              style={{ marginTop: 12, padding: '8px 16px', fontSize: '13px' }}
+            >
+              Buka Kontak Existing →
+            </button>
+          </div>
+        )}
 
-         <label className="field-label" htmlFor="contact-notes" style={{ marginTop: 16 }}>Catatan kebutuhan prospek</label>
-         <textarea
-            id="contact-notes"
-            className="textarea"
-            rows={3}
-            placeholder="Contoh: anak kelas 9, bingung pilih SMA, tanya jadwal weekend."
-            value={notes}
-            onChange={(e) =>setNotes(e.target.value)}
-          />
-       </div>
+        <div className="hv-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label className="field-label" htmlFor="contact-name" style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 700, color: 'var(--muted-strong)' }}>
+              Nama lengkap *
+            </label>
+            <input
+              id="contact-name"
+              type="text"
+              className="hv-input"
+              placeholder="Contoh: Rian Pratama"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
 
-       <button type="submit" disabled={isSubmitting} className="btn btn-primary btn-block" style={{ marginTop: 20 }}>
-         {isSubmitting ? 'Menyimpan...' : 'Simpan Prospek'}
+          <div>
+            <label className="field-label" htmlFor="contact-phone" style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 700, color: 'var(--muted-strong)' }}>
+              Nomor WhatsApp / HP *
+            </label>
+            <input
+              id="contact-phone"
+              type="tel"
+              className="hv-input"
+              placeholder="08121110001 atau +62812..."
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="field-label" htmlFor="contact-source" style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 700, color: 'var(--muted-strong)' }}>
+              Sumber / channel
+            </label>
+            <select
+              id="contact-source"
+              className="hv-select"
+              value={sourceChannel}
+              onChange={(e) => setSourceChannel(e.target.value)}
+            >
+              <option value="Instagram">Instagram</option>
+              <option value="Google">Google Search</option>
+              <option value="TikTok">TikTok</option>
+              <option value="Referral">Referral / Rekomendasi</option>
+              <option value="WhatsApp Direct">WhatsApp Direct</option>
+              <option value="Event Offline">Event / Workshop Offline</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="field-label" htmlFor="contact-notes" style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 700, color: 'var(--muted-strong)' }}>
+              Catatan kebutuhan prospek
+            </label>
+            <textarea
+              id="contact-notes"
+              className="hv-textarea"
+              rows={3}
+              placeholder="Contoh: anak kelas 9, bingung pilih jurusan SMA, prefer jadwal sesi weekend."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="hv-btn-primary"
+          style={{ width: '100%', padding: '14px', fontSize: '15px' }}
+        >
+          {isSubmitting ? 'Menyimpan...' : 'Simpan Prospek'}
         </button>
-     </form>
-   </AppShell>
- );
+      </form>
+    </AppShell>
+  );
 }

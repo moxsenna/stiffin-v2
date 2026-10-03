@@ -66,3 +66,26 @@ export function LainnyaIcon({ size = 22, className }: NavIconProps) {
     </svg>
   );
 }
+
+export function PipelineIcon({ size = 22, className }: NavIconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <rect x="3.5" y="4" width="17" height="16" />
+      <line x1="8.5" y1="4" x2="8.5" y2="20" />
+      <line x1="14.5" y1="4" x2="14.5" y2="20" />
+      <rect x="5" y1="8" width="2" height="5" fill="currentColor" stroke="none" />
+      <rect x="10" y1="6.5" width="2.5" height="8" fill="currentColor" stroke="none" />
+      <rect x="16" y1="11" width="2.5" height="4" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function TemplateIcon({ size = 22, className }: NavIconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M4 5.5h16v10.5H9l-5 4v-14.5z" />
+      <line x1="7.5" y1="9" x2="16.5" y2="9" />
+      <line x1="7.5" y1="12" x2="13.5" y2="12" />
+    </svg>
+  );
+}

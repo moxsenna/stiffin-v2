@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { EmptyState } from '@/components/ui';
 import { PwaAppHeader, PwaDock, PwaProgress, PwaSectionHead } from '@/components/pwa/pwa';
+import { EmptyStateCard, SkeletonCard } from '@/components/pwa/EmptyStateFeedback';
 import { getActiveLearnerContactId, resolveWorkspaceSlug, setActiveLearnerSession, getActiveLearnerSession } from '@/lib/session';
 import { getPlatformApiClient } from '@/adapters';
 import { Certificate } from '@promotor/contracts';
@@ -108,12 +109,15 @@ export default function LearnerHomePage() {
   const programId = activeEnrollment ? String(activeEnrollment.programId ?? activeEnrollment.id) : undefined;
   const activeProgram = programId ? programsMap.get(programId) : undefined;
   const nextLesson = activeEnrollment ? findNextLesson(activeProgram, { completedLessonIds: activeEnrollment.completedLessonIds as string[] | undefined }) : null;
-  const pct = Number(activeEnrollment?.progressPercent ?? 68);
+  const pct = Number(activeEnrollment?.progressPercent ?? 0);
+  const completedCount = list.filter((e) =>
+    ['COMPLETED', 'selesai'].includes(String(e.status)) || Number(e.progressPercent ?? 0) === 100
+  ).length;
 
   const stats = [
-    { kicker: 'Aktif • Februari 2025', value: `${list.length || 3} Kelas`, label: 'Kursus Berjalan', sub: '2 Cohort • 1 Mini-course' },
-    { kicker: 'Rajin', value: '96.4%', label: 'Kehadiran Sesi', sub: '12 dari 13 sesi dihadiri' },
-    { kicker: '+4.5 Jam mgg ini', value: '48.5 Jam', label: 'Total Jam Belajar', sub: 'Target cohort: 60 Jam' },
+    { kicker: 'Terdaftar', value: `${list.length} Kelas`, label: 'Program Diikuti', sub: completedCount > 0 ? `${completedCount} selesai` : 'Baru dimulai' },
+    { kicker: 'Progres', value: `${pct}%`, label: 'Program Aktif', sub: String(activeProgram?.title ?? activeEnrollment?.programTitle ?? 'Belum ada program') },
+    { kicker: 'Prestasi', value: `${certificates.length}`, label: 'Sertifikat', sub: certificates.length > 0 ? 'Terverifikasi' : 'Selesaikan program' },
   ];
 
   return (
@@ -121,18 +125,8 @@ export default function LearnerHomePage() {
       <PwaAppHeader title={`Halo, ${displayName} 👋`} subtitle="SELAMAT DATANG" showCart={false} workspaceSlug={fallbackWorkspace ?? undefined} />
 
       <main className="pwa-wrap pwa-screen-pad-dock">
-        {/* PWA status — Pencil spec: white card, blue icon tile */}
-        <div className="pwa-card" style={{ marginTop: 12, padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'center', borderRadius: 16 }}>
-          <span style={{ flex: 'none', width: 36, height: 36, borderRadius: 10, background: '#EFF6FF', color: '#0D52FF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>📲</span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <strong style={{ fontSize: 12.5, color: '#0F172A' }}>Aplikasi PWA Siap Offline</strong>
-            <div style={{ fontSize: 11, color: '#94A3B8' }}>• 3 Modul Tersimpan • 248 MB</div>
-          </div>
-          <span className="pwa-pill pwa-pill-green">PWA Aktif • 14 Hari</span>
-        </div>
-
         <PwaSectionHead title="Statistik Belajar Anda" />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 8 }}>
           {stats.map((s) => (
             <div key={s.label} className="pwa-card" style={{ padding: 10 }}>
               <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--pwa-primary)' }}>{s.kicker}</div>
@@ -148,22 +142,28 @@ export default function LearnerHomePage() {
           <div className="pwa-card pwa-card-pad" style={{ marginTop: 12 }}>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
               <span className="pwa-pill pwa-pill-green">Aktif Belajar</span>
-              <span className="pwa-pill pwa-pill-live"><span className="pwa-dot-live" /> LIVE BOOTCAMP</span>
-              <span className="pwa-pill pwa-pill-blue">Batch #12 • Minggu 4/8</span>
+              {activeProgram?.subtitle && (
+                <span className="pwa-pill pwa-pill-blue">{activeProgram.subtitle}</span>
+              )}
             </div>
             <h2 style={{ fontSize: 16, fontWeight: 850, margin: '10px 0 0' }}>
-              {String(activeProgram?.title ?? activeEnrollment.programTitle ?? 'Fullstack AI & LLM Engineer Bootcamp')}
+              {String(activeProgram?.title ?? activeEnrollment.programTitle ?? 'Program')}
             </h2>
-            <div className="pwa-muted" style={{ marginTop: 2 }}>Fahri R. (AI Architect) • 42 Peserta Se-angkatan</div>
             <div className="pwa-nested" style={{ marginTop: 10, padding: 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 11.5, fontWeight: 700 }}>
-                <span>MATERI BERJALAN • MODUL 4</span>
-                <span className="tabular-nums">18m tersisa</span>
-              </div>
-              <div style={{ fontSize: 12.5, fontWeight: 700, marginTop: 4 }}>
-                {nextLesson ? `${nextLesson.moduleTitle}: ${nextLesson.title}` : 'RAG Pipeline: Hybrid Search & Vector DB (pgvector)'}
-              </div>
-              <div className="pwa-muted" style={{ fontSize: 11 }}>Video 4.3: Implementasi Metadata Filtering</div>
+              {nextLesson ? (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 11.5, fontWeight: 700 }}>
+                    <span>MATERI BERIKUTNYA</span>
+                  </div>
+                  <div style={{ fontSize: 12.5, fontWeight: 700, marginTop: 4 }}>
+                    {`${nextLesson.moduleTitle}: ${nextLesson.title}`}
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontSize: 12.5, fontWeight: 700 }}>
+                  {pct === 100 ? 'Semua materi selesai — luar biasa! 🎉' : 'Materi program sedang disiapkan.'}
+                </div>
+              )}
             </div>
             <div style={{ marginTop: 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, fontWeight: 700, marginBottom: 6 }}>
@@ -189,61 +189,41 @@ export default function LearnerHomePage() {
           </div>
         ) : (
           !enrollments && (
-            <div className="pwa-card pwa-card-pad" style={{ marginTop: 12 }}>
-              <div className="skeleton-line" style={{ width: '80%' }} />
-              <div className="skeleton-line" style={{ width: '60%', marginTop: 8 }} />
+            <div style={{ marginTop: 12 }}>
+              <SkeletonCard lines={2} hasThumbnail />
             </div>
           )
         )}
 
         {enrollments && list.length === 0 && (
-          <div className="pwa-card pwa-card-pad" style={{ marginTop: 12 }}>
-            <EmptyState
-              title="Anda belum terdaftar dalam program apa pun"
-              explanation="Pilih program dari katalog untuk mulai belajar."
-              action={fallbackWorkspace ? <Link href={`/p/${fallbackWorkspace}/catalog`} className="pwa-cta">Lihat Katalog Program</Link> : <Link href="/masuk" className="pwa-cta">Masuk dengan Akun Lain</Link>}
+          <div style={{ marginTop: 12 }}>
+            <EmptyStateCard
+              icon="📚"
+              title="Anda Belum Terdaftar di Program Edukasi"
+              description="Pilih program dari katalog untuk mulai belajar bersama promotor dan komunitas Anda."
+              actionLabel={fallbackWorkspace ? 'Lihat Katalog Program' : 'Masuk Akun Lain'}
+              actionHref={fallbackWorkspace ? `/p/${fallbackWorkspace}/catalog` : '/masuk'}
             />
           </div>
         )}
 
-        {/* Jadwal live — Pencil spec: outline blue hari ini, white besok */}
+        {/* Jadwal live — data sesi live diumumkan promotor via WhatsApp/komunitas */}
         <PwaSectionHead title="Jadwal Live Terdekat" linkLabel="Lihat Kalender" linkHref="/learn/jadwal" />
-        <div className="pwa-card" style={{ padding: 14, borderRadius: 16, borderColor: '#93C5FD' }}>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-            <span className="pwa-pill" style={{ background: '#EFF6FF', color: '#0D52FF', border: 0, minHeight: 22, padding: '0 8px', borderRadius: 6, fontSize: 10 }}><span className="pwa-dot-live" /> HARI INI • 19:30 - 21:30 WIB</span>
-            <span className="pwa-pill pwa-pill-amber">Mulai dlm 1j 45m</span>
-          </div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginTop: 8 }}>Live Coding: Fine-Tuning Llama 3 with LoRA & Unsloth</div>
-          <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 2 }}>Pemateri: Fahri Ramadhan • Lead AI Architect</div>
-          <div style={{ marginTop: 8, padding: '8px 10px', fontSize: 12, background: '#F8FAFC', borderRadius: 8 }}>
-            Zoom Room • ID: 884-219-030 • Pass: RLV2025
-          </div>
-          <button type="button" style={{ marginTop: 10, minHeight: 42, padding: '0 14px', borderRadius: 12, border: 0, background: '#0D52FF', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>Gabung Sesi Live</button>
-        </div>
-        <div className="pwa-card pwa-card-pad" style={{ marginTop: 8 }}>
-          <span className="pwa-pill pwa-pill-blue">BESOK • 20:00 WIB</span>
-          <div style={{ fontSize: 13.5, fontWeight: 800, marginTop: 8 }}>Mentoring & Review — Office Hours: Code Review & Konsultasi Milestone 2</div>
-          <div className="pwa-muted">Mentor: Alex Pratama • Google Meet • Pengingat Aktif ✓</div>
-        </div>
+        <EmptyStateCard
+          icon="📅"
+          title="Belum Ada Sesi Live Terdekat"
+          description="Info sesi live cohort & mentoring dibagikan via grup komunitas WhatsApp dan tersinkronisasi di kalender."
+          actionLabel="Buka Kalender"
+          actionHref="/learn/jadwal"
+        />
 
-        {/* Tenggat — Pencil spec: urgent outline amber, tombol h32 */}
-        <PwaSectionHead title="Tenggat Tugas & Proyek" linkLabel="Semua Tugas" linkHref="/learn" />
-        <div className="pwa-card" style={{ padding: 14, borderRadius: 16, borderColor: '#FDE68A' }}>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-            <span className="pwa-pill" style={{ background: '#FEE2E2', color: '#DC2626', border: 0, minHeight: 22, padding: '0 8px', borderRadius: 6, fontSize: 10 }}>BESOK • 23:59 WIB</span>
-            <span className="pwa-pill pwa-pill-amber">Tersisa 16 Jam</span>
-            <span className="pwa-pill pwa-pill-dark">Belum Dikirim</span>
-          </div>
-          <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', marginTop: 8 }}>Project Milestone 2: RAG Pipeline Integration</div>
-          <div style={{ fontSize: 11.5, color: '#94A3B8' }}>Deliverable: GitHub Repo + Loom Video Demo</div>
-          <button type="button" style={{ marginTop: 10, minHeight: 32, padding: '0 12px', borderRadius: 8, border: 0, background: '#EFF6FF', color: '#0D52FF', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>Submit</button>
-        </div>
-        <div className="pwa-card" style={{ marginTop: 8, padding: 14, borderRadius: 16 }}>
-          <span className="pwa-pill pwa-pill-blue">3 MARET • 23:59 WIB • Bobot 15%</span>
-          <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A', marginTop: 8 }}>Quiz Evaluasi: Vector Embeddings & Similarity</div>
-          <div style={{ fontSize: 11.5, color: '#94A3B8' }}>20 Soal Pilihan Ganda • 30 Menit • Passing Grade 80%</div>
-          <button type="button" style={{ marginTop: 10, minHeight: 32, padding: '0 12px', borderRadius: 8, border: 0, background: '#EFF6FF', color: '#0D52FF', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>Start Quiz</button>
-        </div>
+        {/* Tenggat — tugas & kuis */}
+        <PwaSectionHead title="Tenggat Tugas & Proyek" />
+        <EmptyStateCard
+          icon="📝"
+          title="Tidak Ada Tugas Tertunda"
+          description="Semua tugas dan kuis telah diselesaikan. Lanjutkan materi pembelajaran untuk mendapatkan sertifikat."
+        />
 
         {/* Program lain */}
         {list.length > 1 && (

@@ -43,6 +43,15 @@ export function sanitizeReturnTo(returnTo: string | null | undefined): string {
   return trimmed;
 }
 
+function getApiBaseUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_API_URL ||
+    (process.env.NODE_ENV === 'production'
+      ? 'https://stiffin-promotor-api.moxsenna.workers.dev'
+      : 'http://localhost:8787')
+  );
+}
+
 export async function getSession(): Promise<UserSession | null> {
   const mode = process.env.NEXT_PUBLIC_API_MODE;
   if (mode !== 'http' && process.env.NODE_ENV !== 'production') {
@@ -54,10 +63,18 @@ export async function getSession(): Promise<UserSession | null> {
     };
   }
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+  const apiUrl = getApiBaseUrl();
   try {
+    const headers: Record<string, string> = {};
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('promotor_session_token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
     const res = await fetch(`${apiUrl}/api/me`, {
       method: 'GET',
+      headers,
       credentials: 'include',
     });
     if (!res.ok) return null;
@@ -76,7 +93,7 @@ export async function signIn(email: string, password: string): Promise<{ success
     return { success: false, error: 'Email dan kata sandi wajib diisi' };
   }
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+  const apiUrl = getApiBaseUrl();
   try {
     const res = await fetch(`${apiUrl}/api/auth/sign-in/email`, {
       method: 'POST',
@@ -88,6 +105,10 @@ export async function signIn(email: string, password: string): Promise<{ success
       const err = await res.json().catch(() => ({}));
       return { success: false, error: err?.message || 'Email atau kata sandi tidak valid' };
     }
+    const data = await res.json().catch(() => ({}));
+    if (data?.token && typeof window !== 'undefined') {
+      localStorage.setItem('promotor_session_token', data.token);
+    }
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err?.message || 'Gagal terhubung ke server autentikasi' };
@@ -95,15 +116,16 @@ export async function signIn(email: string, password: string): Promise<{ success
 }
 
 export async function signOut(): Promise<void> {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('promotor_session_token');
+  }
+
   const mode = process.env.NEXT_PUBLIC_API_MODE;
   if (mode !== 'http' && process.env.NODE_ENV !== 'production') {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('promotor_session_token');
-    }
     return;
   }
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+  const apiUrl = getApiBaseUrl();
   try {
     await fetch(`${apiUrl}/api/auth/sign-out`, {
       method: 'POST',
@@ -112,13 +134,10 @@ export async function signOut(): Promise<void> {
   } catch {
     // ignore
   }
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('promotor_session_token');
-  }
 }
 
 export async function signUp(name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+  const apiUrl = getApiBaseUrl();
   const callbackURL =
     typeof window !== 'undefined'
       ? `${window.location.origin}/login?verified=1`
@@ -141,7 +160,7 @@ export async function signUp(name: string, email: string, password: string): Pro
 }
 
 export async function requestPasswordReset(email: string): Promise<{ success: boolean; error?: string }> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+  const apiUrl = getApiBaseUrl();
   const redirectTo =
     typeof window !== 'undefined'
       ? `${window.location.origin}/reset-password`
@@ -160,7 +179,7 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
 }
 
 export async function resetPassword(token: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+  const apiUrl = getApiBaseUrl();
   try {
     const res = await fetch(`${apiUrl}/api/auth/reset-password`, {
       method: 'POST',

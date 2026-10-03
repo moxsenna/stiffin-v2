@@ -55,22 +55,36 @@ function RegisterForm() {
           </p>
         </div>
 
-        <div style={{ background: 'var(--surface)', border: 'var(--sep-strong)', padding: 22 }}>
+        <div className="hv-card" style={{ padding: 24 }}>
           {errorMessage && (
-            <div className="field-error" role="alert" style={{ marginBottom: 16 }}>
+            <div
+              role="alert"
+              style={{
+                marginBottom: 16,
+                padding: '10px 14px',
+                borderRadius: '10px',
+                background: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                color: '#dc2626',
+                fontSize: '13px',
+                fontWeight: 500,
+              }}
+            >
               {errorMessage}
             </div>
           )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label className="field-label" htmlFor="flow-name">Nama lengkap</label>
+              <label className="field-label" htmlFor="flow-name" style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 700, color: 'var(--muted-strong)' }}>
+                Nama lengkap
+              </label>
               <input
                 id="flow-name"
                 type="text"
                 required
                 autoComplete="name"
-                className="input"
+                className="hv-input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Nama Anda"
@@ -78,13 +92,15 @@ function RegisterForm() {
             </div>
 
             <div>
-              <label className="field-label" htmlFor="flow-email">Email promotor</label>
+              <label className="field-label" htmlFor="flow-email" style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 700, color: 'var(--muted-strong)' }}>
+                Email promotor
+              </label>
               <input
                 id="flow-email"
                 type="email"
                 required
                 autoComplete="email"
-                className="input"
+                className="hv-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="promotor@stifin.id"
@@ -92,7 +108,9 @@ function RegisterForm() {
             </div>
 
             <div>
-              <label className="field-label" htmlFor="flow-password">Kata sandi</label>
+              <label className="field-label" htmlFor="flow-password" style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 700, color: 'var(--muted-strong)' }}>
+                Kata sandi
+              </label>
               <input
                 id="flow-password"
                 type="password"
@@ -100,14 +118,14 @@ function RegisterForm() {
                 autoComplete="new-password"
                 minLength={8}
                 maxLength={128}
-                className="input"
+                className="hv-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Minimal 8 karakter"
               />
             </div>
 
-            <button type="submit" disabled={isLoading} className="btn btn-primary btn-block">
+            <button type="submit" disabled={isLoading} className="hv-btn-primary" style={{ width: '100%', padding: '12px', fontSize: '14px' }}>
               {isLoading ? 'Mendaftar...' : 'Daftar'}
             </button>
           </form>

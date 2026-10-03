@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useParams, useSearchParams } from 'next/navigation';
 import { formatPhoneDisplay } from '@promotor/platform-core';
 
@@ -51,7 +52,11 @@ export default function PublicBookingPage() {
   const [slotUnavailableNotice, setSlotUnavailableNotice] = useState<string | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState<BookingSuccessData | null>(null);
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    (process.env.NODE_ENV === 'production'
+      ? 'https://stiffin-promotor-api.moxsenna.workers.dev'
+      : 'http://localhost:8787');
 
   const fetchSlots = useCallback(async (serviceId: string) =>{
     if (!slug || !serviceId) return;
@@ -209,14 +214,26 @@ export default function PublicBookingPage() {
 
   if (bookingSuccess) {
     return (
-      <div style={{ maxWidth: 540, margin: '40px auto', padding: 24, background: 'var(--surface)', border: 'var(--sep-strong)', fontFamily: 'var(--font-sans)' }}>
-       <div className="kicker kicker-accent">Booking berhasil</div>
-       <h1 style={{ font: '800 28px/1.1 var(--font-sans)', letterSpacing: '-0.03em', marginTop: 12 }}>
-         Booking Berhasil Terkirim!
-        </h1>
-       <p style={{ fontSize: 14, color: 'var(--muted-strong)', marginTop: 8, lineHeight: 1.55 }}>
-         Terima kasih, {name}. Permintaan konsultasi Anda telah kami terima.
-        </p>
+      <div className="hv-page" style={{ paddingBottom: 32 }}>
+        <div className="hv-column" style={{ maxWidth: 560, paddingTop: 32 }}>
+          <div className="hv-card">
+            <div className="hv-kicker-row">
+              <span className="hv-kicker">
+                <Image
+                  src="/icons/pwa-192.png"
+                  alt="Ralivo"
+                  width={14}
+                  height={14}
+                  style={{ borderRadius: '3px', display: 'inline-block', flexShrink: 0 }}
+                />
+                Ralivo Flow Booking
+              </span>
+              <span className="hv-tone-badge hv-tone-badge-retensi">Berhasil</span>
+            </div>
+            <h1 className="hv-page-title">Booking Berhasil Terkirim!</h1>
+            <p className="hv-page-sub" style={{ marginTop: 4 }}>
+              Terima kasih, {name}. Permintaan konsultasi Anda telah kami terima.
+            </p>
 
        <div style={{ marginTop: 20, borderTop: 'var(--sep-strong)' }}>
          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--line)' }}>
@@ -241,66 +258,79 @@ export default function PublicBookingPage() {
          </div>
        </div>
 
-       <p className="muted-note" style={{ marginTop: 16 }}>
-         <strong>Langkah selanjutnya:</strong>promotor akan menghubungi nomor WhatsApp Anda untuk konfirmasi jadwal dan instruksi pembayaran jika berlaku.
+       <p style={{ fontSize: 12, lineHeight: 1.6, color: 'var(--hv-muted)' }}>
+         <strong>Langkah selanjutnya:</strong> promotor akan menghubungi nomor WhatsApp Anda untuk konfirmasi jadwal dan instruksi pembayaran jika berlaku.
         </p>
-     </div>
+          </div>
+        </div>
+      </div>
    );
   }
 
   return (
-    <div style={{ maxWidth: 640, margin: '30px auto', padding: '0 18px', fontFamily: 'var(--font-sans)' }}>
-     <header style={{ borderBottom: 'var(--sep-strong)', paddingBottom: 18 }}>
-       <div className="kicker kicker-accent">Jadwal konsultasi</div>
-       <h1 style={{ font: '800 26px/1.05 var(--font-sans)', letterSpacing: '-0.03em', marginTop: 8 }}>
-         Jadwal Konsultasi STIFIn
-        </h1>
+    <div className="hv-page" style={{ paddingBottom: 32 }}>
+      <div className="hv-column" style={{ maxWidth: 640, paddingTop: 24 }}>
+        <div className="hv-kicker-row">
+          <span className="hv-kicker">
+            <Image
+              src="/icons/pwa-192.png"
+              alt="Ralivo"
+              width={14}
+              height={14}
+              style={{ borderRadius: '3px', display: 'inline-block', flexShrink: 0 }}
+            />
+            Ralivo Flow Booking
+          </span>
+          <span className="hv-stifin-badge">STIFIn OS</span>
+        </div>
+        <h1 className="hv-page-title">Jadwal Konsultasi STIFIn</h1>
+        <div className="hv-card">
        {service ? (
-          <div style={{ marginTop: 10 }}>
-           <div style={{ font: '700 16px/1.3 var(--font-sans)' }}>{service.name}</div>
-           <div className="row-meta">
-             Durasi {service.durationMinutes} menit · {service.priceAmount >0 ? `Rp ${service.priceAmount.toLocaleString('id-ID')}` : 'Gratis'}
+          <div>
+            <div style={{ fontWeight: 750, fontSize: 15, color: 'var(--hv-text)' }}>{service.name}</div>
+            <div className="hv-contact-card-meta">
+             Durasi {service.durationMinutes} menit · {service.priceAmount > 0 ? `Rp ${service.priceAmount.toLocaleString('id-ID')}` : 'Gratis'}
             </div>
            {service.description && (
-              <p style={{ fontSize: 13.5, color: 'var(--muted-strong)', marginTop: 8, lineHeight: 1.5 }}>{service.description}</p>
+              <p style={{ fontSize: 12.5, color: 'var(--hv-muted)', marginTop: 8, lineHeight: 1.55 }}>{service.description}</p>
            )}
           </div>
        ) : (
-          <p className="muted-note" style={{ marginTop: 8 }}>
+          <p style={{ fontSize: 12.5, color: 'var(--hv-muted)', lineHeight: 1.55 }}>
            Pilih slot waktu dan isi data kontak Anda untuk menjadwalkan sesi konsultasi.
           </p>
        )}
-      </header>
+        </div>
 
-     <div style={{ background: 'var(--surface)', borderLeft: 'var(--sep-strong)', borderRight: 'var(--sep-strong)', borderBottom: 'var(--sep-strong)', padding: 22 }}>
+     <div className="hv-card">
        {slotUnavailableNotice && (
-          <div role="alert" style={{ marginBottom: 16, border: '2px solid var(--accent-dark)', color: 'var(--accent-dark)', font: '600 13px/1.5 var(--font-sans)', padding: '10px 12px' }}>
+          <div role="alert" className="hv-message-box" style={{ borderColor: 'var(--hv-danger)', color: 'var(--hv-danger)' }}>
            {slotUnavailableNotice}
           </div>
        )}
 
         {errorMessage && (
-          <div role="alert" className="field-error" style={{ marginBottom: 16 }}>{errorMessage}</div>
+          <div role="alert" className="field-error">{errorMessage}</div>
        )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
          <section>
-           <div className="field-label">1 · Pilih jadwal waktu konsultasi</div>
+           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--hv-muted)', marginBottom: 8 }}>1 · PILIH JADWAL (14 HARI)</div>
 
            {loadingSlots ? (
-              <div style={{ padding: 20, font: '400 13px/1.5 var(--font-sans)', color: 'var(--muted)' }}>Memuat slot ketersediaan...</div>
+              <div className="hv-contact-card-meta" style={{ padding: 12 }}>Memuat slot ketersediaan...</div>
            ) : Object.keys(slotsByDate).length === 0 ? (
-              <div style={{ padding: 16, background: 'var(--surface-muted)', border: '1px solid var(--line)', font: '400 13px/1.5 var(--font-sans)', color: 'var(--muted-strong)' }}>
+              <div className="hv-message-box">
                Belum ada slot waktu yang tersedia dalam 14 hari ke depan. Silakan hubungi promotor langsung.
               </div>
            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxHeight: 300, overflowY: 'auto' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxHeight: 320, overflowY: 'auto' }}>
                {Object.entries(slotsByDate).map(([dateStr, dateSlots]) =>(
                   <div key={dateStr}>
-                   <div style={{ font: '700 10px/1 var(--font-sans)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>
+                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--hv-muted)', marginBottom: 6 }}>
                      {new Date(dateStr).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                     </div>
-                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 8 }}>
+                   <div className="hv-slot-grid">
                      {dateSlots.map((slot) =>{
                         const isSelected = selectedSlot?.startAt === slot.startAt;
                         return (
@@ -309,16 +339,7 @@ export default function PublicBookingPage() {
                             key={slot.startAt}
                             onClick={() =>handleSlotSelect(slot)}
                             aria-pressed={isSelected}
-                            style={{
-                              minHeight: 44,
-                              padding: '10px',
-                              border: isSelected ? '2px solid var(--ink)' : '1px solid var(--line)',
-                              backgroundColor: isSelected ? 'var(--ink)' : 'var(--surface)',
-                              color: isSelected ? 'var(--on-ink)' : 'var(--ink)',
-                              font: `${isSelected ? 700 : 500} 13px/1.2 var(--font-sans)`,
-                              cursor: 'pointer',
-                              textAlign: 'center',
-                            }}
+                            className={`hv-slot${isSelected ? ' is-selected' : ''}`}
                           >
                            {slot.localDisplay}
                           </button>
@@ -331,28 +352,28 @@ export default function PublicBookingPage() {
            )}
           </section>
 
-         <section style={{ borderTop: 'var(--sep-strong)', paddingTop: 18 }}>
-           <div className="field-label">2 · Informasi kontak</div>
+         <section style={{ borderTop: '1px solid var(--hv-line)', paddingTop: 14 }}>
+           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--hv-muted)', marginBottom: 8 }}>2 · INFORMASI KONTAK</div>
 
-           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
              <div>
                <label htmlFor="pub-name" className="field-label">Nama lengkap *</label>
-               <input id="pub-name" type="text" required className="input" value={name} onChange={(e) =>setName(e.target.value)} placeholder="cth: Budi Santoso" />
+               <input id="pub-name" type="text" required className="hv-input" value={name} onChange={(e) =>setName(e.target.value)} placeholder="cth: Budi Santoso" />
              </div>
 
              <div>
                <label htmlFor="pub-phone" className="field-label">Nomor WhatsApp *</label>
-               <input id="pub-phone" type="tel" required className="input" value={phoneRaw} onChange={(e) =>setPhoneRaw(e.target.value)} placeholder="cth: 081234567890" />
+               <input id="pub-phone" type="tel" required className="hv-input" value={phoneRaw} onChange={(e) =>setPhoneRaw(e.target.value)} placeholder="cth: 081234567890" />
              </div>
 
              <div>
                <label htmlFor="pub-email" className="field-label">Email (opsional)</label>
-               <input id="pub-email" type="email" className="input" value={email} onChange={(e) =>setEmail(e.target.value)} placeholder="cth: budi@example.com" />
+               <input id="pub-email" type="email" className="hv-input" value={email} onChange={(e) =>setEmail(e.target.value)} placeholder="cth: budi@example.com" />
              </div>
 
              <div>
                <label htmlFor="pub-loc" className="field-label">Tipe sesi konsultasi</label>
-               <select id="pub-loc" className="select" value={locationType} onChange={(e) =>setLocationType(e.target.value as 'ONLINE' | 'ON_SITE' | 'HOME_VISIT')}>
+               <select id="pub-loc" className="hv-select" value={locationType} onChange={(e) =>setLocationType(e.target.value as 'ONLINE' | 'ON_SITE' | 'HOME_VISIT')}>
                  <option value="ONLINE">Online (Zoom / Google Meet)</option>
                  <option value="ON_SITE">On-Site (Kantor / Tempat Promotor)</option>
                  <option value="HOME_VISIT">Home Visit (Kunjungan ke Rumah)</option>
@@ -361,7 +382,7 @@ export default function PublicBookingPage() {
 
              <div>
                <label htmlFor="pub-notes" className="field-label">Catatan / harapan sesi (opsional)</label>
-               <textarea id="pub-notes" className="textarea" rows={3} value={notes} onChange={(e) =>setNotes(e.target.value)} placeholder="cth: ingin konsultasi tes minat bakat untuk anak usia 10 tahun..." />
+               <textarea id="pub-notes" className="hv-textarea" rows={3} value={notes} onChange={(e) =>setNotes(e.target.value)} placeholder="cth: ingin konsultasi tes minat bakat untuk anak usia 10 tahun..." />
              </div>
            </div>
          </section>
@@ -369,12 +390,13 @@ export default function PublicBookingPage() {
          <button
             type="submit"
             disabled={submitting || !selectedSlot}
-            className="btn btn-accent btn-block"
+            className="hv-wa-btn"
           >
            {submitting ? 'Memproses Booking...' : selectedSlot ? `Konfirmasi Booking (${selectedSlot.localDisplay})` : 'Pilih Slot Waktu Terlebih Dahulu'}
           </button>
        </form>
      </div>
-   </div>
+      </div>
+    </div>
  );
 }

@@ -1,6 +1,11 @@
 import { getLearningRepository } from '@/adapters';
 import type { LearningEventType } from '@promotor/contracts';
 
+export async function startLessonCommand(enrollmentId: string, lessonId: string) {
+  const repo = getLearningRepository();
+  return (repo as any).startLesson ? (repo as any).startLesson(enrollmentId, lessonId) : { ok: true };
+}
+
 export async function completeLessonCommand(enrollmentId: string, lessonId: string) {
   const repo = getLearningRepository();
   return repo.completeLesson(enrollmentId, lessonId);

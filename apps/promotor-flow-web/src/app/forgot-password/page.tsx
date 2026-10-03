@@ -43,28 +43,30 @@ function ForgotPasswordForm() {
           </p>
         </div>
 
-        <div style={{ background: 'var(--surface)', border: 'var(--sep-strong)', padding: 22 }}>
+        <div className="hv-card" style={{ padding: 24 }}>
           {sent ? (
-            <p role="status" style={{ font: '400 13px/1.5 var(--font-sans)' }}>
+            <p role="status" style={{ font: '400 13px/1.5 var(--font-sans)', color: 'var(--ink)' }}>
               Jika email terdaftar, link reset telah terkirim. Periksa kotak masuk Anda.
             </p>
           ) : (
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label className="field-label" htmlFor="flow-email">Email promotor</label>
+                <label className="field-label" htmlFor="flow-email" style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 700, color: 'var(--muted-strong)' }}>
+                  Email promotor
+                </label>
                 <input
                   id="flow-email"
                   type="email"
                   required
                   autoComplete="email"
-                  className="input"
+                  className="hv-input"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="promotor@stifin.id"
                 />
               </div>
 
-              <button type="submit" disabled={isLoading} className="btn btn-primary btn-block">
+              <button type="submit" disabled={isLoading} className="hv-btn-primary" style={{ width: '100%', padding: '12px', fontSize: '14px' }}>
                 {isLoading ? 'Mengirim...' : 'Kirim link reset'}
               </button>
             </form>

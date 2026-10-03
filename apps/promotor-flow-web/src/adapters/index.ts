@@ -61,14 +61,19 @@ export function getApiMode(): 'http' | 'mock' {
 }
 
 function getApiClient(): PromotorFlowApiClient {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
-  let authToken: string | undefined;
-  if (typeof window !== 'undefined') {
-    authToken = localStorage.getItem('promotor_session_token') || undefined;
-  }
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    (process.env.NODE_ENV === 'production'
+      ? 'https://stiffin-promotor-api.moxsenna.workers.dev'
+      : 'http://localhost:8787');
   const client = new ApiClient({
     baseUrl,
-    authToken,
+    authToken: () => {
+      if (typeof window !== 'undefined') {
+        return localStorage.getItem('promotor_session_token') || undefined;
+      }
+      return undefined;
+    },
     credentials: 'include',
   });
   return new PromotorFlowApiClient(client);

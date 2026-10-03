@@ -467,6 +467,27 @@ export const SEED_TEMPLATES: MessageTemplate[] = [
     templateText: 'Halo [Nama], slot tes STIFIn pekan ini tersisa sedikit sekali. Mohon konfirmasi ketersediaan jadwal hari ini agar slot tetap aman untuk Anda.',
     tone: 'URGENT',
   },
+  {
+    id: 'tmpl_followup_class_signal',
+    title: 'Follow-up Sinyal Class',
+    category: 'FOLLOW_UP',
+    templateText: 'Halo Kak [Nama], saya melihat progres belajar Kakak di PromotorClass [HasilSTIFIn] menunjukkan perkembangan yang bagus. Biar makin konkret, yuk lanjutkan dengan tes STIFIn [Layanan] — jadwalkan lewat [LinkBooking] ya Kak.',
+    tone: 'HANGAT',
+  },
+  {
+    id: 'tmpl_booking_remind',
+    title: 'Pengingat Jadwal Booking',
+    category: 'REMIND_BOOKING',
+    templateText: 'Halo Kak [Nama], mengingatkan jadwal [Layanan] Kakak pada [Tanggal]. Konfirmasi kehadiran lewat balasan pesan ini ya, atau ubah jadwal via [LinkBooking]. Sampai jumpa!',
+    tone: 'HANGAT',
+  },
+  {
+    id: 'tmpl_aftercare_referral',
+    title: 'Aftercare & Referral Keluarga',
+    category: 'AFTERCARE',
+    templateText: 'Halo Kak [Nama], sudah sepekan sejak sesi [Layanan] dengan hasil [HasilSTIFIn]. Bagaimana penerapannya? Banyak keluarga lanjut tes untuk pasangan & anak — khusus keluarga Kak [Nama] ada penawaran spesial. Mau dijadwalkan via [LinkBooking]?',
+    tone: 'HANGAT',
+  },
 ];
 
 export const SEED_TAGS: string[] = [

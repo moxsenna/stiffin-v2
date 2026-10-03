@@ -45,34 +45,36 @@ export const DevControlsOverlay: React.FC<DevControlsOverlayProps>= ({
     <div
       style={{
         position: 'fixed',
-        bottom: '70px',
+        bottom: '84px',
         right: '12px',
         zIndex: 150,
       }}
     >
-     {!isOpen ? (
+      {!isOpen ? (
         <button
-          onClick={() =>setIsOpen(true)}
+          onClick={() => setIsOpen(true)}
           style={{
             height: '28px',
-            padding: '0 10px',
-            borderRadius: '0px',
-            backgroundColor: 'var(--ink)',
+            padding: '0 12px',
+            borderRadius: '14px',
+            backgroundColor: 'var(--hv-ink, #0F172A)',
             color: '#FFFFFF',
             font: '600 11px var(--font-sans)',
-            border: 'none',
-            opacity: 0.85,
+            border: '1px solid rgba(255,255,255,0.15)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            cursor: 'pointer',
           }}
         >
           Dev Controls
         </button>
-     ) : (
+      ) : (
         <div
           style={{
             width: '280px',
-            backgroundColor: 'var(--ink)',
+            backgroundColor: 'var(--hv-ink, #0F172A)',
             color: '#FFFFFF',
-            borderRadius: '0px',
+            borderRadius: '12px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
             padding: '14px',
             display: 'flex',
             flexDirection: 'column',

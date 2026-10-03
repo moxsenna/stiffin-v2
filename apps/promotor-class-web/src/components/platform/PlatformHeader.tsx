@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function PlatformHeader() {
   const [scrolled, setScrolled] = useState(false);
@@ -49,7 +50,7 @@ export function PlatformHeader() {
             color: 'var(--color-text-main)',
           }}
         >
-          <img
+          <Image
             src="/images/ralivo-logo.webp"
             alt="Ralivo"
             width={120}

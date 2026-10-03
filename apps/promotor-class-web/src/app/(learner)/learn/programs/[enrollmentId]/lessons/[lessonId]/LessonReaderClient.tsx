@@ -9,7 +9,13 @@ import { getActiveLearnerContactId } from '@/lib/session';
 import { getEnrollmentByIdQuery } from '@/modules/enrollments/queries';
 import { getProgramByIdQuery } from '@/modules/programs/queries';
 import { getEnrollmentFullDetailsQuery } from '@/modules/learning/queries';
-import { completeLessonCommand, submitReflectionCommand, submitLessonPositionCommand } from '@/modules/learning/commands';
+import {
+  startLessonCommand,
+  completeLessonCommand,
+  submitReflectionCommand,
+  submitLessonPositionCommand,
+  recordLearningEventCommand,
+} from '@/modules/learning/commands';
 import { recordCtaClickCommand } from '@/modules/ctas/commands';
 import { extractYoutubeId, getYoutubeEmbedUrl } from '@/lib/video/parse-youtube-url';
 import { YoutubeLessonPlayer } from '@/components/learner/YoutubeLessonPlayer';
@@ -42,6 +48,16 @@ export function LessonReaderClient() {
   const [savedNoteBody, setSavedNoteBody] = useState('');
   const [noteStatus, setNoteStatus] = useState('');
   const [tab, setTab] = useState<'materi' | 'diskusi' | 'catatan'>('materi');
+
+  useEffect(() => {
+    if (enrollmentId && lessonId) {
+      startLessonCommand(enrollmentId, lessonId).catch(() => {});
+      recordLearningEventCommand(enrollmentId, {
+        eventType: 'lesson.started',
+        payload: { lessonId, timestamp: new Date().toISOString() },
+      }).catch(() => {});
+    }
+  }, [enrollmentId, lessonId]);
 
   useEffect(() => {
     getLessonNoteQuery(enrollmentId, lessonId)
@@ -225,6 +241,11 @@ export function LessonReaderClient() {
       } else {
         res = await completeLessonCommand(enrollmentId, lessonId);
       }
+
+      await recordLearningEventCommand(enrollmentId, {
+        eventType: 'lesson.completed',
+        payload: { lessonId, completedAt: new Date().toISOString() },
+      }).catch(() => {});
 
       const allLessons = (program?.modules || []).flatMap((m: any) =>m.lessons || []);
       const currentIndex = allLessons.findIndex((l: any) =>l.id === lessonId);

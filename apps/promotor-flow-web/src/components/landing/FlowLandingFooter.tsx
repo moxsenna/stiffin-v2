@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { LightningIcon } from '../foundation/icons';
 
 export const FlowLandingFooter: React.FC = () => {
@@ -35,7 +36,7 @@ export const FlowLandingFooter: React.FC = () => {
                 marginBottom: '14px',
               }}
             >
-              <img
+              <Image
                 src="/images/ralivo-logo.webp"
                 alt="Ralivo"
                 width={120}

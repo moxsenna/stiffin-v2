@@ -7,21 +7,13 @@ import { getActiveLearnerContactId } from '@/lib/session';
 import { getEnrollmentByIdQuery } from '@/modules/enrollments/queries';
 import { getProgramByIdQuery } from '@/modules/programs/queries';
 import { getEnrollmentFullDetailsQuery } from '@/modules/learning/queries';
+import { completeLessonCommand } from '@/modules/learning/commands';
+import { getLessonNoteQuery, saveLessonNoteCommand } from '@/modules/learning/notes';
+import { listLessonDiscussionsQuery, postLessonDiscussionCommand } from '@/modules/learning/discussions';
 import { PwaAppHeader, PwaDock, PwaProgress } from '@/components/pwa/pwa';
 import { Enrollment, Program } from '@promotor/contracts';
 
 type Tab = 'materi' | 'diskusi' | 'catatan';
-
-/* Forum Q&A statis sesuai referensi (data live tetap dari backend bila ada) */
-const QA_THREADS = [
-  {
-    name: 'Daffa Raihan',
-    time: '25m lalu',
-    q: 'Apakah Pinecone Serverless lebih hemat dibanding pod-based untuk project portfolio?',
-    a: 'Betul sekali, serverless pay-per-read/write hemat s.d. 85% untuk traffic testing!',
-    mentor: 'Kak Fikri Ramadhan',
-  },
-];
 
 export function LearnerProgramClient() {
   const params = useParams();
@@ -33,8 +25,16 @@ export function LearnerProgramClient() {
   const [tab, setTab] = useState<Tab>('materi');
   const [openMod, setOpenMod] = useState<string | null>(null);
   const [question, setQuestion] = useState('');
+  const [questionSent, setQuestionSent] = useState(false);
+  const [discussions, setDiscussions] = useState<any[]>([]);
+  const [loadingDiscussions, setLoadingDiscussions] = useState(false);
+  const [sendingDiscussion, setSendingDiscussion] = useState(false);
   const [note, setNote] = useState('');
   const [noteSaved, setNoteSaved] = useState(false);
+  const [noteLoading, setNoteLoading] = useState(false);
+  const [noteError, setNoteError] = useState<string | null>(null);
+  const [completing, setCompleting] = useState(false);
+  const [completeError, setCompleteError] = useState<string | null>(null);
 
   React.useEffect(() => {
     async function loadData() {
@@ -88,6 +88,33 @@ export function LearnerProgramClient() {
     loadData();
   }, [enrollmentId]);
 
+  const targetLessonId = program?.modules?.[0]?.lessons?.[0]?.id || 'overview';
+
+  React.useEffect(() => {
+    if (tab === 'diskusi' && enrollmentId && targetLessonId) {
+      setLoadingDiscussions(true);
+      listLessonDiscussionsQuery(enrollmentId, targetLessonId)
+        .then((items) => setDiscussions(items))
+        .catch(() => setDiscussions([]))
+        .finally(() => setLoadingDiscussions(false));
+    }
+  }, [tab, enrollmentId, targetLessonId]);
+
+  const handleSendDiscussion = async () => {
+    if (!question.trim() || sendingDiscussion) return;
+    try {
+      setSendingDiscussion(true);
+      const created = await postLessonDiscussionCommand(enrollmentId, targetLessonId, question.trim());
+      setDiscussions((prev) => [...prev, created]);
+      setQuestion('');
+      setQuestionSent(true);
+    } catch {
+      setQuestionSent(true);
+    } finally {
+      setSendingDiscussion(false);
+    }
+  };
+
   if (accessDenied) {
     return (
       <div className="pwa-screen">
@@ -129,50 +156,56 @@ export function LearnerProgramClient() {
     const lp = enrollment.lessonProgress?.[l.id];
     return !((l as { isCompleted?: boolean }).isCompleted ?? lp?.completed);
   }) ?? allLessons[0];
+  const firstOpenLessonId = firstOpen?.id ?? null;
 
   return (
     <div className="pwa-screen">
       <PwaAppHeader
         title="Ruang Belajar & Modul"
-        subtitle="FULLSTACK AI • COHORT 4"
+        subtitle={program.title}
         showBack
         backHref="/learn"
         showCart={false}
       />
 
       <main className="pwa-wrap pwa-screen-pad-dock">
-        {/* Video player — Pencil spec: dark navy radius 20, 50px blue play */}
+        {/* Video preview card — data nyata dari modul dan sesi aktif */}
         <div style={{ paddingTop: 12 }}>
-          <div className="pwa-player" role="img" aria-label="Video sesi aktif" style={{ borderRadius: 20, overflow: 'hidden' }}>
+          <div className="pwa-player" role="img" aria-label="Sesi belajar aktif" style={{ borderRadius: 20, overflow: 'hidden' }}>
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,#0F172A 0%,#1E2A5A 65%,#0D52FF 140%)' }} />
-            <pre
+            <div
               style={{
                 position: 'absolute',
-                inset: '34px 12px 44px',
-                margin: 0,
-                fontFamily: 'monospace',
-                fontSize: 10.5,
-                lineHeight: 1.6,
-                color: '#7DD3FC',
-                overflow: 'hidden',
-                whiteSpace: 'pre-wrap',
+                inset: '34px 16px 44px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                textAlign: 'center',
+                color: '#F8FAFC',
               }}
             >
-              {`import { Pinecone } from '@pinecone-database/pinecone';\nconst index = pinecone.Index('ralivo-rag-embeddings');\nconst vectors = await getEmbeddings(documentChunks);\nawait index.upsert({ records: vectors });`}
-            </pre>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#38BDF8', letterSpacing: '0.06em' }}>
+                {program.title}
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 800, marginTop: 4, maxWidth: 320, lineHeight: 1.3 }}>
+                {firstOpen?.title || 'Materi Pembelajaran'}
+              </div>
+            </div>
             <div className="pwa-player-shade" />
             <div style={{ position: 'absolute', top: 10, left: 10, right: 10, display: 'flex', gap: 6, alignItems: 'center' }}>
               <span className="pwa-pill" style={{ background: 'rgba(255,255,255,0.16)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' }}>
-                HD 1080p • SESI AKTIF
+                SESI AKTIF
               </span>
-              <span className="pwa-pill" style={{ background: '#0F172A', color: '#fff', border: '1px solid #334155' }}>CC INDO</span>
-              <span className="pwa-pill pwa-pill-live" style={{ marginLeft: 'auto' }}><span className="pwa-dot-live" /> LIVE</span>
+              <span className="pwa-pill pwa-pill-cyan" style={{ marginLeft: 'auto' }}>
+                {doneCount} / {allLessons.length} SELESAI
+              </span>
             </div>
             <Link
               href={firstOpen ? `/learn/programs/${enrollment.id}/lessons/${firstOpen.id}` : `/learn/programs/${enrollment.id}`}
-              aria-label="Putar sesi"
+              aria-label="Buka materi pelajaran"
               style={{
-                position: 'absolute', inset: 0, margin: 'auto', width: 50, height: 50, borderRadius: '50%',
+                position: 'absolute', inset: 0, margin: 'auto', width: 52, height: 52, borderRadius: '50%',
                 border: '2px solid rgba(255,255,255,0.95)', background: '#0D52FF',
                 boxShadow: '0 8px 24px rgba(2,6,23,0.5)',
                 color: '#fff', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none',
@@ -180,14 +213,13 @@ export function LearnerProgramClient() {
             >
               ▶
             </Link>
-            <div style={{ position: 'absolute', left: 12, right: 12, bottom: 10 }}>
+            <div style={{ position: 'absolute', left: 14, right: 14, bottom: 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fff', fontSize: 11, fontWeight: 700 }} className="tabular-nums">
-                <span>14:28</span>
-                <span>1.25x</span>
-                <span>32:50</span>
+                <span>Progres: {pct}%</span>
+                <span>{allLessons.length - doneCount} materi tersisa</span>
               </div>
               <div style={{ height: 5, borderRadius: 99, background: 'rgba(255,255,255,0.25)', marginTop: 6, overflow: 'hidden' }}>
-                <div style={{ width: '45%', height: '100%', background: '#38BDF8' }} />
+                <div style={{ width: `${pct}%`, height: '100%', background: '#38BDF8', transition: 'width 0.3s ease' }} />
               </div>
             </div>
           </div>
@@ -195,25 +227,48 @@ export function LearnerProgramClient() {
 
         {/* Session context — Pencil spec: white card radius 18, prev white + next blue */}
         <div className="pwa-card" style={{ marginTop: 10, padding: 14, borderRadius: 18 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', color: '#94A3B8' }}>MODUL 3 • SESI 2 DARI 6 • Hands-on Lab • 32 Menit</div>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', color: '#94A3B8' }}>
+            {allLessons.length > 0 ? `SESI BERIKUTNYA • ${doneCount} DARI ${allLessons.length} SELESAI` : 'BELUM ADA MATERI'}
+          </div>
           <h1 style={{ fontSize: 15.5, fontWeight: 800, margin: '6px 0 0', lineHeight: 1.35, color: '#0F172A' }}>
-            Membangun Vector Embeddings dengan OpenAI & Pinecone DB
+            {firstOpen?.title || program.title}
           </h1>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
-            <span className="pwa-avatar" style={{ width: 34, height: 34, fontSize: 13 }}>F</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 800, color: '#0F172A' }}>Fikri Ramadhan</div>
-              <div style={{ fontSize: 11, color: '#94A3B8' }}>Lead AI Engineer @ Ralivo • 184 Peserta Aktif</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-            <button type="button" style={{ flex: 1, minHeight: 32, borderRadius: 8, border: 0, background: '#EFF6FF', color: '#0D52FF', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Slides PDF</button>
-            <button type="button" style={{ flex: 1, minHeight: 32, borderRadius: 8, border: 0, background: '#EFF6FF', color: '#0D52FF', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Source Code</button>
-          </div>
           {firstOpen && (
-            <Link href={`/learn/programs/${enrollment.id}/lessons/${firstOpen.id}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginTop: 10, minHeight: 32, padding: '0 12px', borderRadius: 999, border: 0, background: '#0D52FF', color: '#fff', fontWeight: 800, fontSize: 12.5, textDecoration: 'none' }}>
-              ✓ Tandai Selesai
-            </Link>
+            <>
+              <button
+                type="button"
+                disabled={completing}
+                onClick={async () => {
+                  setCompleteError(null);
+                  setCompleting(true);
+                  try {
+                    const res = await completeLessonCommand(enrollmentId, firstOpen.id);
+                    setEnrollment((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            progressPercent: res.progressPercent,
+                            lessonProgress: {
+                              ...(prev.lessonProgress || {}),
+                              [firstOpen.id]: { completed: true, completedAt: new Date().toISOString() },
+                            },
+                          }
+                        : prev
+                    );
+                  } catch (err) {
+                    setCompleteError(err instanceof Error ? err.message : 'Gagal menandai materi selesai');
+                  } finally {
+                    setCompleting(false);
+                  }
+                }}
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginTop: 10, minHeight: 32, padding: '0 12px', borderRadius: 999, border: 0, background: '#0D52FF', color: '#fff', fontWeight: 800, fontSize: 12.5, cursor: 'pointer', opacity: completing ? 0.7 : 1 }}
+              >
+                {completing ? 'Menyimpan...' : '✓ Tandai Selesai'}
+              </button>
+              {completeError && (
+                <div style={{ color: 'var(--pwa-danger)', fontSize: 12, marginTop: 8, fontWeight: 700 }}>{completeError}</div>
+              )}
+            </>
           )}
           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
             <span style={{ flex: 1, minHeight: 44, borderRadius: 14, border: '1px solid #E2E8F0', background: '#fff', color: '#475569', fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>← Prev</span>
@@ -225,10 +280,39 @@ export function LearnerProgramClient() {
         <div className="pwa-tabs" role="tablist" aria-label="Konten ruang belajar" style={{ marginTop: 12 }}>
           {([
             { id: 'materi', label: 'Materi' },
-            { id: 'diskusi', label: 'Diskusi (18)' },
+            { id: 'diskusi', label: 'Diskusi' },
             { id: 'catatan', label: 'Catatan' },
           ] as Array<{ id: Tab; label: string }>).map((t) => (
-            <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'is-active' : undefined} onClick={() => setTab(t.id)}>
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.id}
+              className={tab === t.id ? 'is-active' : undefined}
+              onClick={() => {
+                setTab(t.id);
+                if (t.id === 'catatan' && firstOpenLessonId) {
+                  setNoteLoading(true);
+                  getLessonNoteQuery(enrollmentId, firstOpenLessonId)
+                    .then((saved) => {
+                      if (saved?.body) {
+                        setNote(saved.body);
+                        setNoteSaved(true);
+                      } else {
+                        try {
+                          const local = window.localStorage.getItem(`ralivo-note-${enrollmentId}-${firstOpenLessonId}`);
+                          if (local) {
+                            setNote(local);
+                            setNoteSaved(true);
+                          }
+                        } catch { /* abaikan */ }
+                      }
+                    })
+                    .catch(() => {})
+                    .finally(() => setNoteLoading(false));
+                }
+              }}
+            >
               {t.label}
             </button>
           ))}
@@ -242,10 +326,6 @@ export function LearnerProgramClient() {
                 <span className="tabular-nums">{pct}% Selesai ({doneCount}/{allLessons.length})</span>
               </div>
               <div style={{ marginTop: 8 }}><PwaProgress pct={pct} /></div>
-              <div className="pwa-muted" style={{ marginTop: 6 }}>Estimasi Sisa: 3 Jam 45 Menit • +140 XP Didapatkan</div>
-              <button type="button" className="pwa-btn-secondary" style={{ width: '100%', marginTop: 10 }}>
-                Unduh Silabus PDF
-              </button>
             </div>
 
             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -256,7 +336,15 @@ export function LearnerProgramClient() {
                   return (l as { isCompleted?: boolean }).isCompleted ?? lp?.completed;
                 }).length;
                 const open = openMod === mod.id;
-                const locked = mi >= 3;
+                const prevMods = program.modules.slice(0, mi);
+                const prevIncomplete = prevMods.some((pm) =>
+                  (pm.lessons || []).some((pl) => {
+                    const lp = enrollment.lessonProgress?.[pl.id];
+                    return !(((pl as { isCompleted?: boolean }).isCompleted ?? lp?.completed) === true);
+                  })
+                );
+                const locked = mi > 0 && prevIncomplete && modDone === 0;
+                const inProgress = modDone > 0 && modDone < lessons.length;
                 return (
                   <div key={mod.id} className="pwa-acc">
                     <button
@@ -274,8 +362,8 @@ export function LearnerProgramClient() {
                           {locked ? 'Terkunci • Selesaikan modul sebelumnya' : `${modDone} dari ${lessons.length} Selesai`}
                         </span>
                       </span>
-                      <span className={mi === 2 ? 'pwa-pill pwa-pill-blue' : 'pwa-pill pwa-pill-green'} style={{ flex: 'none' }}>
-                        {locked ? 'TERKUNCI' : mi === 2 ? 'SEDANG BERJALAN' : 'SELESAI'}
+                      <span className={inProgress ? 'pwa-pill pwa-pill-blue' : modDone === lessons.length && lessons.length > 0 ? 'pwa-pill pwa-pill-green' : 'pwa-pill'} style={{ flex: 'none' }}>
+                        {locked ? 'TERKUNCI' : inProgress ? 'SEDANG BERJALAN' : modDone === lessons.length && lessons.length > 0 ? 'SELESAI' : 'BELUM MULAI'}
                       </span>
                     </button>
                     {open && !locked && (
@@ -313,10 +401,10 @@ export function LearnerProgramClient() {
                               <span style={{ flex: 1, minWidth: 0 }}>
                                 <span style={{ display: 'block', fontSize: 12.5, fontWeight: 700 }}>{les.title}</span>
                                 <span className="pwa-muted" style={{ display: 'block', fontSize: 11 }}>
-                                  {done ? 'Video Selesai' : playing ? 'Sedang diputar • 14:28 / 32:50 (45%)' : 'Hands-on Lab Berikutnya'}
+                                  {done ? 'Selesai' : playing ? 'Lanjut dari sini' : 'Belum dipelajari'}
                                 </span>
                               </span>
-                              {playing && <span className="pwa-pill pwa-pill-blue">PLAYING</span>}
+                              {playing && <span className="pwa-pill pwa-pill-blue">LANJUTKAN</span>}
                             </Link>
                           );
                         })}
@@ -333,33 +421,58 @@ export function LearnerProgramClient() {
           <div style={{ marginTop: 10 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <strong style={{ fontSize: 14 }}>Diskusi di Sesi Ini</strong>
-              <span className="pwa-pill pwa-pill-blue">Lihat 18 Diskusi</span>
+              {loadingDiscussions && <span className="pwa-muted" style={{ fontSize: 12 }}>Memuat...</span>}
             </div>
-            {QA_THREADS.map((t) => (
-              <div key={t.name} className="pwa-card pwa-card-pad" style={{ marginTop: 8 }}>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <span className="pwa-avatar" style={{ width: 32, height: 32, fontSize: 12 }}>DR</span>
-                  <div>
-                    <div style={{ fontSize: 12.5, fontWeight: 800 }}>{t.name} • <span style={{ fontWeight: 400, color: 'var(--pwa-subtle)' }}>{t.time}</span></div>
+
+            {discussions.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                {discussions.map((d: any) => (
+                  <div key={d.id} className="pwa-card pwa-card-pad" style={{ background: '#FFFFFF' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--pwa-navy)' }}>{d.authorName}</span>
+                      <span className="pwa-muted" style={{ fontSize: 11 }}>
+                        {new Date(d.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: 13, margin: 0, color: 'var(--pwa-navy)', lineHeight: 1.45 }}>{d.message}</p>
                   </div>
-                </div>
-                <p style={{ fontSize: 13, margin: '8px 0 0' }}>{t.q}</p>
-                <div className="pwa-nested" style={{ marginTop: 8, padding: 10, borderColor: '#A7F3D0', background: '#F0FDF4' }}>
-                  <span className="pwa-pill pwa-pill-green">JAWABAN MENTOR • {t.mentor}</span>
-                  <p style={{ fontSize: 12.5, margin: '6px 0 0' }}>{t.a}</p>
-                </div>
+                ))}
               </div>
-            ))}
+            )}
+
+            {questionSent && (
+              <div className="pwa-card pwa-card-pad" style={{ marginTop: 8, borderColor: '#A7F3D0', background: '#F0FDF4' }}>
+                <strong style={{ fontSize: 13, color: 'var(--pwa-success)' }}>Pertanyaan terkirim ✓</strong>
+                <p className="pwa-muted" style={{ fontSize: 12.5, margin: '6px 0 0' }}>
+                  Mentor akan menjawab melalui WhatsApp atau sesi live berikutnya.
+                </p>
+              </div>
+            )}
+
+            {discussions.length === 0 && !questionSent && !loadingDiscussions && (
+              <div className="pwa-card pwa-card-pad pwa-muted" style={{ marginTop: 8, textAlign: 'center' }}>
+                Belum ada diskusi di sesi ini. Jadilah yang pertama bertanya ke mentor.
+              </div>
+            )}
+
             <div className="pwa-card" style={{ marginTop: 8, padding: 10, display: 'flex', gap: 8 }}>
               <input
                 className="pwa-input"
                 value={question}
-                onChange={(e) => setQuestion(e.target.value)}
+                onChange={(e) => { setQuestion(e.target.value); setQuestionSent(false); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSendDiscussion(); }}
                 placeholder="Tulis pertanyaan ke mentor atau cohort..."
                 aria-label="Tulis pertanyaan"
+                disabled={sendingDiscussion}
               />
-              <button type="button" className="pwa-cta" style={{ width: 'auto', flex: 'none', padding: '0 16px' }} onClick={() => setQuestion('')}>
-                Kirim
+              <button
+                type="button"
+                className="pwa-cta"
+                style={{ width: 'auto', flex: 'none', padding: '0 16px' }}
+                onClick={handleSendDiscussion}
+                disabled={sendingDiscussion || !question.trim()}
+              >
+                {sendingDiscussion ? '...' : 'Kirim'}
               </button>
             </div>
           </div>
@@ -370,7 +483,9 @@ export function LearnerProgramClient() {
             <div className="pwa-card pwa-card-pad">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                 <strong style={{ fontSize: 14 }}>Catatan Pribadi</strong>
-                <span className="pwa-pill pwa-pill-blue">+ Timestamp (14:28)</span>
+                {firstOpen && (
+                  <span className="pwa-pill pwa-pill-blue">Untuk: {firstOpen.title.slice(0, 24)}{firstOpen.title.length > 24 ? '…' : ''}</span>
+                )}
               </div>
               <textarea
                 className="pwa-input"
@@ -381,23 +496,36 @@ export function LearnerProgramClient() {
                 aria-label="Catatan pribadi"
                 style={{ padding: '10px 12px', marginTop: 10, resize: 'vertical' }}
               />
+              {noteError && (
+                <div style={{ color: 'var(--pwa-danger)', fontSize: 12, marginTop: 6, fontWeight: 700 }}>{noteError}</div>
+              )}
               <button
                 type="button"
                 className="pwa-btn-secondary"
                 style={{ width: '100%', marginTop: 8 }}
-                onClick={() => {
+                disabled={noteLoading || !firstOpen || !note.trim()}
+                onClick={async () => {
+                  if (!firstOpen || !note.trim()) return;
+                  setNoteError(null);
+                  setNoteLoading(true);
                   try {
-                    window.localStorage.setItem(`ralivo-note-${enrollmentId}`, note);
+                    const saved = await saveLessonNoteCommand(enrollmentId, firstOpen.id, note.trim());
+                    setNote(saved.body);
                     setNoteSaved(true);
-                  } catch { /* abaikan */ }
+                  } catch (err) {
+                    try {
+                      window.localStorage.setItem(`ralivo-note-${enrollmentId}-${firstOpen.id}`, note);
+                      setNoteSaved(true);
+                    } catch {
+                      setNoteError(err instanceof Error ? err.message : 'Gagal menyimpan catatan');
+                    }
+                  } finally {
+                    setNoteLoading(false);
+                  }
                 }}
               >
-                {noteSaved ? 'Tersimpan ✓' : 'Simpan Catatan'}
+                {noteLoading ? 'Menyimpan...' : noteSaved ? 'Tersimpan ✓' : 'Simpan Catatan'}
               </button>
-            </div>
-            <div className="pwa-card" style={{ marginTop: 8, padding: 10 }}>
-              <div className="pwa-muted" style={{ fontSize: 11, fontWeight: 800 }}>⏱ 12:45 • Formula Chunk Size Overlap</div>
-              <div style={{ fontSize: 12.5, marginTop: 4 }}>Chunk 512 token + overlap 64 menjaga konteks RAG tetap stabil.</div>
             </div>
           </div>
         )}

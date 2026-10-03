@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 
 export interface PageHeaderProps {
   kicker?: string;
@@ -191,10 +192,28 @@ export function LifecycleStrip({ stages, currentIndex }: { stages: string[]; cur
  );
 }
 
+export function BrandKicker({ badge = 'STIFIn OS' }: { badge?: string }) {
+  return (
+    <div className="hv-kicker-row">
+      <span className="hv-kicker">
+        <Image
+          src="/icons/pwa-192.png"
+          alt="Ralivo"
+          width={14}
+          height={14}
+          style={{ borderRadius: '3px', display: 'inline-block', flexShrink: 0 }}
+        />
+        Ralivo Flow
+      </span>
+      {badge && <span className="hv-stifin-badge">{badge}</span>}
+    </div>
+  );
+}
+
 export function Wordmark({ flow, class: isClass }: { flow?: boolean; class?: boolean }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <img
+      <Image
         src="/images/ralivo-logo.webp"
         alt="Ralivo"
         width={96}

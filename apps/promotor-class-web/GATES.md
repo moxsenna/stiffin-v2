@@ -1,20 +1,55 @@
-# Gates: promotor-learners-bento
+# Gates: class-web-perfection-and-endpoints
 
-OWNS: apps/promotor-class-web/src/app/(promotor)/app/learners/**, apps/promotor-class-web/src/components/promotor/LearnerDetail.tsx, apps/promotor-class-web/src/components/promotor/WhatsAppDraftSheet.tsx, apps/promotor-class-web/src/components/promotor/BroadcastReminderSheet.tsx, apps/promotor-class-web/src/components/layout/PromotorTabBar.tsx, apps/promotor-class-web/src/styles/globals.css
+OWNS: apps/promotor-class-web/**, apps/platform-api/**, packages/contracts/**, packages/api-client/**
 
-Scope: Rombak UI /app/learners (Daftar Peserta & Follow-up) dari gaya kotak jadul ke sistem bento PWA baru (Electric Blue + kartu radius 16 + pill) tanpa mengubah logika data/aksi.
+Scope: Melengkapi seluruh integrasi player API, endpoint diskusi, empty-state terstandarisasi, master kategori, harga coret resmi, migrasi next/image, 6 endpoint operasional learner/public baru, offline PWA SW riil, trailer player, ekspor PDF, filter server-side, dan push notifikasi.
 
-- [x] G1: Typecheck promotor-class-web lolos tanpa error
+- [ ] G1: Player commands wired up (startLesson, updatePosition, submitReflection, recordEvent)
+  CHECK: node scripts/gate-player-wired.mjs
+  EXPECT: GATECHECK player wired passed
+  EVIDENCE: pending
+
+- [ ] G2: Endpoint dan modul diskusi materi terhubung riil
+  CHECK: node scripts/gate-discussions.mjs
+  EXPECT: GATECHECK discussions passed
+  EVIDENCE: pending
+
+- [ ] G3: Empty-state & skeleton loading terstandarisasi
+  CHECK: node scripts/gate-empty-states.mjs
+  EXPECT: GATECHECK empty states passed
+  EVIDENCE: pending
+
+- [ ] G4: Kategori storefront & harga coret resmi di contracts dan UI
+  CHECK: node scripts/gate-pricing-category.mjs
+  EXPECT: GATECHECK pricing category passed
+  EVIDENCE: pending
+
+- [ ] G5: Peringatan img diganti next/image bersih
+  CHECK: node scripts/gate-images-migrated.mjs
+  EXPECT: GATECHECK images migrated passed
+  EVIDENCE: pending
+
+- [ ] G6: Endpoint API baru (schedules, assignments, reviews, batches, mentors, orders)
+  CHECK: node scripts/gate-new-endpoints.mjs
+  EXPECT: GATECHECK new endpoints passed
+  EVIDENCE: pending
+
+- [ ] G7: Offline PWA riil dengan Service Worker dan CacheStorage downloader
+  CHECK: node scripts/gate-offline-pwa.mjs
+  EXPECT: GATECHECK offline pwa passed
+  EVIDENCE: pending
+
+- [ ] G8: Video trailer player riil dan generator ekspor PDF
+  CHECK: node scripts/gate-trailer-pdf.mjs
+  EXPECT: GATECHECK trailer pdf passed
+  EVIDENCE: pending
+
+- [ ] G9: Server-side catalog filter dan push notification manager
+  CHECK: node scripts/gate-search-push.mjs
+  EXPECT: GATECHECK search push passed
+  EVIDENCE: pending
+
+- [ ] G10: Typecheck dan production build lolos tanpa error
   CHECK: node scripts/gate-typecheck.mjs
   EXPECT: GATECHECK typecheck passed
-  EVIDENCE: 2026-09-15 gate-typecheck.mjs exit 0 "GATECHECK typecheck passed"; next build sukses (First Load JS 102 kB)
-
-- [x] G2: Halaman learners tidak lagi memakai komponen kotak lama
-  CHECK: node scripts/gate-learners-bento.mjs
-  EXPECT: GATECHECK learners bento passed
-  EVIDENCE: 2026-09-15 gate-learners-bento.mjs exit 0 "GATECHECK learners bento passed"
-
-- [x] G3: Tidak ada pola jadul (border 2px solid ink, radius 0, sep-strong) di file learners yang dirombak
-  CHECK: node scripts/gate-no-legacy.mjs
-  EXPECT: GATECHECK no legacy passed
-  EVIDENCE: 2026-09-15 gate-no-legacy.mjs exit 0 "GATECHECK no legacy passed"; grep pola lama di learners/ exit 1 (tidak ada)
+  EVIDENCE: pending

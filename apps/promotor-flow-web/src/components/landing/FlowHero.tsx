@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { WhatsAppIcon, CheckIcon, LightningIcon, CalendarIcon, UsersIcon } from '../foundation/icons';
 
 export const FlowHero: React.FC = () => {
@@ -389,7 +390,7 @@ export const FlowHero: React.FC = () => {
               overflow: 'hidden',
             }}
           >
-            <img
+            <Image
               src={currentTab.desktopSrc}
               alt={currentTab.captionTitle}
               width={1280}
@@ -402,7 +403,7 @@ export const FlowHero: React.FC = () => {
                 objectFit: 'cover',
                 objectPosition: 'top left',
               }}
-              loading="lazy"
+              priority
             />
 
             {/* Floating Mobile Inset Phone Preview */}
@@ -424,7 +425,7 @@ export const FlowHero: React.FC = () => {
               <div style={{ backgroundColor: '#0F172A', padding: '4px 0', textAlign: 'center' }}>
                 <span style={{ width: '32px', height: '3px', backgroundColor: 'rgba(255,255,255,0.4)', borderRadius: '2px', display: 'inline-block' }} />
               </div>
-              <img
+              <Image
                 src={currentTab.mobileSrc}
                 alt={`${currentTab.label} Mobile PWA`}
                 width={390}
@@ -434,7 +435,6 @@ export const FlowHero: React.FC = () => {
                   height: 'auto',
                   display: 'block',
                 }}
-                loading="lazy"
               />
             </div>
           </div>
@@ -492,13 +492,12 @@ export const FlowHero: React.FC = () => {
 
             {/* Screen Content */}
             <div className="flow-phone-screen">
-              <img
+              <Image
                 src={currentTab.mobileSrc}
                 alt={`${currentTab.captionTitle} Mobile PWA`}
                 width={390}
                 height={844}
                 className="flow-phone-screen-img"
-                loading="lazy"
               />
             </div>
 

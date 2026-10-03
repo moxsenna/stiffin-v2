@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function PlatformFooter() {
   return (
@@ -26,7 +27,7 @@ export function PlatformFooter() {
           {/* Brand Col */}
           <div style={{ maxWidth: '300px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-              <img
+              <Image
                 src="/images/ralivo-logo-dark.webp"
                 alt="Ralivo"
                 width={120}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { LightningIcon } from '../foundation/icons';
 
 export const FlowLandingHeader: React.FC = () => {
@@ -50,12 +51,13 @@ export const FlowLandingHeader: React.FC = () => {
             color: 'var(--color-text-primary)',
           }}
         >
-          <img
+          <Image
             src="/images/ralivo-logo.webp"
             alt="Ralivo"
             width={120}
             height={32}
             style={{ height: '32px', width: 'auto', display: 'block' }}
+            priority
           />
           <span
             style={{

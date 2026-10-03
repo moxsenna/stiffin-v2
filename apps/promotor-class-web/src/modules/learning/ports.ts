@@ -26,4 +26,5 @@ export interface LearningRepositoryPort {
   ): Promise<RecordLearningEventResponse>;
   listSignals(status?: 'ACTIVE' | 'RESOLVED' | 'DISMISSED'): Promise<LearningSignalDto[]>;
   updateSignalStatus(signalId: string, status: 'ACTIVE' | 'RESOLVED' | 'DISMISSED'): Promise<LearningSignalDto>;
+  startLesson(enrollmentId: string, lessonId: string): Promise<any>;
 }

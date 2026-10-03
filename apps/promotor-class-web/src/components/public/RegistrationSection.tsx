@@ -5,22 +5,11 @@ import Link from 'next/link';
 import { PublicProgramDetail } from '@/modules/public-storefront/types';
 import { getEnrollmentRepository, getPlatformApiClient } from '@/adapters';
 import { setActiveLearnerSession } from '@/lib/session';
-import { useCountdown } from '@/components/pwa/pwa';
 import { formatIDR } from '@promotor/platform-core';
 
 interface RegistrationSectionProps {
   detail: PublicProgramDetail;
 }
-
-type PayMethod = 'qris' | 'va' | 'ewallet';
-
-const PAY_METHODS: Array<{ id: PayMethod; title: string; desc: string; badge?: string }> = [
-  { id: 'qris', title: 'QRIS Instant', desc: 'Scan via m-banking / e-wallet • GoPay, OVO, DANA, ShopeePay, BCA Mobile, Livin', badge: 'REKOMENDASI • Bebas Admin' },
-  { id: 'va', title: 'Virtual Account Bank', desc: 'BCA, Mandiri, BNI, BRI, Permata • verifikasi otomatis 24/7' },
-  { id: 'ewallet', title: 'E-Wallet Direct Debit', desc: 'GoPay, ShopeePay, OVO, DANA (1-Klik)' },
-];
-
-const HOLD_SECONDS = 15 * 60;
 
 export function RegistrationSection({ detail }: RegistrationSectionProps) {
   const { program } = detail;
@@ -33,23 +22,19 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(defaultVariant?.id ?? null);
-  const [couponCodeInput, setCouponCodeInput] = useState('RALIVOEARLY');
+  const [couponCodeInput, setCouponCodeInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number; finalAmount: number } | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [isCheckingCoupon, setIsCheckingCoupon] = useState(false);
-  const [payMethod, setPayMethod] = useState<PayMethod>('qris');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdEnrollmentId, setCreatedEnrollmentId] = useState<string | null>(null);
   const [checkoutResult, setCheckoutResult] = useState<{ reference: string; checkoutUrl?: string | null; freeCheckout?: boolean } | null>(null);
-  const hold = useCountdown(HOLD_SECONDS, isPaid && !checkoutResult && !createdEnrollmentId);
 
   const selectedVariant = variants.find((v) => v.id === selectedVariantId);
   const listPrice = selectedVariant ? selectedVariant.priceAmount : price;
-  const earlyBird = Math.round(listPrice * 0.4);
-  const afterEarly = listPrice - earlyBird;
   const voucherCut = appliedCoupon ? appliedCoupon.discountAmount : 0;
-  const currentPrice = appliedCoupon ? appliedCoupon.finalAmount : afterEarly;
+  const currentPrice = appliedCoupon ? appliedCoupon.finalAmount : listPrice;
 
   useEffect(() => {
     setSelectedVariantId(defaultVariant?.id ?? null);
@@ -218,29 +203,12 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
         {isPaid ? 'Checkout & Enrollment' : 'Daftar & Buka Akses'}
       </h2>
 
-      {isPaid && (
-        <div className="pwa-card" style={{ marginTop: 10, padding: 12, borderRadius: 16, borderColor: '#FDE68A', background: '#FFFBEB' }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>Slot Kursi Ditahan Sementara</div>
-          <div style={{ fontSize: 11.5, color: '#92400E' }}>Selesaikan pendaftaran sebelum kedaluwarsa</div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', marginTop: 8, background: '#FEF3C7', borderRadius: 8, padding: '6px 10px', fontSize: 22, fontWeight: 800, letterSpacing: '0.04em', color: '#92400E' }} className="tabular-nums" role="timer" aria-live="polite">
-            {hold.mm}:{hold.ss}
-          </div>
-        </div>
-      )}
-
-      {/* Ringkasan pesanan — Pencil spec: white card radius 16 */}
+      {/* Ringkasan pesanan — data nyata dari program */}
       <div className="pwa-card" style={{ marginTop: 10, padding: 14, borderRadius: 16 }}>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          <span className="pwa-pill pwa-pill-dark">INTENSIVE COHORT</span>
-          <span className="pwa-pill pwa-pill-blue">BATCH #12 • LIVE ONLINE</span>
-        </div>
-        <div style={{ fontSize: 15, fontWeight: 800, marginTop: 8, color: '#0F172A' }}>{program.title}</div>
-        <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 2 }}>Mulai 10 Mar 2025 • 8 Pekan • 19:30 - 21:30 WIB</div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-          {['16 Sesi Live', 'Mentoring 1-on-1', 'Sertifikat PWA'].map((t) => (
-            <span key={t} className="pwa-pill" style={{ background: '#fff', border: '1px solid #E2E8F0', color: '#475569', minHeight: 24, padding: '0 8px', borderRadius: 999, fontSize: 10.5 }}>{t}</span>
-          ))}
-        </div>
+        <div style={{ fontSize: 15, fontWeight: 800, marginTop: 0, color: '#0F172A' }}>{program.title}</div>
+        {program.subtitle && (
+          <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 2 }}>{program.subtitle}</div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} style={{ marginTop: 10 }}>
@@ -296,12 +264,12 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
           </div>
         )}
 
-        {/* Voucher — Pencil spec: white card 16, input 42px #F8FAFC, Pakai #EFF6FF */}
+        {/* Voucher — kupon terverifikasi via API */}
         {isPaid && (
           <div className="pwa-card" style={{ marginTop: 12, padding: 14, borderRadius: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
               <strong style={{ fontSize: 13, color: '#0F172A' }}>Kupon & Voucher Diskon</strong>
-              <span className="pwa-pill pwa-pill-green">1 Kupon Tersedia</span>
+              {appliedCoupon && <span className="pwa-pill pwa-pill-green">1 Kupon Terpasang</span>}
             </div>
             {appliedCoupon ? (
               <div className="pwa-nested" style={{ marginTop: 10, padding: '10px 12px', display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', background: '#ECFDF5', borderColor: '#A7F3D0' }}>
@@ -320,7 +288,7 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
                     className="pwa-input"
                     value={couponCodeInput}
                     onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
-                    placeholder="RALIVOEARLY"
+                    placeholder="Contoh: RALIVO10"
                     aria-label="Kode kupon"
                     style={{ fontFamily: 'monospace', fontWeight: 700, minHeight: 42, background: '#F8FAFC' }}
                   />
@@ -339,79 +307,22 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
           </div>
         )}
 
-        {/* Metode pembayaran */}
-        {isPaid && (
-          <div style={{ marginTop: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-              <strong style={{ fontSize: 13.5 }}>Metode Pembayaran</strong>
-              <span className="pwa-muted" style={{ fontSize: 11 }}>Verifikasi Otomatis 24/7</span>
-            </div>
-            <div role="radiogroup" aria-label="Metode pembayaran" style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-              {PAY_METHODS.map((m) => {
-                const selected = payMethod === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    onClick={() => setPayMethod(m.id)}
-                    className="pwa-card"
-                    style={{
-                      padding: 12,
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      borderColor: selected ? '#0D52FF' : '#E2E8F0',
-                      background: selected ? '#EFF6FF' : '#fff',
-                      boxShadow: selected ? '0 0 0 3px rgba(13,82,255,0.14)' : undefined,
-                      font: 'inherit',
-                      color: 'inherit',
-                      width: '100%',
-                    }}
-                  >
-                    <span style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                      <strong style={{ fontSize: 13.5 }}>{m.title}</strong>
-                      {m.badge && <span className="pwa-pill pwa-pill-green">{m.badge}</span>}
-                      {selected && <span className="pwa-pill pwa-pill-blue">Dipilih ✓</span>}
-                    </span>
-                    <span className="pwa-muted" style={{ display: 'block', marginTop: 3 }}>{m.desc}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Rincian */}
+        {/* Rincian — harga murni dari program + kupon terverifikasi API */}
         {isPaid && (
           <div className="pwa-card pwa-card-pad" style={{ marginTop: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <strong style={{ fontSize: 13.5 }}>Rincian Pembayaran</strong>
-              <span className="pwa-muted" style={{ fontSize: 11 }}>Invoice Resmi</span>
             </div>
             <div style={{ marginTop: 4 }}>
-              <div className="pwa-row"><span className="pwa-muted">Harga Normal Cohort #12</span><strong className="tabular-nums">{formatIDR(listPrice)}</strong></div>
-              <div className="pwa-row"><span className="pwa-muted">Diskon Early Bird Cohort</span><strong className="tabular-nums" style={{ color: 'var(--pwa-success)' }}>-{formatIDR(earlyBird)}</strong></div>
+              <div className="pwa-row"><span className="pwa-muted">Harga Program{selectedVariant ? ` • ${selectedVariant.label}` : ''}</span><strong className="tabular-nums">{formatIDR(listPrice)}</strong></div>
               {voucherCut > 0 && (
                 <div className="pwa-row"><span className="pwa-muted">Voucher {appliedCoupon?.code}</span><strong className="tabular-nums" style={{ color: 'var(--pwa-success)' }}>-{formatIDR(voucherCut)}</strong></div>
               )}
-              <div className="pwa-row"><span className="pwa-muted">Biaya Layanan LMS & Sertifikasi</span><strong style={{ color: 'var(--pwa-success)' }}>Gratis</strong></div>
               <div className="pwa-row" style={{ borderTop: '1px solid var(--pwa-border)', marginTop: 4, paddingTop: 12 }}>
-                <span><strong>Total Investasi Belajar</strong><span className="pwa-muted" style={{ display: 'block', fontSize: 11 }}>Sudah termasuk PPN & akses LMS</span></span>
+                <span><strong>Total Pembayaran</strong></span>
                 <strong className="tabular-nums" style={{ fontSize: 18 }}>{formatIDR(currentPrice)}</strong>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Garansi — Pencil spec: white card, green shield */}
-        {isPaid && (
-          <div className="pwa-card" style={{ marginTop: 10, padding: 12, borderRadius: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-            <span style={{ flex: 'none', width: 36, height: 36, borderRadius: 10, background: '#ECFDF5', color: '#059669', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>🛡</span>
-            <span>
-              <strong style={{ fontSize: 13, color: '#0F172A' }}>100% Garansi Uang Kembali 7 Hari</strong>
-              <div style={{ fontSize: 11.5, color: '#475569', marginTop: 2 }}>Refund tanpa syarat bila sesi awal tidak sesuai ekspektasi.</div>
-            </span>
           </div>
         )}
 
@@ -421,18 +332,13 @@ export function RegistrationSection({ detail }: RegistrationSectionProps) {
           </div>
         )}
 
-        <button type="submit" disabled={loading || (isPaid && hold.left <= 0)} className="pwa-cta" style={{ marginTop: 12, minHeight: 50, borderRadius: 12, fontSize: 14 }}>
+        <button type="submit" disabled={loading} className="pwa-cta" style={{ marginTop: 12, minHeight: 50, borderRadius: 12, fontSize: 14 }}>
           {loading ? 'Memproses...' : isPaid ? `Bayar Sekarang • ${formatIDR(currentPrice)}` : 'Daftar & Mulai Belajar Gratis →'}
         </button>
         {isPaid && (
-          <>
-            <div className="pwa-muted" style={{ textAlign: 'center', marginTop: 8, fontSize: 11 }}>
-              Enkripsi 256-bit SSL • Mitra Pembayaran Resmi Bank Indonesia
-            </div>
-            <div className="pwa-muted" style={{ textAlign: 'center', marginTop: 4, fontSize: 11 }}>
-              Akses instan LMS PWA & Komunitas Discord setelah bayar.
-            </div>
-          </>
+          <div className="pwa-muted" style={{ textAlign: 'center', marginTop: 8, fontSize: 11 }}>
+            Anda akan diarahkan ke halaman pembayaran resmi untuk menyelesaikan transaksi.
+          </div>
         )}
 
         {isPaid && waInquiryUrl && (

@@ -65,16 +65,30 @@ function ResetPasswordForm() {
           </p>
         </div>
 
-        <div style={{ background: 'var(--surface)', border: 'var(--sep-strong)', padding: 22 }}>
+        <div className="hv-card" style={{ padding: 24 }}>
           {errorMessage && (
-            <div className="field-error" role="alert" style={{ marginBottom: 16 }}>
+            <div
+              role="alert"
+              style={{
+                marginBottom: 16,
+                padding: '10px 14px',
+                borderRadius: '10px',
+                background: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                color: '#dc2626',
+                fontSize: '13px',
+                fontWeight: 500,
+              }}
+            >
               {errorMessage}
             </div>
           )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label className="field-label" htmlFor="flow-new-password">Kata sandi baru</label>
+              <label className="field-label" htmlFor="flow-new-password" style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 700, color: 'var(--muted-strong)' }}>
+                Kata sandi baru
+              </label>
               <input
                 id="flow-new-password"
                 type="password"
@@ -82,7 +96,7 @@ function ResetPasswordForm() {
                 autoComplete="new-password"
                 minLength={8}
                 maxLength={128}
-                className="input"
+                className="hv-input"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Minimal 8 karakter"
@@ -90,7 +104,9 @@ function ResetPasswordForm() {
             </div>
 
             <div>
-              <label className="field-label" htmlFor="flow-confirm-password">Konfirmasi kata sandi</label>
+              <label className="field-label" htmlFor="flow-confirm-password" style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 700, color: 'var(--muted-strong)' }}>
+                Konfirmasi kata sandi
+              </label>
               <input
                 id="flow-confirm-password"
                 type="password"
@@ -98,14 +114,14 @@ function ResetPasswordForm() {
                 autoComplete="new-password"
                 minLength={8}
                 maxLength={128}
-                className="input"
+                className="hv-input"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Ulangi kata sandi"
               />
             </div>
 
-            <button type="submit" disabled={isLoading} className="btn btn-primary btn-block">
+            <button type="submit" disabled={isLoading} className="hv-btn-primary" style={{ width: '100%', padding: '12px', fontSize: '14px' }}>
               {isLoading ? 'Menyimpan...' : 'Simpan kata sandi'}
             </button>
           </form>

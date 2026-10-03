@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { loadYoutubeIframeApi } from '@/lib/video/youtube-iframe-api';
 
 export function resolveStartSeconds(startSeconds: number, isCompleted: boolean): number {
@@ -98,19 +99,15 @@ export function YoutubeLessonPlayer({ videoId, startSeconds, isCompleted, onEnde
       }}
     >
       {/* Background Poster Image */}
-      <img
+      <Image
         src={posterUrl}
         alt="Video thumbnail"
+        fill
+        unoptimized
+        sizes="100vw"
         style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
           objectFit: 'cover',
           display: 'block',
-        }}
-        onError={(e) => {
-          e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
         }}
       />
 

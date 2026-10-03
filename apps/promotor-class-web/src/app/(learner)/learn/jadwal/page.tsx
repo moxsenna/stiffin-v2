@@ -1,38 +1,76 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { PwaAppHeader, PwaDock } from '@/components/pwa/pwa';
+import { EmptyStateCard, SkeletonCard } from '@/components/pwa/EmptyStateFeedback';
 import { resolveWorkspaceSlug } from '@/lib/session';
+import { getPlatformApiClient } from '@/adapters';
+import type { LearnerScheduleItem } from '@promotor/contracts';
 
 export default function JadwalPage() {
-  const [slug, setSlug] = React.useState<string | null>(null);
-  React.useEffect(() => {
+  const [slug, setSlug] = useState<string | null>(null);
+  const [schedules, setSchedules] = useState<LearnerScheduleItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
     setSlug(resolveWorkspaceSlug());
+    const api = getPlatformApiClient();
+    api.getLearnerSchedules()
+      .then((res) => {
+        setSchedules(res.schedules || []);
+      })
+      .catch(() => {
+        setSchedules([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   return (
     <div className="pwa-screen">
       <PwaAppHeader title="Jadwal Live" subtitle="COHORT & MENTORING" showCart={false} workspaceSlug={slug ?? undefined} />
       <main className="pwa-wrap pwa-screen-pad-dock">
-        <div className="pwa-card pwa-card-pad" style={{ marginTop: 12 }}>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            <span className="pwa-pill pwa-pill-live"><span className="pwa-dot-live" /> HARI INI • 19:30 - 21:30 WIB</span>
-            <span className="pwa-pill pwa-pill-amber">Mulai dlm 1j 45m</span>
+        {loading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+            <SkeletonCard lines={2} hasThumbnail />
+            <SkeletonCard lines={2} hasThumbnail />
           </div>
-          <div style={{ fontSize: 14, fontWeight: 850, marginTop: 8 }}>Live Coding: Fine-Tuning Llama 3 with LoRA & Unsloth</div>
-          <div className="pwa-muted">Pemateri: Fahri Ramadhan • Zoom Room ID: 884-219-030 • Pass: RLV2025</div>
-          <button type="button" className="pwa-cta" style={{ marginTop: 10 }}>Gabung Sesi Live</button>
-        </div>
-        <div className="pwa-card pwa-card-pad" style={{ marginTop: 8 }}>
-          <span className="pwa-pill pwa-pill-blue">BESOK • 20:00 WIB</span>
-          <div style={{ fontSize: 13.5, fontWeight: 800, marginTop: 8 }}>Office Hours: Code Review & Konsultasi Milestone 2</div>
-          <div className="pwa-muted">Mentor: Alex Pratama • Google Meet • Pengingat Aktif ✓</div>
-        </div>
-        <div className="pwa-card pwa-card-pad" style={{ marginTop: 8 }}>
-          <span className="pwa-pill pwa-pill-cyan">MINGGU • 10:00 WIB</span>
-          <div style={{ fontSize: 13.5, fontWeight: 800, marginTop: 8 }}>Weekend Intensive: Demo & Portfolio Review</div>
-          <div className="pwa-muted">Batch 04 • Sabtu & Minggu, 10.00-12.30 WIB</div>
-        </div>
+        ) : schedules.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+            {schedules.map((item) => (
+              <div key={item.id} className="pwa-card pwa-card-pad">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span className="pwa-pill pwa-pill-blue">{item.locationType}</span>
+                  <span className="pwa-muted" style={{ fontSize: 12 }}>
+                    {new Date(item.startAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                  </span>
+                </div>
+                <strong style={{ fontSize: 15, display: 'block', marginTop: 8 }}>{item.title}</strong>
+                <p className="pwa-muted" style={{ fontSize: 12.5, margin: '4px 0 0' }}>{item.programTitle}</p>
+                {item.locationUrl && (
+                  <a
+                    href={item.locationUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="pwa-cta"
+                    style={{ marginTop: 10, textDecoration: 'none', display: 'inline-flex', padding: '8px 16px' }}
+                  >
+                    Gabung Sesi Live
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ marginTop: 12 }}>
+            <EmptyStateCard
+              icon="📅"
+              title="Belum Ada Jadwal Live Terdekat"
+              description="Info sesi live tutoring & mentoring akan diumumkan melalui WhatsApp komunitas dan muncul otomatis di kalender ini."
+            />
+          </div>
+        )}
       </main>
       <PwaDock workspaceSlug={slug ?? undefined} />
     </div>
