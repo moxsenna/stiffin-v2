@@ -944,10 +944,11 @@ export const WaStatusResponseSchema = z.object({
 export type WaStatusResponse = z.infer<typeof WaStatusResponseSchema>;
 
 export const WaPairingStartResponseSchema = z.object({
-  stage: z.literal('unconfigured').optional(),
+  stage: z.enum(['unconfigured', 'connected', 'needs_pairing']).optional(),
   deviceId: z.string().optional(),
   pairingToken: z.string().optional(),
   gatewayUrl: z.string().optional(),
+  phone: z.string().nullable().optional(),
 });
 export type WaPairingStartResponse = z.infer<typeof WaPairingStartResponseSchema>;
 

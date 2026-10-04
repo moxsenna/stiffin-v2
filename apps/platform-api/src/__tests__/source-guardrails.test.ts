@@ -15,7 +15,7 @@ import { createHash } from 'node:crypto';
 const CONTRACTS_BASELINE_HASH = '80fbbe843b572e1829c444e387d030b575dc5ef3394fc4ce976b97780f846a42';
 // Hash setelah penambahan skema WhatsApp (WaStage/WaStatus/WaPairing/SendWa/WaInbox)
 // untuk integrasi Wakonek — perubahan kontrak yang disengaja, bukan drift.
-const CONTRACTS_WA_INTEGRATION_HASH = 'b80c37f7c24535295036ed2fc2c82c2bdb93c958105c5b694f6438d5ec8701a4';
+const CONTRACTS_WA_INTEGRATION_HASH = '0020021a644884c3eb43a98da6a907d6dcf2011edf792958e7571b945c8de677';
 
 describe('B1 — source guardrails', () => {
   it('runtime src/ code never references DATABASE_URL', () => {

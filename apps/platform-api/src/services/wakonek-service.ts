@@ -29,8 +29,6 @@ export interface SendWaTextResult {
   status: string;
 }
 
-const pairingTokenCache = new Map<string, string>();
-
 export function isWakonekConfigured(env?: Env): boolean {
   return Boolean(env?.WAKONEK_GATEWAY_URL?.trim() && env?.WAKONEK_API_KEY?.trim());
 }
@@ -51,15 +49,29 @@ export async function gatewayFetch(
   });
 }
 
+export interface ProvisionDeviceResult {
+  deviceId: string;
+  deviceToken: string;
+  /** Null saat device sudah connected — pairing tidak diperlukan. */
+  pairingToken: string | null;
+  stage: 'connected' | 'needs_pairing';
+  phone: string | null;
+}
+
 /**
- * Provision device WhatsApp baru di gateway jika belum ada row di DB.
- * Jika row sudah ada -> reuse row (jangan panggil gateway POST /v1/devices).
+ * Provision device WhatsApp baru di gateway untuk organisasi.
+ * - Row belum ada -> provision device baru (pairingToken hanya dicetak
+ *   gateway saat device dibuat, expiry 10 menit).
+ * - Row ada & device connected di gateway -> pakai device tersebut.
+ * - Row ada tapi TIDAK connected -> hapus row lama dan provision baru,
+ *   karena pairing token lama sudah pasti kedaluwarsa (tidak ada endpoint
+ *   regenerasi token untuk device lama dengan app API key).
  */
 export async function provisionOrReuseDevice(
   db: any,
   env: Env,
   organizationId: string
-): Promise<{ deviceId: string; deviceToken: string; pairingToken?: string }> {
+): Promise<ProvisionDeviceResult> {
   if (!isWakonekConfigured(env)) {
     throw Object.assign(new Error('Wakonek gateway belum dikonfigurasi'), { code: 'UNCONFIGURED' });
   }
@@ -71,11 +83,30 @@ export async function provisionOrReuseDevice(
     .limit(1);
 
   if (existing) {
-    return {
-      deviceId: existing.deviceId,
-      deviceToken: existing.deviceToken,
-      pairingToken: pairingTokenCache.get(existing.deviceId),
-    };
+    try {
+      const meRes = await gatewayFetch(env, '/v1/devices/me', {
+        headers: { 'X-Device-Token': existing.deviceToken },
+      });
+      if (meRes.ok) {
+        const me = (await meRes.json()) as { status?: string; phone?: string | null };
+        if (me.status === 'connected') {
+          await db
+            .update(whatsappDevices)
+            .set({ status: 'connected', phone: me.phone ?? null })
+            .where(eq(whatsappDevices.id, existing.id));
+          return {
+            deviceId: existing.deviceId,
+            deviceToken: existing.deviceToken,
+            pairingToken: null,
+            stage: 'connected',
+            phone: me.phone ?? null,
+          };
+        }
+      }
+    } catch {
+      // Gateway tidak terjangkau / token invalid -> jatuh ke reprovision.
+    }
+    await db.delete(whatsappDevices).where(eq(whatsappDevices.id, existing.id));
   }
 
   const res = await gatewayFetch(env, '/v1/devices', {
@@ -105,11 +136,13 @@ export async function provisionOrReuseDevice(
     status: 'needs_pairing',
   });
 
-  if (data.pairingToken) {
-    pairingTokenCache.set(data.deviceId, data.pairingToken);
-  }
-
-  return data;
+  return {
+    deviceId: data.deviceId,
+    deviceToken: data.deviceToken,
+    pairingToken: data.pairingToken,
+    stage: 'needs_pairing',
+    phone: null,
+  };
 }
 
 /**

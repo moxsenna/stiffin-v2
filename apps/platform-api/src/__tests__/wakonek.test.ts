@@ -479,13 +479,20 @@ describe('Wakonek Service — provisionOrReuseDevice', () => {
     WAKONEK_API_KEY: 'test-api-key',
   };
 
-  it('reuses existing device without calling gateway POST /v1/devices', async () => {
-    let gatewayFetchCalled = false;
-    globalThis.fetch = (async () => {
-      gatewayFetchCalled = true;
+  it('reuses existing device when gateway reports connected (no POST /v1/devices)', async () => {
+    const calls: string[] = [];
+    globalThis.fetch = (async (url: any, init: any) => {
+      calls.push(String(url));
+      if (String(url).endsWith('/v1/devices/me')) {
+        return new Response(
+          JSON.stringify({ deviceId: 'dev-existing', status: 'connected', phone: '628123456789' }),
+          { status: 200 }
+        );
+      }
       return new Response('{}', { status: 200 });
     }) as any;
 
+    const updates: any[] = [];
     const mockDb: any = {
       select: () => ({
         from: () => ({
@@ -501,12 +508,84 @@ describe('Wakonek Service — provisionOrReuseDevice', () => {
           }),
         }),
       }),
+      update: () => ({
+        set: (vals: any) => ({
+          where: async () => {
+            updates.push(vals);
+          },
+        }),
+      }),
+      delete: () => ({
+        where: async () => {
+          throw new Error('DELETE harusnya tidak dipanggil saat device connected');
+        },
+      }),
     };
 
     const res = await provisionOrReuseDevice(mockDb, validEnv, 'org-existing');
-    assert.strictEqual(res.deviceId, 'dev-existing');
-    assert.strictEqual(res.deviceToken, 'tok-existing');
-    assert.strictEqual(gatewayFetchCalled, false, 'Must NOT call gateway when row exists');
+    assert.strictEqual(res.stage, 'connected');
+    assert.strictEqual(res.pairingToken, null);
+    assert.strictEqual(res.phone, '628123456789');
+    assert.strictEqual(calls.some((u) => u.endsWith('/v1/devices/me')), true);
+    assert.strictEqual(calls.some((u) => u.endsWith('/v1/devices')), false, 'Tidak boleh POST /v1/devices saat masih connected');
+  });
+
+  it('deletes stale row and provisions a fresh device when existing device is not connected', async () => {
+    const calls: string[] = [];
+    globalThis.fetch = (async (url: any, init: any) => {
+      calls.push(String(url));
+      if (String(url).endsWith('/v1/devices/me')) {
+        return new Response(JSON.stringify({ error: 'Forbidden: invalid device token' }), { status: 403 });
+      }
+      if (String(url).endsWith('/v1/devices') && init?.method === 'POST') {
+        return new Response(
+          JSON.stringify({
+            deviceId: 'dev-fresh',
+            deviceToken: 'wk_dev_fresh',
+            pairingToken: 'wk_pair_fresh',
+          }),
+          { status: 201 }
+        );
+      }
+      return new Response('{}', { status: 200 });
+    }) as any;
+
+    let deleted = false;
+    let insertedValues: any = null;
+    const mockDb: any = {
+      select: () => ({
+        from: () => ({
+          where: () => ({
+            limit: async () => [
+              {
+                id: 'row-stale',
+                organizationId: 'org-stale',
+                deviceId: 'dev-stale',
+                deviceToken: 'tok-stale',
+              },
+            ],
+          }),
+        }),
+      }),
+      delete: () => ({
+        where: async () => {
+          deleted = true;
+        },
+      }),
+      insert: () => ({
+        values: async (vals: any) => {
+          insertedValues = vals;
+        },
+      }),
+    };
+
+    const res = await provisionOrReuseDevice(mockDb, validEnv, 'org-stale');
+    assert.strictEqual(deleted, true, 'Row lama harus dihapus');
+    assert.strictEqual(res.stage, 'needs_pairing');
+    assert.strictEqual(res.pairingToken, 'wk_pair_fresh', 'Pairing token segar wajib dikembalikan');
+    assert.strictEqual(res.deviceId, 'dev-fresh');
+    assert.strictEqual(insertedValues?.deviceId, 'dev-fresh');
+    assert.strictEqual(calls.some((u) => u.endsWith('/v1/devices')), true);
   });
 
   it('calls gateway POST /v1/devices ONLY when no row exists and stores device', async () => {

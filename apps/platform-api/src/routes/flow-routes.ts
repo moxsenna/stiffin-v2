@@ -847,6 +847,8 @@ export function registerFlowRoutes(app: Hono<AppEnv>) {
       deviceId: result.deviceId,
       pairingToken: result.pairingToken ?? '',
       gatewayUrl: env.WAKONEK_GATEWAY_URL,
+      stage: result.stage,
+      phone: result.phone,
     }, 200);
   });
 

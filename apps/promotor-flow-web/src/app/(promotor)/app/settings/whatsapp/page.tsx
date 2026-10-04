@@ -27,6 +27,13 @@ export default function WhatsAppSettingsPage() {
         setLocal('error');
         return;
       }
+      if (res.stage === 'connected') {
+        // Device organisasi sudah terhubung — tidak perlu QR.
+        setPairing(null);
+        setLocal('idle');
+        void refresh();
+        return;
+      }
       if (res.deviceId && res.pairingToken && res.gatewayUrl) {
         setPairing({
           deviceId: res.deviceId,
