@@ -38,6 +38,14 @@ async function main() {
   `);
   console.log('✓ Applied Fase 3 table grants');
 
+  // Integrasi Wakonek (migrasi 0025)
+  console.log('Applying WhatsApp table grants...');
+  await client.query(`
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.whatsapp_devices TO promotor_runtime;
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.whatsapp_inbox TO promotor_runtime;
+  `);
+  console.log('✓ Applied WhatsApp table grants');
+
   await client.end();
 }
 
